@@ -8,6 +8,7 @@
 - [Implementation plan](./spec/implementation-plan.md)：架构落地阶段、依赖、交付物和验收门。
 - [Phase 1 contract skeleton](./spec/contract-skeleton.md)：代码中立的生命周期、端口与 stub 验收契约。
 - [Phase 2 runtime recovery](./spec/runtime-recovery.md)：持久状态、checkpoint、重连、幂等与失败恢复契约。
+- [Phase 3 Context & Evidence](./spec/context-evidence-baseline.md)：原件、证据分层、来源、权利与 Context Package 契约。
 
 ## 决策与归档
 

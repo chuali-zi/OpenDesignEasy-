@@ -6,8 +6,10 @@ from collections.abc import Callable
 from datetime import datetime
 from pathlib import Path
 
+from .context import DeterministicContextAssembler, EvidenceService, LocalSourceStore
 from .control import ControlPlane
 from .domain import utc_now
+from .evidence_persistence import SQLiteEvidenceRepository
 from .persistence import (
     SQLiteAuditLog,
     SQLiteCommandLedger,
@@ -40,6 +42,14 @@ class SQLiteApplication:
         self.side_effects = SQLiteSideEffectLedger(self.store)
         self.writer = SQLiteTransactionalProjectWriter(self.store)
         self.runtime = SQLiteWorkflowRuntime(database, data_root=data_root, clock=clock)
+        self.evidence_repository = SQLiteEvidenceRepository(self.store)
+        self.source_store = LocalSourceStore(data_root)
+        self.evidence = EvidenceService(
+            self.evidence_repository,
+            self.source_store,
+            project_repository=self.repository,
+        )
+        self.context_assembler = DeterministicContextAssembler()
         delivery = DurableDeliveryPort(
             DeterministicDeliveryPort(), self.side_effects, audit_log=self.audit
         )

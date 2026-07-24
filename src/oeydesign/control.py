@@ -340,7 +340,7 @@ class ControlPlane:
             "ProjectPrepared",
             {
                 "context_package_id": context.id,
-                "brief_goal": brief.goal,
+                "brief_fingerprint": stable_id("brief", project.id, brief),
             },
         )
         self._transition(project, ProjectState.READY_FOR_DESIGN)

@@ -9,14 +9,18 @@ from .domain import (
     Approval,
     ApprovedDirection,
     ArtifactRevision,
+    BriefRecord,
     Candidate,
     CommandRecord,
     ConstraintProfile,
+    ConstraintProfileRecord,
     ContextPackage,
+    ContextRequirements,
     DeliveryBundle,
     DeliveryReconciliation,
     DesignBrief,
     DesignStrategy,
+    EvidenceRecord,
     ExportCandidate,
     FeedbackRecord,
     GateDecision,
@@ -24,6 +28,9 @@ from .domain import (
     QualityDecision,
     RemediationRequest,
     RenderBundle,
+    RightsStatus,
+    SourceAsset,
+    SourceLocator,
     StageCheckpoint,
     WorkflowRun,
 )
@@ -105,6 +112,94 @@ class SideEffectLedgerPort(Protocol):
     def fail(self, effect_key: str, error: str) -> None: ...
 
     def get(self, effect_key: str) -> Mapping[str, Any] | None: ...
+
+
+class SourceIngestionPort(Protocol):
+    def ingest(
+        self,
+        *,
+        project_id: str,
+        original_name: str,
+        media_type: str,
+        payload: bytes,
+        rights: RightsStatus,
+    ) -> SourceAsset: ...
+
+    def read(self, source: SourceAsset) -> bytes: ...
+
+
+class EvidenceParserPort(Protocol):
+    capability_version: str
+    supported_media_types: tuple[str, ...]
+
+    def parse(
+        self, source: SourceAsset, payload: bytes
+    ) -> tuple[EvidenceRecord, ...]: ...
+
+
+class EvidenceInterpreterPort(Protocol):
+    capability_version: str
+
+    def interpret(
+        self,
+        source: SourceAsset,
+        observations: tuple[EvidenceRecord, ...],
+        *,
+        purpose: str,
+    ) -> tuple[EvidenceRecord, ...]: ...
+
+
+class EvidenceConfirmationPort(Protocol):
+    capability_version: str
+
+    def confirm(
+        self,
+        evidence: EvidenceRecord,
+        *,
+        confirmed_value: Any | None = None,
+    ) -> EvidenceRecord: ...
+
+
+class SourceResolverPort(Protocol):
+    def resolve(
+        self, project_id: str, locator: SourceLocator
+    ) -> tuple[SourceAsset, bytes]: ...
+
+
+class EvidenceRepositoryPort(Protocol):
+    def add_source(self, source: SourceAsset) -> None: ...
+
+    def get_source(
+        self, source_id: str, revision: int | None = None
+    ) -> SourceAsset: ...
+
+    def list_sources(self, project_id: str) -> tuple[SourceAsset, ...]: ...
+
+    def add_evidence(self, records: tuple[EvidenceRecord, ...]) -> None: ...
+
+    def get_evidence(self, evidence_id: str) -> EvidenceRecord: ...
+
+    def list_evidence(self, project_id: str) -> tuple[EvidenceRecord, ...]: ...
+
+    def save_context(self, package: ContextPackage) -> None: ...
+
+    def latest_context(self, project_id: str) -> ContextPackage | None: ...
+
+
+class ContextAssemblerPort(Protocol):
+    capability_version: str
+
+    def assemble(
+        self,
+        *,
+        project_id: str,
+        sources: tuple[SourceAsset, ...],
+        evidence: tuple[EvidenceRecord, ...],
+        requirements: ContextRequirements,
+        brief: BriefRecord,
+        constraints: ConstraintProfileRecord,
+        revision: int,
+    ) -> ContextPackage: ...
 
 
 class WorkflowRuntimePort(Protocol):

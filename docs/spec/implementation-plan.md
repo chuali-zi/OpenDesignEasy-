@@ -167,6 +167,8 @@ Product Shell 可以与 Project Core 并行开始，但在 Project lifecycle 确
 
 ## Phase 3：Context & Evidence 最小基线
 
+状态：已完成（2026-07-24）。
+
 目标：让系统从真实输入建立可追踪上下文，而不是直接把附件塞给模型。
 
 交付物：
@@ -352,7 +354,7 @@ conformance-tests/       跨实现契约测试
 
 ## 10. 当前下一步
 
-Phase 2 已通过 SQLite composition root、重启恢复、checkpoint、event cursor、
-原子命令、revision restore、失败注入和 durable side-effect 验收。下一步按
-Phase 3 先形成 Context & Evidence 最小规范，再实现可追踪原件、结构化文件与
-图片 adapter；此时仍不决定智能设计、Artifact 生产和质量治理的内部技术栈。
+Phase 3 已通过受控原件、CSV/PNG adapter、三层证据、typed locator、权利隔离、
+Brief/Constraint 确认、Context Package、SQLite 重开和跨 Project 读取拒绝验收。
+下一步按 Phase 4 先形成适量 Product Shell 与 stub 闭环规范，再实现可从 Project
+恢复的工作台；此时仍不决定智能设计、Artifact 生产和质量治理的内部技术栈。

@@ -138,6 +138,24 @@ class SideEffectReconciliationStatus(StrEnum):
     UNKNOWN = "UNKNOWN"
 
 
+class SourceKind(StrEnum):
+    STRUCTURED_FILE = "STRUCTURED_FILE"
+    IMAGE = "IMAGE"
+
+
+class EvidenceLayer(StrEnum):
+    NATIVE_OBSERVATION = "NATIVE_OBSERVATION"
+    MACHINE_INTERPRETATION = "MACHINE_INTERPRETATION"
+    HUMAN_CONFIRMATION = "HUMAN_CONFIRMATION"
+
+
+class RightsStatus(StrEnum):
+    UNKNOWN = "UNKNOWN"
+    ANALYSIS_ONLY = "ANALYSIS_ONLY"
+    CLEARED_FOR_DELIVERY = "CLEARED_FOR_DELIVERY"
+    PROHIBITED = "PROHIBITED"
+
+
 class ContractError(Exception):
     def __init__(
         self,
@@ -215,7 +233,75 @@ class ContextPackage:
     confirmed_facts: tuple[str, ...]
     source_refs: tuple[str, ...]
     material_uncertainties: tuple[str, ...] = ()
+    evidence_refs: tuple[SourceLocator, ...] = ()
+    analysis_asset_refs: tuple[SourceLocator, ...] = ()
+    delivery_asset_refs: tuple[SourceLocator, ...] = ()
+    brief_record_id: str | None = None
+    brief_record_revision: int | None = None
+    constraint_record_id: str | None = None
+    constraint_record_revision: int | None = None
     metadata: Mapping[str, Any] = field(default_factory=dict)
+
+
+@dataclass(frozen=True, slots=True)
+class SourceAsset:
+    id: str
+    project_id: str
+    revision: int
+    kind: SourceKind
+    original_name: str
+    media_type: str
+    byte_size: int
+    sha256_digest: str
+    storage_ref: str
+    rights: RightsStatus
+
+
+@dataclass(frozen=True, slots=True)
+class SourceLocator:
+    source_id: str
+    source_revision: int
+    selector: Mapping[str, Any]
+
+
+@dataclass(frozen=True, slots=True)
+class EvidenceRecord:
+    id: str
+    project_id: str
+    revision: int
+    layer: EvidenceLayer
+    evidence_key: str
+    value: Any
+    locator: SourceLocator
+    confidence: float
+    derived_from: tuple[str, ...]
+    rights: RightsStatus
+    capability_version: str
+
+
+@dataclass(frozen=True, slots=True)
+class BriefRecord:
+    id: str
+    project_id: str
+    revision: int
+    brief: DesignBrief
+    confirmed: bool
+
+
+@dataclass(frozen=True, slots=True)
+class ConstraintProfileRecord:
+    id: str
+    project_id: str
+    revision: int
+    profile: ConstraintProfile
+    confirmed: bool
+
+
+@dataclass(frozen=True, slots=True)
+class ContextRequirements:
+    required_fact_keys: tuple[str, ...] = ()
+    required_delivery_source_ids: tuple[str, ...] = ()
+    minimum_interpretation_confidence: float = 0.75
 
 
 @dataclass(frozen=True, slots=True)
