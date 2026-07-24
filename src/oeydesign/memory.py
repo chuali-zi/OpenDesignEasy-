@@ -8,10 +8,12 @@ from dataclasses import replace
 from typing import Any
 
 from .domain import (
+    CheckpointStatus,
     CommandRecord,
     ContractError,
     ErrorCategory,
     Project,
+    StageCheckpoint,
     WorkflowProgressEvent,
     WorkflowRun,
     WorkflowStatus,
@@ -22,6 +24,7 @@ from .domain import (
 class InMemoryProjectRepository:
     def __init__(self) -> None:
         self._projects: dict[str, Project] = {}
+        self._revisions: dict[str, dict[int, Project]] = {}
 
     def add(self, project: Project) -> None:
         if project.id in self._projects:
@@ -31,6 +34,7 @@ class InMemoryProjectRepository:
                 details={"project_id": project.id},
             )
         self._projects[project.id] = deepcopy(project)
+        self._revisions[project.id] = {project.revision: deepcopy(project)}
 
     def get(self, project_id: str) -> Project:
         try:
@@ -57,6 +61,27 @@ class InMemoryProjectRepository:
                 current_revision=stored.revision,
             )
         self._projects[project.id] = deepcopy(project)
+        self._revisions[project.id][project.revision] = deepcopy(project)
+
+    def get_revision(self, project_id: str, revision: int) -> Project:
+        try:
+            return deepcopy(self._revisions[project_id][revision])
+        except KeyError as exc:
+            raise ContractError(
+                ErrorCategory.DETERMINISTIC_FAILURE,
+                "Project revision does not exist",
+                details={"project_id": project_id, "revision": revision},
+            ) from exc
+
+    def list_revisions(self, project_id: str) -> tuple[int, ...]:
+        try:
+            return tuple(sorted(self._revisions[project_id]))
+        except KeyError as exc:
+            raise ContractError(
+                ErrorCategory.DETERMINISTIC_FAILURE,
+                "Project does not exist",
+                details={"project_id": project_id},
+            ) from exc
 
 
 class InMemoryCommandLedger:
@@ -82,6 +107,7 @@ class InMemoryWorkflowRuntime:
     def __init__(self) -> None:
         self._runs: dict[str, WorkflowRun] = {}
         self._by_key: dict[str, str] = {}
+        self._checkpoints: dict[tuple[str, str, str], StageCheckpoint] = {}
 
     def start(
         self,
@@ -135,6 +161,27 @@ class InMemoryWorkflowRuntime:
             "Run resumed" if not resume_input else "Run resumed with input",
         )
         run = replace(run, status=WorkflowStatus.RUNNING, events=run.events + (event,))
+        self._runs[run.id] = run
+        return run
+
+    def pause(self, run_id: str, reason: str) -> WorkflowRun:
+        run = self._get(run_id)
+        if run.status is WorkflowStatus.COMPLETED:
+            raise ContractError(
+                ErrorCategory.INVALID_TRANSITION,
+                "A completed workflow cannot be paused",
+            )
+        if run.status is WorkflowStatus.PAUSED:
+            return run
+        event = WorkflowProgressEvent(
+            len(run.events) + 1, "WorkflowPaused", run.current_stage, reason
+        )
+        run = replace(
+            run,
+            status=WorkflowStatus.PAUSED,
+            pause_reason=reason,
+            events=run.events + (event,),
+        )
         self._runs[run.id] = run
         return run
 
@@ -215,6 +262,42 @@ class InMemoryWorkflowRuntime:
         )
         self._runs[run.id] = run
         return run
+
+    def checkpoint(
+        self,
+        run_id: str,
+        *,
+        stage: str,
+        input_fingerprint: str,
+        output_refs: tuple[str, ...] = (),
+        side_effect_key: str | None = None,
+    ) -> StageCheckpoint:
+        key = (run_id, stage, input_fingerprint)
+        existing = self._checkpoints.get(key)
+        if existing and existing.status is CheckpointStatus.COMPLETED:
+            return existing
+        checkpoint = StageCheckpoint(
+            run_id=run_id,
+            stage=stage,
+            input_fingerprint=input_fingerprint,
+            status=CheckpointStatus.COMPLETED,
+            attempt=1,
+            output_refs=output_refs,
+            side_effect_key=side_effect_key,
+        )
+        self._checkpoints[key] = checkpoint
+        self.complete(
+            run_id,
+            stage=stage,
+            output_refs=output_refs,
+            side_effect_key=side_effect_key,
+        )
+        return checkpoint
+
+    def get_checkpoint(
+        self, run_id: str, stage: str, input_fingerprint: str
+    ) -> StageCheckpoint | None:
+        return self._checkpoints.get((run_id, stage, input_fingerprint))
 
     def _get(self, run_id: str) -> WorkflowRun:
         try:

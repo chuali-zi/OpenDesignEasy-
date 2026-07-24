@@ -7,6 +7,7 @@
 - [System specification](./spec/system-spec.md)：规范性的总体组件、状态、接口和端到端流程。
 - [Implementation plan](./spec/implementation-plan.md)：架构落地阶段、依赖、交付物和验收门。
 - [Phase 1 contract skeleton](./spec/contract-skeleton.md)：代码中立的生命周期、端口与 stub 验收契约。
+- [Phase 2 runtime recovery](./spec/runtime-recovery.md)：持久状态、checkpoint、重连、幂等与失败恢复契约。
 
 ## 决策与归档
 

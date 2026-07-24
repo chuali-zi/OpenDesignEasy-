@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Iterable
+from copy import deepcopy
 from dataclasses import replace
 from datetime import datetime
 
@@ -25,14 +26,19 @@ from .domain import (
     FeedbackKind,
     FeedbackRecord,
     GenerateCandidates,
+    PauseWorkflow,
     PrepareProject,
     ProduceArtifact,
     Project,
     ProjectState,
     QualityDecision,
+    ReconcileWorkflowStatus,
+    RestoreProjectRevision,
+    ResumeWorkflow,
     SubmitFeedback,
     ValidateArtifact,
     WorkflowRun,
+    WorkflowStatus,
     canonical_json,
     constraint_profile,
     stable_id,
@@ -45,11 +51,13 @@ from .memory import (
 )
 from .ports import (
     ArtifactProductionPort,
+    AuditLogPort,
     CommandLedger,
     DeliveryPort,
     DesignIntelligencePort,
     ProjectRepository,
     QualityGovernancePort,
+    TransactionalProjectWriter,
     WorkflowRuntimePort,
 )
 from .stubs import (
@@ -71,7 +79,9 @@ _ALLOWED_TRANSITIONS: dict[ProjectState, set[ProjectState]] = {
     ProjectState.NEEDS_INPUT: {
         ProjectState.INGESTING,
         ProjectState.DESIGNING,
+        ProjectState.PRODUCING,
         ProjectState.VALIDATING,
+        ProjectState.DELIVERING,
         ProjectState.CANCELED,
     },
     ProjectState.READY_FOR_DESIGN: {
@@ -152,6 +162,8 @@ class ControlPlane:
         artifact: ArtifactProductionPort | None = None,
         quality: QualityGovernancePort | None = None,
         delivery: DeliveryPort | None = None,
+        transactional_writer: TransactionalProjectWriter | None = None,
+        audit_log: AuditLogPort | None = None,
         clock: Callable[[], datetime] = utc_now,
     ) -> None:
         self.repository = (
@@ -167,9 +179,25 @@ class ControlPlane:
         self.delivery = (
             delivery if delivery is not None else DeterministicDeliveryPort()
         )
+        self.transactional_writer = transactional_writer
+        self.audit_log = audit_log
         self.clock = clock
 
     def execute(self, command: Command) -> CommandResult:
+        try:
+            return self._execute(command)
+        except ContractError as error:
+            if self.audit_log is not None:
+                self.audit_log.record(
+                    project_id=command.project_id,
+                    action=type(command).__name__,
+                    revision=command.expected_project_revision,
+                    outcome=error.category.value,
+                    metadata={"error_category": error.category.value},
+                )
+            raise
+
+    def _execute(self, command: Command) -> CommandResult:
         fingerprint = stable_id("command", command)
         prior = self.ledger.get(command.command_id)
         if prior:
@@ -182,8 +210,16 @@ class ControlPlane:
             return prior.result
 
         if isinstance(command, CreateProject):
-            result = self._create_project(command)
-            self.ledger.record(command.command_id, CommandRecord(fingerprint, result))
+            project, result = self._create_project(command)
+            record = CommandRecord(fingerprint, result)
+            if self.transactional_writer is not None:
+                self.transactional_writer.add_with_command(
+                    project, command.command_id, record
+                )
+            else:
+                self.repository.add(project)
+                self.ledger.record(command.command_id, record)
+            self._audit_success(command, result, project.active_run_id)
             return result
 
         if not command.project_id:
@@ -202,7 +238,6 @@ class ControlPlane:
         first_event = len(project.events)
         project.revision += 1
         value = self._dispatch(project, command)
-        self.repository.save(project, expected_revision=expected_revision)
         result = CommandResult(
             project_id=project.id,
             project_revision=project.revision,
@@ -210,10 +245,21 @@ class ControlPlane:
             event_ids=tuple(event.id for event in project.events[first_event:]),
             value=value,
         )
-        self.ledger.record(command.command_id, CommandRecord(fingerprint, result))
+        record = CommandRecord(fingerprint, result)
+        if self.transactional_writer is not None:
+            self.transactional_writer.save_with_command(
+                project,
+                expected_revision=expected_revision,
+                command_id=command.command_id,
+                record=record,
+            )
+        else:
+            self.repository.save(project, expected_revision=expected_revision)
+            self.ledger.record(command.command_id, record)
+        self._audit_success(command, result, project.active_run_id)
         return result
 
-    def _create_project(self, command: CreateProject) -> CommandResult:
+    def _create_project(self, command: CreateProject) -> tuple[Project, CommandResult]:
         project_id = command.project_id or stable_id("project", command.command_id)
         constraints = command.constraints or constraint_profile(
             command.preset, command.template_role
@@ -229,9 +275,8 @@ class ControlPlane:
             "ProjectCreated",
             {"name": project.name, "state": project.state.value},
         )
-        self.repository.add(project)
-        return CommandResult(
-            project.id, project.revision, project.state, (event.id,), project
+        return project, CommandResult(
+            project.id, project.revision, project.state, (event.id,), deepcopy(project)
         )
 
     def _dispatch(self, project: Project, command: Command) -> object:
@@ -253,6 +298,14 @@ class ControlPlane:
             return self._deliver(project, command)
         if isinstance(command, CancelWorkflow):
             return self._cancel(project, command)
+        if isinstance(command, PauseWorkflow):
+            return self._pause(project, command)
+        if isinstance(command, ResumeWorkflow):
+            return self._resume(project, command)
+        if isinstance(command, ReconcileWorkflowStatus):
+            return self._reconcile_workflow(project, command)
+        if isinstance(command, RestoreProjectRevision):
+            return self._restore(project, command)
         raise ContractError(
             ErrorCategory.INVALID_TRANSITION,
             f"Unsupported command {type(command).__name__}",
@@ -732,12 +785,210 @@ class ControlPlane:
         return record
 
     def _cancel(self, project: Project, command: CancelWorkflow) -> WorkflowRun:
-        if not command.workflow_run_id:
+        run = self._workflow_for_project(project, command.workflow_run_id)
+        canceled = self.runtime.cancel(run.id, command.reason)
+        project.active_run_id = canceled.id
+        project.status_reason = command.reason
+        self._emit(
+            project,
+            "WorkflowCanceled",
+            {"workflow_run_id": canceled.id, "reason": command.reason},
+        )
+        self._transition(project, ProjectState.CANCELED)
+        return canceled
+
+    def _pause(self, project: Project, command: PauseWorkflow) -> WorkflowRun:
+        run = self._workflow_for_project(project, command.workflow_run_id)
+        paused = self.runtime.pause(run.id, command.reason)
+        project.active_run_id = paused.id
+        project.status_reason = command.reason
+        self._emit(
+            project,
+            "WorkflowPaused",
+            {"workflow_run_id": paused.id, "reason": command.reason},
+        )
+        return paused
+
+    def _resume(self, project: Project, command: ResumeWorkflow) -> WorkflowRun:
+        run = self._workflow_for_project(project, command.workflow_run_id)
+        if project.state in {
+            ProjectState.BLOCKED,
+            ProjectState.FAILED,
+            ProjectState.CANCELED,
+        }:
+            raise ContractError(
+                ErrorCategory.INVALID_TRANSITION,
+                f"A {project.state.value} Project cannot resume this workflow",
+            )
+        self._require_resume_compatibility(project, run, command.resume_input)
+        resumed = self.runtime.resume(run.id, command.resume_input)
+        if project.state is ProjectState.NEEDS_INPUT and project.resume_state:
+            self._transition(project, project.resume_state)
+        project.active_run_id = resumed.id
+        project.status_reason = None
+        project.resume_state = None
+        self._emit(
+            project,
+            "WorkflowResumed",
+            {"workflow_run_id": resumed.id, "with_input": bool(command.resume_input)},
+        )
+        return resumed
+
+    def _require_resume_compatibility(
+        self,
+        project: Project,
+        run: WorkflowRun,
+        resume_input: object,
+    ) -> None:
+        current_revision = project.revision - 1
+        compatible_revision = None
+        if isinstance(resume_input, dict):
+            compatible_revision = resume_input.get("compatible_project_revision")
+        explicitly_compatible = (
+            isinstance(compatible_revision, int)
+            and not isinstance(compatible_revision, bool)
+            and compatible_revision == current_revision
+        )
+        control_events = {
+            "WorkflowPaused",
+            "WorkflowResumed",
+            "WorkflowStatusReconciled",
+            "ProjectStateChanged",
+        }
+        incompatible_events = tuple(
+            event.event_type
+            for event in project.events
+            if event.project_revision > run.input_revision
+            and event.project_revision <= current_revision
+            and event.event_type not in control_events
+        )
+        if run.input_revision > current_revision or (
+            incompatible_events and not explicitly_compatible
+        ):
+            raise ContractError(
+                ErrorCategory.STALE_REVISION,
+                "Workflow input is incompatible with the current Project revision",
+                current_revision=current_revision,
+                details={
+                    "workflow_input_revision": run.input_revision,
+                    "changed_event_types": incompatible_events,
+                },
+            )
+
+    def _reconcile_workflow(
+        self, project: Project, command: ReconcileWorkflowStatus
+    ) -> WorkflowRun:
+        run = self._workflow_for_project(project, command.workflow_run_id)
+        target_states = {
+            WorkflowStatus.NEEDS_INPUT: ProjectState.NEEDS_INPUT,
+            WorkflowStatus.BLOCKED: ProjectState.BLOCKED,
+            WorkflowStatus.FAILED: ProjectState.FAILED,
+            WorkflowStatus.CANCELED: ProjectState.CANCELED,
+        }
+        target = target_states.get(run.status)
+        if target is not None and project.state is not target:
+            project.resume_state = (
+                project.state if target is ProjectState.NEEDS_INPUT else None
+            )
+            self._transition(project, target)
+        project.active_run_id = run.id
+        project.status_reason = (
+            run.error_message or run.pause_reason or run.status.value
+        )
+        self._emit(
+            project,
+            "WorkflowStatusReconciled",
+            {
+                "workflow_run_id": run.id,
+                "workflow_status": run.status.value,
+                "error_category": (
+                    run.error_category.value if run.error_category else None
+                ),
+            },
+        )
+        return run
+
+    def _restore(
+        self, project: Project, command: RestoreProjectRevision
+    ) -> dict[str, object]:
+        current_before_restore = project.revision - 1
+        if command.source_revision <= 0 or command.source_revision >= project.revision:
+            raise ContractError(
+                ErrorCategory.STALE_REVISION,
+                "Restore must target an existing earlier Project revision",
+                current_revision=current_before_restore,
+            )
+        get_revision = getattr(self.repository, "get_revision", None)
+        if not callable(get_revision):
+            raise ContractError(
+                ErrorCategory.CAPABILITY_UNAVAILABLE,
+                "The configured Project repository cannot restore revisions",
+            )
+        source = get_revision(project.id, command.source_revision)
+        self._invalidate_approvals(
+            project,
+            actions=(ApprovalAction.COMMIT_DIRECTION, ApprovalAction.EXPORT),
+            reason=f"Project restored from revision {command.source_revision}",
+        )
+        project.constraints = deepcopy(source.constraints)
+        project.context_package = deepcopy(source.context_package)
+        project.brief = deepcopy(source.brief)
+        project.strategy = deepcopy(source.strategy)
+        project.candidates = deepcopy(source.candidates)
+        project.approved_direction = (
+            deepcopy(source.approved_direction) if source.current_artifact else None
+        )
+        project.current_artifact = deepcopy(source.current_artifact)
+        project.current_render = None
+        project.current_export = None
+        project.current_quality = None
+        project.active_run_id = None
+        project.status_reason = None
+        project.resume_state = None
+        project.restored_from_revision = command.source_revision
+        if project.current_artifact is not None:
+            restored_state = ProjectState.VALIDATING
+        elif project.candidates:
+            restored_state = ProjectState.AWAITING_DIRECTION_APPROVAL
+        elif project.context_package is not None and project.brief is not None:
+            restored_state = ProjectState.READY_FOR_DESIGN
+        else:
+            restored_state = ProjectState.NEW
+        if project.state is not restored_state:
+            previous_state = project.state
+            project.state = restored_state
+            self._emit(
+                project,
+                "ProjectStateChanged",
+                {"from": previous_state.value, "to": restored_state.value},
+            )
+        self._emit(
+            project,
+            "ProjectRestored",
+            {
+                "source_revision": command.source_revision,
+                "previous_revision": current_before_restore,
+                "restored_revision": project.revision,
+            },
+        )
+        return {
+            "source_revision": command.source_revision,
+            "restored_revision": project.revision,
+            "state": project.state.value,
+            "artifact_id": (
+                project.current_artifact.id if project.current_artifact else None
+            ),
+        }
+
+    def _workflow_for_project(
+        self, project: Project, workflow_run_id: str
+    ) -> WorkflowRun:
+        if not workflow_run_id:
             raise ContractError(
                 ErrorCategory.DETERMINISTIC_FAILURE,
                 "workflow_run_id is required",
             )
-        runs = self.runtime.query(command.workflow_run_id)
+        runs = self.runtime.query(workflow_run_id)
         if len(runs) != 1:
             raise ContractError(
                 ErrorCategory.DETERMINISTIC_FAILURE,
@@ -749,15 +1000,7 @@ class ControlPlane:
                 ErrorCategory.POLICY_BLOCKED,
                 "Workflow belongs to another Project",
             )
-        canceled = self.runtime.cancel(run.id, command.reason)
-        project.active_run_id = canceled.id
-        self._emit(
-            project,
-            "WorkflowCanceled",
-            {"workflow_run_id": canceled.id, "reason": command.reason},
-        )
-        self._transition(project, ProjectState.CANCELED)
-        return canceled
+        return run
 
     def _start_run(
         self, project: Project, workflow_kind: str, idempotency_key: str
@@ -941,6 +1184,22 @@ class ControlPlane:
                 "hard_errors": len(decision.hard_errors),
                 "verdict": decision.verdict.value,
             },
+        )
+
+    def _audit_success(
+        self,
+        command: Command,
+        result: CommandResult,
+        workflow_run_id: str | None,
+    ) -> None:
+        if self.audit_log is None:
+            return
+        self.audit_log.record(
+            project_id=result.project_id,
+            action=type(command).__name__,
+            revision=result.project_revision,
+            outcome="SUCCEEDED",
+            run_id=workflow_run_id,
         )
 
     def _emit(

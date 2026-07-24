@@ -143,6 +143,8 @@ Product Shell 可以与 Project Core 并行开始，但在 Project lifecycle 确
 
 ## Phase 2：Project 与可恢复工作流基础
 
+状态：已完成（2026-07-24）。
+
 目标：建立可靠的产品状态和长任务控制。
 
 交付物：
@@ -327,7 +329,7 @@ conformance-tests/       跨实现契约测试
 | G0 架构采用 | 总体原则与分层 | 已完成 |
 | G1 系统 Spec | 组件、状态、接口、控制流 | 已完成 |
 | G2 Contract Skeleton | 接口可被 stub 验证 | 已完成 |
-| G3 Runtime Foundation | 工作流、状态、存储与隔离方向 | 待 ADR |
+| G3 Runtime Foundation | 工作流、状态、存储与隔离方向 | 已完成（ADR-0001） |
 | G4 Module Specs | 三个模块内部架构 | 明确暂缓 |
 | G5 Vertical Slice | 首个媒介、场景和质量门 | 待 G4 |
 | G6 Expansion | 第二媒介和产品化范围 | 待真实数据 |
@@ -350,6 +352,7 @@ conformance-tests/       跨实现契约测试
 
 ## 10. 当前下一步
 
-Phase 1 已通过 contract、state transition 与 deterministic stub 验收。下一步按
-Phase 2 先形成运行时恢复规范和候选 ADR，再实现持久 Project 与可恢复 workflow；
-此时仍不决定智能设计、Artifact 生产和质量治理的内部技术栈。
+Phase 2 已通过 SQLite composition root、重启恢复、checkpoint、event cursor、
+原子命令、revision restore、失败注入和 durable side-effect 验收。下一步按
+Phase 3 先形成 Context & Evidence 最小规范，再实现可追踪原件、结构化文件与
+图片 adapter；此时仍不决定智能设计、Artifact 生产和质量治理的内部技术栈。

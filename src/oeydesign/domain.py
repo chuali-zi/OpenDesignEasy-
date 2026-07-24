@@ -97,8 +97,12 @@ class ApprovalAction(StrEnum):
 
 
 class WorkflowStatus(StrEnum):
+    PENDING = "PENDING"
     RUNNING = "RUNNING"
     PAUSED = "PAUSED"
+    NEEDS_INPUT = "NEEDS_INPUT"
+    BLOCKED = "BLOCKED"
+    RETRY_WAIT = "RETRY_WAIT"
     COMPLETED = "COMPLETED"
     CANCELED = "CANCELED"
     FAILED = "FAILED"
@@ -113,6 +117,25 @@ class GateVerdict(StrEnum):
 class FindingKind(StrEnum):
     AESTHETIC = "AESTHETIC"
     HARD_ERROR = "HARD_ERROR"
+
+
+class CheckpointStatus(StrEnum):
+    RUNNING = "RUNNING"
+    RETRY_WAIT = "RETRY_WAIT"
+    COMPLETED = "COMPLETED"
+    FAILED = "FAILED"
+
+
+class SideEffectStatus(StrEnum):
+    CLAIMED = "CLAIMED"
+    COMPLETED = "COMPLETED"
+    FAILED = "FAILED"
+
+
+class SideEffectReconciliationStatus(StrEnum):
+    COMPLETED = "COMPLETED"
+    SAFE_TO_RETRY = "SAFE_TO_RETRY"
+    UNKNOWN = "UNKNOWN"
 
 
 class ContractError(Exception):
@@ -273,6 +296,28 @@ class CancelWorkflow(Command):
     reason: str = "Canceled by user"
 
 
+@dataclass(frozen=True, slots=True, kw_only=True)
+class PauseWorkflow(Command):
+    workflow_run_id: str = ""
+    reason: str = "Paused by user"
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class ResumeWorkflow(Command):
+    workflow_run_id: str = ""
+    resume_input: Mapping[str, Any] = field(default_factory=dict)
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class ReconcileWorkflowStatus(Command):
+    workflow_run_id: str = ""
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class RestoreProjectRevision(Command):
+    source_revision: int = 0
+
+
 @dataclass(frozen=True, slots=True)
 class DomainEvent:
     id: str
@@ -290,6 +335,10 @@ class WorkflowProgressEvent:
     event_type: str
     stage: str
     message: str
+    id: str = ""
+    project_id: str = ""
+    occurred_at: datetime | None = None
+    details: Mapping[str, Any] = field(default_factory=dict)
 
 
 @dataclass(frozen=True, slots=True)
@@ -304,6 +353,48 @@ class WorkflowRun:
     completed_stages: tuple[str, ...] = ()
     side_effect_keys: tuple[str, ...] = ()
     events: tuple[WorkflowProgressEvent, ...] = ()
+    pause_reason: str | None = None
+    error_category: ErrorCategory | None = None
+    error_message: str | None = None
+    attempt: int = 0
+    max_attempts: int = 3
+
+
+@dataclass(frozen=True, slots=True)
+class StageCheckpoint:
+    run_id: str
+    stage: str
+    input_fingerprint: str
+    status: CheckpointStatus
+    attempt: int
+    output_refs: tuple[str, ...] = ()
+    error_category: ErrorCategory | None = None
+    error_message: str | None = None
+    side_effect_key: str | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class AuditEntry:
+    id: str
+    sequence: int
+    project_id: str
+    workflow_run_id: str | None
+    action: str
+    outcome: str
+    project_revision: int | None
+    metadata: Mapping[str, Any]
+    occurred_at: datetime
+
+
+@dataclass(frozen=True, slots=True)
+class SideEffectRecord:
+    key: str
+    project_id: str
+    action: str
+    target_revision: int
+    status: SideEffectStatus
+    result: Mapping[str, Any] | None = None
+    error: str | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -449,6 +540,13 @@ class DeliveryBundle:
 
 
 @dataclass(frozen=True, slots=True)
+class DeliveryReconciliation:
+    status: SideEffectReconciliationStatus
+    bundle: DeliveryBundle | None = None
+    reason: str = ""
+
+
+@dataclass(frozen=True, slots=True)
 class FeedbackRecord:
     id: str
     kind: FeedbackKind
@@ -485,6 +583,9 @@ class Project:
     feedback: list[FeedbackRecord] = field(default_factory=list)
     events: list[DomainEvent] = field(default_factory=list)
     active_run_id: str | None = None
+    status_reason: str | None = None
+    resume_state: ProjectState | None = None
+    restored_from_revision: int | None = None
 
 
 @dataclass(frozen=True, slots=True)

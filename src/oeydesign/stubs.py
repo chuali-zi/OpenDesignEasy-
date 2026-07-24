@@ -16,6 +16,7 @@ from .domain import (
     ConstraintProfile,
     ContextPackage,
     DeliveryBundle,
+    DeliveryReconciliation,
     DesignBrief,
     DesignStrategy,
     ExportCandidate,
@@ -28,6 +29,7 @@ from .domain import (
     QualityDecision,
     RemediationRequest,
     RenderBundle,
+    SideEffectReconciliationStatus,
     TemplateRole,
     WorkflowRun,
     canonical_json,
@@ -472,6 +474,41 @@ class DeterministicDeliveryPort:
         existing = self._by_side_effect_key.get(side_effect_key)
         if existing:
             return existing
+        bundle = self._build_bundle(
+            artifact, export, decision, approval, side_effect_key
+        )
+        self._by_side_effect_key[side_effect_key] = bundle
+        return bundle
+
+    def reconcile(
+        self,
+        artifact: ArtifactRevision,
+        export: ExportCandidate,
+        decision: QualityDecision,
+        approval: Approval,
+        *,
+        side_effect_key: str,
+    ) -> DeliveryReconciliation:
+        bundle = self._by_side_effect_key.get(side_effect_key)
+        if bundle is None:
+            bundle = self._build_bundle(
+                artifact, export, decision, approval, side_effect_key
+            )
+            self._by_side_effect_key[side_effect_key] = bundle
+        return DeliveryReconciliation(
+            SideEffectReconciliationStatus.COMPLETED,
+            bundle,
+            "The deterministic local bundle is derivable from its stable key",
+        )
+
+    def _build_bundle(
+        self,
+        artifact: ArtifactRevision,
+        export: ExportCandidate,
+        decision: QualityDecision,
+        approval: Approval,
+        side_effect_key: str,
+    ) -> DeliveryBundle:
         bundle = DeliveryBundle(
             id=stable_id("delivery", side_effect_key),
             revision=1,
@@ -488,5 +525,4 @@ class DeterministicDeliveryPort:
             side_effect_key=side_effect_key,
             manifest=dict(export.manifest),
         )
-        self._by_side_effect_key[side_effect_key] = bundle
         return bundle

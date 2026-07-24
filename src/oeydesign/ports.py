@@ -14,6 +14,7 @@ from .domain import (
     ConstraintProfile,
     ContextPackage,
     DeliveryBundle,
+    DeliveryReconciliation,
     DesignBrief,
     DesignStrategy,
     ExportCandidate,
@@ -23,6 +24,7 @@ from .domain import (
     QualityDecision,
     RemediationRequest,
     RenderBundle,
+    StageCheckpoint,
     WorkflowRun,
 )
 
@@ -35,10 +37,74 @@ class ProjectRepository(Protocol):
     def save(self, project: Project, *, expected_revision: int) -> None: ...
 
 
+class RevisionedProjectRepository(ProjectRepository, Protocol):
+    def get_revision(self, project_id: str, revision: int) -> Project: ...
+
+    def list_revisions(self, project_id: str) -> tuple[int, ...]: ...
+
+
 class CommandLedger(Protocol):
     def get(self, command_id: str) -> CommandRecord | None: ...
 
     def record(self, command_id: str, record: CommandRecord) -> None: ...
+
+
+class TransactionalProjectWriter(Protocol):
+    """Atomically persists Project state, events, and a command result."""
+
+    def add_with_command(
+        self, project: Project, command_id: str, record: CommandRecord
+    ) -> None: ...
+
+    def save_with_command(
+        self,
+        project: Project,
+        *,
+        expected_revision: int,
+        command_id: str,
+        record: CommandRecord,
+    ) -> None: ...
+
+
+class ProjectEventStore(Protocol):
+    def after_sequence(
+        self, project_id: str, after_sequence: int = 0
+    ) -> tuple[object, ...]: ...
+
+
+class AuditLogPort(Protocol):
+    def record(
+        self,
+        *,
+        project_id: str | None,
+        action: str,
+        revision: int | None = None,
+        outcome: str | None = None,
+        run_id: str | None = None,
+        metadata: Mapping[str, Any] | None = None,
+    ) -> None: ...
+
+    def query(
+        self, *, project_id: str | None = None, run_id: str | None = None
+    ) -> tuple[Mapping[str, Any], ...]: ...
+
+
+class SideEffectLedgerPort(Protocol):
+    def claim(
+        self,
+        effect_key: str,
+        *,
+        project_id: str,
+        action: str,
+        target_revision: int,
+        lease_seconds: int = 60,
+    ) -> Mapping[str, Any]: ...
+
+    def complete(self, effect_key: str, result: Any) -> Any: ...
+
+    def fail(self, effect_key: str, error: str) -> None: ...
+
+    def get(self, effect_key: str) -> Mapping[str, Any] | None: ...
 
 
 class WorkflowRuntimePort(Protocol):
@@ -54,6 +120,8 @@ class WorkflowRuntimePort(Protocol):
         self, run_id: str, resume_input: Mapping[str, Any] | None = None
     ) -> WorkflowRun: ...
 
+    def pause(self, run_id: str, reason: str) -> WorkflowRun: ...
+
     def cancel(self, run_id: str, reason: str) -> WorkflowRun: ...
 
     def query(
@@ -68,6 +136,20 @@ class WorkflowRuntimePort(Protocol):
         output_refs: tuple[str, ...] = (),
         side_effect_key: str | None = None,
     ) -> WorkflowRun: ...
+
+    def checkpoint(
+        self,
+        run_id: str,
+        *,
+        stage: str,
+        input_fingerprint: str,
+        output_refs: tuple[str, ...] = (),
+        side_effect_key: str | None = None,
+    ) -> StageCheckpoint: ...
+
+    def get_checkpoint(
+        self, run_id: str, stage: str, input_fingerprint: str
+    ) -> StageCheckpoint | None: ...
 
 
 class DesignIntelligencePort(Protocol):
@@ -189,3 +271,13 @@ class DeliveryPort(Protocol):
         *,
         side_effect_key: str,
     ) -> DeliveryBundle: ...
+
+    def reconcile(
+        self,
+        artifact: ArtifactRevision,
+        export: ExportCandidate,
+        decision: QualityDecision,
+        approval: Approval,
+        *,
+        side_effect_key: str,
+    ) -> DeliveryReconciliation: ...

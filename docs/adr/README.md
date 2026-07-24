@@ -11,3 +11,7 @@
 - 对已采用架构原则的修改。
 
 每份 ADR 至少说明状态、上下文、决策、备选方案、影响和替换条件。尚未接受的 ADR 不具有规范效力。
+
+## 已接受
+
+- [ADR-0001：Phase 2 runtime 与持久化基础](./0001-runtime-persistence-foundation.md)

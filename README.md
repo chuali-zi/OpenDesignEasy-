@@ -1,10 +1,14 @@
 # OEYdesign
 
-Phase 1 is a dependency-free Python reference harness for the adopted project
-contract.  It deliberately uses deterministic in-memory ports instead of a
-model, renderer, database, workflow framework, or vendor message schema.
+OEYdesign currently provides the Phase 1 contract harness and the Phase 2
+recoverable application foundation. It keeps deterministic design, artifact,
+quality, and delivery adapters while persisting Projects, commands, workflow
+checkpoints, event cursors, audits, and side-effect claims in SQLite.
 
 Run the contract tests with `python -m pytest`.
 
-The public entry point is `oeydesign.ControlPlane`; its commands follow the
-workflow documented in `docs/spec/contract-skeleton.md`.
+Use `oeydesign.ControlPlane` for the in-memory contract harness, or
+`oeydesign.SQLiteApplication("oeydesign.sqlite", data_root="./data")` as the
+durable composition root. File databases require an explicit application data
+root and cannot resolve outside it. The contracts are documented in
+`docs/spec/contract-skeleton.md` and `docs/spec/runtime-recovery.md`.
