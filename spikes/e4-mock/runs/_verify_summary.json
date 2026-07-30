@@ -1,0 +1,285 @@
+[
+  {
+    "run": "run-01",
+    "load_ok": true,
+    "console_errors": [
+      "Failed to load resource: the server responded with a status of 404 (File not found)"
+    ],
+    "failed_requests": [],
+    "sections_found": [
+      "topbar",
+      "projects",
+      "chat",
+      "preview"
+    ],
+    "project_switch": {
+      "attempted": true,
+      "changed": true,
+      "detail": "DOM text changed after clicking a project-list item"
+    },
+    "chat_send": {
+      "attempted": true,
+      "changed": true,
+      "detail": "chat area innerHTML length 1620 -> 2288; probe text present=True"
+    },
+    "classification": "FULLY_INTERACTIVE",
+    "screenshots": [
+      "spikes\\e4-mock\\shots\\run-01\\01-initial.png",
+      "spikes\\e4-mock\\shots\\run-01\\02-after-project-click.png",
+      "spikes\\e4-mock\\shots\\run-01\\03-after-chat-send.png"
+    ],
+    "console_errors_excluding_favicon": [
+      "Failed to load resource: the server responded with a status of 404 (File not found)"
+    ],
+    "failed_requests_excluding_favicon": []
+  },
+  {
+    "run": "run-02",
+    "load_ok": true,
+    "console_errors": [
+      "Failed to load resource: the server responded with a status of 404 (File not found)"
+    ],
+    "failed_requests": [],
+    "sections_found": [
+      "topbar",
+      "projects",
+      "chat",
+      "preview"
+    ],
+    "project_switch": {
+      "attempted": true,
+      "changed": false,
+      "detail": "no clickable candidate rows found"
+    },
+    "chat_send": {
+      "attempted": true,
+      "changed": true,
+      "detail": "chat area innerHTML length 1124 -> 2159; probe text present=False"
+    },
+    "classification": "PARTIALLY_INTERACTIVE",
+    "screenshots": [
+      "spikes\\e4-mock\\shots\\run-02\\01-initial.png",
+      "spikes\\e4-mock\\shots\\run-02\\03-after-chat-send.png"
+    ],
+    "console_errors_excluding_favicon": [
+      "Failed to load resource: the server responded with a status of 404 (File not found)"
+    ],
+    "failed_requests_excluding_favicon": []
+  },
+  {
+    "run": "run-03",
+    "load_ok": true,
+    "console_errors": [
+      "Failed to load resource: the server responded with a status of 404 (File not found)"
+    ],
+    "failed_requests": [],
+    "sections_found": [
+      "topbar",
+      "projects",
+      "conversation",
+      "preview"
+    ],
+    "project_switch": {
+      "attempted": true,
+      "changed": false,
+      "detail": "no clickable candidate rows found"
+    },
+    "chat_send": {
+      "attempted": true,
+      "changed": false,
+      "detail": "no input/textarea found in chat section"
+    },
+    "classification": "COMPLETELY_UNUSABLE",
+    "screenshots": [
+      "spikes\\e4-mock\\shots\\run-03\\01-initial.png"
+    ],
+    "console_errors_excluding_favicon": [
+      "Failed to load resource: the server responded with a status of 404 (File not found)"
+    ],
+    "failed_requests_excluding_favicon": []
+  },
+  {
+    "run": "run-04",
+    "load_ok": true,
+    "console_errors": [
+      "Failed to load resource: the server responded with a status of 404 (File not found)"
+    ],
+    "failed_requests": [],
+    "sections_found": [
+      "shell",
+      "topbar",
+      "projects",
+      "conversation",
+      "preview",
+      "statusbar"
+    ],
+    "project_switch": {
+      "attempted": true,
+      "changed": true,
+      "detail": "DOM text changed after clicking a project-list item"
+    },
+    "chat_send": {
+      "attempted": true,
+      "changed": true,
+      "detail": "chat area innerHTML length 1449 -> 2160; probe text present=True"
+    },
+    "classification": "FULLY_INTERACTIVE",
+    "screenshots": [
+      "spikes\\e4-mock\\shots\\run-04\\01-initial.png",
+      "spikes\\e4-mock\\shots\\run-04\\02-after-project-click.png",
+      "spikes\\e4-mock\\shots\\run-04\\03-after-chat-send.png"
+    ],
+    "console_errors_excluding_favicon": [
+      "Failed to load resource: the server responded with a status of 404 (File not found)"
+    ],
+    "failed_requests_excluding_favicon": []
+  },
+  {
+    "run": "run-05",
+    "load_ok": true,
+    "console_errors": [
+      "Failed to load resource: the server responded with a status of 404 (File not found)",
+      "Failed to load resource: the server responded with a status of 404 (File not found)",
+      "Failed to load resource: the server responded with a status of 404 (File not found)"
+    ],
+    "failed_requests": [
+      "404 http://127.0.0.1:9348/app.js",
+      "GET http://127.0.0.1:9348/app.js -> net::ERR_ABORTED",
+      "404 http://127.0.0.1:9348/app.js",
+      "GET http://127.0.0.1:9348/app.js -> net::ERR_ABORTED"
+    ],
+    "sections_found": [
+      "topbar",
+      "project-list",
+      "chat",
+      "preview"
+    ],
+    "project_switch": {
+      "attempted": true,
+      "changed": false,
+      "detail": "no clickable candidate rows found"
+    },
+    "chat_send": {
+      "attempted": true,
+      "changed": true,
+      "detail": "chat area innerHTML length 761 -> 752; probe text present=False"
+    },
+    "classification": "PARTIALLY_INTERACTIVE",
+    "screenshots": [
+      "spikes\\e4-mock\\shots\\run-05\\01-initial.png",
+      "spikes\\e4-mock\\shots\\run-05\\03-after-chat-send.png"
+    ],
+    "console_errors_excluding_favicon": [
+      "Failed to load resource: the server responded with a status of 404 (File not found)",
+      "Failed to load resource: the server responded with a status of 404 (File not found)",
+      "Failed to load resource: the server responded with a status of 404 (File not found)"
+    ],
+    "failed_requests_excluding_favicon": [
+      "404 http://127.0.0.1:9348/app.js",
+      "GET http://127.0.0.1:9348/app.js -> net::ERR_ABORTED",
+      "404 http://127.0.0.1:9348/app.js",
+      "GET http://127.0.0.1:9348/app.js -> net::ERR_ABORTED"
+    ]
+  },
+  {
+    "run": "run-06",
+    "load_ok": true,
+    "console_errors": [
+      "Failed to load resource: the server responded with a status of 404 (File not found)",
+      "pageerror: Cannot read properties of null (reading 'messages')"
+    ],
+    "failed_requests": [],
+    "sections_found": [
+      "topbar",
+      "project-list",
+      "chat",
+      "preview"
+    ],
+    "project_switch": {
+      "attempted": true,
+      "changed": false,
+      "detail": "no clickable candidate rows found"
+    },
+    "chat_send": {
+      "attempted": true,
+      "changed": true,
+      "detail": "chat area innerHTML length 820 -> 1607; probe text present=False"
+    },
+    "classification": "PARTIALLY_INTERACTIVE",
+    "screenshots": [
+      "spikes\\e4-mock\\shots\\run-06\\01-initial.png",
+      "spikes\\e4-mock\\shots\\run-06\\03-after-chat-send.png"
+    ],
+    "console_errors_excluding_favicon": [
+      "Failed to load resource: the server responded with a status of 404 (File not found)",
+      "pageerror: Cannot read properties of null (reading 'messages')"
+    ],
+    "failed_requests_excluding_favicon": []
+  },
+  {
+    "run": "run-07",
+    "load_ok": true,
+    "console_errors": [
+      "Failed to load resource: the server responded with a status of 404 (File not found)"
+    ],
+    "failed_requests": [],
+    "sections_found": [
+      "topbar",
+      "sidebar",
+      "chat",
+      "preview"
+    ],
+    "project_switch": {
+      "attempted": true,
+      "changed": false,
+      "detail": "no clickable candidate rows found"
+    },
+    "chat_send": {
+      "attempted": true,
+      "changed": true,
+      "detail": "chat area innerHTML length 1109 -> 1336; probe text present=True"
+    },
+    "classification": "PARTIALLY_INTERACTIVE",
+    "screenshots": [
+      "spikes\\e4-mock\\shots\\run-07\\01-initial.png",
+      "spikes\\e4-mock\\shots\\run-07\\03-after-chat-send.png"
+    ],
+    "console_errors_excluding_favicon": [
+      "Failed to load resource: the server responded with a status of 404 (File not found)"
+    ],
+    "failed_requests_excluding_favicon": []
+  },
+  {
+    "run": "run-08",
+    "load_ok": true,
+    "console_errors": [
+      "Failed to load resource: the server responded with a status of 404 (File not found)"
+    ],
+    "failed_requests": [],
+    "sections_found": [
+      "projects",
+      "chat",
+      "preview"
+    ],
+    "project_switch": {
+      "attempted": true,
+      "changed": true,
+      "detail": "DOM text changed after clicking a project-list item"
+    },
+    "chat_send": {
+      "attempted": true,
+      "changed": true,
+      "detail": "chat area innerHTML length 2746 -> 855; probe text present=False"
+    },
+    "classification": "FULLY_INTERACTIVE",
+    "screenshots": [
+      "spikes\\e4-mock\\shots\\run-08\\01-initial.png",
+      "spikes\\e4-mock\\shots\\run-08\\02-after-project-click.png",
+      "spikes\\e4-mock\\shots\\run-08\\03-after-chat-send.png"
+    ],
+    "console_errors_excluding_favicon": [
+      "Failed to load resource: the server responded with a status of 404 (File not found)"
+    ],
+    "failed_requests_excluding_favicon": []
+  }
+]

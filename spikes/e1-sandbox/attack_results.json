@@ -1,0 +1,146 @@
+[
+  {
+    "attack": "dotdot_relative",
+    "mode": "naive",
+    "outcome": "ESCAPED",
+    "detail": "ESCAPED: read 72 bytes from ..\\outside_secret\\credentials.txt\nCONTENT_PREFIX: 'FAKE_SECRET=this-file-is-outside-the-sandbox-workspace-root-do-not-read"
+  },
+  {
+    "attack": "dotdot_relative",
+    "mode": "hardened",
+    "outcome": "ESCAPED",
+    "detail": "ESCAPED: read 72 bytes from ..\\outside_secret\\credentials.txt\r\nCONTENT_PREFIX: 'FAKE_SECRET=this-file-is-outside-the-sandbox-workspace-root-do-not-rea"
+  },
+  {
+    "attack": "absolute_path",
+    "mode": "naive",
+    "outcome": "ESCAPED",
+    "detail": "ESCAPED: read 72 bytes from D:\\projects2\\OEYdesign\\spikes\\e1-sandbox\\outside_secret\\credentials.txt\nCONTENT_PREFIX: 'FAKE_SECRET=this-file-is-outside-"
+  },
+  {
+    "attack": "absolute_path",
+    "mode": "hardened",
+    "outcome": "ESCAPED",
+    "detail": "ESCAPED: read 72 bytes from D:\\projects2\\OEYdesign\\spikes\\e1-sandbox\\outside_secret\\credentials.txt\r\nCONTENT_PREFIX: 'FAKE_SECRET=this-file-is-outside"
+  },
+  {
+    "attack": "absolute_windir",
+    "mode": "naive",
+    "outcome": "ESCAPED",
+    "detail": "ESCAPED: read 85 bytes from C:\\Windows\\win.ini\nCONTENT_PREFIX: '; for 16-bit app support\\n[fonts]\\n[extensions]\\n[mci extensions]\\n[files]\\n[Mail]\\nMA"
+  },
+  {
+    "attack": "absolute_windir",
+    "mode": "hardened",
+    "outcome": "ESCAPED",
+    "detail": "ESCAPED: read 85 bytes from C:\\Windows\\win.ini\r\nCONTENT_PREFIX: '; for 16-bit app support\\n[fonts]\\n[extensions]\\n[mci extensions]\\n[files]\\n[Mail]\\nM"
+  },
+  {
+    "attack": "junction_escape",
+    "mode": "naive",
+    "outcome": "ESCAPED",
+    "detail": "ESCAPED: junction created, listed 129 entries in C:\\Users\\chual\nSAMPLE: ['.agents', '.antistar', '.bashrc', '.bash_profile', '.blender-mcp']"
+  },
+  {
+    "attack": "junction_escape",
+    "mode": "hardened",
+    "outcome": "ESCAPED",
+    "detail": "ESCAPED: junction created, listed 129 entries in C:\\Users\\chual\r\nSAMPLE: ['.agents', '.antistar', '.bashrc', '.bash_profile', '.blender-mcp']"
+  },
+  {
+    "attack": "unc_admin_share",
+    "mode": "naive",
+    "outcome": "ESCAPED",
+    "detail": "ESCAPED: read 85 bytes from \\\\localhost\\C$\\Windows\\win.ini"
+  },
+  {
+    "attack": "unc_admin_share",
+    "mode": "hardened",
+    "outcome": "ESCAPED",
+    "detail": "ESCAPED: read 85 bytes from \\\\localhost\\C$\\Windows\\win.ini"
+  },
+  {
+    "attack": "extended_length_prefix",
+    "mode": "naive",
+    "outcome": "ESCAPED",
+    "detail": "ESCAPED: read 85 bytes from \\\\?\\C:\\Windows\\win.ini"
+  },
+  {
+    "attack": "extended_length_prefix",
+    "mode": "hardened",
+    "outcome": "ESCAPED",
+    "detail": "ESCAPED: read 85 bytes from \\\\?\\C:\\Windows\\win.ini"
+  },
+  {
+    "attack": "device_names",
+    "mode": "naive",
+    "outcome": "INFO",
+    "detail": "CON: OPENED_FOR_WRITE | PRN: BLOCKED: [Errno 2] No such file or directory: 'PRN' | AUX: BLOCKED: [Errno 2] No such file or directory: 'AUX' | NUL: OPENED_FOR_WRITE | COM1: BLOCKED: [Errno 2] No such file or directory: 'COM1' | LPT1: BLOCKED: [Errno 2] No such file or directory: 'LPT1'"
+  },
+  {
+    "attack": "network_no_mitigation",
+    "mode": "naive",
+    "outcome": "ESCAPED",
+    "detail": "ESCAPED(socket): raw TCP connect to example.com:80 succeeded | ESCAPED(urllib): fetched 200 bytes from http://example.com"
+  },
+  {
+    "attack": "network_proxy_env_mitigation",
+    "mode": "naive+proxyenv",
+    "outcome": "INFO",
+    "detail": "ESCAPED(socket): raw TCP connect to example.com:80 succeeded | BLOCKED(urllib): <urlopen error [WinError 10061] \u00e7\u201d\u00b1\u00e4\u00ba\u017d\u00e7\u203a\u00ae\u00e6\u00a0\u2021\u00e8\u00ae\u00a1\u00e7\u00ae\u2014\u00e6\u0153\u00ba\u00e7\u00a7\u00af\u00e6\u017e\ufffd\u00e6\u2039\u2019\u00e7\u00bb\ufffd\u00ef\u00bc\u0152\u00e6\u2014\u00a0\u00e6\u00b3\u2022\u00e8\u00bf\u017e\u00e6\u017d\u00a5\u00e3\u20ac\u201a>"
+  },
+  {
+    "attack": "firewall_rule_without_admin",
+    "mode": "naive",
+    "outcome": "BLOCKED_NEEDS_ADMIN",
+    "detail": "The requested operation requires elevation (Run as administrator)."
+  },
+  {
+    "attack": "timeout_grandchild_kill",
+    "mode": "naive",
+    "outcome": "GRANDCHILD_SURVIVED",
+    "detail": "heartbeat before='5' after='9'"
+  },
+  {
+    "attack": "timeout_grandchild_kill",
+    "mode": "hardened",
+    "outcome": "GRANDCHILD_REAPED",
+    "detail": "timed_out=True job_terminated=True heartbeat before='3' after='3'"
+  },
+  {
+    "attack": "memory_limit",
+    "mode": "naive_no_cap",
+    "outcome": "ESCAPED_NO_LIMIT",
+    "detail": "ESCAPED: allocated full 4096 MB without being killed"
+  },
+  {
+    "attack": "memory_limit",
+    "mode": "hardened_100MB_cap",
+    "outcome": "JOB_KILLED",
+    "detail": "returncode=1 timed_out=False last_line='SELF_LIMITED: MemoryError after 90 MB (Python-level, not job object)'"
+  },
+  {
+    "attack": "output_flood",
+    "mode": "naive_uncapped",
+    "outcome": "COMPLETED",
+    "detail": "captured 50050000 bytes in 0.55s (no cap applied)"
+  },
+  {
+    "attack": "output_flood",
+    "mode": "hardened_1MB_cap",
+    "outcome": "TRUNCATED",
+    "detail": "captured 1000000 bytes, truncated=True, elapsed=0.24s, child_returncode=0"
+  },
+  {
+    "attack": "credential_isolation",
+    "mode": "naive_env_copy_plus_key",
+    "outcome": "LEAKED",
+    "detail": "ESCAPED: credential-shaped env keys present: ['API_KEY', 'DEEPSEEK_API_KEY', 'GITEE_TOKEN', 'MCP_API_KEY', 'OPENCODE_GO_API_KEY', 'VSCODE_GIT_IPC_AUTH_TOKEN']"
+  },
+  {
+    "attack": "credential_isolation",
+    "mode": "hardened_clean_env",
+    "outcome": "NOT_LEAKED",
+    "detail": "BLOCKED: no credential-shaped env keys found (total env keys: 8)"
+  }
+]

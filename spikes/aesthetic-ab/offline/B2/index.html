@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>OEYdesign — Proofing Table</title>
+  <link rel="stylesheet" href="assets/fonts.css">
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main class="bench" data-oey-section="workbench">
+    <aside class="dialog" data-oey-section="conversation" aria-label="对话与校对记录">
+      <header class="dialog-head" data-oey-section="conversation-title">
+        <div class="mini-title">OEYDESIGN / PROOFING TABLE</div>
+        <div class="mini-sub">MULTIMODAL DESIGN AGENT · LOCAL MOCK</div>
+      </header>
+
+      <div class="thread" id="thread" aria-live="polite">
+        <section class="turn user" data-oey-object="turn-u1">
+          <div class="meta">USER · 10:18 · BRIEF</div>
+          <p>做一页新品发布 landing：主体是一台家用咖啡烘焙机。语气要克制、工程感，不要电商促销腔。首屏要有型号、核心参数、一个预约入口。</p>
+        </section>
+
+        <section class="turn agent" data-oey-object="turn-a1">
+          <div class="meta">AGENT · 10:19 · DELIVERED <span class="stamp">v1</span></div>
+          <p>已交 Web 首屏稿：暖纸底、黑墨字、参数用等宽排。预约入口放在首屏右下，未用品牌红，避免和批改痕迹抢语义。</p>
+        </section>
+
+        <section class="turn user" data-oey-object="turn-u2">
+          <div class="meta">USER · 10:24 · REVISION</div>
+          <p>标题太长，参数表像说明书。把“热风循环”提到第一卖点；预约按钮文案改成“申请试烘”。</p>
+        </section>
+
+        <section class="turn agent" data-oey-object="turn-a2">
+          <div class="meta">AGENT · 10:26 · DELIVERED <span class="stamp">v2</span></div>
+          <p>v2 已改：标题压到两行内；参数从 6 条减到 4 条；第一卖点换成“热风循环 / 温差 ±1.5°C”。我保留了首屏留白，没有加阴影。</p>
+        </section>
+
+        <section class="turn user" data-oey-object="turn-u3">
+          <div class="meta">USER · 10:31 · MARKUP</div>
+          <p>首屏主图还是像库存图。换一个更黑的机身角度；另外导出走 PDF，别现在导出，我还有两处要圈。</p>
+        </section>
+
+        <section class="turn agent" data-oey-object="turn-a3">
+          <div class="meta">AGENT · 10:33 · DELIVERED <span class="stamp accent">v3</span></div>
+          <p>v3 在右侧。主图已替换成低角度黑机身线稿位；导出已挂起，等你清完 pending marks。点预览里的对象可直接下批改标记。</p>
+        </section>
+      </div>
+
+      <div class="marks-panel" data-oey-section="marks-panel">
+        <button class="text-toggle" id="toggleMarks" type="button" aria-expanded="false">PENDING MARKS · <span id="markCountInline" class="accent">2</span></button>
+        <div class="marks-list" id="marksList" hidden>
+          <div class="mark-row" data-mark-row="hero-image"><span class="accent">M1</span><span>主图角度仍偏亮，等机身替换确认</span><button type="button" data-resolve="hero-image">RESOLVE</button></div>
+          <div class="mark-row" data-mark-row="spec-grid"><span class="accent">M2</span><span>±1.5°C 需要来源脚注</span><button type="button" data-resolve="spec-grid">RESOLVE</button></div>
+        </div>
+      </div>
+
+      <form class="composer" id="composer" data-oey-section="composer">
+        <label class="composer-label" for="prompt">INSTRUCTION</label>
+        <textarea id="prompt" rows="4" spellcheck="false" placeholder="下指令：改文案 / 换结构 / 圈对象 / 要求导出"></textarea>
+        <div class="composer-row">
+          <span class="hint">ENTER 发送 · SHIFT+ENTER 换行</span>
+          <button class="send" type="submit">SEND</button>
+        </div>
+      </form>
+    </aside>
+
+    <section class="preview" data-oey-section="preview" aria-label="设计成果预览">
+      <header class="proof-head" data-oey-section="version-stamp">
+        <div class="version" aria-label="当前版本 v3">v3</div>
+        <div class="proof-meta">
+          <div>STATUS: DRAFT · <span class="accent" id="pendingCount">2 PENDING MARKS</span></div>
+          <div>ARTIFACT: WEB / LANDING · CANVAS 1440×960</div>
+          <div>LAST PROOF: 10:33 · CHANGES UNREAD: <span class="accent">1</span></div>
+        </div>
+        <nav class="proof-actions" aria-label="预览动作">
+          <button class="action" type="button" data-action="prev">← v2</button>
+          <button class="action is-current" type="button" data-action="current">v3</button>
+          <button class="action" type="button" data-action="next">v4 →</button>
+          <button class="action" type="button" id="exportBtn">EXPORT</button>
+        </nav>
+      </header>
+
+      <div class="canvas-wrap" data-oey-section="canvas-wrap">
+        <article class="artifact" id="artifact" data-oey-section="artifact" aria-label="Landing page draft v3">
+          <div class="artifact-topline">
+            <span>ROASTER-01 / HOME BATCH</span>
+            <span>DRAFT FOR PROOF · NOT FOR PUBLISH</span>
+          </div>
+
+          <header class="artifact-nav" data-oey-object="nav" tabindex="0">
+            <span>ROASTER-01</span>
+            <span>SPEC / PROCESS / RESERVE</span>
+          </header>
+
+          <section class="hero" data-oey-object="hero" tabindex="0">
+            <div class="hero-copy">
+              <div class="kicker">HOME ROASTING, CALIBRATED</div>
+              <h1 data-oey-object="headline" tabindex="0">热风循环，<br />把一炉豆子控制在 ±1.5°C。</h1>
+              <p class="lede" data-oey-object="lede" tabindex="0">250g 小批量、封闭滚筒、可复现曲线。为家庭烘焙保留手感，去掉猜测。</p>
+              <div class="cta-line" data-oey-object="cta" tabindex="0">
+                <span class="artifact-cta">申请试烘</span>
+                <span class="cta-note">首批 120 台 · 工程样机</span>
+              </div>
+            </div>
+            <figure class="hero-image" data-oey-object="hero-image" tabindex="0" aria-label="主图：黑色机身低角度">
+              <span class="image-tag">OBJECT: HERO-IMAGE / LOW ANGLE / BLACK BODY</span>
+            </figure>
+          </section>
+
+          <section class="spec-grid" data-oey-object="spec-grid" tabindex="0">
+            <div class="spec"><span>CAPACITY</span><strong>250g</strong></div>
+            <div class="spec"><span>HEAT</span><strong>HOT-AIR LOOP</strong></div>
+            <div class="spec"><span>DRIFT</span><strong>±1.5°C</strong></div>
+            <div class="spec"><span>PROFILE</span><strong>9 CURVES</strong></div>
+          </section>
+
+          <footer class="artifact-foot" data-oey-object="footer" tabindex="0">
+            <span>FOOTNOTE REQUIRED: TEMPERATURE SOURCE</span>
+            <span>PAGE 01 / 01 · EXPORT PDF PENDING</span>
+          </footer>
+        </article>
+      </div>
+
+      <section class="version-strip" data-oey-section="versions">
+        <details>
+          <summary>VERSIONS / DELIVERY LOG</summary>
+          <div class="version-list">
+            <button type="button" data-version="v1"><span>v1</span><em>brief parsed</em></button>
+            <button type="button" data-version="v2"><span>v2</span><em>copy compressed</em></button>
+            <button type="button" data-version="v3" aria-current="true"><span>v3</span><em class="accent">proof open</em></button>
+            <button type="button" data-version="v4" disabled><span>v4</span><em>waiting marks</em></button>
+          </div>
+        </details>
+      </section>
+
+      <section class="export-bar" id="exportBar" data-oey-section="export-bar" hidden>
+        <div>
+          <div class="export-title">EXPORT CHECK / v3</div>
+          <div class="export-copy" id="exportCopy">2 个批改标记未清。确认导出会把当前稿记为 PDF 交付物。</div>
+        </div>
+        <button class="confirm-export" id="confirmExport" type="button">CONFIRM EXPORT v3</button>
+      </section>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>

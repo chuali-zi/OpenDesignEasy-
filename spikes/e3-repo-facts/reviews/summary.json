@@ -1,0 +1,114 @@
+{
+  "per_generation": [
+    {
+      "file": "gen_01.md",
+      "primary": {
+        "untraceable": 4,
+        "not_a_factual_claim": 6,
+        "traceable_correct": 3
+      },
+      "closed_world": {
+        "traceable_correct": 7,
+        "not_a_factual_claim": 6
+      }
+    },
+    {
+      "file": "gen_02.md",
+      "primary": {
+        "traceable_correct": 7,
+        "not_a_factual_claim": 1
+      },
+      "closed_world": {
+        "traceable_correct": 7,
+        "not_a_factual_claim": 1
+      }
+    },
+    {
+      "file": "gen_03.md",
+      "primary": {
+        "traceable_correct": 7
+      },
+      "closed_world": {
+        "traceable_correct": 7
+      }
+    },
+    {
+      "file": "gen_04.md",
+      "primary": {
+        "traceable_correct": 7,
+        "not_a_factual_claim": 1
+      },
+      "closed_world": {
+        "traceable_correct": 7,
+        "not_a_factual_claim": 1
+      }
+    },
+    {
+      "file": "gen_05.md",
+      "primary": {
+        "traceable_correct": 6
+      },
+      "closed_world": {
+        "traceable_correct": 6
+      }
+    },
+    {
+      "file": "gen_06.md",
+      "primary": {
+        "traceable_correct": 7,
+        "not_a_factual_claim": 2
+      },
+      "closed_world": {
+        "traceable_correct": 7,
+        "not_a_factual_claim": 2
+      }
+    },
+    {
+      "file": "gen_07.md",
+      "primary": {
+        "traceable_correct": 8
+      },
+      "closed_world": {
+        "traceable_correct": 8
+      }
+    },
+    {
+      "file": "gen_08.md",
+      "primary": {
+        "traceable_correct": 7
+      },
+      "closed_world": {
+        "traceable_correct": 7
+      }
+    },
+    {
+      "file": "gen_09.md",
+      "primary": {
+        "traceable_correct": 8
+      },
+      "closed_world": {
+        "traceable_correct": 8
+      }
+    },
+    {
+      "file": "gen_10.md",
+      "primary": {
+        "traceable_correct": 6,
+        "not_a_factual_claim": 1
+      },
+      "closed_world": {
+        "traceable_correct": 6,
+        "not_a_factual_claim": 1
+      }
+    }
+  ],
+  "aggregate_primary": {
+    "untraceable": 4,
+    "not_a_factual_claim": 11,
+    "traceable_correct": 66
+  },
+  "aggregate_closed_world": {
+    "traceable_correct": 70,
+    "not_a_factual_claim": 11
+  }
+}

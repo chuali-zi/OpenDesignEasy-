@@ -1,0 +1,48 @@
+Let me analyze the screenshot. The page renders: darkroom theme, left panel project list, center preview with a webpage, right panel with 冲洗记录, 显影检查, 标注台 (partially visible). Issues I can spot:
+
+1. Console error: 404 resource — likely a missing favicon or font file. Could add inline favicon to fix.
+2. The preview area: text "我们相信茶不只属于白天，霓虹茶室想把「夜里也有一个安靜去处」这件事，做" — appears clipped/cut off, text overflowing or truncated with overflow hidden. There's a line at the bottom partially cut. Also the hero text "把夜晚泡进一盏茶里" — the last character "里" seems partially cut at bottom? Actually "把夜晚泡进一盏茶里" looks fine.
+3. 标注台 at bottom right is cut off at viewport edge — but that's just scroll, probably fine.
+4. 冲洗记录 entry at 09:18: text "「夜色茶单」与「晨雾茶" appears truncated — the event text may be cut off ("与「晨雾茶" incomplete, ends mid-quote). Could be overflow truncation.
+5. The status stamp "方向待确认" in topbar — intent said 微微倾斜印章; it's shown as a box, maybe not rotated, hard to tell.
+6. The preview paragraph "我们相信茶不只属于白天…做" is clipped by the card boundary — overflow issue in the embedded mock page.
+
+Without the actual code, I need to output modified files. But I don't have the original files in this conversation... The user says "延续你自己的工作区" — but I don't actually have the file contents. I must produce the complete new content of changed files. Since I don't have the original, I'd have to reconstruct the whole index.html. Hmm.
+
+The instruction: if issues found, output complete new content of changed files. I'd need to write a full HTML file implementing this design with fixes. That's a big but feasible task: write index.html (single file) with all sections, data-oey anchors, fixing the clipped text and 404 (no external resources).
+
+Given the 404 error, likely an external font or favicon. Fix by using only system fonts and inline SVG favicon.
+
+I'll write a complete index.html reproducing the design shown, with fixes:
+- No external requests (no favicon 404 — add <link rel="icon" href="data:...">).
+- Fix truncated timeline text (09:18 entry complete text).
+- Fix clipped paragraph in preview mock page (allow full text visible).
+- Ensure no overflow.
+
+Issues list:
+1. 存在 1 条 404 console error（缺少 favicon 或外部资源引用），需改为内联资源。
+2. 预览区内嵌网页的段落「我们相信茶不只属于白天…」在卡片边界处被裁断，文字不完整。
+3. 冲洗记录 09:18 事件文本「产出 R3 两个候选方向：「夜色茶单」与「晨雾茶」末尾被截断，引号未闭合。
+4. 预览区主标题下方正文行与下方卡片间距导致文字被遮挡（同上 2 maybe merge）。
+
+Also hero image placeholder "AI 配图占位" label low contrast? It's on amber gradient, dark text — readable-ish. Could mention. Keep honest.
+
+Also 候选 A / 候选 B toggle — 候选 B looks inactive fine.
+
+Now produce full index.html implementing the whole workbench with data-oey anchors: topbar, project list, preview, timeline (冲洗记录), quality (显影检查), feedback forms (标注台 - two forms: 硬错误/整体方向反馈 vs 审美标注). Also deliverable gate? The intent mentions 交付闸口 in quality area. In screenshot quality shows gate bar "质量复核尚未运行". Include.
+
+I'll build a single-file HTML with embedded CSS/JS, warm darkroom palette, serif display font, tilted stamp, data-oey attributes on key regions.
+
+Write it comprehensively but not excessively long. Include:
+- topbar: brand DARKROOM with amber dot, EDITION 内部样机 R0, stamp 方向待确认 (rotated).
+- left sidebar: 底片夹 project list (4 projects), 新建项目 button.
+- center: title 霓虹茶室·品牌官网, REVISION R3 badge, 候选A/B toggle, preview frame with browser chrome (darkroom://proof/p-tea), embedded mock page: nav, hero gradient placeholder labeled AI 配图占位, headline 把夜晚泡进一盏茶里, sub text, CTA button, three cards, full paragraph (not clipped), 方向概念 + 用色 swatches strip below.
+- right: 冲洗记录 timeline (5 events, full text), 显影检查 (preset/template/媒介, gate bar, 硬错误 track 尚未运行, 审美发现 track 尚未运行), 标注台 with two forms: 整体方向反馈 (textarea + submit) and 单点审美标注 (textarea + submit). Interactive JS minimal: tab switching of projects maybe, candidate toggle, form submission appends to timeline. Keep JS simple but functional.
+
+Ensure no horizontal overflow, no external requests, inline SVG favicon data URI.
+
+Write the file now. Keep CSS warm: bg #16110d, text #f0e7d8, accent #e8a33d, hard error 暖红 #d4604a, 暗金 #b8892f aesthetic, 苔绿 #7d8f5a deliverable.
+
+data-oey anchors: data-oey="topbar", "project-list", "preview", "timeline", "quality", "feedback".
+
+Output format: ISSUES block then FILE block with index.html.

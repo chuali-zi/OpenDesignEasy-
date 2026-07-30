@@ -1,0 +1,28 @@
+{
+  "arm": "A",
+  "idx": 1,
+  "max_tokens": 40000,
+  "stages": [
+    {
+      "stage": "gen",
+      "usage": {
+        "prompt_tokens": 418,
+        "completion_tokens": 21526,
+        "total_tokens": 21944,
+        "completion_tokens_details": {
+          "reasoning_tokens": 4152
+        },
+        "_finish_reason": "stop"
+      },
+      "elapsed_s": 568.1702702045441
+    }
+  ],
+  "files": [
+    "app.js",
+    "index.html",
+    "styles.css"
+  ],
+  "raw_chars": 54586,
+  "total_elapsed_s": 568.2,
+  "truncated": false
+}

@@ -1,0 +1,61 @@
+The user wants a static prototype of an "Agent Workbench" frontend: pure HTML/CSS/JS, no external resources. Three sections: project list, conversation area, preview area. Mock layer required. data-oey-section / data-oey-object anchors. MOCK.md. Output only file blocks.
+
+I'll create:
+- index.html
+- styles.css
+- app.js (contains mock API: window.__mockApi__, simulated fetch latency, template-based reply generation)
+- MOCK.md
+
+Design: dark theme workbench. Projects list on left, chat center, preview right. Mock: project switching loads sessions, sending message triggers simulated agent reply (template/rule-based generation based on keywords), preview updates per project and per latest reply (e.g., code snippet / card).
+
+Let me build carefully with data-oey attributes.
+
+Implementation plan:
+
+app.js:
+- Inline fake data: projects array with id, name, desc, status, updatedAt, conversations (messages), artifacts (preview content).
+- mockApi: functions returning Promises with setTimeout delays: listProjects(), getSession(projectId), sendMessage(projectId, text) → generates reply via rule-based generator, getPreview(projectId) → preview evolves with message count (append build log entries).
+- Rule-based reply: parse keywords (e.g., "登录", "按钮", "颜色", "数据"...), else pick from rotating templates referencing the project and message index.
+- Preview: each project has base artifact (HTML snippet code or card data). Each agent reply appends a "revision" to the preview, e.g., new code line / changelog entry.
+
+Keep it reasonable in size but complete. All Chinese UI copy.
+
+Anchors:
+- data-oey-section="projects" on aside; project items data-oey-object="projects.item"
+- data-oey-section="chat"; messages data-oey-object="chat.message", input chat.input, button chat.send
+- data-oey-section="preview"; card data-oey-object="preview.card", code preview.code
+- header data-oey-section="topbar"
+
+MOCK.md covering all mock behaviors.
+
+Write files now. Ensure no markdown code fences, only file blocks.
+
+Let me write the code.
+
+index.html structure:
+
+- header.topbar: logo, current project title (topbar.projectName), status badge
+- main layout: aside#projects, section#chat, section#preview
+- chat: messages container, composer with textarea/input + send button
+- preview: tabs (预览 / 代码), preview card area, code area, changelog list
+
+app.js: render functions, event handlers, typing indicator, simulated streaming maybe — keep simpler: typing indicator then full reply. Preview update: artifact rendered as mini "generated page card" plus code lines appended.
+
+Reply generator rules:
+- if text includes "颜色|配色|主题" → style revision reply
+- includes "按钮|组件" → component reply
+- includes "数据|接口|API" → data reply
+- includes "部署|发布|上线" → deploy reply
+- else generic template with rotating openings
+
+Each reply carries a patch: {title, codeLine, changeNote} appended to project artifact.
+
+Preview evolves: version number v1.N increments, code block gains lines, changelog gains entries, card shows title + summary + badge.
+
+Write it.
+
+Keep CSS decent ~200 lines.
+
+MOCK.md must list: project list (inline fabricated array), session/messages (fabricated seed + rule-generated replies), preview (template-derived from project + reply patches), send message latency via setTimeout, window.__mockApi__ exposed, no network requests at all.
+
+Now write files.

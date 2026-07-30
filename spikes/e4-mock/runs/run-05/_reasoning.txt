@@ -1,0 +1,765 @@
+The user wants a static prototype of an "Agent Workbench" frontend. Pure HTML/CSS/JS, no external resources. Must include index.html, MOCK.md, data-oey-section and data-oey-object anchors, mock layer for interactions.
+
+Let me design:
+
+- index.html: structure with three sections: project list (sidebar), chat area, preview area.
+- styles.css: dark theme styling.
+- app.js: mock layer (window.__mockApi__ with setTimeout simulating latency), state management, rendering.
+- MOCK.md: documentation.
+
+Data: ~4 projects, each with conversations (messages), and preview content (code snippets/cards). Mock API: listProjects, getProject(id), getMessages(projectId), sendMessage(projectId, text) → generates reply via template rules, getPreview(projectId) → preview changes based on project and message count.
+
+Reply generation: rule-based templates — e.g., parse user message keywords, generate response mentioning tasks, and update preview (e.g., preview gets a new "revision" entry or updated code with comment).
+
+Let me build it carefully.
+
+Structure:
+
+```html
+<aside data-oey-section="project-list">
+  <h2 data-oey-object="project-list.title">项目</h2>
+  <ul data-oey-object="project-list.items">
+    <li data-oey-object="project-list.item" data-project-id="...">
+      <span data-oey-object="project-list.item.name">...</span>
+      <span data-oey-object="project-list.item.status">...</span>
+    </li>
+  </ul>
+</aside>
+<main data-oey-section="chat">
+  <header><h1 data-oey-object="chat.project-name">...</h1><span data-oey-object="chat.status">...</span></header>
+  <div data-oey-object="chat.messages">
+    <div class="msg" data-oey-object="chat.message">
+      <span data-oey-object="chat.message.author">...</span>
+      <div data-oey-object="chat.message.text">...</div>
+    </div>
+  </div>
+  <form data-oey-object="chat.composer">
+    <textarea data-oey-object="chat.input"></textarea>
+    <button data-oey-object="chat.send">发送</button>
+  </form>
+</main>
+<section data-oey-section="preview">
+  <header data-oey-object="preview.header"><h2 data-oey-object="preview.title"></h2><span data-oey-object="preview.version"></span></header>
+  <div data-oey-object="preview.body">
+    <pre data-oey-object="preview.code"></pre>
+  </div>
+</section>
+```
+
+Mock: `window.__mockApi__` object with methods returning Promises with setTimeout delays. Data inline arrays in app.js (or a separate mock.js). Also override fetch? I'll just use the client object and mention setTimeout + in-memory store. Maybe also intercept fetch to route `/api/*` to mock for realism. Keep it simpler: mockApi client. Actually requirement says method is my choice. I'll do `window.__mockApi__` client with setTimeout.
+
+Agent reply generation rules:
+- Template pool based on detected intent: if message contains "改"/"修改" → revision reply; contains "预览"/"看看" → preview-focused; else generic.
+- Reply includes step list. After reply, preview version increments and preview code gets a new comment line with timestamp.
+
+Preview per project: code snippet (HTML/CSS/JS) per project. Each agent reply appends a revision log entry in preview and bumps version.
+
+Chat messages stored per project in mock DB; switching projects loads messages and preview.
+
+Also typing indicator while agent "thinks".
+
+Write files:
+
+1. index.html
+2. styles.css
+3. mock.js (data + mockApi)
+4. app.js (UI wiring)
+5. MOCK.md
+
+Let me write the code.
+
+mock.js:
+
+```js
+(function () {
+  const LATENCY = { list: 180, messages: 220, reply: [700, 1600], preview: 150 };
+  const delay = ms => new Promise(r => setTimeout(r, ms));
+  const rand = (a,b) => Math.floor(a + Math.random()*(b-a));
+
+  const db = {
+    projects: [
+      { id:'p-aurora', name:'极光数据看板', desc:'实时指标可视化', status:'运行中', accent:'#5eead4', kind:'dashboard' },
+      { id:'p-forge', name:'Forge CLI 脚手架', ... },
+      ...
+    ],
+    conversations: { 'p-aurora': [ {id, role:'user'|'agent', text, ts}, ... ] },
+    previews: { 'p-aurora': { title, version, files: [{name, lang, code}], revisions: [] } }
+  };
+```
+
+Reply generation: analyze text:
+
+```js
+function craftReply(project, text) {
+  const rules = [
+    { test: /颜色|配色|主题|样式/i, ... },
+    ...
+  ];
+}
+```
+
+Reply composed of: ack sentence referencing project name, extracted keyword, numbered plan steps (2-3 from template), and a note that preview updated. Also pushes a revision into preview and bumps version.
+
+Preview update rule: append revision {n, summary derived from user text (truncate 24 chars), ts}, version = `v0.${revisions.length + base}`, and append comment line to main file code: `// rev n: <summary>`.
+
+app.js:
+
+- state = { projects, currentId, messages, preview, sending }
+- init: fetch projects, render list, select first.
+- selectProject(id): set active class, fetch messages + preview, render.
+- send: read textarea, optimistic append user msg, call api.sendMessage → get reply, append, fetch preview, re-render.
+- Escape HTML.
+
+Render preview: tabs for files? Simpler: show file name, code block, revision log list. Include data-oey-object anchors on dynamic elements: preview.file-name, preview.code, preview.revision.
+
+Typing indicator element while waiting.
+
+Write MOCK.md covering: project list (fictional), conversations seed (fictional), agent replies (template/rule-derived — describe rules), preview content (fictional seed + rule-derived revisions), technique (window.__mockApi__, setTimeout latency, in-memory store, no network), and state resets on refresh.
+
+Now write everything carefully. Make CSS decent: dark theme, three-column layout.
+
+Let me write the files.
+
+index.html — reference styles.css, mock.js, app.js.
+
+For message bubbles: data-oey-object="chat.message", with chat.message.author and chat.message.text, also role attribute.
+
+Composer: Enter to send (Ctrl+Enter or plain Enter? use Enter to send, Shift+Enter newline).
+
+Char count maybe. Keep simple.
+
+Now code.
+
+mock.js full:
+
+```js
+/* mock.js — 前端本地 Mock 层，无任何真实网络请求 */
+(function () {
+  'use strict';
+
+  var LATENCY = {
+    projects: 160,
+    conversation: 240,
+    preview: 140,
+    replyMin: 650,
+    replyMax: 1500
+  };
+
+  function wait(ms) {
+    return new Promise(function (resolve) { setTimeout(resolve, ms); });
+  }
+  function randInt(min, max) {
+    return Math.floor(min + Math.random() * (max - min + 1));
+  }
+  function now() { return Date.now(); }
+
+  var db = {
+    projects: [ ... ],
+    conversations: { ... },
+    previews: { ... },
+    counters: { msg: 100 }
+  };
+```
+
+Projects (4):
+
+1. p-aurora 极光数据看板 — dashboard — preview: HTML/CSS code of a dashboard card.
+2. p-forge Forge 脚手架 — cli — preview: JS code.
+3. p-lumen Lumen 文档站 — docs — preview: markdown-ish text.
+4. p-pixel Pixel 头像生成器 — image — preview: SVG-ish code? Could be CSS art description. Let's do SVG code.
+
+Each conversation: 3-4 seed messages alternating user/agent.
+
+Preview structure:
+
+```js
+previews: {
+  'p-aurora': {
+    title: 'dashboard.html · 实时指标卡片',
+    kind: 'code',
+    language: 'html',
+    baseVersion: 3,   // so version starts v0.3
+    code: '<section class="metric-grid">\n ...',
+    revisions: [ { n: 2, summary: '调整卡片栅格为 3 列', ts: ... } ]
+  }
+}
+```
+
+Version computed: `v0.` + (baseVersion + revisions added since load?) Hmm — simpler: store version as number and increment on each reply. Start e.g. 3 → display "v0.3".
+
+Reply generation rules — implement:
+
+```js
+var REPLY_RULES = [
+  { match: /(颜色|配色|主题|深色|浅色|样式)/, tag: '视觉样式',
+    steps: ['定位到样式定义，抽出需要调整的变量', '按新方向生成 2 套候选并取对比度更高的一套', '同步更新预览产物并记录本次修订'] },
+  { match: /(性能|慢|卡顿|优化|速度)/, tag: '性能优化', steps: [...] },
+  { match: /(报错|bug|错误|失败|异常)/i, tag:'缺陷排查', steps:[...] },
+  { match: /(新增|增加|添加|加一个|做个)/, tag:'功能新增', steps:[...] },
+  { default: true, tag:'常规迭代', steps:[...] }
+];
+```
+
+Reply text template:
+
+```
+收到，我把这条需求归类为「{tag}」。针对 {project.name}，我按下面的顺序处理：
+
+1. {step1}
+2. {step2}
+3. {step3}
+
+本次改动的摘要我已经写进预览区的修订记录，版本号升至 {version}。你可以继续补充细节，我会在当前结果上增量调整。
+```
+
+But version known after updating preview — craftReply updates preview first then composes text. Good.
+
+Also quote user text truncated: `你提到的「xxx」` where xxx = first 16 chars.
+
+Preview code update: append line `\n<!-- rev {n}: {summary} -->` for html, `// rev` for js, `# rev` for md. Use comment style by language.
+
+mockApi:
+
+```js
+window.__mockApi__ = {
+  listProjects: function(){ return wait(L.projects).then(clone(db.projects with meta like lastMessage preview)) },
+  getConversation: function(id){...},
+  getPreview: function(id){...},
+  sendMessage: function(projectId, text){ 
+     push user msg; return wait(rand).then(()=>{ const reply = craftReply(...); push; return clone(reply); });
+  }
+};
+```
+
+Include in listProjects each project's message count & last activity? Add `unread` maybe. Keep: name, desc, status, kind, msgCount.
+
+app.js: 
+
+```js
+(function(){
+  var api = window.__mockApi__;
+  var state = { projects: [], currentId: null, sending: false };
+  var els = {...cache by id...};
+
+  function esc(s){...}
+
+  function renderProjects(){ ... build li ... onclick selectProject }
+
+  function selectProject(id){
+    state.currentId = id;
+    mark active;
+    renderChatSkeleton / loading;
+    api.getConversation(id) & api.getPreview(id) → render;
+  }
+
+  function renderChat(conv){ header name/status; messages; }
+  function appendMessage(m){...}
+  function renderPreview(p){ title, version badge, code text, revisions list }
+
+  form submit → send.
+})();
+```
+
+Set active project list item shows status dot with accent color.
+
+Typing indicator: a message bubble with class typing, three dots animation, removed when reply arrives.
+
+Preview revisions rendered as list items with data-oey-object="preview.revision".
+
+Empty composer disable while sending.
+
+Also add "new project" button? Not required; skip to reduce scope, but maybe small touch: filter? Skip.
+
+CSS: grid layout `grid-template-columns: 260px 1fr 420px`, dark, accent per project via inline style custom property.
+
+Now write everything concretely. Also ensure index.html works via file:// — plain scripts, no modules issues (use regular scripts, not type=module, to be safe with file://). Yes use regular scripts.
+
+Write the preview code seed content. Keep each ~10-15 lines.
+
+p-aurora code (html):
+
+```
+<section class="metric-grid">
+  <article class="metric" data-trend="up">
+    <h3>活跃会话</h3>
+    <strong>1,284</strong>
+    <span class="delta">+12.4%</span>
+  </article>
+  <article class="metric" data-trend="down">
+    <h3>平均延迟</h3>
+    <strong>212ms</strong>
+    <span class="delta">-8.1%</span>
+  </article>
+  <article class="metric" data-trend="up">
+    <h3>任务成功率</h3>
+    <strong>98.2%</strong>
+    <span class="delta">+0.6%</span>
+  </article>
+</section>
+```
+
+p-forge (js):
+
+```
+#!/usr/bin/env node
+const { scaffold } = require('./scaffold');
+
+const args = process.argv.slice(2);
+const template = args[0] || 'starter';
+
+scaffold({ template, cwd: process.cwd() })
+  .then(report => {
+    console.log(`created ${report.files} files from "${template}"`);
+  })
+  .catch(err => {
+    console.error('scaffold failed:', err.message);
+    process.exit(1);
+  });
+```
+
+p-lumen (markdown):
+
+```
+# Lumen 文档站 · 快速开始
+
+## 安装
+在任意静态服务器上托管 `dist/` 目录即可。
+
+## 目录约定
+- `docs/` 存放 Markdown 源文件
+- `docs/nav.yml` 控制左侧导航顺序
+- `assets/` 存放本地图片与附件
+
+## 构建
+执行 `lumen build`，输出到 `dist/`。
+```
+
+p-pixel (svg):
+
+```
+<svg viewBox="0 0 64 64" width="128" height="128">
+  <rect width="64" height="64" rx="14" fill="#1e293b"/>
+  <circle cx="32" cy="26" r="10" fill="#f59e0b"/>
+  <rect x="14" y="42" width="36" height="8" rx="4" fill="#38bdf8"/>
+  <circle cx="28" cy="24" r="2" fill="#0f172a"/>
+  <circle cx="36" cy="24" r="2" fill="#0f172a"/>
+</svg>
+```
+
+Comment styles per language: html `<!-- -->`, js `//`, md `<!-- -->`? Markdown use `<!-- -->` too. svg `<!-- -->`.
+
+Seed conversations:
+
+p-aurora:
+- user: 帮我把看板首屏的指标卡片搭出来，先放活跃会话、延迟和成功率三个。
+- agent: 已完成第一版…
+- user: 成功率那张卡片的趋势标反了，顺便把栅格调成三列。
+- agent: 已修正…（对应 revision n:2 调整卡片栅格为 3 列）
+
+Revisions seed: [{n:1, summary:'初版三卡片栅格', ts}, {n:2, summary:'修正趋势标记并改为 3 列', ts}] version:2.
+
+p-forge: user asks scaffold starter, agent reply. revisions seed n:1 '生成 CLI 入口初版'. version 1.
+
+p-lumen: seed 2 messages. revision 1.
+
+p-pixel: seed 2 messages. revision 1.
+
+Timestamps: use fixed offsets from load: Date.now() - x.
+
+Now MOCK.md content: cover all mocks:
+
+- 项目列表 listProjects — 纯虚构，内联数组
+- 会话历史 getConversation — 纯虚构种子消息
+- 发送消息回复 sendMessage — 规则推导：正则意图匹配 4 类 + 兜底，回复文本由模板拼接（项目名、意图标签、用户输入截断、版本号）；延迟随机 650–1500ms
+- 预览 getPreview — 种子代码纯虚构；每次 agent 回复后按规则追加修订记录 + 版本号 +1 + 代码尾部追加注释行（注释风格随 language 推导）
+- 技术手段：window.__mockApi__、setTimeout、内存对象、深拷贝防止外部篡改；无 fetch 拦截、无 SW、无网络
+- 状态仅在内存中，刷新重置
+- 说明 index.html 中无静态消息/项目硬编码（全部来自 mock 层渲染）
+
+Check hard constraint 2 anchors: sections: project-list, chat, preview. Also maybe a topbar section. Add `data-oey-section="topbar"` with product name object. Good.
+
+Write app.js rendering with createElement or innerHTML + esc. Use innerHTML with esc for simplicity.
+
+Time format: HH:MM.
+
+Let me now write final files.
+
+app.js details:
+
+```js
+function renderMessages(list){
+  els.messages.innerHTML = list.map(function(m){
+    return '<div class="msg msg-' + m.role + '" data-oey-object="chat.message" data-role="'+m.role+'">' +
+      '<div class="msg-meta"><span class="msg-author" data-oey-object="chat.message.author">' + (m.role==='agent'?'Agent':'你') + '</span>' +
+      '<span class="msg-time" data-oey-object="chat.message.time">' + fmtTime(m.ts) + '</span></div>' +
+      '<div class="msg-text" data-oey-object="chat.message.text">' + esc(m.text).replace(/\n/g,'<br>') + '</div></div>';
+  }).join('');
+  els.messages.scrollTop = els.messages.scrollHeight;
+}
+```
+
+Chat header: project name + status + kind tag.
+
+Preview render:
+
+```js
+els.previewTitle.textContent = p.title;
+els.previewVersion.textContent = 'v0.' + p.version;
+els.previewFile.textContent = p.fileName;
+els.previewCode.textContent = p.code; // textContent safe
+revisions list items: '<li data-oey-object="preview.revision"><span ... revision.n>...</span>...'
+```
+
+Preview file name per project: store fileName in preview data.
+
+sendMessage flow in app:
+
+```js
+function onSend(e){
+  e.preventDefault();
+  var text = els.input.value.trim();
+  if(!text || state.sending || !state.currentId) return;
+  state.sending = true;
+  els.send.disabled = true;
+  els.input.value = '';
+  // user message comes back from api? api.sendMessage pushes user msg and returns {userMessage, agentMessage}
+  showTyping();
+  api.sendMessage(state.currentId, text).then(function(res){
+    hideTyping();
+    appendMessage(res.userMessage); — actually append user message immediately is better UX; but then need the user msg object. Return both; append user immediately after calling? The mock pushes both. Simpler: api.sendMessage returns {user, agent}; we append user right away after promise resolves? That delays user bubble by latency — bad. Alternative: append user optimistically locally (construct object), and mock returns only agent reply. Mock still stores user message internally. Fine: construct local user msg with ts now, append, then await reply.
+  });
+}
+```
+
+Do: append local user bubble immediately; show typing; api.sendMessage(id, text) resolves with agent reply after delay; append; refresh preview via api.getPreview; update project list item last-message snippet.
+
+Project list item: name, desc, status dot, message count badge. Update count after reply.
+
+Also loading states: when switching project show "加载中…" placeholder in messages and preview.
+
+CSS: write a decent dark theme, ~250 lines. Three-column grid, responsive-ish min widths. Typing dots keyframes. Status pulse.
+
+Also empty state if no projects.
+
+Write index.html:
+
+```html
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nexus · Agent 工作台</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="app">
+  <header class="topbar" data-oey-section="topbar">
+    <div class="brand" data-oey-object="topbar.brand">NEXUS<span>Agent 工作台</span></div>
+    <div class="topbar-right">
+      <span class="mock-badge" data-oey-object="topbar.env">本地 Mock 环境 · 无后端</span>
+    </div>
+  </header>
+  <div class="layout">
+    <aside class="sidebar" data-oey-section="project-list">
+      <div class="sidebar-head">
+        <h2 data-oey-object="project-list.title">项目</h2>
+        <span class="count" data-oey-object="project-list.count">0</span>
+      </div>
+      <ul class="project-items" id="projectItems" data-oey-object="project-list.items"></ul>
+    </aside>
+    <main class="chat" data-oey-section="chat">
+      <header class="chat-head">
+        <div>
+          <h1 id="chatProjectName" data-oey-object="chat.project-name">—</h1>
+          <p class="chat-sub" id="chatProjectDesc" data-oey-object="chat.project-desc"></p>
+        </div>
+        <span class="chat-status" id="chatStatus" data-oey-object="chat.status"></span>
+      </header>
+      <div class="messages" id="messages" data-oey-object="chat.messages"></div>
+      <form class="composer" id="composer" data-oey-object="chat.composer">
+        <textarea id="input" rows="2" placeholder="给 Agent 下达指令…（Enter 发送，Shift+Enter 换行）" data-oey-object="chat.input"></textarea>
+        <button type="submit" id="sendBtn" data-oey-object="chat.send">发送</button>
+      </form>
+    </main>
+    <section class="preview" data-oey-section="preview">
+      <header class="preview-head">
+        <div>
+          <h2 data-oey-object="preview.title" id="previewTitle">—</h2>
+          <span class="preview-file" data-oey-object="preview.file" id="previewFile"></span>
+        </div>
+        <span class="version" data-oey-object="preview.version" id="previewVersion"></span>
+      </header>
+      <div class="preview-body" data-oey-object="preview.body">
+        <pre class="code"><code id="previewCode" data-oey-object="preview.code"></code></pre>
+        <div class="revisions">
+          <h3 data-oey-object="preview.revisions-title">修订记录</h3>
+          <ul id="revisionList" data-oey-object="preview.revisions"></ul>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>
+<script src="mock.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
+```
+
+Project item markup:
+
+```html
+<li class="project-item" data-oey-object="project-list.item" data-project-id="...">
+  <span class="dot" style="--accent:#5eead4"></span>
+  <div class="pi-main">
+    <div class="pi-name" data-oey-object="project-list.item.name">…</div>
+    <div class="pi-desc" data-oey-object="project-list.item.desc">…</div>
+  </div>
+  <div class="pi-side">
+    <span class="pi-status" data-oey-object="project-list.item.status">运行中</span>
+    <span class="pi-count" data-oey-object="project-list.item.count">4</span>
+  </div>
+</li>
+```
+
+OK. Now write mock.js fully.
+
+```js
+(function () {
+  'use strict';
+
+  var LATENCY = { projects: 160, conversation: 240, preview: 140, replyMin: 650, replyMax: 1500 };
+
+  function wait(ms) { return new Promise(function (resolve) { setTimeout(resolve, ms); }); }
+  function randInt(min, max) { return Math.floor(min + Math.random() * (max - min + 1)); }
+  function clone(o) { return JSON.parse(JSON.stringify(o)); }
+  function uid(prefix) { return prefix + '-' + (++db.seq); }
+
+  var T0 = Date.now();
+  function ago(min) { return T0 - min * 60000; }
+```
+
+db.seq counter.
+
+Full project definitions with accents.
+
+Reply crafting:
+
+```js
+var REPLY_RULES = [
+  { match: /(颜色|配色|主题|深色|浅色|样式|字体)/, tag: '视觉样式调整', steps: [...] },
+  { match: /(性能|很慢|卡顿|优化|速度|加载)/, tag: '性能优化', steps: [...] },
+  { match: /(报错|bug|错误|失败|异常|不生效)/i, tag: '缺陷排查', steps: [...] },
+  { match: /(新增|增加|添加|加一个|加一個|做个|做一个)/, tag: '功能新增', steps: [...] },
+  { match: null, tag: '常规迭代', steps: ['通读当前产物的最新版本，确认可复用的结构', '在最小改动范围内实现你描述的调整', '更新预览并把改动写入修订记录'] }
+];
+
+function pickRule(text){ for(... ) if (r.match && r.match.test(text)) return r; return default last; }
+```
+
+craftReply(project, text):
+
+```js
+function craftReply(project, text) {
+  var rule = pickRule(text);
+  var pv = db.previews[project.id];
+  var summary = text.replace(/\s+/g, ' ');
+  if (summary.length > 20) summary = summary.slice(0, 20) + '…';
+  var n = pv.revisions.length + 1;
+  pv.version += 1;
+  var comment = commentFor(pv.language, 'rev ' + n + ': ' + summary);
+  pv.code = pv.code + '\n' + comment;
+  pv.revisions.push({ n: n, summary: summary, ts: Date.now() });
+  var quote = text.replace(/\s+/g,' ');
+  if (quote.length > 16) quote = quote.slice(0,16)+'…';
+  var body = '收到。我把「' + quote + '」归类为「' + rule.tag + '」，将在「' + project.name + '」上按以下顺序执行：\n\n' +
+    rule.steps.map(function(s,i){return (i+1)+'. '+s;}).join('\n') +
+    '\n\n改动已落到预览产物：修订 #' + n + '，版本升至 v0.' + pv.version + '。你可以继续补充约束，我会在现有结果上增量调整。';
+  return { id: uid('m'), role: 'agent', text: body, ts: Date.now() };
+}
+
+function commentFor(lang, s) {
+  if (lang === 'javascript') return '// ' + s;
+  return '<!-- ' + s + ' -->';
+}
+```
+
+Wait: for html seed code, appending `<!-- -->` fine.
+
+sendMessage:
+
+```js
+sendMessage: function (projectId, text) {
+  var conv = db.conversations[projectId];
+  var project = findProject(projectId);
+  if (!conv || !project) return wait(120).then(function(){ throw new Error('project not found'); });
+  conv.push({ id: uid('m'), role: 'user', text: text, ts: Date.now() });
+  return wait(randInt(LATENCY.replyMin, LATENCY.replyMax)).then(function () {
+    var reply = craftReply(project, text);
+    conv.push(reply);
+    project.msgCount = conv.length;
+    project.lastText = text... 
+    return clone(reply);
+  });
+}
+```
+
+listProjects returns clone of projects array where each includes msgCount computed from conversation length.
+
+getConversation returns {project: clone(project), messages: clone(conv)}.
+
+getPreview returns clone(pv).
+
+db.seq init 0.
+
+Conversations seeds — write them.
+
+Now app.js:
+
+```js
+(function () {
+  'use strict';
+  var api = window.__mockApi__;
+  var $ = function (id) { return document.getElementById(id); };
+  var els = {
+    items: $('projectItems'), count: ...,
+    name: $('chatProjectName'), desc: $('chatProjectDesc'), status: $('chatStatus'),
+    messages: $('messages'), form: $('composer'), input: $('input'), sendBtn: $('sendBtn'),
+    pTitle: $('previewTitle'), pFile: $('previewFile'), pVersion: $('previewVersion'),
+    pCode: $('previewCode'), revList: $('revisionList'),
+    pCount: $('projectCount')
+  };
+  var state = { projects: [], currentId: null, sending: false, typingEl: null };
+
+  function esc(s){ return String(s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+  function fmtTime(ts){ var d=new Date(ts); var h=('0'+d.getHours()).slice(-2), m=('0'+d.getMinutes()).slice(-2); return h+':'+m; }
+
+  function renderProjects(){
+    els.pCount.textContent = state.projects.length;
+    els.items.innerHTML = state.projects.map(function(p){
+      var active = p.id===state.currentId ? ' active' : '';
+      return '<li class="project-item'+active+'" data-oey-object="project-list.item" data-project-id="'+p.id+'" style="--accent:'+p.accent+'">' +
+        '<span class="dot"></span>' +
+        '<div class="pi-main"><div class="pi-name" data-oey-object="project-list.item.name">'+esc(p.name)+'</div>' +
+        '<div class="pi-desc" data-oey-object="project-list.item.desc">'+esc(p.desc)+'</div></div>' +
+        '<div class="pi-side"><span class="pi-status" data-oey-object="project-list.item.status">'+esc(p.status)+'</span>' +
+        '<span class="pi-count" data-oey-object="project-list.item.count">'+p.msgCount+'</span></div></li>';
+    }).join('');
+    // bind
+    Array.prototype.forEach.call(els.items.children, function(li){
+      li.addEventListener('click', function(){ selectProject(li.getAttribute('data-project-id')); });
+    });
+  }
+
+  function setProjectCount(id, n){
+    var p = state.projects.filter(...)[0]; if(p){p.msgCount=n; renderProjects();}
+  }
+
+  function selectProject(id){
+    if (state.sending) { /* allow switch? simpler: allow but if sending ignore */ }
+    if (state.currentId === id) return;
+    state.currentId = id;
+    renderProjects();
+    var p = byId(id);
+    els.name.textContent = p.name;
+    els.desc.textContent = p.desc;
+    els.status.textContent = p.status;
+    els.messages.innerHTML = '<div class="loading" data-oey-object="chat.loading">正在加载会话…</div>';
+    els.pTitle.textContent = '加载中…'; ...
+    Promise.all([api.getConversation(id), api.getPreview(id)]).then(function(res){
+      if (state.currentId !== id) return; // stale
+      renderMessages(res[0].messages);
+      renderPreview(res[1]);
+    });
+  }
+```
+
+Handle sending & switching: if user switches mid-send, reply should go to its own project. Simplest: disable project switching while sending? Or guard append: only append if state.currentId === replyProjectId. Mock stores message regardless, so when user switches back, getConversation will include it. Do that: sendMessage captures projectId at send time; on resolve, update count; if still current, append + preview refresh; else skip.
+
+renderMessages(list): if empty show empty hint.
+
+appendMessage(m): build node and insert before typing? Simpler: remove typing, append both user & agent. User appended immediately at send (before api resolves). So:
+
+```js
+function onSend(e){
+  e.preventDefault();
+  var text = els.input.value.trim();
+  if (!text || state.sending || !state.currentId) return;
+  var pid = state.currentId;
+  state.sending = true; els.sendBtn.disabled = true; els.input.value='';
+  var userMsg = { role:'user', text:text, ts:Date.now() };
+  appendMessage(userMsg);
+  showTyping();
+  api.sendMessage(pid, text).then(function(reply){
+    state.sending = false; els.sendBtn.disabled = false;
+    setProjectCount(pid);
+    if (state.currentId === pid){
+      hideTyping();
+      appendMessage(reply);
+      api.getPreview(pid).then(renderPreview);
+    }
+  });
+}
+```
+
+setProjectCount: recompute by asking api? Just increment locally: p.msgCount += 2. Fine but better call api.listProjects? Increment locally is fine but mock count is source of truth; increment by 2 matches. I'll increment by 2.
+
+Typing indicator element:
+
+```js
+function showTyping(){
+  hideTyping();
+  var el = document.createElement('div');
+  el.className = 'msg msg-agent typing';
+  el.setAttribute('data-oey-object','chat.typing');
+  el.innerHTML = '<div class="msg-meta"><span class="msg-author">Agent</span></div><div class="dots"><i></i><i></i><i></i></div>';
+  els.messages.appendChild(el);
+  state.typingEl = el;
+  els.messages.scrollTop = els.messages.scrollHeight;
+}
+```
+
+renderPreview(p):
+
+```js
+els.pTitle.textContent = p.title;
+els.pFile.textContent = p.fileName + ' · ' + p.language;
+els.pVersion.textContent = 'v0.' + p.version;
+els.pCode.textContent = p.code;
+els.revList.innerHTML = p.revisions.slice().reverse().map(function(r){
+  return '<li data-oey-object="preview.revision"><span class="rev-n" data-oey-object="preview.revision.n">#'+r.n+'</span>' +
+   '<span class="rev-text" data-oey-object="preview.revision.summary">'+esc(r.summary)+'</span>' +
+   '<span class="rev-time" data-oey-object="preview.revision.time">'+fmtTime(r.ts)+'</span></li>';
+}).join('');
+```
+
+Enter key handling on textarea:
+
+```js
+els.input.addEventListener('keydown', function(e){
+  if (e.key === 'Enter' && !e.shiftKey){ e.preventDefault(); els.form.requestSubmit ? els.form.requestSubmit() : onSend(e); }
+});
+```
+
+Use form submit event. requestSubmit supported widely; fallback dispatch. I'll just call onSend via creating — simpler: in keydown call `onSend(e)` directly (it preventDefaults). Fine.
+
+init:
+
+```js
+api.listProjects().then(function(projects){
+  state.projects = projects;
+  if (projects.length){ state.currentId = projects[0].id; renderProjects(); loadCurrent(); }
+});
+```
+
+Refactor: selectProject(id, force). Initial call with force.
+
+Write CSS now — dark, modern.
+
+Now MOCK.md — thorough.
+
+Compose all files. Watch out: inside mock.js seed code strings contain `</section>` etc — fine in JS strings. But mock.js is external file so no `</script>` escaping issues. In index.html no inline script. Good. Avoid `</script>` inside strings anyway.
+
+For markdown preview (lumen), language 'markdown', commentFor returns `<!-- -->` — fine in md.
+
+Write final answer with 5 file blocks: index.html, styles.css, mock.js, app.js, MOCK.md. No code fences, no prose.

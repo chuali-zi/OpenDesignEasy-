@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Q7 反例：纯静态页，无 mock</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header data-oey-section="topbar">
+  <span data-oey-object="topbar.title">Static Studio</span>
+  <nav>
+    <button id="navToggle" type="button" aria-expanded="false">Menu</button>
+  </nav>
+</header>
+
+<main data-oey-section="about">
+  <h1 data-oey-object="about.title">这是一个纯静态说明页</h1>
+  <p data-oey-object="about.body">
+    本页面不发任何网络请求，不覆盖 fetch/XMLHttpRequest，不注册 Service Worker，
+    没有内联的假数据数组，也没有用 setTimeout 模拟网络延迟。所有内容都是写死在
+    HTML 里的静态文案，用来测试 mock 检测器在「真的没有 mock」时是否会误报。
+  </p>
+</main>
+
+<section data-oey-section="faq">
+  <h2 data-oey-object="faq.title">常见问题（纯前端手风琴，无数据加载）</h2>
+  <div class="faq-item">
+    <button class="faq-q" type="button">这个页面会请求后端吗？</button>
+    <div class="faq-a" hidden>不会，全部内容在页面加载时就已经存在于 HTML 中。</div>
+  </div>
+  <div class="faq-item">
+    <button class="faq-q" type="button">点击展开用到 mock 数据吗？</button>
+    <div class="faq-a" hidden>没有，展开/收起只是切换一个 hidden 属性，不涉及任何数据获取。</div>
+  </div>
+</section>
+
+<footer data-oey-section="footer">
+  <span data-oey-object="footer.copyright">Static Studio · 无 mock 控制组页面</span>
+</footer>
+
+<script src="script.js"></script>
+</body>
+</html>

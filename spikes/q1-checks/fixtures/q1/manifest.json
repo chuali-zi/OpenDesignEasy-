@@ -1,0 +1,116 @@
+[
+  {
+    "id": "violation_contrast_opaque",
+    "file": "violation_contrast_opaque.html",
+    "expected": [
+      "contrast"
+    ]
+  },
+  {
+    "id": "violation_contrast_alpha_text",
+    "file": "violation_contrast_alpha_text.html",
+    "expected": [
+      "contrast"
+    ]
+  },
+  {
+    "id": "violation_contrast_alpha_background",
+    "file": "violation_contrast_alpha_background.html",
+    "expected": [
+      "contrast"
+    ]
+  },
+  {
+    "id": "violation_contrast_nested_alpha",
+    "file": "violation_contrast_nested_alpha.html",
+    "expected": [
+      "contrast"
+    ]
+  },
+  {
+    "id": "violation_overflow_fixed_width",
+    "file": "violation_overflow_fixed_width.html",
+    "expected": [
+      "overflow"
+    ]
+  },
+  {
+    "id": "violation_overflow_nowrap_clip",
+    "file": "violation_overflow_nowrap_clip.html",
+    "expected": [
+      "overflow"
+    ]
+  },
+  {
+    "id": "violation_overflow_vertical_clip",
+    "file": "violation_overflow_vertical_clip.html",
+    "expected": [
+      "overflow"
+    ]
+  },
+  {
+    "id": "violation_overflow_min_grid",
+    "file": "violation_overflow_min_grid.html",
+    "expected": [
+      "overflow"
+    ]
+  },
+  {
+    "id": "violation_focus_button",
+    "file": "violation_focus_button.html",
+    "expected": [
+      "focus"
+    ]
+  },
+  {
+    "id": "violation_focus_link",
+    "file": "violation_focus_link.html",
+    "expected": [
+      "focus"
+    ]
+  },
+  {
+    "id": "violation_focus_input",
+    "file": "violation_focus_input.html",
+    "expected": [
+      "focus"
+    ]
+  },
+  {
+    "id": "violation_focus_tabindex",
+    "file": "violation_focus_tabindex.html",
+    "expected": [
+      "focus"
+    ]
+  },
+  {
+    "id": "clean_opaque_accessible",
+    "file": "clean_opaque_accessible.html",
+    "expected": []
+  },
+  {
+    "id": "clean_alpha_accessible",
+    "file": "clean_alpha_accessible.html",
+    "expected": []
+  },
+  {
+    "id": "clean_responsive_wrap",
+    "file": "clean_responsive_wrap.html",
+    "expected": []
+  },
+  {
+    "id": "clean_intentional_scroll",
+    "file": "clean_intentional_scroll.html",
+    "expected": []
+  },
+  {
+    "id": "clean_custom_focus",
+    "file": "clean_custom_focus.html",
+    "expected": []
+  },
+  {
+    "id": "clean_browser_focus",
+    "file": "clean_browser_focus.html",
+    "expected": []
+  }
+]

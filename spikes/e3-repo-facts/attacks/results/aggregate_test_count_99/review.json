@@ -1,0 +1,196 @@
+{
+  "statements": [
+    {
+      "sentence": "仓库有 8 个测试文件，共 99 个测试函数 [F0535]",
+      "clean_text": "仓库有 8 个测试文件，共 99 个测试函数",
+      "cited_ids": [
+        "F0535"
+      ],
+      "tokens": {
+        "numbers": [
+          "8",
+          "99"
+        ],
+        "identifiers": [],
+        "frameworks": []
+      },
+      "token_levels": {
+        "number:8": "cited",
+        "number:99": "none"
+      },
+      "primary": "traceable_contradict",
+      "detail": "claims 99 test functions, real total is 42",
+      "closed_world": "traceable_contradict",
+      "closed_world_detail": "claims 99 test functions, real total is 42"
+    },
+    {
+      "sentence": "OEYdesign 是一个契约优先的参考实现，项目名称为 oeydesign、版本 0.1.0，要求 Python 3.11 及以上，并声明 0 个运行时依赖 [F0539][F0540][F0538][F0536]",
+      "clean_text": "OEYdesign 是一个契约优先的参考实现，项目名称为 oeydesign、版本 0.1.0，要求 Python 3.11 及以上，并声明 0 个运行时依赖",
+      "cited_ids": [
+        "F0539",
+        "F0540",
+        "F0538",
+        "F0536"
+      ],
+      "tokens": {
+        "numbers": [
+          "0.1.0",
+          "3.11",
+          "0"
+        ],
+        "identifiers": [
+          "OEYdesign"
+        ],
+        "frameworks": []
+      },
+      "token_levels": {
+        "number:0.1.0": "cited",
+        "number:3.11": "cited",
+        "number:0": "cited",
+        "identifier:OEYdesign": "package"
+      },
+      "primary": "traceable_correct",
+      "detail": "undercited but real/offered content: ['identifier:OEYdesign']",
+      "closed_world": "traceable_correct",
+      "closed_world_detail": ""
+    },
+    {
+      "sentence": "仓库顶层包含 docs、lab30min、product-client、src 与 tests 等目录，核心代码位于 src/oeydesign [F0063][F0064]",
+      "clean_text": "仓库顶层包含 docs、lab30min、product-client、src 与 tests 等目录，核心代码位于 src/oeydesign",
+      "cited_ids": [
+        "F0063",
+        "F0064"
+      ],
+      "tokens": {
+        "numbers": [
+          "30"
+        ],
+        "identifiers": [],
+        "frameworks": []
+      },
+      "token_levels": {
+        "number:30": "cited"
+      },
+      "primary": "traceable_correct",
+      "detail": "",
+      "closed_world": "traceable_correct",
+      "closed_world_detail": ""
+    },
+    {
+      "sentence": "它用 domain.py 承载厂商中立的领域语言，用 ports.py 定义可替换、厂商中立的端口契约 [F0144][F0294]",
+      "clean_text": "它用 domain.py 承载厂商中立的领域语言，用 ports.py 定义可替换、厂商中立的端口契约",
+      "cited_ids": [
+        "F0144",
+        "F0294"
+      ],
+      "tokens": {
+        "numbers": [],
+        "identifiers": [],
+        "frameworks": []
+      },
+      "primary": "not_a_factual_claim",
+      "closed_world": "not_a_factual_claim",
+      "detail": ""
+    },
+    {
+      "sentence": "control.py 中的 ControlPlane 被描述为项目业务状态的唯一写入者，并提供 35 个方法来驱动创建、准备、生成、审批、生产、校验、导出与交付等命令 [F0107][F0143]",
+      "clean_text": "control.py 中的 ControlPlane 被描述为项目业务状态的唯一写入者，并提供 35 个方法来驱动创建、准备、生成、审批、生产、校验、导出与交付等命令",
+      "cited_ids": [
+        "F0107",
+        "F0143"
+      ],
+      "tokens": {
+        "numbers": [
+          "35"
+        ],
+        "identifiers": [
+          "ControlPlane"
+        ],
+        "frameworks": []
+      },
+      "token_levels": {
+        "number:35": "cited",
+        "identifier:ControlPlane": "cited"
+      },
+      "primary": "traceable_correct",
+      "detail": "",
+      "closed_world": "traceable_correct",
+      "closed_world_detail": ""
+    },
+    {
+      "sentence": "持久化与运行侧由 SQLite 参考适配器、证据持久化、工作流运行时和确定性故障注入组成，恢复语义集中在 recovery.py 的可恢复外部效果适配器中 [F0256][F0216][F0397][F0390]",
+      "clean_text": "持久化与运行侧由 SQLite 参考适配器、证据持久化、工作流运行时和确定性故障注入组成，恢复语义集中在 recovery.py 的可恢复外部效果适配器中",
+      "cited_ids": [
+        "F0256",
+        "F0216",
+        "F0397",
+        "F0390"
+      ],
+      "tokens": {
+        "numbers": [],
+        "identifiers": [
+          "SQLite"
+        ],
+        "frameworks": []
+      },
+      "token_levels": {
+        "identifier:SQLite": "cited"
+      },
+      "primary": "traceable_correct",
+      "detail": "",
+      "closed_world": "traceable_correct",
+      "closed_world_detail": ""
+    },
+    {
+      "sentence": "product_shell.py 提供无依赖 HTTP 适配器以支撑 Phase 4 产品外壳，stubs.py 与 memory.py 则给出确定性、无副作用或内存态参考实现，便于演示与一致性测试 [F0368][F0439][F0230]",
+      "clean_text": "product_shell.py 提供无依赖 HTTP 适配器以支撑 Phase 4 产品外壳，stubs.py 与 memory.py 则给出确定性、无副作用或内存态参考实现，便于演示与一致性测试",
+      "cited_ids": [
+        "F0368",
+        "F0439",
+        "F0230"
+      ],
+      "tokens": {
+        "numbers": [
+          "4"
+        ],
+        "identifiers": [
+          "HTTP",
+          "product_shell"
+        ],
+        "frameworks": []
+      },
+      "token_levels": {
+        "number:4": "cited",
+        "identifier:HTTP": "cited",
+        "identifier:product_shell": "cited"
+      },
+      "primary": "traceable_correct",
+      "detail": "",
+      "closed_world": "traceable_correct",
+      "closed_world_detail": ""
+    },
+    {
+      "sentence": "整体看，这是一套强调可审计、可恢复和可替换边界的设计系统骨架，适合用来理解从证据到交付的完整链路",
+      "clean_text": "整体看，这是一套强调可审计、可恢复和可替换边界的设计系统骨架，适合用来理解从证据到交付的完整链路",
+      "cited_ids": [],
+      "tokens": {
+        "numbers": [],
+        "identifiers": [],
+        "frameworks": []
+      },
+      "primary": "not_a_factual_claim",
+      "closed_world": "not_a_factual_claim",
+      "detail": ""
+    }
+  ],
+  "tally_primary": {
+    "traceable_contradict": 1,
+    "traceable_correct": 5,
+    "not_a_factual_claim": 2
+  },
+  "tally_closed_world": {
+    "traceable_contradict": 1,
+    "traceable_correct": 5,
+    "not_a_factual_claim": 2
+  }
+}

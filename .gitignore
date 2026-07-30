@@ -7,6 +7,18 @@ pytest_tmp*/
 .venv/
 .env
 data/
+# 离线 vendor 的字体/框架资产：可由 `spikes/aesthetic-ab/vendor.py fetch-pack`
+# 按 manifest 里的固定版本重新取回，不必入库（二进制约 61MB + @font-face CSS 约 3.5MB，
+# 且在每个产物里各存一份）。产物自身的 styles.css 不在此列，必须入库。
+spikes/_vendor/**/*.woff2
+spikes/_vendor/**/*.css
+spikes/_vendor/*.js
+spikes/**/assets/fonts/**
+spikes/**/assets/fonts.css
+spikes/**/assets/tailwind.js
+
+# Windows 设备名，由 shell 重定向意外产生，Win32 下无法访问。永远不入库。
+nul
 dist/
 build/
 *.egg-info/

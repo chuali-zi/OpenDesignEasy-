@@ -1,0 +1,42 @@
+{
+  "ac_sid": "S-1-15-2-1913600469-3048443276-993218475-2851901795-388325919-3465850541-3166567087",
+  "child_rc": {
+    "A": 0,
+    "B1": 1,
+    "B2": 1,
+    "C": 0,
+    "E": 0,
+    "F": 1,
+    "D": "launch-failed: CreateProcessW failed: 5"
+  },
+  "probes": {
+    "A  read inside workspace  (want ALLOW)": {
+      "verdict": "ALLOWED",
+      "output": "INSIDE-OK"
+    },
+    "B1 read repo file outside (want DENY)": {
+      "verdict": "DENIED",
+      "output": "Access is denied."
+    },
+    "B2 read user profile      (want DENY)": {
+      "verdict": "DENIED",
+      "output": "Access is denied."
+    },
+    "C  read C:\\Windows\\win.ini (info)": {
+      "verdict": "ALLOWED",
+      "output": "; for 16-bit app support\n[fonts]\n[extensions]\n[mci extensions]\n[files]\n[Mail]\nMAPI=1"
+    },
+    "E  write inside workspace (want ALLOW)": {
+      "verdict": "ALLOWED",
+      "output": "W"
+    },
+    "D  network via certutil   (want DENY)": {
+      "verdict": "BLOCKED(no output)",
+      "output": null
+    },
+    "F  write outside (want DENY)": {
+      "verdict": "DENIED",
+      "output": null
+    }
+  }
+}

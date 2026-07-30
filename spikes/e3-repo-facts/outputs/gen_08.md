@@ -1,0 +1,5 @@
+OEYdesign 是一个「契约优先」（contract-first）的参考实现项目，包名为 oeydesign，当前版本 0.1.0，要求 Python 3.11 及以上 [F0541][F0539][F0540][F0538]。它的最大特点是零运行时依赖——pyproject.toml 中 dependencies 为空列表，构建仅依赖 setuptools>=68 [F0536][F0537]。
+
+整个项目围绕一套厂商中立、可替换的端口契约组织：ports.py 定义了 ProjectRepository、WorkflowRuntimePort、DesignIntelligencePort、QualityGovernancePort、DeliveryPort 等一系列 Protocol 接口 [F0294][F0299][F0349][F0354][F0364][F0367]，而 domain.py（689 行）提供所有适配器共享的领域语言，包含 ProjectState、WorkflowStatus 等枚举以及 Project、Command、Candidate 等不可变数据类 [F0144][F0149][F0155][F0213][F0178][F0200]。核心的 ControlPlane 是项目业务状态的唯一写入者，负责执行创建项目、生成候选、审批方向、产出、校验、导出、交付以及工作流暂停/恢复/对账等 35 个方法 [F0107][F0143]。
+
+在落地层面，项目提供 SQLite 持久化适配器（SQLiteProjectRepository、SQLiteCommandLedger、SQLiteEventStore、SQLiteAuditLog 等）[F0256][F0271][F0275][F0278][F0282]，SQLite 驱动的工作流运行时支持阶段检查点与确定性失败注入以便演练恢复 [F0397][F0418][F0426]，stubs.py 则给出设计、产物、质量与交付端口的确定性、无副作用实现 [F0439][F0445][F0450][F0457][F0462]。上下文与证据子系统（context.py，616 行）内置本地源存储、CSV/PNG 证据解析器与人工确认机制 [F0071][F0078][F0082][F0084][F0089]，并附带一个零依赖的 HTTP 产品外壳 [F0368]。仓库包含 8 个测试文件、共 42 个测试函数，另设 lab30min 教学目录帮助使用者按阶段上手 [F0535][F0463][F0471]。

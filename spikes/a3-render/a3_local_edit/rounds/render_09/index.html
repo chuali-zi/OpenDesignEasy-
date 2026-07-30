@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>拾野工作室 — 独立品牌与数字体验设计</title>
+<style>
+:root{
+  --color-bg:#faf8f4;
+  --color-surface:#ffffff;
+  --color-ink:#1c1a17;
+  --color-muted:#6f6a61;
+  --color-line:#e4dfd5;
+  --color-accent:#c96f3b;
+  --color-accent-dark:#a4551f;
+  --color-warm:#f2ece2;
+  --color-dark:#232019;
+  --color-dark-muted:#b7b0a4;
+  --font-sans:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+  --font-serif:Georgia,"Times New Roman","Songti SC",serif;
+  --fs-hero:56px;
+  --fs-h2:36px;
+  --fs-h3:22px;
+  --fs-body:16px;
+  --fs-small:14px;
+  --fs-caption:12px;
+  --fw-regular:400;
+  --fw-medium:500;
+  --fw-bold:700;
+  --space-xs:8px;
+  --space-sm:16px;
+  --space-md:24px;
+  --space-lg:48px;
+  --space-xl:80px;
+  --radius-sm:6px;
+  --radius-lg:16px;
+  --maxw:1200px;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:auto;}
+body{font-family:var(--font-sans);font-size:var(--fs-body);font-weight:var(--fw-regular);color:var(--color-ink);background:var(--color-bg);line-height:1.6;}
+img{max-width:100%;display:block;}
+a{color:var(--color-accent);text-decoration:none;}
+a:hover{color:var(--color-accent-dark);}
+.wrap{max-width:var(--maxw);margin:0 auto;padding:0 var(--space-md);}
+.kicker{font-size:var(--fs-caption);letter-spacing:2px;text-transform:uppercase;color:var(--color-accent);font-weight:var(--fw-bold);}
+h2.section-title{font-family:var(--font-serif);font-size:var(--fs-h2);font-weight:var(--fw-bold);margin:var(--space-xs) 0 var(--space-sm);}
+.section-head{margin-bottom:var(--space-lg);}
+.lead{color:var(--color-muted);max-width:640px;}
+.btn{display:inline-block;padding:12px 28px;border-radius:var(--radius-sm);font-weight:var(--fw-medium);font-size:var(--fs-body);}
+.btn-primary{background:var(--color-accent);color:#fff;}
+.btn-primary:hover{background:var(--color-accent-dark);color:#fff;}
+.btn-ghost{border:1px solid var(--color-line);color:var(--color-ink);background:transparent;}
+.btn-ghost:hover{border-color:var(--color-accent);color:var(--color-accent);}
+
+/* header */
+.site-header{background:var(--color-surface);border-bottom:1px solid var(--color-line);position:sticky;top:0;z-index:10;}
+.header-inner{display:flex;align-items:center;justify-content:space-between;padding:18px var(--space-md);max-width:var(--maxw);margin:0 auto;}
+.brand-logo{font-family:var(--font-serif);font-size:24px;font-weight:var(--fw-bold);color:var(--color-ink);}
+.brand-logo span{color:var(--color-accent);}
+.nav-list{list-style:none;display:flex;gap:var(--space-md);}
+.nav-list a{color:var(--color-ink);font-size:var(--fs-small);font-weight:var(--fw-medium);}
+.nav-list a:hover{color:var(--color-accent);}
+
+/* hero */
+.hero{background:var(--color-dark);color:#f5f1e8;padding:var(--space-xl) 0;}
+.hero-grid{display:grid;grid-template-columns:1.2fr 1fr;gap:var(--space-lg);align-items:center;}
+.hero h1{font-family:var(--font-serif);font-size:var(--fs-hero);line-height:1.15;margin:var(--space-sm) 0;}
+.hero p{color:var(--color-dark-muted);max-width:520px;margin-bottom:var(--space-md);}
+.hero-actions{display:flex;gap:var(--space-sm);}
+.hero-visual{border-radius:var(--radius-lg);overflow:hidden;}
+.hero-stats{display:flex;gap:var(--space-lg);margin-top:var(--space-lg);padding-top:var(--space-md);border-top:1px solid #3a352b;}
+.hero-stats .stat-num{font-family:var(--font-serif);font-size:32px;color:var(--color-accent);}
+.hero-stats .stat-label{font-size:var(--fs-small);color:var(--color-dark-muted);}
+
+/* intro */
+.intro{padding:var(--space-xl) 0;background:var(--color-bg);}
+.intro-grid{display:grid;grid-template-columns:1fr 1fr;gap:var(--space-lg);align-items:start;}
+.intro-features{display:grid;grid-template-columns:1fr 1fr;gap:var(--space-md);}
+.feature-card{background:var(--color-surface);border:1px solid var(--color-line);border-radius:var(--radius-lg);padding:var(--space-md);}
+.feature-card h4{font-size:var(--fs-h3);font-weight:var(--fw-medium);margin-bottom:var(--space-xs);font-family:var(--font-serif);}
+.feature-card p{font-size:var(--fs-small);color:var(--color-muted);}
+.intro-quote{margin-top:var(--space-md);padding-left:var(--space-sm);border-left:3px solid var(--color-accent);font-family:var(--font-serif);font-size:20px;color:var(--color-ink);}
+
+/* cases */
+.cases{padding:var(--space-xl) 0;background:var(--color-warm);}
+.case-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--space-md);}
+.case-card{background:var(--color-surface);border-radius:var(--radius-lg);overflow:hidden;border:1px solid var(--color-line);}
+.case-thumb{height:200px;}
+.case-body{padding:var(--space-md);}
+.case-tag{font-size:var(--fs-caption);letter-spacing:1px;text-transform:uppercase;color:var(--color-accent);font-weight:var(--fw-bold);}
+.case-body h3{font-family:var(--font-serif);font-size:var(--fs-h3);margin:6px 0;}
+.case-body p{font-size:var(--fs-small);color:var(--color-muted);}
+.case-more{text-align:center;margin-top:var(--space-lg);}
+
+/* services */
+.services{padding:var(--space-xl) 0;background:var(--color-surface);}
+.service-list{display:grid;grid-template-columns:repeat(2,1fr);gap:var(--space-md);}
+.service-item{display:flex;gap:var(--space-md);padding:var(--space-md);border:1px solid var(--color-line);border-radius:var(--radius-lg);background:var(--color-bg);}
+.service-index{font-family:var(--font-serif);font-size:32px;color:var(--color-accent);line-height:1;}
+.service-item h3{font-size:var(--fs-h3);font-family:var(--font-serif);margin-bottom:6px;}
+.service-item p{font-size:var(--fs-small);color:var(--color-muted);}
+.service-meta{margin-top:var(--space-xs);font-size:var(--fs-caption);color:var(--color-accent);font-weight:var(--fw-medium);}
+
+/* testimonials */
+.testimonials{padding:var(--space-xl) 0;background:var(--color-dark);color:#f5f1e8;}
+.testimonials .kicker{color:var(--color-accent);}
+.testimonial-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--space-md);}
+.quote-card{background:#2c2820;border:1px solid #3a352b;border-radius:var(--radius-lg);padding:var(--space-md);}
+.quote-card blockquote{font-family:var(--font-serif);font-size:17px;line-height:1.7;margin-bottom:var(--space-sm);}
+.quote-who{display:flex;align-items:center;gap:var(--space-sm);}
+.quote-avatar{width:44px;height:44px;border-radius:50%;background:var(--color-accent);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:var(--fw-bold);}
+.quote-name{font-weight:var(--fw-medium);font-size:var(--fs-small);}
+.quote-role{font-size:var(--fs-caption);color:var(--color-dark-muted);}
+
+/* contact */
+.contact{padding:var(--space-xl) 0;background:var(--color-bg);}
+.contact-grid{display:grid;grid-template-columns:1fr 1.2fr;gap:var(--space-lg);}
+.contact-info p{color:var(--color-muted);margin-bottom:var(--space-md);}
+.contact-rows{display:grid;gap:var(--space-sm);}
+.contact-row{display:flex;gap:var(--space-sm);align-items:baseline;}
+.contact-row .label{font-size:var(--fs-caption);text-transform:uppercase;letter-spacing:1px;color:var(--color-muted);width:72px;flex:none;}
+.contact-row .value{font-weight:var(--fw-medium);}
+.contact-form{background:var(--color-surface);border:1px solid var(--color-line);border-radius:var(--radius-lg);padding:var(--space-lg);}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:var(--space-sm);margin-bottom:var(--space-sm);}
+.form-field{margin-bottom:var(--space-sm);}
+.form-field label{display:block;font-size:var(--fs-small);font-weight:var(--fw-medium);margin-bottom:6px;}
+.form-field input,.form-field textarea{width:100%;padding:10px 12px;border:1px solid var(--color-line);border-radius:var(--radius-sm);font-family:var(--font-sans);font-size:var(--fs-body);background:var(--color-bg);}
+.form-field textarea{height:110px;resize:vertical;}
+
+/* footer */
+.site-footer{background:var(--color-ink);color:var(--color-dark-muted);padding:var(--space-lg) 0 var(--space-md);}
+.footer-cols{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:var(--space-lg);margin-bottom:var(--space-lg);}
+.footer-brand h4{font-family:var(--font-serif);font-size:24px;color:#f5f1e8;margin-bottom:var(--space-sm);}
+.footer-col h5{color:#f5f1e8;font-size:var(--fs-small);margin-bottom:var(--space-sm);letter-spacing:1px;}
+.footer-col ul{list-style:none;display:grid;gap:var(--space-xs);}
+.footer-col a{color:var(--color-dark-muted);font-size:var(--fs-small);}
+.footer-col a:hover{color:var(--color-accent);}
+.footer-bottom{border-top:1px solid #3a352b;padding-top:var(--space-sm);display:flex;justify-content:space-between;font-size:var(--fs-caption);}
+
+@media (max-width:960px){
+  .hero-grid,.intro-grid,.contact-grid{grid-template-columns:1fr;}
+  .case-grid,.testimonial-grid{grid-template-columns:1fr;}
+  .service-list{grid-template-columns:1fr;}
+  .footer-cols{grid-template-columns:1fr 1fr;}
+  .hero h1{font-size:40px;}
+}
+</style>
+</head>
+<body>
+
+<!-- ============ HEADER ============ -->
+<header class="site-header" data-oey-section="site-header">
+  <div class="header-inner">
+    <a class="brand-logo" href="#top" data-oey-object="brand-logo">拾野<span>工作室</span></a>
+    <nav aria-label="主导航">
+      <ul class="nav-list" data-oey-object="nav-menu">
+        <li><a href="#intro">关于我们</a></li>
+        <li><a href="#cases">精选案例</a></li>
+        <li><a href="#services">服务能力</a></li>
+        <li><a href="#voices">客户评价</a></li>
+      </ul>
+    </nav>
+    <a class="btn btn-primary" href="#contact" data-oey-object="header-cta">开始合作</a>
+  </div>
+</header>
+
+<!-- ============ HERO ============ -->
+<section class="hero" data-oey-section="hero-banner" id="top">
+  <div class="wrap hero-grid">
+    <div>
+      <p class="kicker" data-oey-object="hero-kicker">独立设计工作室 · 成立于 2016</p>
+      <h1 data-oey-object="hero-title">为认真做事的品牌，<br>设计被记住的体验。</h1>
+      <p data-oey-object="hero-subtitle">第 1 轮更新内容：以清晰设计回应真实需求。</p>
+      <div class="hero-actions">
+        <a class="btn btn-primary" href="#cases" data-oey-object="hero-cta-primary" title="第 2 轮局部说明">查看案例</a>
+        <a class="btn btn-ghost" href="#contact" data-oey-object="hero-cta-secondary">预约咨询</a>
+      </div>
+      <div class="hero-stats" data-oey-object="hero-stats">
+        <div><div class="stat-num">120+</div><div class="stat-label">交付项目</div></div>
+        <div><div class="stat-num">18</div><div class="stat-label">设计奖项</div></div>
+        <div><div class="stat-num">96%</div><div class="stat-label">客户续约率</div></div>
+      </div>
+    </div>
+    <div class="hero-visual">
+      <svg viewBox="0 0 480 520" width="100%" height="100%" role="img" aria-label="工作室视觉拼贴" data-oey-object="hero-visual" xmlns="http://www.w3.org/2000/svg">
+        <rect width="480" height="520" fill="#2c2820"/>
+        <rect x="40" y="60" width="220" height="160" rx="12" fill="#c96f3b"/>
+        <rect x="280" y="60" width="160" height="220" rx="12" fill="#3a352b"/>
+        <circle cx="150" cy="330" r="90" fill="#f2ece2"/>
+        <rect x="260" y="320" width="180" height="140" rx="12" fill="#a4551f"/>
+        <text x="60" y="490" font-family="Georgia,serif" font-size="28" fill="#f5f1e8">SHIYE STUDIO</text>
+        <text x="300" y="490" font-family="Georgia,serif" font-size="28" fill="#f5f1e8">新增项目 5</text>
+      </svg>
+    </div>
+  </div>
+</section>
+
+<!-- ============ BRAND INTRO ============ -->
+<section class="intro" data-oey-section="brand-intro" id="intro">
+  <div class="wrap">
+    <div class="section-head">
+      <p class="kicker" data-oey-object="intro-kicker">关于拾野</p>
+      <h2 class="section-title" data-oey-object="intro-title"><span>小而坚定的团队，做深而不是做广</span></h2>
+    </div>
+    <div class="intro-grid">
+      <div>
+        <p class="lead" data-oey-object="intro-lead">我们是一支 12 人的独立团队，分布在杭州与成都。不设销售岗，每一个项目都由创始设计师直接参与。我们每年只承接有限数量的委托，以保证每个品牌都被认真对待。</p>
+        <blockquote class="intro-quote" data-oey-object="intro-quote">“设计不是装饰，而是帮助品牌把复杂的事情讲清楚。”</blockquote>
+        <p style="margin-top:16px;"><a href="#contact" data-oey-object="intro-link">了解我们的工作流程 →</a></p>
+      </div>
+      <div class="intro-features" data-oey-object="intro-feature-grid">
+        <div class="feature-card"><h4>深度共创</h4><p>从战略工作坊开始，与客户团队共同定义问题，而不是直接给答案。</p></div>
+        <div class="feature-card"><h4>全链路交付</h4><p>从品牌策略到上线落地，设计与工程在同一屋檐下协作。</p></div>
+        <div class="feature-card"><h4>长期陪伴</h4><p>超过一半的客户与我们合作三年以上，共同迭代品牌系统。</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ CASE STUDIES ============ -->
+<section class="cases" data-oey-section="case-studies" id="cases">
+  <div class="wrap">
+    <div class="section-head">
+      <p class="kicker" data-oey-object="cases-kicker">精选案例</p>
+      <h2 class="section-title" data-oey-object="cases-title">第 6 轮更新内容：以清晰设计回应真实需求。</h2>
+      <p class="lead" data-oey-object="cases-lead" title="第 7 轮局部说明">涵盖消费品牌、文化机构与科技公司，每一个项目都是一次从零开始的深入合作。</p>
+    </div>
+    <div class="case-grid" data-oey-object="case-card-grid">
+      <article class="case-card">
+        <svg class="case-thumb" viewBox="0 0 400 200" xmlns="http://www.w3.org/2000/svg"><rect width="400" height="200" fill="#c96f3b"/><circle cx="200" cy="100" r="56" fill="#faf8f4"/><text x="200" y="108" text-anchor="middle" font-size="20" fill="#1c1a17" font-family="Georgia,serif">山雾茶事</text></svg>
+        <div class="case-body"><p class="case-tag">品牌识别 / 包装</p><h3>山雾茶事</h3><p>为新中式茶饮品牌构建完整的视觉系统与门店体验。</p></div>
+      </article>
+      <article class="case-card">
+        <svg class="case-thumb" viewBox="0 0 400 200" xmlns="http://www.w3.org/2000/svg"><rect width="400" height="200" fill="#232019"/><rect x="60" y="50" width="280" height="100" rx="10" fill="#f2ece2"/><text x="200" y="108" text-anchor="middle" font-size="20" fill="#1c1a17" font-family="Georgia,serif">栖间民宿</text></svg>
+        <div class="case-body"><p class="case-tag">空间导视 / 网站</p><h3>栖间民宿</h3><p>莫干山精品民宿的品牌升级与官网预订体验重构。</p></div>
+      </article>
+      <article class="case-card">
+        <svg class="case-thumb" viewBox="0 0 400 200" xmlns="http://www.w3.org/2000/svg"><rect width="400" height="200" fill="#a4551f"/><rect x="80" y="40" width="60" height="120" fill="#faf8f4"/><rect x="170" y="40" width="60" height="120" fill="#e4dfd5"/><rect x="260" y="40" width="60" height="120" fill="#f2ece2"/></svg>
+        <div class="case-body"><p class="case-tag">产品设计 / App</p><h3>墨记笔记</h3><p>效率工具 App 的信息架构重塑与界面系统设计。</p></div>
+      </article>
+      <article class="case-card">
+        <svg class="case-thumb" viewBox="0 0 400 200" xmlns="http://www.w3.org/2000/svg"><rect width="400" height="200" fill="#f2ece2"/><circle cx="140" cy="100" r="60" fill="#232019"/><circle cx="250" cy="100" r="60" fill="#c96f3b"/></svg>
+        <div class="case-body"><p class="case-tag">展览视觉 / 出版</p><h3>南方摄影季</h3><p>年度摄影大展的主视觉、画册与现场导视系统。</p></div>
+      </article>
+      <article class="case-card">
+        <svg class="case-thumb" viewBox="0 0 400 200" xmlns="http://www.w3.org/2000/svg"><rect width="400" height="200" fill="#3a352b"/><path d="M120 140 L200 60 L280 140 Z" fill="#c96f3b"/><text x="200" y="180" text-anchor="middle" font-size="16" fill="#f5f1e8" font-family="Georgia,serif">北屿咖啡</text></svg>
+        <div class="case-body"><p class="case-tag">品牌识别 / 电商</p><h3>北屿咖啡</h3><p>精品咖啡豆品牌的视觉焕新与线上商城设计。</p></div>
+      </article>
+      <article class="case-card">
+        <svg class="case-thumb" viewBox="0 0 400 200" xmlns="http://www.w3.org/2000/svg"><rect width="400" height="200" fill="#e4dfd5"/><rect x="100" y="40" width="200" height="120" rx="60" fill="#a4551f"/><text x="200" y="112" text-anchor="middle" font-size="18" fill="#faf8f4" font-family="Georgia,serif">回声剧场</text></svg>
+        <div class="case-body"><p class="case-tag">机构品牌 / 网站</p><h3>回声剧场</h3><p>独立剧场的品牌系统与演出票务数字平台。</p></div>
+      </article>
+    </div>
+    <div class="case-more">
+      <a class="btn btn-ghost" href="#contact" data-oey-object="cases-more-link">索取完整作品集</a>
+    </div>
+  </div>
+</section>
+
+<!-- ============ SERVICES ============ -->
+<section class="services" data-oey-section="service-list" id="services">
+  <div class="wrap">
+    <div class="section-head">
+      <p class="kicker" data-oey-object="services-kicker">服务能力</p>
+      <h2 class="section-title" data-oey-object="services-title">四个彼此支撑的专业方向</h2>
+    </div>
+    <div class="service-list" data-oey-object="service-items">
+      <div class="service-item"><div class="service-index">01</div><div><h3>品牌策略与识别</h3><p>品牌定位、命名、视觉识别系统（VI）、品牌手册与落地规范。</p><p class="service-meta">周期 8–12 周</p></div></div>
+      <div class="service-item"><div class="service-index">02</div><div><h3>数字产品设计</h3><p>网站、App 与设计系统，从信息架构到高保真交付与前端协作。</p><p class="service-meta">周期 6–16 周</p></div></div>
+      <div class="service-item"><div class="service-index">03</div><div><h3>包装与印刷品</h3><p>包装结构、材质工艺、画册与出版物，对接印厂全程跟色。</p><p class="service-meta">周期 4–10 周</p></div></div>
+      <div class="service-item"><div class="service-index">04</div><div><h3>空间与导视</h3><p>门店与展陈空间的视觉延伸、环境图形与导视系统设计。</p><p class="service-meta">周期 8–14 周</p></div></div>
+    </div>
+    <p style="margin-top:32px;"><a href="#contact" data-oey-object="services-cta-link"><span>告诉我们你的项目需求 →</span></a></p>
+  </div>
+</section>
+
+<!-- ============ TESTIMONIALS ============ -->
+<section class="testimonials" data-oey-section="client-voices" id="voices">
+  <div class="wrap">
+    <div class="section-head">
+      <p class="kicker" data-oey-object="voices-kicker">客户评价</p>
+      <h2 class="section-title" data-oey-object="voices-title" style="color:#f5f1e8;">他们如何评价与拾野的合作</h2>
+    </div>
+    <div class="testimonial-grid" data-oey-object="testimonial-cards">
+      <div class="quote-card">
+        <blockquote>“拾野没有急着出图，而是先花两周理解我们的茶山与用户。最终的系统三年过去依然好用。”</blockquote>
+        <div class="quote-who"><div class="quote-avatar">林</div><div><div class="quote-name">林晚秋</div><div class="quote-role">山雾茶事 · 创始人</div></div></div>
+      </div>
+      <div class="quote-card">
+        <blockquote>“官网改版后预订转化率提升了 40%。他们是真正懂商业目标的设计团队。”</blockquote>
+        <div class="quote-who"><div class="quote-avatar">周</div><div><div class="quote-name">周其远</div><div class="quote-role">栖间民宿 · 主理人</div></div></div>
+      </div>
+      <div class="quote-card">
+        <blockquote>“设计系统文档细致到工程师可以直接照做，协作体验是我们合作过最顺滑的。”</blockquote>
+        <div class="quote-who"><div class="quote-avatar">陈</div><div><div class="quote-name">陈墨白</div><div class="quote-role">墨记笔记 · 产品负责人</div></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ CONTACT ============ -->
+<section class="contact" data-oey-section="contact-us" id="contact">
+  <div class="wrap">
+    <div class="section-head">
+      <p class="kicker" data-oey-object="contact-kicker">联系我们</p>
+      <h2 class="section-title" data-oey-object="contact-title">聊聊你的下一个项目</h2>
+    </div>
+    <div class="contact-grid">
+      <div class="contact-info">
+        <p data-oey-object="contact-lead">无论你是筹备中的新品牌，还是希望升级现有体验的团队，都欢迎写信或来访。我们通常会在两个工作日内回复。</p>
+        <div class="contact-rows">
+          <div class="contact-row"><span class="label" data-oey-object="contact-email-label">邮箱</span><a class="value" href="mailto:hello@shiye.design" data-oey-object="contact-email">hello@shiye.design</a></div>
+          <div class="contact-row"><span class="label" data-oey-object="contact-phone-label">电话</span><span class="value" data-oey-object="contact-phone">+86 0571-8888-6666</span></div>
+          <div class="contact-row"><span class="label" data-oey-object="contact-addr-label">地址</span><span class="value" data-oey-object="contact-address">杭州市西湖区留和路 139 号 拾野小楼 3F</span></div>
+          <div class="contact-row"><span class="label" data-oey-object="contact-hours-label">时间</span><span class="value" data-oey-object="contact-hours">周一至周五 10:00 – 19:00</span></div>
+        </div>
+      </div>
+      <form class="contact-form" data-oey-object="contact-form" action="#" method="post">
+        <div class="form-row">
+          <div class="form-field"><label for="f-name">你的称呼</label><input id="f-name" type="text" placeholder="怎么称呼你"></div>
+          <div class="form-field"><label for="f-mail">联系邮箱</label><input id="f-mail" type="email" placeholder="name@example.com"></div>
+        </div>
+        <div class="form-field"><label for="f-type">项目类型</label><input id="f-type" type="text" placeholder="品牌 / 网站 / 包装 / 空间"></div>
+        <div class="form-field"><label for="f-msg">项目简述</label><textarea id="f-msg" placeholder="简单说说你的想法、预算范围与期望时间"></textarea></div>
+        <button class="btn btn-primary" type="submit">发送需求</button>
+      </form>
+    </div>
+  </div>
+</section>
+
+<!-- ============ FOOTER ============ -->
+<footer class="site-footer" data-oey-section="site-footer">
+  <div class="wrap">
+    <div class="footer-cols">
+      <div class="footer-brand">
+        <h4 data-oey-object="footer-brand">拾野工作室</h4>
+        <p data-oey-object="footer-tagline">Shiye Studio — 独立品牌与数字体验设计，杭州 / 成都。</p>
+      </div>
+      <div class="footer-col">
+        <h5 data-oey-object="footer-nav-title">导航</h5>
+        <ul data-oey-object="footer-nav-list">
+          <li><a href="#intro">关于我们</a></li>
+          <li><a href="#cases">精选案例</a></li>
+          <li><a href="#services">服务能力</a></li>
+          <li><a href="#voices">客户评价</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h5 data-oey-object="footer-social-title">关注</h5>
+        <ul data-oey-object="footer-social-list">
+          <li><a href="#">微信公众号</a></li>
+          <li><a href="#">Behance</a></li>
+          <li><a href="#">Instagram</a></li>
+          <li><a href="#">小红书</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h5 data-oey-object="footer-join-title">加入</h5>
+        <ul data-oey-object="footer-join-list">
+          <li><a href="#">品牌设计师</a></li>
+          <li><a href="#">产品设计师</a></li>
+          <li><a href="#">实习申请</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span data-oey-object="footer-copyright">© 2025 拾野工作室 Shiye Studio. 保留所有权利。</span>
+      <a href="#top" data-oey-object="footer-top-link">回到顶部 ↑</a>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>

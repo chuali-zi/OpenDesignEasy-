@@ -1,0 +1,42 @@
+[
+  {
+    "run": "A1",
+    "rewrites": [],
+    "remaining_external": []
+  },
+  {
+    "run": "A2",
+    "rewrites": [
+      "fonts(a2) -> assets/fonts.css"
+    ],
+    "remaining_external": []
+  },
+  {
+    "run": "B1",
+    "rewrites": [
+      "fonts(b1) -> assets/fonts.css"
+    ],
+    "remaining_external": []
+  },
+  {
+    "run": "B2",
+    "rewrites": [
+      "fonts(b2) -> assets/fonts.css"
+    ],
+    "remaining_external": []
+  },
+  {
+    "run": "C1",
+    "rewrites": [
+      "tailwind -> assets/tailwind.js"
+    ],
+    "remaining_external": []
+  },
+  {
+    "run": "C2",
+    "rewrites": [
+      "tailwind -> assets/tailwind.js"
+    ],
+    "remaining_external": []
+  }
+]

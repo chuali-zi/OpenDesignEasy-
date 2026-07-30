@@ -1,0 +1,472 @@
+/* ============================================================
+   OEYdesign 工作台外壳 — 套准工作台（Registration Bench）
+   外壳：近白灰底 / 1px 发丝线 / Plex 体系 / accent 单点出现
+   ============================================================ */
+
+:root{
+  --bg:#F4F5F6;
+  --surface:#FFFFFF;
+  --ink:#191D22;
+  --ink-muted:#4E5764;
+  --line:#DFE3E7;
+  --accent:#0A5C43;
+  --shadow:0 1px 2px rgba(25,29,34,0.06);
+  --sans:"IBM Plex Sans","Noto Sans SC",sans-serif;
+  --mono:"IBM Plex Mono",monospace;
+}
+
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%}
+body{
+  font-family:var(--sans);
+  font-size:14px;
+  color:var(--ink);
+  background:var(--bg);
+  overflow:hidden;
+}
+.mono{font-family:var(--mono)}
+button{font-family:inherit;cursor:pointer}
+a{color:inherit;text-decoration:none}
+
+/* ---------- 顶栏 48px ---------- */
+.topbar{
+  height:48px;
+  background:var(--surface);
+  border-bottom:1px solid var(--line);
+  display:flex;
+  align-items:center;
+  gap:24px;
+  padding:0 16px;
+}
+.brand{display:flex;align-items:center;gap:8px}
+.brand-mark{
+  width:24px;height:24px;border-radius:4px;
+  background:var(--ink);color:#fff;
+  display:flex;align-items:center;justify-content:center;
+  font-size:14px;font-weight:600;
+}
+.brand-name{font-size:16px;font-weight:600}
+.project{
+  display:flex;align-items:center;gap:8px;
+  padding-left:24px;border-left:1px solid var(--line);
+  height:24px;
+}
+.project-name{font-size:14px;color:var(--ink)}
+.project-type{
+  font-family:var(--mono);font-size:12px;color:var(--ink-muted);
+  border:1px solid var(--line);border-radius:4px;padding:2px 6px;
+  background:var(--surface);
+}
+.top-actions{margin-left:auto;display:flex;align-items:center;gap:16px}
+.save-state{font-size:14px;color:var(--ink-muted)}
+.save-state .mono{font-size:12px}
+.save-check{color:var(--accent);font-weight:600}
+
+.btn-primary{
+  height:32px;padding:0 16px;
+  background:var(--accent);color:#fff;
+  border:none;border-radius:6px;
+  font-size:14px;font-weight:500;
+}
+.btn-primary:hover{filter:brightness(1.08)}
+.btn-primary:active{filter:brightness(0.94)}
+
+/* ---------- 总体布局：轨与台 ---------- */
+.layout{display:flex;height:calc(100vh - 48px)}
+
+/* ---------- 左：对话轨 352px ---------- */
+.rail{
+  width:352px;flex:0 0 352px;
+  background:var(--surface);
+  border-right:1px solid var(--line);
+  display:flex;flex-direction:column;
+  min-height:0;
+}
+.rail-head{
+  display:flex;align-items:baseline;justify-content:space-between;
+  padding:16px 16px 12px;
+}
+.rail-head h1{font-size:16px;font-weight:600}
+.rail-count{font-size:14px;color:var(--ink-muted)}
+
+/* 版本面板（默认收起） */
+.versions{border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.versions-toggle{
+  width:100%;height:40px;padding:0 16px;
+  background:var(--surface);border:none;
+  display:flex;align-items:center;justify-content:space-between;
+  font-size:14px;font-weight:500;color:var(--ink);
+}
+.versions-toggle:hover{background:var(--bg)}
+.versions-right{display:flex;align-items:center;gap:8px;color:var(--ink-muted)}
+.v-now{font-size:12px}
+.chev{transition:transform .15s ease}
+.versions-toggle[aria-expanded="true"] .chev{transform:rotate(180deg)}
+.version-list{list-style:none;border-top:1px solid var(--line)}
+.version-row{
+  position:relative;
+  display:flex;align-items:center;gap:8px;
+  min-height:40px;padding:4px 16px;
+  cursor:pointer;border-bottom:1px solid var(--line);
+}
+.version-row:last-child{border-bottom:none}
+.version-row:hover{background:var(--bg)}
+.v-tag{
+  font-size:12px;color:var(--ink-muted);
+  border:1px solid var(--line);border-radius:4px;padding:2px 4px;
+  min-width:30px;text-align:center;
+}
+.v-desc{font-size:14px;color:var(--ink);flex:1}
+.v-time{font-size:12px;color:var(--ink-muted)}
+.v-badge{
+  display:none;
+  font-size:12px;color:var(--accent);font-weight:600;
+}
+.version-row.is-current .v-tag{border-color:var(--accent);color:var(--accent)}
+.version-row.is-current .v-badge{display:inline}
+.version-row.is-current::before{
+  content:"";position:absolute;left:0;top:8px;bottom:8px;width:2px;background:var(--accent);
+}
+
+/* 对话流 */
+.chat{
+  flex:1;overflow-y:auto;min-height:0;
+  padding:16px;display:flex;flex-direction:column;gap:24px;
+}
+.turn-meta{
+  display:flex;align-items:baseline;gap:8px;margin-bottom:4px;
+}
+.who{font-size:14px;font-weight:600}
+.time{font-size:12px;color:var(--ink-muted)}
+
+.turn.user .bubble{
+  background:var(--bg);
+  border:1px solid var(--line);
+  border-radius:6px;
+  padding:12px;
+  font-size:14px;line-height:1.65;
+  box-shadow:var(--shadow);
+}
+
+.turn.agent{display:flex;gap:12px}
+.spine{display:flex;flex-direction:column;align-items:center;flex:0 0 auto}
+.vchip{
+  font-size:12px;color:var(--ink-muted);
+  border:1px solid var(--line);border-radius:4px;
+  background:var(--surface);padding:2px 4px;
+}
+.spine-line{flex:1;width:2px;background:var(--line);margin-top:4px;min-height:24px}
+.turn-body{flex:1;min-width:0}
+.turn-body p{font-size:14px;line-height:1.7;color:var(--ink)}
+
+/* 对象 chip：accent 语义之一「对象锚点」 */
+.obj-chip{
+  font-family:var(--mono);font-size:12px;
+  color:var(--accent);background:var(--surface);
+  border:1px solid var(--accent);border-radius:4px;
+  padding:2px 6px;margin:0 2px;
+  line-height:1.4;vertical-align:baseline;
+}
+.obj-chip:hover{background:rgba(10,92,67,0.08)}
+.obj-chip.sel{background:var(--accent);color:#fff}
+
+/* 输入区 */
+.composer{border-top:1px solid var(--line);padding:12px 16px;background:var(--surface)}
+.composer textarea{
+  width:100%;resize:none;
+  border:1px solid var(--line);border-radius:6px;
+  padding:8px 12px;
+  font-family:var(--sans);font-size:14px;line-height:1.6;color:var(--ink);
+  background:var(--surface);
+  min-height:56px;
+}
+.composer textarea:focus{outline:1px solid var(--accent);outline-offset:0;border-color:var(--accent)}
+.composer-row{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-top:8px;
+}
+.composer-hint{font-size:14px;color:var(--ink-muted)}
+.send-btn{height:32px}
+
+/* ---------- 右：画布台 ---------- */
+.bench{
+  flex:1;min-width:0;
+  display:flex;flex-direction:column;
+  background:var(--bg);
+}
+.toolbar{
+  margin:16px auto 0;
+  width:1024px;max-width:calc(100% - 64px);
+  background:var(--surface);
+  border:1px solid var(--line);border-radius:6px;
+  box-shadow:var(--shadow);
+  display:flex;align-items:center;gap:16px;
+  padding:8px 12px;
+}
+.tb-left{display:flex;align-items:baseline;gap:12px;flex:1;min-width:0}
+.tb-title{font-size:14px;font-weight:600}
+.tb-status{font-size:14px;color:var(--ink-muted)}
+.tb-center{display:flex;gap:4px}
+.dev-btn{
+  height:32px;padding:0 12px;
+  background:var(--surface);color:var(--ink-muted);
+  border:1px solid var(--line);border-radius:6px;
+  font-size:14px;
+}
+.dev-btn:hover{color:var(--ink)}
+.dev-btn.is-on{color:var(--ink);border-color:var(--ink);font-weight:500}
+.tb-right{display:flex;align-items:center;gap:12px;flex:1;justify-content:flex-end}
+.tb-ver{
+  font-size:12px;color:var(--accent);
+  border:1px solid var(--accent);border-radius:4px;padding:3px 6px;
+  font-weight:500;
+}
+
+.canvas{
+  flex:1;overflow:auto;min-height:0;
+  padding:16px 32px 48px;
+  display:flex;justify-content:center;align-items:flex-start;
+}
+.artboard{
+  background:#fff;
+  border:1px solid var(--line);
+  box-shadow:var(--shadow);
+  flex:0 0 auto;
+  transition:width .2s ease;
+}
+.artboard.w-desktop{width:1024px}
+.artboard.w-tablet{width:768px}
+.artboard.w-phone{width:400px}
+
+/* ============================================================
+   套准锚点覆盖层（signature move）
+   1.5px 角线 / 不填充 / 不遮罩产物本体
+   ============================================================ */
+.reg-overlay{
+  position:absolute;display:none;
+  pointer-events:none;z-index:60;
+}
+.reg-overlay.on{display:block}
+.reg-corner{
+  position:absolute;width:12px;height:12px;
+  border:0 solid var(--accent);
+}
+.reg-corner.tl{top:-6px;left:-6px;border-top-width:1.5px;border-left-width:1.5px}
+.reg-corner.tr{top:-6px;right:-6px;border-top-width:1.5px;border-right-width:1.5px}
+.reg-corner.bl{bottom:-6px;left:-6px;border-bottom-width:1.5px;border-left-width:1.5px}
+.reg-corner.br{bottom:-6px;right:-6px;border-bottom-width:1.5px;border-right-width:1.5px}
+.reg-label{
+  position:absolute;top:-30px;left:-6px;
+  font-size:12px;color:var(--accent);
+  background:var(--surface);
+  border:1px solid var(--accent);border-radius:4px;
+  padding:2px 6px;white-space:nowrap;
+  box-shadow:var(--shadow);
+}
+
+/* ---------- Toast ---------- */
+.toast{
+  position:fixed;right:24px;bottom:24px;
+  background:var(--ink);color:#fff;
+  font-size:14px;
+  padding:12px 16px;border-radius:6px;
+  box-shadow:var(--shadow);
+  opacity:0;transform:translateY(8px);
+  transition:opacity .18s ease,transform .18s ease;
+  pointer-events:none;z-index:100;
+}
+.toast.show{opacity:1;transform:translateY(0)}
+
+/* ============================================================
+   内层产物：焙野咖啡落地页
+   独立视觉语言：暖橙 + 深墨 + 奶油底，衬线标题
+   与外壳零共享色值
+   ============================================================ */
+.page{
+  --p-bg:#FAF3E9;
+  --p-card:#FFFDF8;
+  --p-ink:#2B1A10;
+  --p-muted:#8A7462;
+  --p-orange:#E8622C;
+  --p-line:#EADFCF;
+  position:relative;
+  background:var(--p-bg);
+  color:var(--p-ink);
+  font-family:"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+  font-size:15px;line-height:1.7;
+}
+.page [data-oey-object]{cursor:crosshair}
+
+.p-nav{
+  display:flex;align-items:center;gap:32px;
+  padding:20px 40px;
+  border-bottom:1px solid var(--p-line);
+  background:var(--p-card);
+}
+.p-logo{
+  font-family:Georgia,"Songti SC","STSong",serif;
+  font-size:20px;font-weight:700;letter-spacing:.02em;
+  display:flex;align-items:center;gap:8px;
+}
+.p-logo em{font-style:normal;font-size:14px;color:var(--p-orange);letter-spacing:.12em}
+.p-logo-mark{width:14px;height:14px;background:var(--p-orange);border-radius:50%;display:inline-block}
+.p-nav-links{display:flex;gap:24px;margin-left:auto}
+.p-nav-links a{font-size:14px;color:var(--p-ink)}
+.p-nav-links a:hover{color:var(--p-orange)}
+.p-nav-cta{
+  font-size:14px;font-weight:600;color:#fff;
+  background:var(--p-ink);
+  padding:8px 16px;border-radius:999px;
+}
+
+.p-hero{
+  display:flex;gap:48px;align-items:center;
+  padding:64px 40px;
+}
+.p-hero-text{flex:1;min-width:0}
+.p-eyebrow{
+  font-size:14px;color:var(--p-orange);font-weight:600;
+  letter-spacing:.06em;margin-bottom:16px;
+}
+.p-title{
+  font-family:Georgia,"Songti SC","STSong",serif;
+  font-size:26px;font-weight:700;line-height:1.45;
+  letter-spacing:-.01em;
+  max-width:230px;
+  margin-bottom:16px;
+}
+.p-sub{font-size:15px;color:var(--p-muted);max-width:420px;margin-bottom:24px}
+.p-cta-row{display:flex;gap:16px;align-items:center;margin-bottom:32px}
+.p-cta{
+  display:inline-block;
+  background:var(--p-orange);color:#fff;
+  font-size:15px;font-weight:600;
+  padding:12px 24px;border-radius:999px;
+  border:2px solid var(--p-ink);
+}
+.p-cta-ghost{
+  font-size:15px;font-weight:600;color:var(--p-ink);
+  border-bottom:2px solid var(--p-orange);padding-bottom:2px;
+}
+.p-stats{display:flex;gap:32px}
+.p-stats dt{
+  font-family:Georgia,"Songti SC",serif;
+  font-size:26px;font-weight:700;color:var(--p-orange);
+}
+.p-stats dd{font-size:14px;color:var(--p-muted)}
+.p-hero-visual{flex:0 0 auto;display:flex;align-items:center;justify-content:center}
+.p-disc{
+  width:240px;height:240px;border-radius:50%;
+  background:var(--p-orange);
+  display:flex;align-items:center;justify-content:center;
+  position:relative;
+}
+.p-disc-ring{
+  position:absolute;inset:12px;border-radius:50%;
+  border:2px dashed var(--p-card);
+}
+.p-disc-core{
+  width:150px;height:150px;border-radius:50%;
+  background:var(--p-card);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;
+  text-align:center;
+}
+.p-disc-core span{font-size:12px;color:var(--p-muted);letter-spacing:.08em}
+.p-disc-core strong{
+  font-family:Georgia,"Songti SC",serif;
+  font-size:16px;color:var(--p-ink);
+}
+
+.p-beans{padding:24px 40px 64px}
+.p-sec-head{margin-bottom:32px}
+.p-sec-head h2{
+  font-family:Georgia,"Songti SC",serif;
+  font-size:22px;font-weight:700;
+}
+.p-sec-head p{font-size:14px;color:var(--p-muted)}
+.p-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}
+.p-card{
+  background:var(--p-card);
+  border:1px solid var(--p-line);
+  border-radius:14px;
+  padding:20px;
+}
+.p-swatch{height:96px;border-radius:10px;margin-bottom:16px}
+.sw-1{background:var(--p-orange)}
+.sw-2{background:#8C4A1E}
+.sw-3{background:#3E5C3A}
+.p-card h3{
+  font-family:Georgia,"Songti SC",serif;
+  font-size:16px;font-weight:700;margin-bottom:4px;
+}
+.p-notes{font-size:14px;color:var(--p-muted);margin-bottom:12px}
+.p-roast{display:flex;align-items:center;gap:5px;margin-bottom:16px}
+.p-roast span{width:9px;height:9px;border-radius:50%;border:1.5px solid var(--p-orange)}
+.p-roast span.on{background:var(--p-orange)}
+.p-roast em{font-style:normal;font-size:13px;color:var(--p-muted);margin-left:6px}
+.p-card-foot{display:flex;align-items:center;justify-content:space-between}
+.p-card-foot strong{font-size:16px}
+.p-card-foot button{
+  font-size:14px;font-weight:600;
+  color:var(--p-orange);background:none;
+  border:1.5px solid var(--p-orange);border-radius:999px;
+  padding:7px 14px;
+}
+.p-card-foot button:hover{background:var(--p-orange);color:#fff}
+
+.p-subscribe{padding:0 40px 64px}
+.p-sub-block{
+  background:var(--p-ink);color:var(--p-bg);
+  border-radius:16px;
+  padding:48px;text-align:center;
+}
+.p-sub-block h2{
+  font-family:Georgia,"Songti SC",serif;
+  font-size:22px;font-weight:700;margin-bottom:8px;
+}
+.p-sub-block p{font-size:14px;color:#CBB49E;max-width:420px;margin:0 auto 24px}
+.p-sub-form{display:flex;gap:12px;justify-content:center}
+.p-sub-form input{
+  width:280px;height:44px;
+  border:1.5px solid #5A4231;border-radius:999px;
+  background:#3A2417;color:var(--p-bg);
+  font-size:14px;padding:0 18px;
+  font-family:inherit;
+}
+.p-sub-form input::placeholder{color:#8A7462}
+.p-sub-form button{
+  height:44px;padding:0 24px;
+  background:var(--p-orange);color:#fff;
+  border:none;border-radius:999px;
+  font-size:15px;font-weight:600;
+}
+.p-sub-note{font-size:13px !important;margin-top:16px !important;color:#8A7462 !important}
+
+.p-footer{
+  border-top:1px solid var(--p-line);
+  background:var(--p-card);
+  padding:40px;
+  display:flex;gap:48px;align-items:flex-start;flex-wrap:wrap;
+}
+.p-foot-brand{
+  font-family:Georgia,"Songti SC",serif;
+  font-size:18px;font-weight:700;
+  display:flex;flex-direction:column;gap:4px;
+}
+.p-foot-brand small{font-family:inherit;font-size:13px;font-weight:400;color:var(--p-muted)}
+.p-foot-cols{display:flex;gap:48px;margin-left:auto}
+.p-foot-cols div{display:flex;flex-direction:column;gap:6px}
+.p-foot-cols strong{font-size:14px;margin-bottom:2px}
+.p-foot-cols a{font-size:14px;color:var(--p-muted)}
+.p-foot-cols a:hover{color:var(--p-orange)}
+.p-foot-copy{width:100%;font-size:13px;color:var(--p-muted);border-top:1px solid var(--p-line);padding-top:16px}
+
+/* 窄画板下的产物自适应（产物自己的响应式） */
+.artboard.w-phone .p-hero{flex-direction:column;padding:40px 24px}
+.artboard.w-phone .p-cards{grid-template-columns:1fr}
+.artboard.w-phone .p-nav-links{display:none}
+.artboard.w-phone .p-sub-form{flex-direction:column;align-items:center}
+.artboard.w-phone .p-sub-form input{width:100%}
+.artboard.w-phone .p-beans,.artboard.w-phone .p-subscribe{padding-left:24px;padding-right:24px}
+.artboard.w-phone .p-sub-block{padding:32px 24px}
+.artboard.w-tablet .p-cards{grid-template-columns:1fr 1fr}

@@ -1,0 +1,89 @@
+{
+  "session_id": "smoke",
+  "termination_reason": "self_terminated",
+  "fatal_error": null,
+  "steps": 6,
+  "tool_calls_total": 6,
+  "format_errors": 0,
+  "format_error_detail": [],
+  "sandbox_violations": 0,
+  "read_fault_planned_at": 1,
+  "read_fault_triggered_at": 3,
+  "run_command_fault_planned_at": 1,
+  "run_command_fault_triggered_at": 5,
+  "prompt_tokens": 9638,
+  "completion_tokens": 1417,
+  "reasoning_tokens": 194,
+  "total_tokens": 11055,
+  "api_elapsed_total_s": 62.53,
+  "wall_clock_s": 62.55,
+  "calls_log": [
+    {
+      "idx": 1,
+      "step": 1,
+      "name": "list_files",
+      "format_ok": true,
+      "result_ok": true,
+      "args_key": ".",
+      "is_fault": false
+    },
+    {
+      "idx": 2,
+      "step": 2,
+      "name": "write_file",
+      "format_ok": true,
+      "result_ok": true,
+      "args_key": "index.html",
+      "is_fault": false
+    },
+    {
+      "idx": 3,
+      "step": 3,
+      "name": "read_file",
+      "format_ok": true,
+      "result_ok": false,
+      "args_key": "index.html",
+      "is_fault": true
+    },
+    {
+      "idx": 4,
+      "step": 4,
+      "name": "list_files",
+      "format_ok": true,
+      "result_ok": true,
+      "args_key": ".",
+      "is_fault": false
+    },
+    {
+      "idx": 5,
+      "step": 4,
+      "name": "run_command",
+      "format_ok": true,
+      "result_ok": true,
+      "args_key": "pwd && ls -la && find . -name 'index.html' 2>/dev/null",
+      "is_fault": true
+    },
+    {
+      "idx": 6,
+      "step": 5,
+      "name": "read_file",
+      "format_ok": true,
+      "result_ok": true,
+      "args_key": "index.html",
+      "is_fault": false
+    }
+  ],
+  "final_message": {
+    "role": "assistant",
+    "content": "The self-check succeeded — the file contents match exactly what I intended. All requirements are verified:\n\n- Valid HTML5 doctype (`<!DOCTYPE html>`)\n- `<title>`: \"Lumibrew — The Self-Cleaning Travel Mug\"\n- `<header>` with a short nav (Features / About / Contact links)\n- `<main>` with an `<h1>`, an `<h2>`, and two paragraphs of real descriptive text\n- `<footer>` with a copyright line\n\n**Summary:** I built a single-page product landing page at `index.html` for \"Lumibrew,\" a fictional self-cleaning travel mug with a UV-C sanitizing lid. The page includes a styled header with navigation, a main section with headings and genuine marketing copy describing the product's features and benefits, a footer, and some light inline CSS for a clean layout. The file was written, confirmed present in the workspace, and read back successfully to verify its contents. One initial read attempt returned a transient FileNotFoundError, which I diagnosed by re-listing the directory (the file was present) and then successfully retried the read."
+  },
+  "artifact": {
+    "exists": true,
+    "parseable": true,
+    "size_bytes": 2042,
+    "error": null,
+    "valid": true
+  },
+  "read_recovery": "recovered",
+  "run_command_recovery": "recovered"
+}

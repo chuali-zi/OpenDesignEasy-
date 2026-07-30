@@ -1,0 +1,1151 @@
+<<<FILE: index.html>>>
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>环线 THE LOOP · OEYdesign Agent 工作台</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<header class="rail" data-oey-section="project-rail">
+  <div class="rail-brand">
+    <span class="rail-logo" aria-hidden="true">◍</span>
+    <div>
+      <div class="rail-name" data-oey-object="rail.brand">环线 THE LOOP</div>
+      <div class="rail-sub" data-oey-object="rail.tagline">OEYdesign · design_agent 工作台</div>
+    </div>
+  </div>
+  <nav class="rail-tabs" id="railTabs" data-oey-object="rail.tabs" aria-label="项目切换"></nav>
+  <div class="rail-right">
+    <span class="rail-status" id="railStatus" data-oey-object="rail.status">载入中…</span>
+    <button class="btn btn-ghost" id="btnNewProject" data-oey-object="rail.new" type="button">+ 新案子</button>
+  </div>
+</header>
+
+<main class="spine" id="spine">
+
+  <section class="station" data-oey-section="stage">
+    <div class="station-node" aria-hidden="true"></div>
+    <div class="station-head">
+      <div>
+        <h1 class="stage-title" id="stageTitle" data-oey-object="stage.heading">—</h1>
+        <p class="stage-brief" id="stageBrief" data-oey-object="stage.brief"></p>
+      </div>
+      <div class="stage-meta">
+        <span class="rev-badge" id="stageRevision" data-oey-object="stage.revision">REVISION —</span>
+        <span class="rev-note" id="stageNote" data-oey-object="stage.note"></span>
+      </div>
+    </div>
+    <div class="stage-canvas" id="stagePreview" data-oey-object="stage.preview"></div>
+    <div class="stage-empty" id="stageEmpty" data-oey-object="stage.empty" hidden>
+      这个项目还没有任何候选方向。design_agent 会先把模糊需求问清楚，再动手产出第一稿。
+    </div>
+  </section>
+
+  <section class="station" data-oey-section="feedback-direction">
+    <div class="station-node node-warn" aria-hidden="true"></div>
+    <h2 class="station-label" data-oey-object="direction.title">整条路走偏了？</h2>
+    <p class="station-hint">对<b>整体方向</b>不满意：换一个叙事、换一种语气、或换一套视觉。这会推翻当前候选，agent 重新出方向。</p>
+    <div class="chip-row" id="directionChips" data-oey-object="direction.chips">
+      <button class="chip" type="button" data-preset="换一种叙事结构，现在的故事线不成立。">换叙事</button>
+      <button class="chip" type="button" data-preset="整体语气不对，请换一种说话方式。">换语气</button>
+      <button class="chip" type="button" data-preset="视觉方向推倒重来，当前配色与版式都不合适。">换视觉</button>
+    </div>
+    <textarea class="fb-input" id="directionInput" data-oey-object="direction.input" rows="3" placeholder="说清楚哪里不对、想要什么感觉，越具体 agent 越不容易再走偏…"></textarea>
+    <div class="fb-actions">
+      <button class="btn btn-primary" id="directionSubmit" data-oey-object="direction.submit" type="button">推翻这个方向，重做</button>
+    </div>
+  </section>
+
+  <section class="station" data-oey-section="feedback-local">
+    <div class="station-node node-fine" aria-hidden="true"></div>
+    <h2 class="station-label" data-oey-object="local.title">只有一处硌眼？</h2>
+    <p class="station-hint">对<b>局部内容</b>不满意：方向保留，只微调某个具体位置。可以直接点预览里的区块来定位。</p>
+    <div class="fb-local-row">
+      <label class="fb-field">
+        <span>位置</span>
+        <select id="localRegion" data-oey-object="local.region"></select>
+      </label>
+    </div>
+    <textarea class="fb-input" id="localInput" data-oey-object="local.input" rows="2" placeholder="这个区块哪里不对、想改成什么样…"></textarea>
+    <div class="fb-actions">
+      <button class="btn btn-secondary" id="localSubmit" data-oey-object="local.submit" type="button">只改这一处</button>
+    </div>
+  </section>
+
+  <section class="station" data-oey-section="loop">
+    <div class="station-node" aria-hidden="true"></div>
+    <h2 class="station-label" data-oey-object="loop.title">回路记录 <span class="loop-count" id="loopCount" data-oey-object="loop.count"></span></h2>
+    <p class="station-hint">这个项目从提问、出方向、收到反馈到复核交付，每一步都留在这里，按发生顺序排列。</p>
+    <ol class="loop-list" id="loopList" data-oey-object="loop.list"></ol>
+  </section>
+
+  <section class="station" data-oey-section="constraints">
+    <div class="station-node" aria-hidden="true"></div>
+    <h2 class="station-label" data-oey-object="constraints.title">约束档案</h2>
+    <p class="station-hint">创建项目时定下的边界，agent 每次产出都要在这些边界内工作。</p>
+    <div class="constraint-grid">
+      <div class="constraint-cell">
+        <span class="constraint-key">Preset</span>
+        <span class="constraint-val" id="constraintPreset" data-oey-object="constraints.preset">—</span>
+      </div>
+      <div class="constraint-cell">
+        <span class="constraint-key">Template role</span>
+        <span class="constraint-val" id="constraintRole" data-oey-object="constraints.role">—</span>
+      </div>
+      <div class="constraint-cell">
+        <span class="constraint-key">语气</span>
+        <span class="constraint-val" id="constraintTone" data-oey-object="constraints.tone">—</span>
+      </div>
+      <div class="constraint-cell">
+        <span class="constraint-key">色板</span>
+        <span class="constraint-val" id="constraintPalette" data-oey-object="constraints.palette">—</span>
+      </div>
+    </div>
+    <ul class="constraint-rules" id="constraintRules" data-oey-object="constraints.rules"></ul>
+  </section>
+
+  <section class="station" data-oey-section="quality">
+    <div class="station-node node-gate" aria-hidden="true"></div>
+    <h2 class="station-label" data-oey-object="quality.title">质量双轨</h2>
+    <p class="station-hint">两条独立轨道：<b>硬错误</b>是客观问题、会关掉交付闸门；<b>审美发现</b>只是建议，交不交付你自己定。两者不合并、不打总分。</p>
+    <div class="gate" id="qualityVerdict" data-oey-object="quality.verdict">—</div>
+    <div class="quality-lanes">
+      <div class="lane lane-hard">
+        <h3 data-oey-object="quality.hardTitle">硬错误 · 挡住交付</h3>
+        <ul id="qualityHard" data-oey-object="quality.hard"></ul>
+      </div>
+      <div class="lane lane-soft">
+        <h3 data-oey-object="quality.aestheticTitle">审美发现 · 仅供参考</h3>
+        <ul id="qualityAesthetic" data-oey-object="quality.aesthetic"></ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="station" data-oey-section="delivery">
+    <div class="station-node" aria-hidden="true"></div>
+    <h2 class="station-label" data-oey-object="delivery.title">交付记录</h2>
+    <p class="station-hint">只有通过质量闸门的正式 Artifact 才能导出。这里留下每一次导出的痕迹。</p>
+    <div class="delivery-status" id="deliveryStatus" data-oey-object="delivery.status">—</div>
+    <ul class="delivery-list" id="deliveryList" data-oey-object="delivery.list"></ul>
+  </section>
+
+  <footer class="colophon">环线 THE LOOP — OEYdesign 前端方向实验 · 数据全部为本地 mock</footer>
+</main>
+
+<div class="modal-mask" id="modalMask" hidden>
+  <div class="modal" data-oey-section="new-project" role="dialog" aria-modal="true" aria-label="开一个新案子">
+    <h2 data-oey-object="new.title">开一个新案子</h2>
+    <label class="fb-field">
+      <span>项目名称</span>
+      <input id="npName" data-oey-object="new.name" type="text" placeholder="例如：社区书店 招募海报">
+    </label>
+    <div class="fb-field">
+      <span>Constraint preset</span>
+      <div class="chip-row" id="npPreset" data-oey-object="new.preset">
+        <button class="chip" type="button" data-val="开放探索">开放探索</button>
+        <button class="chip" type="button" data-val="设计引导">设计引导</button>
+        <button class="chip" type="button" data-val="规范生产">规范生产</button>
+      </div>
+    </div>
+    <div class="fb-field">
+      <span>Template role</span>
+      <div class="chip-row" id="npRole" data-oey-object="new.role">
+        <button class="chip" type="button" data-val="参考样例">参考样例</button>
+        <button class="chip" type="button" data-val="起始脚手架">起始脚手架</button>
+        <button class="chip" type="button" data-val="设计系统">设计系统</button>
+        <button class="chip" type="button" data-val="交付合同">交付合同</button>
+      </div>
+    </div>
+    <div class="fb-actions">
+      <button class="btn btn-ghost" id="npCancel" type="button">取消</button>
+      <button class="btn btn-primary" id="npSubmit" data-oey-object="new.submit" type="button">创建并进入环线</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast" data-oey-section="toast" hidden></div>
+
+<script src="data.js"></script>
+<script src="api.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
+<<<END>>>
+
+<<<FILE: styles.css>>>
+:root {
+  --ink: #0e1116;
+  --ink-2: #151a21;
+  --panel: #1a212b;
+  --line: #2a3340;
+  --paper: #ece7dc;
+  --muted: #8b95a3;
+  --accent: #ff5c33;
+  --accent-soft: rgba(255, 92, 51, .14);
+  --teal: #3ec6a8;
+  --teal-soft: rgba(62, 198, 168, .12);
+  --red: #ff4d5e;
+  --red-soft: rgba(255, 77, 94, .12);
+  --amber: #e8b44a;
+  --amber-soft: rgba(232, 180, 74, .12);
+  --radius: 14px;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background:
+    radial-gradient(1200px 500px at 80% -10%, rgba(255, 92, 51, .07), transparent 60%),
+    radial-gradient(900px 500px at 10% 0%, rgba(62, 198, 168, .06), transparent 60%),
+    var(--ink);
+  color: var(--paper);
+  font-family: -apple-system, "PingFang SC", "Microsoft YaHei", "Segoe UI", sans-serif;
+  line-height: 1.6;
+}
+
+h1, h2, h3 { font-family: Georgia, "Songti SC", "SimSun", serif; letter-spacing: .01em; }
+button { font: inherit; cursor: pointer; }
+textarea, input, select {
+  font: inherit;
+  color: var(--paper);
+  background: var(--ink-2);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+textarea, input { width: 100%; padding: 10px 12px; resize: vertical; }
+textarea:focus, input:focus, select:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+select { padding: 8px 10px; }
+
+/* ---------- 顶部项目横带 ---------- */
+.rail {
+  position: sticky; top: 0; z-index: 40;
+  display: flex; align-items: center; gap: 20px;
+  padding: 12px 28px;
+  background: rgba(14, 17, 22, .92);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--line);
+}
+.rail-brand { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+.rail-logo { font-size: 26px; color: var(--accent); }
+.rail-name { font-family: Georgia, serif; font-size: 17px; }
+.rail-sub { font-size: 11px; color: var(--muted); letter-spacing: .08em; }
+.rail-tabs { display: flex; gap: 8px; overflow-x: auto; flex: 1; padding: 4px 2px; }
+.rail-tab {
+  flex-shrink: 0;
+  display: flex; align-items: center; gap: 8px;
+  padding: 7px 14px;
+  background: var(--ink-2);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--paper);
+  transition: border-color .15s, background .15s;
+}
+.rail-tab:hover { border-color: var(--muted); }
+.rail-tab.active { border-color: var(--accent); background: var(--accent-soft); }
+.rail-tab .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.dot.idle { background: var(--muted); }
+.dot.busy { background: var(--amber); }
+.dot.ok { background: var(--teal); }
+.dot.blocked { background: var(--red); }
+.rail-tab .tab-kind { font-size: 11px; color: var(--muted); }
+.rail-right { display: flex; align-items: center; gap: 14px; flex-shrink: 0; }
+.rail-status {
+  font-size: 12px; letter-spacing: .12em; text-transform: uppercase;
+  padding: 5px 12px; border: 1px dashed var(--line); border-radius: 999px; color: var(--muted);
+}
+.rail-status.busy { color: var(--amber); border-color: var(--amber); }
+.rail-status.ok { color: var(--teal); border-color: var(--teal); }
+.rail-status.blocked { color: var(--red); border-color: var(--red); }
+
+/* ---------- 按钮 ---------- */
+.btn {
+  border-radius: 999px; padding: 9px 18px; border: 1px solid transparent;
+  transition: transform .1s, opacity .15s;
+}
+.btn:active { transform: scale(.97); }
+.btn:disabled { opacity: .5; cursor: wait; }
+.btn-primary { background: var(--accent); color: #14100c; font-weight: 600; }
+.btn-secondary { background: var(--teal); color: #0c1412; font-weight: 600; }
+.btn-ghost { background: transparent; border-color: var(--line); color: var(--paper); }
+.btn-ghost:hover { border-color: var(--muted); }
+
+/* ---------- 单轴纵深主线 ---------- */
+.spine {
+  position: relative;
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 56px 24px 80px 64px;
+}
+.spine::before {
+  content: "";
+  position: absolute; top: 0; bottom: 0; left: 42px;
+  width: 2px;
+  background: linear-gradient(var(--line) 0%, var(--accent) 30%, var(--teal) 70%, var(--line) 100%);
+  opacity: .35;
+}
+.station { position: relative; margin-bottom: 72px; }
+.station-node {
+  position: absolute; left: -30px; top: 10px;
+  width: 14px; height: 14px; border-radius: 50%;
+  background: var(--ink); border: 3px solid var(--accent);
+}
+.node-warn { border-color: var(--accent); box-shadow: 0 0 12px var(--accent-soft); }
+.node-fine { border-color: var(--teal); }
+.node-gate { border-color: var(--amber); }
+.station-label { font-size: 22px; margin: 0 0 4px; }
+.station-hint { color: var(--muted); font-size: 13.5px; margin: 0 0 18px; max-width: 620px; }
+.station-hint b { color: var(--paper); }
+
+/* ---------- 候选舞台 ---------- */
+.station-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 20px; flex-wrap: wrap; }
+.stage-title { font-size: 30px; margin: 0; }
+.stage-brief { color: var(--muted); font-size: 14px; margin: 6px 0 0; max-width: 520px; }
+.stage-meta { text-align: right; }
+.rev-badge {
+  display: inline-block;
+  font-size: 12px; letter-spacing: .14em;
+  color: var(--accent); border: 1px solid var(--accent);
+  padding: 4px 12px; border-radius: 999px;
+}
+.rev-note { display: block; font-size: 12px; color: var(--muted); margin-top: 6px; }
+.stage-canvas {
+  margin-top: 20px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 22px;
+  min-height: 220px;
+}
+.stage-empty {
+  margin-top: 20px;
+  border: 1px dashed var(--line); border-radius: var(--radius);
+  padding: 48px 24px; text-align: center; color: var(--muted);
+}
+[data-region] { cursor: crosshair; border-radius: 8px; transition: outline-color .15s; outline: 1px dashed transparent; outline-offset: 4px; }
+[data-region]:hover { outline-color: var(--teal); }
+[data-region].region-picked { outline: 2px solid var(--teal); }
+.region-tag {
+  display: inline-block; font-size: 10px; color: var(--teal);
+  letter-spacing: .1em; margin-bottom: 6px; text-transform: uppercase;
+}
+
+/* 网页方向预览 */
+.pv-web .pv-hero {
+  background: linear-gradient(135deg, #2b1c14, #17202a);
+  border-radius: 10px; padding: 34px 28px; margin-bottom: 14px;
+}
+.pv-kicker { font-size: 11px; letter-spacing: .22em; color: var(--amber); }
+.pv-hero h3 { font-size: 24px; margin: 10px 0 18px; }
+.pv-cta {
+  display: inline-block; background: var(--accent); color: #14100c;
+  font-weight: 600; font-size: 13px; padding: 8px 20px; border-radius: 999px;
+}
+.pv-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.pv-cols > div { background: var(--ink-2); border: 1px solid var(--line); padding: 16px; }
+.pv-cols h4 { margin: 0 0 6px; font-size: 14px; }
+.pv-cols p { margin: 0; font-size: 12.5px; color: var(--muted); }
+.pv-swatch { display: inline-block; width: 14px; height: 14px; border-radius: 4px; margin-right: 6px; vertical-align: -2px; }
+
+/* PPT 方向预览 */
+.pv-deck { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+.pv-slide {
+  background: var(--ink-2); border: 1px solid var(--line); border-radius: 10px;
+  padding: 16px 14px; min-height: 120px; display: flex; flex-direction: column; gap: 8px;
+}
+.pv-slide .n { font-size: 10px; color: var(--muted); letter-spacing: .15em; }
+.pv-slide .t { font-family: Georgia, serif; font-size: 15px; }
+.pv-slide .bar { height: 5px; border-radius: 3px; background: var(--line); margin-top: auto; }
+.pv-slide .bar.fill-a { background: var(--accent); width: 70%; }
+.pv-slide .bar.fill-b { background: var(--teal); width: 45%; }
+
+/* 文档方向预览 */
+.pv-doc { background: var(--ink-2); border: 1px solid var(--line); border-radius: 10px; padding: 26px 30px; }
+.pv-doc h4 { font-family: Georgia, serif; font-size: 19px; margin: 0 0 4px; }
+.pv-doc .doc-ed { font-size: 11px; color: var(--muted); letter-spacing: .14em; margin-bottom: 14px; }
+.pv-doc p { font-size: 13px; color: #c9cfd8; margin: 0 0 10px; }
+.pv-doc .rule-line { border-left: 3px solid var(--teal); padding: 4px 12px; margin: 12px 0; font-size: 12.5px; color: var(--teal); }
+
+/* ---------- 反馈 ---------- */
+.chip-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+.chip {
+  background: var(--ink-2); border: 1px solid var(--line); color: var(--paper);
+  border-radius: 999px; padding: 6px 14px; font-size: 13px;
+}
+.chip:hover { border-color: var(--muted); }
+.chip.on { border-color: var(--accent); background: var(--accent-soft); }
+.fb-actions { margin-top: 12px; display: flex; gap: 10px; }
+.fb-local-row { display: flex; gap: 14px; margin-bottom: 12px; }
+.fb-field { display: flex; flex-direction: column; gap: 6px; font-size: 13px; color: var(--muted); margin-bottom: 12px; }
+.fb-field select { min-width: 240px; color: var(--paper); }
+
+/* ---------- 回路记录 ---------- */
+.loop-count { font-size: 13px; color: var(--muted); font-family: inherit; }
+.loop-list { list-style: none; margin: 0; padding: 0; }
+.loop-item {
+  display: grid; grid-template-columns: 92px 110px 1fr; gap: 14px;
+  padding: 12px 0; border-bottom: 1px dashed var(--line);
+  font-size: 13.5px;
+}
+.loop-item .t { color: var(--muted); font-variant-numeric: tabular-nums; }
+.loop-item .actor { font-size: 12px; letter-spacing: .06em; }
+.actor.agent { color: var(--accent); }
+.actor.user { color: var(--teal); }
+.actor.system { color: var(--muted); }
+.actor.quality { color: var(--amber); }
+.loop-item .text { color: #d4dae2; }
+.loop-item.fresh { animation: freshIn .8s ease; background: var(--teal-soft); border-radius: 8px; padding-left: 10px; }
+@keyframes freshIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; } }
+
+/* ---------- 约束档案 ---------- */
+.constraint-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 14px; }
+.constraint-cell {
+  background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px;
+  display: flex; flex-direction: column; gap: 4px;
+}
+.constraint-key { font-size: 10.5px; letter-spacing: .16em; text-transform: uppercase; color: var(--muted); }
+.constraint-val { font-size: 14px; }
+.constraint-rules { margin: 0; padding-left: 18px; color: #c9cfd8; font-size: 13.5px; }
+.constraint-rules li { margin-bottom: 4px; }
+
+/* ---------- 质量双轨 ---------- */
+.gate {
+  display: inline-block; padding: 8px 16px; border-radius: 999px;
+  font-size: 13px; font-weight: 600; letter-spacing: .04em; margin-bottom: 16px;
+}
+.gate.open { background: var(--teal-soft); color: var(--teal); border: 1px solid var(--teal); }
+.gate.closed { background: var(--red-soft); color: var(--red); border: 1px solid var(--red); }
+.quality-lanes { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.lane { border-radius: var(--radius); padding: 18px; border: 1px solid var(--line); }
+.lane-hard { background: var(--red-soft); border-color: rgba(255, 77, 94, .4); }
+.lane-soft { background: var(--amber-soft); border-color: rgba(232, 180, 74, .35); }
+.lane h3 { margin: 0 0 10px; font-size: 15px; }
+.lane-hard h3 { color: var(--red); }
+.lane-soft h3 { color: var(--amber); }
+.lane ul { margin: 0; padding-left: 18px; font-size: 13.5px; color: #dfe3e8; }
+.lane li { margin-bottom: 8px; }
+.lane .code { font-family: ui-monospace, Menlo, monospace; font-size: 11.5px; color: var(--muted); display: block; }
+.lane .none { color: var(--muted); font-size: 13px; list-style: none; margin-left: -18px; }
+
+/* ---------- 交付 ---------- */
+.delivery-status { font-size: 14px; margin-bottom: 12px; padding: 10px 14px; border-radius: 10px; background: var(--panel); border: 1px solid var(--line); }
+.delivery-status.ok { border-color: var(--teal); color: var(--teal); }
+.delivery-status.blocked { border-color: var(--red); color: var(--red); }
+.delivery-status.wait { color: var(--muted); }
+.delivery-list { list-style: none; margin: 0; padding: 0; font-size: 13.5px; }
+.delivery-list li {
+  display: flex; justify-content: space-between; gap: 16px;
+  padding: 10px 0; border-bottom: 1px dashed var(--line); color: #d4dae2;
+}
+.delivery-list .when { color: var(--muted); flex-shrink: 0; }
+.delivery-list .empty-note { color: var(--muted); border: none; }
+
+/* ---------- 弹层与提示 ---------- */
+.modal-mask {
+  position: fixed; inset: 0; z-index: 60;
+  background: rgba(8, 10, 13, .72); backdrop-filter: blur(4px);
+  display: flex; align-items: center; justify-content: center;
+}
+.modal {
+  width: min(480px, 92vw);
+  background: var(--panel); border: 1px solid var(--line); border-radius: 18px;
+  padding: 28px;
+}
+.modal h2 { margin: 0 0 18px; }
+.toast {
+  position: fixed; bottom: 26px; left: 50%; transform: translateX(-50%);
+  z-index: 80; background: var(--paper); color: #171a1f;
+  padding: 12px 22px; border-radius: 999px; font-size: 13.5px; font-weight: 600;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, .5);
+  animation: toastIn .25s ease;
+}
+@keyframes toastIn { from { opacity: 0; transform: translate(-50%, 10px); } to { opacity: 1; } }
+
+.colophon { text-align: center; color: var(--muted); font-size: 12px; letter-spacing: .1em; padding-top: 24px; }
+
+.fade-in { animation: fadeIn .35s ease; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; } }
+
+@media (max-width: 720px) {
+  .rail { flex-wrap: wrap; gap: 10px; padding: 10px 16px; }
+  .spine { padding-left: 48px; }
+  .spine::before { left: 28px; }
+  .station-node { left: -26px; }
+  .constraint-grid, .quality-lanes, .pv-cols { grid-template-columns: 1fr; }
+  .pv-deck { grid-template-columns: 1fr; }
+  .loop-item { grid-template-columns: 1fr; gap: 2px; }
+}
+<<<END>>>
+
+<<<FILE: data.js>>>
+/* OEYdesign · 环线 THE LOOP — 内联 mock 数据层
+ * 所有数据均为虚构的 demo 内容，字段结构参照 docs/prd.md 与 product-client/ 的信息架构：
+ * 候选方向 → 反馈/批准 → 正式 Artifact → 质量双轨复核 → 导出交付。
+ */
+window.__OEP_DATA__ = {
+  projects: [
+    {
+      id: "p-dawnbrew",
+      name: "黎明咖啡 · 品牌落地页",
+      kind: "网页",
+      status: "等待方向反馈",
+      statusTone: "busy",
+      brief: "一家只做早晨六点到十点营业的社区咖啡店，想要一个「让人想早起」的单页网站。",
+      preset: "设计引导",
+      templateRole: "起始脚手架",
+      revision: { no: 3, note: "第 3 轮候选 · 根据上一轮「太冷」的反馈调暖了色板", updatedAt: "2025-06-18 09:42" },
+      regions: ["首屏主视觉", "标题文案", "产品列表", "品牌故事", "配色"],
+      preview: {
+        type: "web",
+        kicker: "DAWN BREW · 城市晨光",
+        headline: "把清晨的第一杯，做成一天的开场白。",
+        cta: "探索今日菜单",
+        colA: { title: "今日菜单", text: "晨雾拿铁 / 烤橙美式 / 六点限定的海盐可颂，卖到十点就收摊。" },
+        colB: { title: "品牌故事", text: "店主相信一天的好坏在早上就定了调，所以这家店只陪你看日出。" },
+        palette: ["#ff5c33", "#e8b44a", "#2b1c14"]
+      },
+      events: [
+        { t: "06-14 10:02", actor: "user", text: "提出需求：「一家只开早上的咖啡店，想要个让人想早起的网站」。" },
+        { t: "06-14 10:03", actor: "agent", text: "需求有模糊处，主动追问：目标来客是谁？「想早起」是温暖感还是效率感？" },
+        { t: "06-14 11:20", actor: "user", text: "回复澄清：客群是附近上班族，要温暖、慢一点的感觉。" },
+        { t: "06-15 09:10", actor: "agent", text: "生成 2 个候选方向：A「报纸晨刊风」/ B「日出渐变色卡片」，等待选择。" },
+        { t: "06-15 15:44", actor: "user", text: "选择方向 B，但批注：整体偏冷，不像早晨。" },
+        { t: "06-17 08:31", actor: "agent", text: "产出 Revision 2 正式 Artifact，进入质量复核。" },
+        { t: "06-17 08:33", actor: "quality", text: "复核完成：0 个硬错误，2 条审美发现（不挡交付）。" },
+        { t: "06-18 09:42", actor: "agent", text: "按「偏冷」批注重出 Revision 3，色板整体调暖，等待方向反馈。" }
+      ],
+      constraints: {
+        tone: "温暖、慢节奏、口语化",
+        palette: "暖橙 + 麦金 + 深烘棕",
+        rules: [
+          "不使用冷蓝/科技灰作为主色",
+          "首屏必须出现营业时间（06:00–10:00）",
+          "文案不出现「精品」「匠心」等滥用词"
+        ]
+      },
+      quality: {
+        hard: [],
+        aesthetic: [
+          "「品牌故事」段落行长偏长，建议收窄到 52 字符以内",
+          "主按钮与背景对比度虽达标，但 hover 态反馈偏弱，可增强"
+        ]
+      },
+      feedbackLog: [
+        { t: "06-15 15:44", type: "整体方向", text: "方向 B 保留，但整体偏冷，不像早晨。" }
+      ],
+      delivery: {
+        state: "wait",
+        note: "Revision 3 尚未获批，暂无待交付的正式 Artifact。",
+        records: []
+      }
+    },
+    {
+      id: "p-q3deck",
+      name: "Q3 产品发布会 PPT",
+      kind: "PPT",
+      status: "交付被硬错误拦截",
+      statusTone: "blocked",
+      brief: "为 Q3 发布会准备一份 12 页演讲 PPT，面向渠道伙伴，重点是新品的三个核心数据。",
+      preset: "规范生产",
+      templateRole: "交付合同",
+      revision: { no: 1, note: "第 1 轮候选 · 首次出稿", updatedAt: "2025-06-19 14:05" },
+      regions: ["封面页", "数据页", "结尾页"],
+      preview: {
+        type: "deck",
+        slides: [
+          { n: "01 / 12", t: "把「快」做成一种习惯", bar: "fill-a" },
+          { n: "07 / 12", t: "三个数字看懂 Q3 新品", bar: "fill-b" },
+          { n: "12 / 12", t: "下一季度，一起提速", bar: "fill-a" }
+        ]
+      },
+      events: [
+        { t: "06-18 16:20", actor: "user", text: "提出需求：Q3 发布会 PPT，12 页，面向渠道伙伴。" },
+        { t: "06-18 16:21", actor: "agent", text: "追问：三个核心数据的口径与可公开范围？演讲人时长？" },
+        { t: "06-18 17:02", actor: "user", text: "回复数据口径，授权全部公开，演讲 20 分钟。" },
+        { t: "06-19 11:15", actor: "agent", text: "生成 1 个候选方向（规范生产 preset 下只出单稿），进入内部整理。" },
+        { t: "06-19 14:05", actor: "agent", text: "产出 Revision 1 正式 Artifact，自动进入质量复核。" },
+        { t: "06-19 14:07", actor: "quality", text: "复核完成：1 个硬错误（第 7 页引用数据缺少来源标注），交付闸门关闭。" }
+      ],
+      constraints: {
+        tone: "克制、可信、数据优先",
+        palette: "墨黑 + 信号橙单点强调",
+        rules: [
+          "每页只讲一件事",
+          "所有引用数据必须标注来源",
+          "禁止使用 3D 图表与阴影效果"
+        ]
+      },
+      quality: {
+        hard: [
+          { code: "HARD-SRC-001", text: "第 7 页「三个数字」引用数据缺少来源标注，违反约束「所有引用数据必须标注来源」。" }
+        ],
+        aesthetic: [
+          "封面页标题字重与副标题拉不开层级，建议加大对比",
+          "结尾页留白偏少，演讲收尾节奏会显得赶"
+        ]
+      },
+      feedbackLog: [],
+      delivery: {
+        state: "blocked",
+        note: "交付闸门关闭：1 个硬错误待处理。补齐来源标注后可重新复核。",
+        records: []
+      }
+    },
+    {
+      id: "p-inkds",
+      name: "INK 设计系统规范文档",
+      kind: "文档",
+      status: "已交付",
+      statusTone: "ok",
+      brief: "把团队口头约定的排版与组件规则，沉淀成一份可对外交付的设计系统规范文档。",
+      preset: "规范生产",
+      templateRole: "设计系统",
+      revision: { no: 5, note: "第 5 轮 · 已定稿并导出", updatedAt: "2025-06-12 18:30" },
+      regions: ["文档封面", "排版规则", "组件清单"],
+      preview: {
+        type: "doc",
+        title: "INK Design System · 规范 v1.0",
+        edition: "EDITION 05 · FINAL",
+        paras: [
+          "INK 约定：一切排版从基线网格出发，一切组件从字号阶梯出发。",
+          "本规范覆盖：字体阶梯、间距刻度、组件状态、禁用清单四个部分。"
+        ],
+        ruleLine: "规则示例 — 正文行高恒为字号的 1.65 倍，任何页面不得例外。"
+      },
+      events: [
+        { t: "06-05 09:00", actor: "user", text: "提出需求：把口头约定沉淀成规范文档，要能对外交付。" },
+        { t: "06-05 09:01", actor: "agent", text: "追问：读者是内部设计师还是外部合作方？决定措辞的严格程度。" },
+        { t: "06-06 10:40", actor: "agent", text: "生成 2 个候选方向：A「手册体」/ B「条款体」。" },
+        { t: "06-06 15:12", actor: "user", text: "批准方向 B「条款体」，要求逐条编号、可引用。" },
+        { t: "06-08 17:55", actor: "agent", text: "产出 Revision 4 Artifact，质量复核发现 1 个硬错误（条款编号断档）。" },
+        { t: "06-09 10:22", actor: "user", text: "局部批注：「组件清单」的状态命名与正文不一致，只改这一处。" },
+        { t: "06-12 18:24", actor: "agent", text: "产出 Revision 5，复核通过：0 硬错误，1 条审美发现（不影响交付）。" },
+        { t: "06-12 18:30", actor: "system", text: "导出 ink-design-system-v1.0.pdf，交付完成。" }
+      ],
+      constraints: {
+        tone: "条款化、可引用、零歧义",
+        palette: "黑白灰 + 单一校样蓝",
+        rules: [
+          "每条规则必须可编号引用",
+          "禁止出现「尽量」「大约」等模糊词",
+          "所有组件必须给出禁用示例"
+        ]
+      },
+      quality: {
+        hard: [],
+        aesthetic: [
+          "「组件清单」表格密度偏高，打印版可考虑拆页"
+        ]
+      },
+      feedbackLog: [
+        { t: "06-06 15:12", type: "整体方向", text: "批准方向 B「条款体」。" },
+        { t: "06-09 10:22", type: "局部微调", text: "「组件清单」的状态命名与正文不一致，只改这一处。" }
+      ],
+      delivery: {
+        state: "ok",
+        note: "交付闸门开放，Revision 5 已导出。",
+        records: [
+          { t: "06-12 18:30", text: "ink-design-system-v1.0.pdf · 42 页 · 随交付合同归档" }
+        ]
+      }
+    }
+  ]
+};
+<<<END>>>
+
+<<<FILE: api.js>>>
+/* 环线 THE LOOP — mock API 客户端
+ * 没有真实后端：所有「接口」都是这个文件里的本地函数，
+ * 用 setTimeout 模拟网络延迟，数据直接读写 window.__OEP_DATA__ 的内联数组。
+ * 暴露为 window.__mockApi__，界面层（app.js）只通过它取数/提交。
+ */
+(function () {
+  const db = window.__OEP_DATA__;
+  const LATENCY_MIN = 160;
+  const LATENCY_SPAN = 240;
+
+  function wait() {
+    return new Promise((resolve) =>
+      setTimeout(resolve, LATENCY_MIN + Math.random() * LATENCY_SPAN)
+    );
+  }
+  function clone(obj) {
+    return JSON.parse(JSON.stringify(obj));
+  }
+  function find(id) {
+    return db.projects.find((p) => p.id === id);
+  }
+  function now() {
+    const d = new Date();
+    const pad = (n) => String(n).padStart(2, "0");
+    return `${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  }
+
+  window.__mockApi__ = {
+    /* 项目横带：只回摘要字段 */
+    async listProjects() {
+      await wait();
+      return db.projects.map((p) => ({
+        id: p.id,
+        name: p.name,
+        kind: p.kind,
+        status: p.status,
+        statusTone: p.statusTone
+      }));
+    },
+
+    /* 进入某个项目：回完整详情 */
+    async getProject(id) {
+      await wait();
+      const p = find(id);
+      if (!p) throw new Error("project not found: " + id);
+      return clone(p);
+    },
+
+    /* 整体方向反馈：推翻当前候选，状态变为重审中 */
+    async submitDirectionFeedback(id, text) {
+      await wait();
+      const p = find(id);
+      if (!p) throw new Error("project not found: " + id);
+      const t = now();
+      p.status = "方向重审中";
+      p.statusTone = "busy";
+      p.feedbackLog.push({ t, type: "整体方向", text });
+      p.events.push({ t, actor: "user", text: `推翻整体方向：「${text}」` });
+      p.events.push({ t, actor: "agent", text: "收到方向级批注，当前候选作废，正在重新构思方向…" });
+      return { project: clone(p), message: "已记录：这个方向推翻，agent 开始重做" };
+    },
+
+    /* 局部反馈：方向保留，只登记一处微调 */
+    async submitLocalFeedback(id, region, text) {
+      await wait();
+      const p = find(id);
+      if (!p) throw new Error("project not found: " + id);
+      const t = now();
+      p.feedbackLog.push({ t, type: "局部微调", text: `「${region}」${text}` });
+      p.events.push({ t, actor: "user", text: `局部批注 ·「${region}」：${text}` });
+      p.events.push({ t, actor: "agent", text: `已把「${region}」列入微调队列，方向不变，只改这一处。` });
+      return { project: clone(p), message: `已记录对「${region}」的局部批注` };
+    },
+
+    /* 新案子：按固定规则生成一个「刚起步」的项目骨架 */
+    async createProject({ name, preset, role }) {
+      await wait();
+      const t = now();
+      const p = {
+        id: "p-" + Math.random().toString(36).slice(2, 8),
+        name,
+        kind: "待定",
+        status: "需求澄清中",
+        statusTone: "busy",
+        brief: "（新案子，需求尚未澄清完整）",
+        preset,
+        templateRole: role,
+        revision: { no: 0, note: "尚无候选 · 等待需求澄清", updatedAt: t },
+        regions: [],
+        preview: null,
+        events: [
+          { t, actor: "system", text: `项目创建：preset「${preset}」/ template role「${role}」。` },
+          { t, actor: "agent", text: "需求还不够清楚，先不急着出稿——正在整理要问你的问题。" },
+          { t, actor: "agent", text: "提出澄清问题：产物是网页、PPT 还是文档？给谁看？什么叫「好看」？" }
+        ],
+        constraints: {
+          tone: "待澄清",
+          palette: "待澄清",
+          rules: ["（约束档案将在需求澄清后生成）"]
+        },
+        quality: { hard: [], aesthetic: [] },
+        feedbackLog: [],
+        delivery: { state: "wait", note: "还没有可交付的 Artifact。", records: [] }
+      };
+      db.projects.push(p);
+      return { project: clone(p), message: `「${name}」已进入环线` };
+    }
+  };
+})();
+<<<END>>>
+
+<<<FILE: app.js>>>
+/* 环线 THE LOOP — 界面层
+ * 结构：单轴纵深主线。顶部横带切换项目 = 切换你在读哪一条「环线」；
+ * 主线上的每个站点（候选舞台 / 两级反馈 / 回路记录 / 约束 / 质量双轨 / 交付）
+ * 都随项目整体重渲染。
+ */
+(function () {
+  const api = window.__mockApi__;
+  const $ = (sel) => document.querySelector(sel);
+
+  const els = {
+    tabs: $("#railTabs"),
+    status: $("#railStatus"),
+    spine: $("#spine"),
+    stageTitle: $("#stageTitle"),
+    stageBrief: $("#stageBrief"),
+    stageRevision: $("#stageRevision"),
+    stageNote: $("#stageNote"),
+    stagePreview: $("#stagePreview"),
+    stageEmpty: $("#stageEmpty"),
+    directionChips: $("#directionChips"),
+    directionInput: $("#directionInput"),
+    directionSubmit: $("#directionSubmit"),
+    localRegion: $("#localRegion"),
+    localInput: $("#localInput"),
+    localSubmit: $("#localSubmit"),
+    loopCount: $("#loopCount"),
+    loopList: $("#loopList"),
+    constraintPreset: $("#constraintPreset"),
+    constraintRole: $("#constraintRole"),
+    constraintTone: $("#constraintTone"),
+    constraintPalette: $("#constraintPalette"),
+    constraintRules: $("#constraintRules"),
+    qualityVerdict: $("#qualityVerdict"),
+    qualityHard: $("#qualityHard"),
+    qualityAesthetic: $("#qualityAesthetic"),
+    deliveryStatus: $("#deliveryStatus"),
+    deliveryList: $("#deliveryList"),
+    toast: $("#toast"),
+    modalMask: $("#modalMask"),
+    npName: $("#npName"),
+    npPreset: $("#npPreset"),
+    npRole: $("#npRole")
+  };
+
+  const state = { projects: [], currentId: null, detail: null, freshEvents: 0 };
+  const ACTOR_LABEL = { agent: "design_agent", user: "你", system: "系统", quality: "质量复核" };
+
+  /* ---------- 提示 ---------- */
+  let toastTimer = null;
+  function toast(msg) {
+    els.toast.textContent = msg;
+    els.toast.hidden = false;
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => (els.toast.hidden = true), 2800);
+  }
+
+  /* ---------- 顶部项目横带 ---------- */
+  function renderRail() {
+    els.tabs.innerHTML = "";
+    state.projects.forEach((p) => {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "rail-tab" + (p.id === state.currentId ? " active" : "");
+      btn.innerHTML = `<span class="dot ${p.statusTone}"></span><span>${p.name}</span><span class="tab-kind">${p.kind}</span>`;
+      btn.addEventListener("click", () => selectProject(p.id));
+      els.tabs.appendChild(btn);
+    });
+  }
+
+  function renderStatus(p) {
+    els.status.textContent = p.status;
+    els.status.className = "rail-status " + (p.statusTone || "");
+  }
+
+  /* ---------- 候选预览（三种产物形态） ---------- */
+  function regionBlock(name, inner) {
+    return `<div data-region="${name}"><span class="region-tag">${name}</span>${inner}</div>`;
+  }
+
+  function renderPreview(p) {
+    const pv = p.preview;
+    if (!pv) {
+      els.stagePreview.innerHTML = "";
+      els.stagePreview.hidden = true;
+      els.stageEmpty.hidden = false;
+      return;
+    }
+    els.stagePreview.hidden = false;
+    els.stageEmpty.hidden = true;
+
+    if (pv.type === "web") {
+      const swatches = pv.palette
+        .map((c) => `<span class="pv-swatch" style="background:${c}"></span>`)
+        .join("");
+      els.stagePreview.innerHTML = `
+        <div class="pv-web">
+          ${regionBlock("首屏主视觉", `
+            <div class="pv-hero">
+              <div class="pv-kicker">${pv.kicker}</div>
+              <h3 data-region="标题文案">${pv.headline}</h3>
+              <span class="pv-cta">${pv.cta}</span>
+            </div>`)}
+          <div class="pv-cols">
+            ${regionBlock("产品列表", `<h4>${pv.colA.title}</h4><p>${pv.colA.text}</p>`)}
+            ${regionBlock("品牌故事", `<h4>${pv.colB.title}</h4><p>${pv.colB.text}</p>`)}
+          </div>
+          ${regionBlock("配色", `<div style="margin-top:14px">${swatches}<span style="font-size:12px;color:var(--muted)">当前色板</span></div>`)}
+        </div>`;
+    } else if (pv.type === "deck") {
+      const regionNames = ["封面页", "数据页", "结尾页"];
+      els.stagePreview.innerHTML = `
+        <div class="pv-deck">
+          ${pv.slides.map((s, i) => `
+            <div class="pv-slide" data-region="${regionNames[i] || "第 " + s.n + " 页"}">
+              <span class="n">${s.n}</span>
+              <span class="t">${s.t}</span>
+              <span class="bar ${s.bar}"></span>
+            </div>`).join("")}
+        </div>`;
+    } else if (pv.type === "doc") {
+      els.stagePreview.innerHTML = `
+        <div class="pv-doc">
+          ${regionBlock("文档封面", `<h4>${pv.title}</h4><div class="doc-ed">${pv.edition}</div>`)}
+          ${regionBlock("排版规则", pv.paras.map((t) => `<p>${t}</p>`).join("") + `<div class="rule-line">${pv.ruleLine}</div>`)}
+          ${regionBlock("组件清单", `<p>组件状态命名、禁用示例清单（略）——点此区块可对它提局部批注。</p>`)}
+        </div>`;
+    }
+
+    /* 点选预览区块 = 帮局部反馈定位 */
+    els.stagePreview.querySelectorAll("[data-region]").forEach((node) => {
+      node.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const name = node.getAttribute("data-region");
+        const opt = [...els.localRegion.options].find((o) => o.value === name);
+        if (opt) els.localRegion.value = name;
+        els.stagePreview.querySelectorAll("[data-region]").forEach((n) => n.classList.remove("region-picked"));
+        node.classList.add("region-picked");
+        toast(`已定位到「${name}」，在下面写这一处的批注`);
+        document.querySelector('[data-oey-section="feedback-local"]').scrollIntoView({ behavior: "smooth", block: "center" });
+      });
+    });
+  }
+
+  /* ---------- 各站点渲染 ---------- */
+  function renderStage(p) {
+    els.stageTitle.textContent = p.name;
+    els.stageBrief.textContent = p.brief;
+    els.stageRevision.textContent = p.revision.no > 0 ? `REVISION ${String(p.revision.no).padStart(2, "0")}` : "尚无候选";
+    els.stageNote.textContent = p.revision.note + " · " + p.revision.updatedAt;
+    renderPreview(p);
+  }
+
+  function renderLocalRegions(p) {
+    els.localRegion.innerHTML = "";
+    if (!p.regions.length) {
+      els.localRegion.innerHTML = `<option value="">（还没有可批注的内容）</option>`;
+      els.localRegion.disabled = true;
+      return;
+    }
+    els.localRegion.disabled = false;
+    p.regions.forEach((r) => {
+      const o = document.createElement("option");
+      o.value = r;
+      o.textContent = r;
+      els.localRegion.appendChild(o);
+    });
+  }
+
+  function renderLoop(p) {
+    els.loopCount.textContent = `· ${p.events.length} 步`;
+    els.loopList.innerHTML = "";
+    p.events.forEach((ev, i) => {
+      const li = document.createElement("li");
+      const fresh = state.freshEvents > 0 && i >= p.events.length - state.freshEvents;
+      li.className = "loop-item" + (fresh ? " fresh" : "");
+      li.innerHTML = `
+        <span class="t">${ev.t}</span>
+        <span class="actor ${ev.actor}">${ACTOR_LABEL[ev.actor] || ev.actor}</span>
+        <span class="text">${ev.text}</span>`;
+      els.loopList.appendChild(li);
+    });
+    state.freshEvents = 0;
+  }
+
+  function renderConstraints(p) {
+    els.constraintPreset.textContent = p.preset;
+    els.constraintRole.textContent = p.templateRole;
+    els.constraintTone.textContent = p.constraints.tone;
+    els.constraintPalette.textContent = p.constraints.palette;
+    els.constraintRules.innerHTML = p.constraints.rules.map((r) => `<li>${r}</li>`).join("");
+  }
+
+  function renderQuality(p) {
+    const hard = p.quality.hard;
+    if (hard.length > 0) {
+      els.qualityVerdict.textContent = `交付闸门：关闭 · ${hard.length} 个硬错误待处理`;
+      els.qualityVerdict.className = "gate closed";
+    } else {
+      els.qualityVerdict.textContent = "交付闸门：开放 · 无硬错误";
+      els.qualityVerdict.className = "gate open";
+    }
+    els.qualityHard.innerHTML = hard.length
+      ? hard.map((h) => `<li><span class="code">${h.code}</span>${h.text}</li>`).join("")
+      : `<li class="none">没有硬错误。</li>`;
+    els.qualityAesthetic.innerHTML = p.quality.aesthetic.length
+      ? p.quality.aesthetic.map((a) => `<li>${a}</li>`).join("")
+      : `<li class="none">暂无审美发现。</li>`;
+  }
+
+  function renderDelivery(p) {
+    const d = p.delivery;
+    els.deliveryStatus.textContent = d.note;
+    els.deliveryStatus.className = "delivery-status " + d.state;
+    els.deliveryList.innerHTML = d.records.length
+      ? d.records.map((r) => `<li><span>${r.text}</span><span class="when">${r.t}</span></li>`).join("")
+      : `<li class="empty-note">还没有导出过任何文件。</li>`;
+  }
+
+  function renderDetail(p) {
+    renderStatus(p);
+    renderStage(p);
+    renderLocalRegions(p);
+    renderLoop(p);
+    renderConstraints(p);
+    renderQuality(p);
+    renderDelivery(p);
+    els.spine.classList.remove("fade-in");
+    void els.spine.offsetWidth;
+    els.spine.classList.add("fade-in");
+  }
+
+  /* ---------- 交互 ---------- */
+  async function selectProject(id) {
+    if (id === state.currentId && state.detail) return;
+    state.currentId = id;
+    renderRail();
+    els.status.textContent = "载入中…";
+    els.status.className = "rail-status";
+    state.detail = await api.getProject(id);
+    renderDetail(state.detail);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  function pickChipGroup(container, cb) {
+    container.addEventListener("click", (e) => {
+      const chip = e.target.closest(".chip");
+      if (!chip) return;
+      container.querySelectorAll(".chip").forEach((c) => c.classList.remove("on"));
+      chip.classList.add("on");
+      cb(chip);
+    });
+  }
+
+  pickChipGroup(els.directionChips, (chip) => {
+    els.directionInput.value = chip.getAttribute("data-preset");
+    els.directionInput.focus();
+  });
+
+  els.directionSubmit.addEventListener("click", async () => {
+    const text = els.directionInput.value.trim();
+    if (!text) { toast("先写一句：这个方向哪里不对"); return; }
+    if (!state.detail) return;
+    els.directionSubmit.disabled = true;
+    const before = state.detail.events.length;
+    const res = await api.submitDirectionFeedback(state.currentId, text);
+    els.directionSubmit.disabled = false;
+    state.detail = res.project;
+    state.freshEvents = res.project.events.length - before;
+    els.directionInput.value = "";
+    els.directionChips.querySelectorAll(".chip").forEach((c) => c.classList.remove("on"));
+    syncSummary(res.project);
+    renderDetail(res.project);
+    toast(res.message);
+  });
+
+  els.localSubmit.addEventListener("click", async () => {
+    const region = els.localRegion.value;
+    const text = els.localInput.value.trim();
+    if (!region) { toast("这个项目还没有可批注的区块"); return; }
+    if (!text) { toast("写一句：这一处想怎么改"); return; }
+    els.localSubmit.disabled = true;
+    const before = state.detail.events.length;
+    const res = await api.submitLocalFeedback(state.currentId, region, text);
+    els.localSubmit.disabled = false;
+    state.detail = res.project;
+    state.freshEvents = res.project.events.length - before;
+    els.localInput.value = "";
+    document.querySelectorAll("[data-region]").forEach((n) => n.classList.remove("region-picked"));
+    syncSummary(res.project);
+    renderDetail(res.project);
+    toast(res.message);
+  });
+
+  function syncSummary(p) {
+    const s = state.projects.find((x) => x.id === p.id);
+    if (s) { s.status = p.status; s.statusTone = p.statusTone; }
+    renderRail();
+  }
+
+  /* ---------- 新案子弹层 ---------- */
+  let npPresetVal = "开放探索";
+  let npRoleVal = "参考样例";
+  pickChipGroup(els.npPreset, (chip) => (npPresetVal = chip.getAttribute("data-val")));
+  pickChipGroup(els.npRole, (chip) => (npRoleVal = chip.getAttribute("data-val")));
+
+  $("#btnNewProject").addEventListener("click", () => {
+    els.modalMask.hidden = false;
+    els.npName.value = "";
+    els.npName.focus();
+  });
+  $("#npCancel").addEventListener("click", () => (els.modalMask.hidden = true));
+  els.modalMask.addEventListener("click", (e) => {
+    if (e.target === els.modalMask) els.modalMask.hidden = true;
+  });
+  $("#npSubmit").addEventListener("click", async () => {
+    const name = els.npName.value.trim();
+    if (!name) { toast("给案子起个名字"); return; }
+    const res = await api.createProject({ name, preset: npPresetVal, role: npRoleVal });
+    els.modalMask.hidden = true;
+    state.projects.push({
+      id: res.project.id, name: res.project.name, kind: res.project.kind,
+      status: res.project.status, statusTone: res.project.statusTone
+    });
+    toast(res.message);
+    state.currentId = null; /* 强制重新载入 */
+    await selectProject(res.project.id);
+  });
+
+  /* ---------- 启动 ---------- */
+  (async function init() {
+    state.projects = await api.listProjects();
+    renderRail();
+    if (state.projects.length) await selectProject(state.projects[0].id);
+  })();
+})();
+<<<END>>>
+
+<<<FILE: MOCK.md>>>
+# MOCK.md — 环线 THE LOOP 的 mock 声明
+
+本原型**没有任何真实后端**。所有数据与交互都在浏览器内完成，刷新页面后一切回到初始状态。
+
+## 技术手段
+
+- **内联数据数组**：`data.js` 在 `window.__OEP_DATA__` 上挂了 3 个虚构项目的完整数据（普通 JS 对象数组）。
+- **假客户端**：`api.js` 暴露 `window.__mockApi__`，界面层（`app.js`）只通过它读写数据，模拟真实前端的 API 边界。
+- **setTimeout 模拟延迟**：`__mockApi__` 的每个方法都 `await` 一段 160–400ms 的随机延迟，模拟网络往返。
+- **无 fetch 拦截**：没有覆盖 `window.fetch`，因为没有发起任何真实请求。
+
+## mock 的接口 / 交互点
+
+| 方法 | 用途 | 数据来源 |
+|---|---|---|
+| `listProjects()` | 顶部项目横带 | 纯虚构：3 个手写项目（网页 / PPT / 文档各一），字段结构参照 product-client 的信息架构（项目状态、可切换），内容本身与真实仓库无关 |
+| `getProject(id)` | 项目详情：预览、事件、约束、质量、交付 | 纯虚构：每个项目的预览文案、事件流水、约束规则、质量结论均为手写编造的 demo 内容 |
+| `submitDirectionFeedback(id, text)` | 整体方向反馈 | **规则推导**：把用户文本追加进 `feedbackLog`（类型「整体方向」）和 `events`（追加 2 条：用户批注 + agent 回应），并把项目状态改为「方向重审中」 |
+| `submitLocalFeedback(id, region, text)` | 局部内容反馈 | **规则推导**：追加 `feedbackLog`（类型「局部微调」）和 `events`（2 条），项目状态不变，体现「方向保留、只微调一处」的语义差异 |
+| `createProject({name, preset, role})` | 新案子表单 | **规则推导**：按固定模板生成「刚起步」的项目骨架——revision 0、无预览（触发空状态）、3 条种子事件（含 agent 主动提问，呼应 PRD 中「信息不确定时主动提问」）、空质量结论、空交付记录 |
+| 预览区块点选 | 局部反馈定位 | 纯前端行为：点击 `[data-region]` 元素即设置反馈表单位置下拉框，无数据层参与 |
+
+## 与事实的对应关系（未 mock 出不存在的功能）
+
+- 反馈分「整体方向 / 局部微调」两种粒度 → 两个独立入口 + 两条不同的数据变更路径。
+- 质量结论分「硬错误（挡交付）/ 审美发现（不挡交付）」→ 两条独立轨道渲染，交付闸门状态仅由硬错误数量推导，**没有合并成分数**。
+- 流程「候选 → 反馈/批准 → Artifact → 复核 → 导出」→ 仅作为事件流和交付记录的文案呈现，没有实现真实生成或复核逻辑。
+- 持久化（SQLite）、stub 适配器等真实实现细节 → 未在界面中声称存在。
+<<<END>>>
+
+<<<FILE: INTENT.md>>>
+# INTENT.md — 环线 THE LOOP
+
+**差异轴：版式结构。** 我放弃左中右三栏，选择「单轴纵深叙事流」：整屏只有一条居中的垂直主线，像读一份按时间展开的记录。顶部横带是唯一的「岔路口」——切换项目 = 换一条环线来读，整条主线随之整体换内容。核心任务的路径因此改变：看候选就是读主线的第一站；给反馈不是去某个固定侧栏，而是在主线中段「写下一步」——方向级反馈（橙色站点，推翻重做）和局部批注（青色站点，可点预览区块直接定位）是两个先后相邻、语气完全不同的站点；质量与交付则是主线的收尾站点，读到那里自然看到结论。
+
+**命名与定位：** 「环线 THE LOOP」——把 project 的一生（提问→候选→反馈→复核→交付）视为一条可回读的环，每次反馈都让环线多绕一圈、留下新的事件。配色为暗色油墨底 + 信号橙（行动）/ 青（微调）/ 红（硬错误）/ 琥珀（审美建议）。
+
+**最能体现差异轴的位置：**
+1. `project-rail` + 单轴主线：切换项目改变的是整条叙事，而非某个面板。
+2. `feedback-direction` 与 `feedback-local`：两种反馈粒度是主线上两个相邻站点，且局部反馈可点击 `stage` 预览中的区块直接定位，把「看」和「批注」缝在一条纵向路径上。
+3. `quality` 双轨：硬错误与审美发现并排两轨、闸门独立，顺着主线读到结尾自然理解「能不能交付」。
+<<<END>>>

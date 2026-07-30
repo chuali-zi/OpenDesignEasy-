@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Q4 contract fixture</title><style>
+* { box-sizing:border-box; }
+html, body { margin:0; }
+body { color:#202020; background:#ffffff; font:16px/1.5 Arial,sans-serif; }
+main { padding:24px; }
+h1 { color:#202020; font-size:32px; font-weight:700; margin:0 0 16px; }
+p { color:#202020; font-size:16px; margin:0 0 16px; }
+.grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; }
+.card { color:#202020; background:#f2f4f7; padding:16px; border:1px solid #667085; }
+.card strong { color:#202020; display:block; font-size:20px; font-weight:700; margin-bottom:8px; }
+.runtime { color:#202020; padding:8px; background:#f2f4f7; }
+
+</style></head><body><main>
+<section data-oey-section="hero"><h1 data-oey-object="hero.title">Stable design contract</h1><p data-oey-object="hero.subtitle">Normal edits must not be reported as drift.</p></section>
+<section data-oey-section="cards"><div class="grid"><article class="card" data-oey-object="cards.alpha"><strong>Alpha</strong><p>Existing token values.</p></article><article class="card" data-oey-object="cards.beta"><strong>Beta</strong><p>Existing token values.</p></article></div></section>
+</main><script>
+    const item = document.createElement('p');
+    item.className = 'runtime';
+    item.setAttribute('data-oey-object', 'cards.runtime');
+    item.textContent = 'Rendered runtime anchor';
+    document.querySelector('[data-oey-section="cards"]').appendChild(item);
+    </script></body></html>

@@ -1,0 +1,27 @@
+We need answer with files only, exact format no markdown fences. Need produce a complete static prototype. Need think through design and ensure constraints.
+
+Need output file blocks only final. Need build index.html, styles.css, app.js, MOCK.md maybe. No external resources. Use pure HTML/CSS/JS. Need data-oey anchors. Need mock layer robust. Need include all mock behaviors in MOCK.md.
+
+Plan: single-page Agent Workbench. Files: index.html, styles.css, app.js, MOCK.md. Maybe no more. Use CSS no external fonts/icons, emoji OK? Emojis are text, fine. Need no CDN.
+
+Implementation details:
+- index.html links styles.css and app.js, includes layout: header, sidebar project list section data-oey-section="projects", main chat data-oey-section="conversation", aside preview data-oey-section="preview". Key objects: projects.list, projects.item (dynamic), conversation.title, conversation.messages, conversation.message, conversation.composer, conversation.input, conversation.send, preview.title, preview.body, preview.card etc.
+- Accessibility, responsive.
+- app.js: create window.__mockApi__ with latency; uses seeded templates and in-memory DB; maybe intercept fetch too to demonstrate. But MOCK must cover all. Simpler: expose mock client with methods listProjects, getProject, sendMessage, getPreview using setTimeout and template generation. Also override window.fetch for /api/* routes so network calls return mock Responses; app uses fetch('/api/projects') etc. Need support browsers file://? fetch to relative /api may fail under file due origin? Better not rely on fetch for core? Could have window.__mockApi__ primary and also fetch interceptor optional. But hard constraint allows any. Use __mockApi__ only with setTimeout; avoid fetch under file issues. MOCK state no network. Need maybe if served static, works too. Good.
+- Data: projects array 4 with id,name,status,accent,summary,messages[],preview type/code etc. Switch project updates all.
+- Send message: append user bubble immediately, set agent typing indicator, after latency generate reply via rules: parse keywords (preview/code/deploy/test/summary), produce text and maybe update preview by generating artifact: if user asks code, preview becomes generated function based on project; if asks summary, preview metrics; otherwise updated card. Need ensure preview changes on conversation. Persist per project in DB.
+- Mock layer deterministic-ish: hash string seed, pick templates. Include delay 450-900ms.
+- No external images. Use inline SVG? fine. CSS gradients.
+- Data anchors on dynamic elements. Need containers with data-oey-section. For repeated project item use data-oey-object="projects.item" plus data-project-id. Message bubbles data-oey-object="conversation.message". Preview cards data-oey-object="preview.card". Good.
+
+Need ensure no markdown code fences in final. Just file blocks. Need content complete.
+
+Need be careful final only file blocks. Compose concise but enough.
+
+Let's craft files. Ensure JS references DOM ids. Need script defer.
+
+Potential issue final answer not too long but sufficient. Need include MOCK.md covering all mock points: project list, project detail, send message reply, preview updates, typing/latency, storage in-memory only, no real backend/network, deterministic templates.
+
+Need ensure index.html has inline noscript maybe. All structure roles data-oey-section: app shell? Requirement structural containers. Add data-oey-section to header/topbar, projects, conversation, preview, statusbar. Key objects.
+
+Let's write final with exact markers.

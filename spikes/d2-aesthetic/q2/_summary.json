@@ -1,0 +1,38 @@
+{
+  "rubric_dimensions": [
+    "视觉层级",
+    "留白节奏",
+    "对比",
+    "排版一致性",
+    "意图契合"
+  ],
+  "total_findings": 15,
+  "total_valid_target_refs": 11,
+  "overall_valid_target_ref_rate": 0.7333333333333333,
+  "per_candidate": [
+    {
+      "cand_id": 1,
+      "finding_count": 4,
+      "valid_target_ref_rate": 0.0,
+      "dimension_coverage_count": 4
+    },
+    {
+      "cand_id": 2,
+      "finding_count": 3,
+      "valid_target_ref_rate": 1.0,
+      "dimension_coverage_count": 3
+    },
+    {
+      "cand_id": 3,
+      "finding_count": 3,
+      "valid_target_ref_rate": 1.0,
+      "dimension_coverage_count": 3
+    },
+    {
+      "cand_id": 4,
+      "finding_count": 5,
+      "valid_target_ref_rate": 1.0,
+      "dimension_coverage_count": 4
+    }
+  ]
+}

@@ -1,0 +1,267 @@
+{
+  "statements": [
+    {
+      "sentence": "该项目声明 1 个运行时依赖 FastAPI [F0536]",
+      "clean_text": "该项目声明 1 个运行时依赖 FastAPI",
+      "cited_ids": [
+        "F0536"
+      ],
+      "tokens": {
+        "numbers": [
+          "1"
+        ],
+        "identifiers": [
+          "FastAPI"
+        ],
+        "frameworks": [
+          "fastapi"
+        ]
+      },
+      "token_levels": {
+        "number:1": "package",
+        "identifier:FastAPI": "none",
+        "framework:fastapi": "none"
+      },
+      "primary": "traceable_contradict",
+      "detail": "claims framework(s) ['fastapi'] in use, but real dependency fact says 0 runtime dependencies",
+      "closed_world": "traceable_contradict",
+      "closed_world_detail": "claims framework(s) ['fastapi'] in use, but real dependency fact says 0 runtime dependencies"
+    },
+    {
+      "sentence": "它是一个名为 oeydesign、版本 0.1.0 的 Python 项目，自述为“Contract-first reference implementation for OEYdesign”，并要求 Python >=3.11 [F0539][F0540][F0541][F0538]",
+      "clean_text": "它是一个名为 oeydesign、版本 0.1.0 的 Python 项目，自述为“Contract-first reference implementation for OEYdesign”，并要求 Python >=3.11",
+      "cited_ids": [
+        "F0539",
+        "F0540",
+        "F0541",
+        "F0538"
+      ],
+      "tokens": {
+        "numbers": [
+          "0.1.0",
+          "3.11"
+        ],
+        "identifiers": [
+          "OEYdesign"
+        ],
+        "frameworks": []
+      },
+      "token_levels": {
+        "number:0.1.0": "cited",
+        "number:3.11": "cited",
+        "identifier:OEYdesign": "cited"
+      },
+      "primary": "traceable_correct",
+      "detail": "",
+      "closed_world": "traceable_correct",
+      "closed_world_detail": ""
+    },
+    {
+      "sentence": "仓库顶层包含 docs、lab30min、product-client、src、tests 等目录以及 README.md、pyproject.toml 等文件，呈现出从文档、实验到源码与测试的完整布局 [F0063]",
+      "clean_text": "仓库顶层包含 docs、lab30min、product-client、src、tests 等目录以及 README.md、pyproject.toml 等文件，呈现出从文档、实验到源码与测试的完整布局",
+      "cited_ids": [
+        "F0063"
+      ],
+      "tokens": {
+        "numbers": [
+          "30"
+        ],
+        "identifiers": [
+          "README"
+        ],
+        "frameworks": []
+      },
+      "token_levels": {
+        "number:30": "cited",
+        "identifier:README": "cited"
+      },
+      "primary": "traceable_correct",
+      "detail": "",
+      "closed_world": "traceable_correct",
+      "closed_world_detail": ""
+    },
+    {
+      "sentence": "核心包 src/oeydesign 以契约优先为定位，__init__ 模块写明“OEYdesign contract-first reference implementation” [F0064]",
+      "clean_text": "核心包 src/oeydesign 以契约优先为定位，__init__ 模块写明“OEYdesign contract-first reference implementation”",
+      "cited_ids": [
+        "F0064"
+      ],
+      "tokens": {
+        "numbers": [],
+        "identifiers": [
+          "OEYdesign"
+        ],
+        "frameworks": []
+      },
+      "token_levels": {
+        "identifier:OEYdesign": "cited"
+      },
+      "primary": "traceable_correct",
+      "detail": "",
+      "closed_world": "traceable_correct",
+      "closed_world_detail": ""
+    },
+    {
+      "sentence": "领域层 domain.py 提供项目、命令、事件、审批、产物、交付等数据模型，并通过 ProjectState、WorkflowStatus、GateVerdict 等枚举约束状态语义 [F0144][F0213][F0178][F0193][F0201][F0203][F0210][F0149][F0155][F0156]",
+      "clean_text": "领域层 domain.py 提供项目、命令、事件、审批、产物、交付等数据模型，并通过 ProjectState、WorkflowStatus、GateVerdict 等枚举约束状态语义",
+      "cited_ids": [
+        "F0144",
+        "F0213",
+        "F0178",
+        "F0193",
+        "F0201",
+        "F0203",
+        "F0210",
+        "F0149",
+        "F0155",
+        "F0156"
+      ],
+      "tokens": {
+        "numbers": [],
+        "identifiers": [
+          "GateVerdict",
+          "ProjectState",
+          "WorkflowStatus"
+        ],
+        "frameworks": []
+      },
+      "token_levels": {
+        "identifier:GateVerdict": "cited",
+        "identifier:ProjectState": "cited",
+        "identifier:WorkflowStatus": "cited"
+      },
+      "primary": "traceable_correct",
+      "detail": "",
+      "closed_world": "traceable_correct",
+      "closed_world_detail": ""
+    },
+    {
+      "sentence": "控制面 control.py 被描述为项目业务状态的唯一写入者，ControlPlane 暴露 35 个方法覆盖创建、准备、生成候选、审批、生产、校验、导出与交付等流程 [F0107][F0143]",
+      "clean_text": "控制面 control.py 被描述为项目业务状态的唯一写入者，ControlPlane 暴露 35 个方法覆盖创建、准备、生成候选、审批、生产、校验、导出与交付等流程",
+      "cited_ids": [
+        "F0107",
+        "F0143"
+      ],
+      "tokens": {
+        "numbers": [
+          "35"
+        ],
+        "identifiers": [
+          "ControlPlane"
+        ],
+        "frameworks": []
+      },
+      "token_levels": {
+        "number:35": "cited",
+        "identifier:ControlPlane": "cited"
+      },
+      "primary": "traceable_correct",
+      "detail": "",
+      "closed_world": "traceable_correct",
+      "closed_world_detail": ""
+    },
+    {
+      "sentence": "持久化与运行时由 SQLite 适配器支撑，包括 SQLiteProjectRepository、SQLiteWorkflowRuntime、SQLiteEvidenceRepository 等 [F0256][F0271][F0397][F0418][F0216][F0229]",
+      "clean_text": "持久化与运行时由 SQLite 适配器支撑，包括 SQLiteProjectRepository、SQLiteWorkflowRuntime、SQLiteEvidenceRepository 等",
+      "cited_ids": [
+        "F0256",
+        "F0271",
+        "F0397",
+        "F0418",
+        "F0216",
+        "F0229"
+      ],
+      "tokens": {
+        "numbers": [],
+        "identifiers": [
+          "SQLite",
+          "SQLiteEvidenceRepository",
+          "SQLiteProjectRepository",
+          "SQLiteWorkflowRuntime"
+        ],
+        "frameworks": []
+      },
+      "token_levels": {
+        "identifier:SQLite": "cited",
+        "identifier:SQLiteEvidenceRepository": "cited",
+        "identifier:SQLiteProjectRepository": "cited",
+        "identifier:SQLiteWorkflowRuntime": "cited"
+      },
+      "primary": "traceable_correct",
+      "detail": "",
+      "closed_world": "traceable_correct",
+      "closed_world_detail": ""
+    },
+    {
+      "sentence": "ports.py 定义可替换的厂商中立端口，stubs.py 与 memory.py 提供确定性和内存参考实现 [F0294][F0439][F0230]",
+      "clean_text": "ports.py 定义可替换的厂商中立端口，stubs.py 与 memory.py 提供确定性和内存参考实现",
+      "cited_ids": [
+        "F0294",
+        "F0439",
+        "F0230"
+      ],
+      "tokens": {
+        "numbers": [],
+        "identifiers": [],
+        "frameworks": []
+      },
+      "primary": "not_a_factual_claim",
+      "closed_world": "not_a_factual_claim",
+      "detail": ""
+    },
+    {
+      "sentence": "测试侧共有 8 个测试文件、42 个测试函数，覆盖 Phase 1 到 Phase 4 的契约、持久化、运行时、上下文与产品外壳 [F0535][F0498][F0504][F0519][F0534]",
+      "clean_text": "测试侧共有 8 个测试文件、42 个测试函数，覆盖 Phase 1 到 Phase 4 的契约、持久化、运行时、上下文与产品外壳",
+      "cited_ids": [
+        "F0535",
+        "F0498",
+        "F0504",
+        "F0519",
+        "F0534"
+      ],
+      "tokens": {
+        "numbers": [
+          "8",
+          "42",
+          "1",
+          "4"
+        ],
+        "identifiers": [],
+        "frameworks": []
+      },
+      "token_levels": {
+        "number:8": "cited",
+        "number:42": "cited",
+        "number:1": "cited",
+        "number:4": "cited"
+      },
+      "primary": "traceable_correct",
+      "detail": "",
+      "closed_world": "traceable_correct",
+      "closed_world_detail": ""
+    },
+    {
+      "sentence": "整体来看，它更像一套可审计、可恢复、可替换适配器的设计工作流参考实现，而不是单一界面应用",
+      "clean_text": "整体来看，它更像一套可审计、可恢复、可替换适配器的设计工作流参考实现，而不是单一界面应用",
+      "cited_ids": [],
+      "tokens": {
+        "numbers": [],
+        "identifiers": [],
+        "frameworks": []
+      },
+      "primary": "not_a_factual_claim",
+      "closed_world": "not_a_factual_claim",
+      "detail": ""
+    }
+  ],
+  "tally_primary": {
+    "traceable_contradict": 1,
+    "traceable_correct": 7,
+    "not_a_factual_claim": 2
+  },
+  "tally_closed_world": {
+    "traceable_contradict": 1,
+    "traceable_correct": 7,
+    "not_a_factual_claim": 2
+  }
+}

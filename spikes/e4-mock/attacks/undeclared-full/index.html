@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ForgeDesk · Agent 工作台</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<header class="topbar" data-oey-section="topbar">
+  <div class="topbar-left">
+    <span class="logo" data-oey-object="topbar.logo">◆ ForgeDesk</span>
+    <span class="topbar-divider"></span>
+    <span class="crumb" data-oey-object="topbar.projectName" id="topbarProjectName">加载中…</span>
+  </div>
+  <div class="topbar-right">
+    <span class="badge badge-env" data-oey-object="topbar.env">本地 Mock 环境</span>
+    <span class="badge badge-status" data-oey-object="topbar.agentStatus" id="topbarAgentStatus">Agent 空闲</span>
+  </div>
+</header>
+
+<main class="layout">
+
+  <!-- ============ 项目列表区 ============ -->
+  <aside class="panel panel-projects" data-oey-section="projects">
+    <div class="panel-head">
+      <h2 class="panel-title" data-oey-object="projects.title">项目 / 会话</h2>
+      <button class="btn-ghost" id="btnRefreshProjects" data-oey-object="projects.refresh" title="重新拉取列表">↻</button>
+    </div>
+    <div class="projects-filter">
+      <input type="search" id="projectFilter" class="input" placeholder="筛选项目…"
+             data-oey-object="projects.filter">
+    </div>
+    <ul class="project-list" id="projectList" data-oey-object="projects.list">
+      <!-- 项目项由 app.js 渲染，结构：
+           <li data-oey-object="projects.item">
+             <span data-oey-object="projects.item.name">…</span>
+             <span data-oey-object="projects.item.desc">…</span>
+             <span data-oey-object="projects.item.meta">…</span>
+           </li> -->
+    </ul>
+    <div class="projects-empty" id="projectsEmpty" hidden data-oey-object="projects.empty">
+      没有匹配的项目
+    </div>
+    <div class="panel-foot">
+      <span data-oey-object="projects.summary" id="projectsSummary">—</span>
+    </div>
+  </aside>
+
+  <!-- ============ 对话区 ============ -->
+  <section class="panel panel-chat" data-oey-section="chat">
+    <div class="panel-head">
+      <h2 class="panel-title" data-oey-object="chat.title">对话</h2>
+      <span class="chat-session" data-oey-object="chat.sessionId" id="chatSessionId">—</span>
+    </div>
+
+    <div class="chat-messages" id="chatMessages" data-oey-object="chat.messages">
+      <!-- 消息气泡由 app.js 渲染，结构：
+           <div class="msg msg-user|msg-agent" data-oey-object="chat.message">
+             <div data-oey-object="chat.message.role">…</div>
+             <div data-oey-object="chat.message.text">…</div>
+             <div data-oey-object="chat.message.time">…</div>
+           </div> -->
+    </div>
+
+    <div class="chat-typing" id="chatTyping" hidden data-oey-object="chat.typing">
+      <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+      <span class="typing-text">Agent 正在思考…</span>
+    </div>
+
+    <form class="chat-composer" id="chatComposer">
+      <textarea id="chatInput" class="composer-input" rows="2"
+                placeholder="给 Agent 下达指令，例如：把主按钮改成绿色并加上图标"
+                data-oey-object="chat.input"></textarea>
+      <div class="composer-bar">
+        <span class="composer-hint" data-oey-object="chat.hint">Enter 发送 · Shift+Enter 换行</span>
+        <button type="submit" class="btn-primary" id="btnSend" data-oey-object="chat.send">发送</button>
+      </div>
+    </form>
+  </section>
+
+  <!-- ============ 预览区 ============ -->
+  <section class="panel panel-preview" data-oey-section="preview">
+    <div class="panel-head">
+      <h2 class="panel-title" data-oey-object="preview.title">产出预览</h2>
+      <span class="preview-version" data-oey-object="preview.version" id="previewVersion">v—</span>
+    </div>
+
+    <div class="preview-tabs">
+      <button class="tab is-active" data-tab="card" data-oey-object="preview.tabCard">产物卡片</button>
+      <button class="tab" data-tab="code" data-oey-object="preview.tabCode">生成代码</button>
+      <button class="tab" data-tab="log" data-oey-object="preview.tabLog">变更记录</button>
+    </div>
+
+    <div class="preview-body">
+      <div class="preview-pane is-active" id="paneCard">
+        <div class="artifact-card" data-oey-object="preview.card" id="previewCard">
+          <div class="artifact-badge" data-oey-object="preview.card.badge" id="cardBadge">—</div>
+          <h3 class="artifact-title" data-oey-object="preview.card.title" id="cardTitle">—</h3>
+          <p class="artifact-desc" data-oey-object="preview.card.desc" id="cardDesc">—</p>
+          <div class="artifact-stats" data-oey-object="preview.card.stats" id="cardStats">—</div>
+        </div>
+      </div>
+
+      <div class="preview-pane" id="paneCode">
+        <pre class="code-view" data-oey-object="preview.code" id="previewCode">// 加载中…</pre>
+      </div>
+
+      <div class="preview-pane" id="paneLog">
+        <ul class="change-log" data-oey-object="preview.changelog" id="previewLog">
+          <!-- <li data-oey-object="preview.changelog.entry">…</li> -->
+        </ul>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<script src="app.js"></script>
+</body>
+</html>

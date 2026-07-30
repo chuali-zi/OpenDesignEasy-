@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OEYdesign · 远航台 VOYAGE HELM</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<!-- ══════════════ 舰桥顶栏 ══════════════ -->
+<header class="bridge-head" data-oey-section="bridge-head">
+  <div class="brand" data-oey-object="bridge-head.brand">
+    <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true">
+      <circle cx="16" cy="16" r="13" fill="none" stroke="currentColor" stroke-width="2"/>
+      <path d="M16 5 L19 16 L16 27 L13 16 Z" fill="currentColor"/>
+      <circle cx="16" cy="16" r="2.4" fill="#0b1c26"/>
+    </svg>
+    <div class="brand-text">
+      <span class="brand-name">OEYdesign</span>
+      <span class="brand-sub">远航台 · VOYAGE HELM</span>
+    </div>
+  </div>
+
+  <div class="voyage-plate" data-oey-object="bridge-head.voyage-plate">
+    <span class="plate-label">当前航次</span>
+    <span class="plate-code" id="voyageCode">— 未挂旗 —</span>
+  </div>
+
+  <div class="route-switch" data-oey-section="route-switch">
+    <label class="route-label" for="projectSelect" data-oey-object="route-switch.label">切换航线</label>
+    <select id="projectSelect" data-oey-object="route-switch.selector"></select>
+  </div>
+
+  <div class="status-flag" data-oey-object="bridge-head.status-flag">
+    <span class="flag-dot" id="statusDot"></span>
+    <span id="statusText">锚泊中 · 无航次</span>
+  </div>
+
+  <nav class="view-tabs" data-oey-object="bridge-head.view-tabs">
+    <button class="tab active" id="tabBridge" data-view="bridge">驾驶台</button>
+    <button class="tab" id="tabHarbor" data-view="harbor">船坞 · 新航次</button>
+  </nav>
+</header>
+
+<!-- ══════════════ 驾驶台视图 ══════════════ -->
+<main class="deck" id="bridgeView" data-oey-section="deck">
+
+  <!-- 左舷：航海日志 + 喊话口 -->
+  <aside class="port-side">
+
+    <section class="panel logbook" data-oey-section="logbook">
+      <h2 class="panel-title">
+        <svg viewBox="0 0 16 16" class="ico"><path d="M3 2h10v12H3z" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M5.5 5h5M5.5 8h5M5.5 11h3" stroke="currentColor" stroke-width="1.2"/></svg>
+        航海日志
+      </h2>
+      <div class="log-state" data-oey-object="logbook.state" id="logState">NO VOYAGE · 无在航项目</div>
+      <ol class="log-list" data-oey-object="logbook.entries" id="logList"></ol>
+
+      <div class="next-moves" data-oey-object="logbook.next-moves">
+        <div class="next-title">下一舵令 · 可执行</div>
+        <div id="nextMoves"></div>
+      </div>
+    </section>
+
+    <section class="panel hail" data-oey-section="hail-direction">
+      <h2 class="panel-title">
+        <svg viewBox="0 0 16 16" class="ico"><path d="M8 1l2 5 5 .6-3.7 3.4 1 5L8 12.4 3.7 15l1-5L1 6.6 6 6z" fill="none" stroke="currentColor" stroke-width="1.2"/></svg>
+        喊话 · 要求改航线
+      </h2>
+      <p class="hail-hint" data-oey-object="hail-direction.hint">对整个候选方向不满意——换叙事、换语气、换视觉，让 agent 重新出一条航线。</p>
+      <form id="formDirection">
+        <div class="seg" data-oey-object="hail-direction.aspect" id="directionAspect">
+          <button type="button" class="seg-btn active" data-aspect="叙事">换叙事</button>
+          <button type="button" class="seg-btn" data-aspect="语气">换语气</button>
+          <button type="button" class="seg-btn" data-aspect="视觉">换视觉</button>
+        </div>
+        <textarea data-oey-object="hail-direction.message" id="directionText" rows="3" placeholder="例：现在这版像企业年报，我想要更像独立杂志的开卷……"></textarea>
+        <button type="submit" class="btn btn-brass" data-oey-object="hail-direction.submit">发出改航线令</button>
+        <div class="form-ack" id="directionAck"></div>
+      </form>
+    </section>
+
+    <section class="panel hail" data-oey-section="hail-patch">
+      <h2 class="panel-title">
+        <svg viewBox="0 0 16 16" class="ico"><circle cx="8" cy="8" r="6" fill="none" stroke="currentColor" stroke-width="1.3"/><path d="M8 4.5v3.5l2.4 2" stroke="currentColor" stroke-width="1.3" fill="none"/></svg>
+        喊话 · 局部修补
+      </h2>
+      <p class="hail-hint" data-oey-object="hail-patch.hint">只对某一处内容不满意——指出具体位置的事实、权利或策略问题，agent 做定点微调，不动整体航线。</p>
+      <form id="formPatch">
+        <select data-oey-object="hail-patch.target" id="patchTarget"></select>
+        <textarea data-oey-object="hail-patch.message" id="patchText" rows="3" placeholder="例：第三屏引用的数据是去年的，请换成最新口径……"></textarea>
+        <button type="submit" class="btn btn-brass" data-oey-object="hail-patch.submit">发出修补令</button>
+        <div class="form-ack" id="patchAck"></div>
+      </form>
+    </section>
+
+  </aside>
+
+  <!-- 中央：海图桌 -->
+  <section class="chart-table" data-oey-section="chart-table">
+    <div class="chart-head">
+      <h2 class="panel-title">
+        <svg viewBox="0 0 16 16" class="ico"><path d="M2 12l4-8 3 5 2-3 3 6z" fill="none" stroke="currentColor" stroke-width="1.3"/></svg>
+        海图桌 · 候选与校样
+      </h2>
+      <span class="rev-stamp" data-oey-object="chart-table.revision" id="revStamp">REV —</span>
+    </div>
+
+    <div class="candidate-rail" data-oey-object="chart-table.candidates" id="candidateRail"></div>
+
+    <div class="proof-stage" data-oey-object="chart-table.preview" id="proofStage">
+      <div class="empty-sea" id="emptySea">
+        <svg viewBox="0 0 64 64" class="empty-ico">
+          <path d="M8 44c6-4 10-4 16 0s10 4 16 0 10-4 16 0" fill="none" stroke="currentColor" stroke-width="2"/>
+          <path d="M8 52c6-4 10-4 16 0s10 4 16 0 10-4 16 0" fill="none" stroke="currentColor" stroke-width="2" opacity=".5"/>
+          <path d="M32 10v22M32 12l14 16H32" fill="none" stroke="currentColor" stroke-width="2"/>
+        </svg>
+        <p data-oey-object="chart-table.empty">海图桌空着。在左上方选定一条航线，或在「船坞」开辟新航次，候选设计会铺在这里。</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 右舷：船况仪 -->
+  <aside class="starboard-side">
+    <section class="panel" data-oey-section="ship-instruments">
+
+      <div class="inst-block" data-oey-object="ship-instruments.manifest">
+        <h3 class="inst-title">载货清单 · 项目文件</h3>
+        <ul class="file-tree" id="fileTree"></ul>
+      </div>
+
+      <div class="inst-block" data-oey-object="ship-instruments.sailing-orders">
+        <h3 class="inst-title">航行令 · 约束档案</h3>
+        <dl class="orders" id="sailingOrders"></dl>
+      </div>
+
+      <div class="inst-block" data-oey-object="ship-instruments.inspection">
+        <h3 class="inst-title">出港检查 · 质量复核</h3>
+        <div class="insp-lane insp-hard">
+          <div class="lane-head"><span class="lane-light red"></span>暗礁警报 · 硬错误（挡住出港）</div>
+          <ul id="hardList" class="insp-list"></ul>
+        </div>
+        <div class="insp-lane insp-soft">
+          <div class="lane-head"><span class="lane-light amber"></span>瞭望员笔记 · 审美发现（不挡出港，自行判断）</div>
+          <ul id="softList" class="insp-list"></ul>
+        </div>
+      </div>
+
+      <div class="inst-block" data-oey-object="ship-instruments.voyage-records">
+        <h3 class="inst-title">航次档案 · 反馈与交付</h3>
+        <ul class="record-list" id="recordList"></ul>
+      </div>
+
+    </section>
+  </aside>
+</main>
+
+<!-- ══════════════ 船坞视图（新航次） ══════════════ -->
+<main class="harbor hidden" id="harborView" data-oey-section="harbor">
+  <div class="harbor-card">
+    <h2 class="harbor-title" data-oey-object="harbor.title">船坞 · 登记新航次</h2>
+    <p class="harbor-sub" data-oey-object="harbor.subtitle">造一个 demo 项目：起名、定下航行令（约束档）、挂上样板旗（模板角色），即可启航。</p>
+    <form id="formNewVoyage" class="harbor-form">
+      <label class="field">
+        <span data-oey-object="harbor.name-label">航次名称</span>
+        <input type="text" data-oey-object="harbor.name-input" id="newName" placeholder="例：极光咖啡 · 秋季新品页" required>
+      </label>
+
+      <div class="field">
+        <span data-oey-object="harbor.preset-label">航行令 · Constraint preset</span>
+        <div class="pick-row" id="presetPick">
+          <button type="button" class="pick active" data-value="开放探索" data-oey-object="harbor.preset-open">
+            <b>开放探索</b><i>自由海域，先看风向再定线</i>
+          </button>
+          <button type="button" class="pick" data-value="设计引导" data-oey-object="harbor.preset-guided">
+            <b>设计引导</b><i>领航员随行，关键峡口给建议</i>
+          </button>
+          <button type="button" class="pick" data-value="规范生产" data-oey-object="harbor.preset-strict">
+            <b>规范生产</b><i>班轮时刻表，按章航行</i>
+          </button>
+        </div>
+      </div>
+
+      <div class="field">
+        <span data-oey-object="harbor.role-label">样板旗 · Template role</span>
+        <div class="pick-row" id="rolePick">
+          <button type="button" class="pick active" data-value="参考样例" data-oey-object="harbor.role-sample"><b>参考样例</b><i>只作瞭望参照</i></button>
+          <button type="button" class="pick" data-value="起始脚手架" data-oey-object="harbor.role-scaffold"><b>起始脚手架</b><i>从龙骨开始搭</i></button>
+          <button type="button" class="pick" data-value="设计系统" data-oey-object="harbor.role-system"><b>设计系统</b><i>整套船规随航</i></button>
+          <button type="button" class="pick" data-value="交付合同" data-oey-object="harbor.role-contract"><b>交付合同</b><i>抵港即验收</i></button>
+        </div>
+      </div>
+
+      <button type="submit" class="btn btn-brass btn-big" data-oey-object="harbor.submit">登记并启航</button>
+      <div class="form-ack" id="harborAck"></div>
+    </form>
+  </div>
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script src="app.js"></script>
+</body>
+</html>

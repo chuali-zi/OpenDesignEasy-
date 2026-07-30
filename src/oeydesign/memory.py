@@ -46,6 +46,12 @@ class InMemoryProjectRepository:
                 details={"project_id": project_id},
             ) from exc
 
+    def list_projects(self) -> tuple[Project, ...]:
+        return tuple(
+            deepcopy(self._projects[project_id])
+            for project_id in sorted(self._projects)
+        )
+
     def save(self, project: Project, *, expected_revision: int) -> None:
         stored = self._projects.get(project.id)
         if stored is None:

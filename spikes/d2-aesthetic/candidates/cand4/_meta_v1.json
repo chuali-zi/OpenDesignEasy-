@@ -1,0 +1,30 @@
+{
+  "cand_id": 4,
+  "axis_key": "density",
+  "axis_label": "信息密度与节奏 / information density & rhythm",
+  "elapsed_s": 503.8,
+  "usage": {
+    "prompt_tokens": 1817,
+    "completion_tokens": 16923,
+    "total_tokens": 18740,
+    "cached_tokens": 1792,
+    "completion_tokens_details": {
+      "reasoning_tokens": 2601
+    },
+    "prompt_tokens_details": {
+      "cached_tokens": 1792
+    }
+  },
+  "file_count": 5,
+  "files": [
+    "index.html",
+    "styles.css",
+    "app.js",
+    "MOCK.md",
+    "INTENT.md"
+  ],
+  "has_index_html": true,
+  "has_mock_md": true,
+  "has_intent_md": true,
+  "raw_response_chars": 45682
+}

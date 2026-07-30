@@ -1,0 +1,66 @@
+I need to create a static prototype: index.html, app.js, styles.css, MOCK.md. No external resources. Mock API via window.__mockApi__ with setTimeout latency. Sections with data-oey-section, objects with data-oey-object.
+
+Design: "Agent 工作台" — sidebar with projects, chat area, preview panel. Mock projects with different conversations and preview content. Sending message generates simulated agent reply via template rules (based on keywords + project context). Preview updates per project and per new messages (e.g., shows generated artifact like code snippet or task card).
+
+Let me write files.
+
+Projects: e.g., "官网改版助手", "数据周报机器人", "React 组件生成器", "文档问答助手". Each has messages and preview artifact (HTML/code/steps).
+
+Mock layer: window.__mockApi__ with methods listProjects(), getProject(id), sendMessage(projectId, text) returning Promise with delay. Reply generation: rule-based — detect keywords (代码/组件 → code artifact; 报告/数据 → report card; 计划 → steps), else generic summary referencing user text.
+
+Preview: shows artifact of current conversation — last agent message carries artifact, or project default artifact. I'll design: each agent reply may include an artifact {type, title, content}. Preview panel renders based on type: 'code', 'card', 'steps'.
+
+Typing indicator, latency 400-900ms random.
+
+Write the code carefully.
+
+styles.css: dark-ish modern design, CSS only.
+
+Anchors:
+- aside data-oey-section="project-list", items data-oey-object="project-list.item", title "project-list.item-title" etc.
+- chat section data-oey-section="chat", messages data-oey-object="chat.message", bubble "chat.message-bubble", input "chat.input", send button "chat.send-button".
+- preview data-oey-section="preview", card "preview.card", title "preview.title", body "preview.content".
+
+MOCK.md in Chinese, thorough.
+
+Let me write app.js:
+
+```js
+(function(){
+  const LATENCY = {min:350, max:900};
+  const delay = () => new Promise(r=>setTimeout(r, LATENCY.min + Math.random()*(LATENCY.max-LATENCY.min)));
+
+  const DB = { projects: [...] };
+```
+
+Project structure: {id, name, desc, status, updatedAt, messages:[{role, text, artifact?}], artifact: default}
+
+Reply generator:
+
+```js
+function generateReply(project, text){
+  const t = text.toLowerCase();
+  if (/代码|组件|code|button|函数/.test(text)) -> code artifact
+  else if (/报告|数据|周报|统计/.test) -> card
+  else if (/计划|步骤|方案|安排/.test) -> steps
+  else generic text reply, keep current artifact? Produce "note" artifact summarizing.
+}
+```
+
+Code artifact template uses project name and user text snippet.
+
+Escape HTML for user text.
+
+Render functions: renderProjectList, renderChat, renderPreview. State: currentProjectId, sending flag.
+
+Send flow: append user message, show typing indicator, call api.sendMessage, append reply, update preview if artifact, update project list item's lastMessage/updatedAt.
+
+Also preview header shows project name.
+
+Write it.
+
+For code artifact content example: generate a JS function based on keyword. Keep templates.
+
+MOCK.md: list mocked endpoints: GET /api/projects, GET /api/projects/:id, POST /api/projects/:id/messages — implemented as in-memory arrays + Promise + setTimeout; reply generation rules described; preview derived from message artifact; all data fictional.
+
+Now write files fully. Keep decent styling but not overly long.

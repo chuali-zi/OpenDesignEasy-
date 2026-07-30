@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>麦香坊 · 本地面包店菜单</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: #faf3e8;
+    color: #4a3325;
+    line-height: 1.6;
+  }
+  .wrap { max-width: 960px; margin: 0 auto; padding: 0 24px; }
+
+  /* Hero */
+  .hero {
+    background: #3b2a1c;
+    color: #f6ead6;
+    padding: 64px 0 56px;
+    text-align: center;
+  }
+  .hero .logo {
+    width: 72px;
+    height: 72px;
+    display: block;
+    margin: 0 auto 18px;
+  }
+  .hero h1 { font-size: 40px; letter-spacing: 6px; margin-bottom: 10px; }
+  .hero .slogan { font-size: 16px; color: #d9c3a5; margin-bottom: 26px; }
+  .hero .badge {
+    display: inline-block;
+    border: 1px solid #c8862b;
+    color: #e8b563;
+    padding: 6px 18px;
+    border-radius: 999px;
+    font-size: 13px;
+    letter-spacing: 2px;
+  }
+
+  /* Section titles */
+  .section-title {
+    text-align: center;
+    margin: 56px 0 8px;
+    font-size: 28px;
+    letter-spacing: 3px;
+  }
+  .section-sub {
+    text-align: center;
+    color: #9a7b57;
+    font-size: 14px;
+    margin-bottom: 36px;
+  }
+
+  /* Menu grid */
+  .menu-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+    padding-bottom: 8px;
+  }
+  .card {
+    background: #ffffff;
+    border: 1px solid #ecdfc9;
+    border-radius: 14px;
+    padding: 24px 22px;
+    box-shadow: 0 2px 8px rgba(74, 51, 37, 0.06);
+  }
+  .card .icon-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+  }
+  .card .icon { width: 34px; height: 34px; }
+  .card .tag {
+    font-size: 11px;
+    color: #b0782f;
+    background: #f7ecd7;
+    border-radius: 6px;
+    padding: 3px 8px;
+    letter-spacing: 1px;
+  }
+  .card h3 { font-size: 18px; margin-bottom: 6px; }
+  .card p { font-size: 13px; color: #8a715a; min-height: 42px; margin-bottom: 14px; }
+  .card .price-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .card .price { font-size: 20px; font-weight: 700; color: #c8862b; }
+  .card .price small { font-size: 12px; font-weight: 400; color: #a98d6c; }
+  .card .btn {
+    font-size: 13px;
+    color: #ffffff;
+    background: #c8862b;
+    border: none;
+    border-radius: 8px;
+    padding: 7px 16px;
+    cursor: pointer;
+    font-family: inherit;
+  }
+
+  /* About */
+  .about {
+    background: #f3e6cf;
+    margin-top: 64px;
+    padding: 56px 0;
+  }
+  .about-inner {
+    display: flex;
+    gap: 40px;
+    align-items: center;
+  }
+  .about .about-img {
+    width: 120px;
+    height: 120px;
+    flex-shrink: 0;
+    background: #ffffff;
+    border-radius: 50%;
+    padding: 24px;
+    border: 1px solid #e3d2b4;
+  }
+  .about h2 { font-size: 24px; margin-bottom: 12px; letter-spacing: 2px; }
+  .about p { font-size: 14px; color: #6d5640; margin-bottom: 10px; }
+  .about .hours {
+    display: inline-block;
+    margin-top: 6px;
+    font-size: 13px;
+    color: #8a5a1d;
+    background: #fbf3e2;
+    border: 1px dashed #cfa15c;
+    border-radius: 8px;
+    padding: 8px 14px;
+  }
+
+  /* Footer */
+  .footer {
+    background: #3b2a1c;
+    color: #cbb593;
+    text-align: center;
+    padding: 32px 0;
+    font-size: 13px;
+  }
+  .footer .footer-title { color: #f0e2c8; font-size: 16px; letter-spacing: 3px; margin-bottom: 6px; }
+</style>
+</head>
+<body>
+
+  <!-- 顶部招牌区 -->
+  <header class="hero" data-oey-section="hero">
+    <div class="wrap">
+      <img class="logo" data-oey-object="hero.logo" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxjaXJjbGUgY3g9IjgiIGN5PSI4IiByPSI4IiBmaWxsPSIjYzg4NjJiIi8+PC9zdmc+" alt="麦香坊标志">
+      <h1 data-oey-object="hero.title">麦香坊面包店</h1>
+      <p class="slogan" data-oey-object="hero.slogan">每日清晨现烤 · 街坊邻里的老味道</p>
+      <span class="badge" data-oey-object="hero.badge">今日新品：海盐芝士软欧</span>
+    </div>
+  </header>
+
+  <!-- 菜单展示区 -->
+  <main data-oey-section="menu">
+    <div class="wrap">
+      <h2 class="section-title" data-oey-object="menu.title">本 周 菜 单</h2>
+      <p class="section-sub" data-oey-object="menu.subtitle">所有面包均为当日现烤，售完即止</p>
+
+      <div class="menu-grid">
+        <div class="card">
+          <div class="icon-row">
+            <img class="icon" data-oey-object="menu.item1-icon" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxjaXJjbGUgY3g9IjgiIGN5PSI4IiByPSI4IiBmaWxsPSIjYzg4NjJiIi8+PC9zdmc+" alt="招牌吐司">
+            <span class="tag" data-oey-object="menu.item1-tag">招牌</span>
+          </div>
+          <h3 data-oey-object="menu.item1-name">原味鲜奶吐司</h3>
+          <p data-oey-object="menu.item1-desc">选用本地牧场鲜奶，低温慢发酵，柔软拉丝，麦香浓郁。</p>
+          <div class="price-row">
+            <span class="price" data-oey-object="menu.item1-price">¥18<small> / 条</small></span>
+            <button class="btn" data-oey-object="menu.item1-btn">加入购物袋</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="icon-row">
+            <img class="icon" data-oey-object="menu.item2-icon" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxjaXJjbGUgY3g9IjgiIGN5PSI4IiByPSI4IiBmaWxsPSIjYzg4NjJiIi8+PC9zdmc+" alt="可颂">
+            <span class="tag" data-oey-object="menu.item2-tag">热销</span>
+          </div>
+          <h3 data-oey-object="menu.item2-name">法式黄油可颂</h3>
+          <p data-oey-object="menu.item2-desc">二十七层手工开酥，外层酥脆，内里蜂窝组织均匀绵软。</p>
+          <div class="price-row">
+            <span class="price" data-oey-object="menu.item2-price">¥12<small> / 个</small></span>
+            <button class="btn" data-oey-object="menu.item2-btn">加入购物袋</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="icon-row">
+            <img class="icon" data-oey-object="menu.item3-icon" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxjaXJjbGUgY3g9IjgiIGN5PSI4IiByPSI4IiBmaWxsPSIjYzg4NjJiIi8+PC9zdmc+" alt="贝果">
+            <span class="tag" data-oey-object="menu.item3-tag">低糖</span>
+          </div>
+          <h3 data-oey-object="menu.item3-name">全麦核桃贝果</h3>
+          <p data-oey-object="menu.item3-desc">全麦粉搭配烘烤核桃碎，嚼劲十足，健身人士的首选。</p>
+          <div class="price-row">
+            <span class="price" data-oey-object="menu.item3-price">¥10<small> / 个</small></span>
+            <button class="btn" data-oey-object="menu.item3-btn">加入购物袋</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="icon-row">
+            <img class="icon" data-oey-object="menu.item4-icon" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxjaXJjbGUgY3g9IjgiIGN5PSI4IiByPSI4IiBmaWxsPSIjYzg4NjJiIi8+PC9zdmc+" alt="肉桂卷">
+            <span class="tag" data-oey-object="menu.item4-tag">甜点</span>
+          </div>
+          <h3 data-oey-object="menu.item4-name">黑糖肉桂卷</h3>
+          <p data-oey-object="menu.item4-desc">浓郁肉桂与黑糖慢烤交融，淋上奶油奶酪糖霜，温暖治愈。</p>
+          <div class="price-row">
+            <span class="price" data-oey-object="menu.item4-price">¥15<small> / 个</small></span>
+            <button class="btn" data-oey-object="menu.item4-btn">加入购物袋</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="icon-row">
+            <img class="icon" data-oey-object="menu.item5-icon" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxjaXJjbGUgY3g9IjgiIGN5PSI4IiByPSI4IiBmaWxsPSIjYzg4NjJiIi8+PC9zdmc+" alt="法棍">
+            <span class="tag" data-oey-object="menu.item5-tag">经典</span>
+          </div>
+          <h3 data-oey-object="menu.item5-name">传统石窑法棍</h3>
+          <p data-oey-object="menu.item5-desc">石窑高温烘烤，表皮脆响、内芯柔韧，只有麦粉的纯粹香气。</p>
+          <div class="price-row">
+            <span class="price" data-oey-object="menu.item5-price">¥14<small> / 根</small></span>
+            <button class="btn" data-oey-object="menu.item5-btn">加入购物袋</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="icon-row">
+            <img class="icon" data-oey-object="menu.item6-icon" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxjaXJjbGUgY3g9IjgiIGN5PSI4IiByPSI4IiBmaWxsPSIjYzg4NjJiIi8+PC9zdmc+" alt="蛋挞">
+            <span class="tag" data-oey-object="menu.item6-tag">限量</span>
+          </div>
+          <h3 data-oey-object="menu.item6-name">焦糖流心蛋挞</h3>
+          <p data-oey-object="menu.item6-desc">酥皮层层分明，蛋奶馅嫩滑流心，表面焦糖斑恰到好处。</p>
+          <div class="price-row">
+            <span class="price" data-oey-object="menu.item6-price">¥8<small> / 个</small></span>
+            <button class="btn" data-oey-object="menu.item6-btn">加入购物袋</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- 关于我们 -->
+  <section class="about" data-oey-section="about">
+    <div class="wrap about-inner">
+      <img class="about-img" data-oey-object="about.image" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxjaXJjbGUgY3g9IjgiIGN5PSI4IiByPSI4IiBmaWxsPSIjYzg4NjJiIi8+PC9zdmc+" alt="面包师手作">
+      <div>
+        <h2 data-oey-object="about.title">关于麦香坊</h2>
+        <p data-oey-object="about.text1">麦香坊开在街角已经十二年。我们坚持每天凌晨四点开始和面、发酵、烘烤，只为了让街坊们上班路上能买到还带着余温的面包。</p>
+        <p data-oey-object="about.text2">面粉来自本地农场，黄油与奶油坚持当日新鲜使用，不使用任何防腐剂。剩下的面包每晚捐给社区食堂。</p>
+        <span class="hours" data-oey-object="about.hours">营业时间：周一至周日 7:00 – 21:00 ｜ 地址：梧桐街 24 号</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- 页脚 -->
+  <footer class="footer" data-oey-section="footer">
+    <div class="wrap">
+      <p class="footer-title" data-oey-object="footer.title">麦香坊面包店</p>
+      <p data-oey-object="footer.contact">电话：0571-8888-6666 ｜ 微信客服：maixiangfang</p>
+      <p data-oey-object="footer.copyright">© 2025 麦香坊 · 手工现烤，温暖每一天</p>
+    </div>
+  </footer>
+
+</body>
+</html>

@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Minimum grid overflow</title>
+  <style>
+    * { box-sizing: border-box; }
+    html, body { margin: 0; min-height: 100%; }
+    body { background: #ffffff; color: #161616; font: 16px/1.5 Arial, sans-serif; }
+    main { width: calc(100% - 32px); max-width: 760px; margin: 24px auto; }
+    .panel { padding: 24px; border: 1px solid #767676; border-radius: 8px; }
+    button, input, a, [tabindex] { font: inherit; }
+    .target { display:grid; grid-template-columns:repeat(3,280px); gap:16px; min-width:872px; }
+  </style>
+</head>
+<body>
+  <main data-oey-section="fixture"><div class="target"><span>First wide cell</span><span>Second wide cell</span><span>Third wide cell</span></div></main>
+  <script>document.querySelector('.target').setAttribute('data-oey-object','fixture.target');</script>
+</body>
+</html>

@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>A2 render fixture</title>
+<link rel="stylesheet" href="local.css" />
+</head>
+<body>
+  <h1 data-oey-section="hero">A2 sandbox render fixture</h1>
+  <p>This page intentionally references one local asset (should load) and
+     two external assets (should fail with no network).</p>
+  <img src="local-swatch.png" alt="local swatch" width="40" height="40" />
+  <img src="https://example.com/does-not-exist-swatch.png" alt="external swatch" width="40" height="40" />
+  <script src="https://cdn.example.com/nonexistent-lib.js"></script>
+  <script src="local.js"></script>
+</body>
+</html>

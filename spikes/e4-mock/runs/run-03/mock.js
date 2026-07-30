@@ -1,0 +1,560 @@
+/* ============================================================
+ * Orbit Agent 工作台 —— 前端 Mock 层
+ * 本文件在浏览器内完全拦截发往 /api/* 的请求，
+ * 使用内联数据 + 规则模板推导生成响应，
+ * 并通过 setTimeout 模拟网络/推理延迟。
+ * 同时暴露 window.__mockApi__ 作为应用侧统一客户端。
+ * 详见 MOCK.md。
+ * ============================================================ */
+(function () {
+  'use strict';
+
+  /* ---------------- 1. 内联虚构数据（种子数据） ---------------- */
+
+  var LATENCY = { list: 250, detail: 300, replyMin: 900, replyMax: 1800 };
+
+  var PROJECTS = [
+    {
+      id: 'aurora-dash',
+      name: '极光数据看板',
+      slug: 'aurora-dash',
+      model: 'orbit-large · v2.3',
+      status: 'running',
+      statusLabel: '运行中',
+      desc: '面向运营团队的实时数据可视化看板，包含 GMV、转化率、留存三条主线。',
+      lastActive: '今天 10:24',
+      messages: [
+        { id: 'm-a1', role: 'user', time: '09:58', text: '帮我把看板首页的核心指标卡重新组织一下，运营同学反馈信息太密。' },
+        { id: 'm-a2', role: 'agent', time: '09:59', text: '收到。我建议把 12 张指标卡收敛为 3 组：\n\n1. 交易主线：GMV、订单量、客单价\n2. 转化主线：访问-下单转化率、支付成功率\n3. 留存主线：次日留存、7 日留存\n\n每组只保留 1 个主指标大数字 + 2 个次级指标，预览区已经生成了对应的布局代码，可以看一下效果。' },
+        { id: 'm-a3', role: 'user', time: '10:05', text: '主指标的环比涨跌要能用颜色直接看出来。' },
+        { id: 'm-a4', role: 'agent', time: '10:06', text: '已处理：主指标旁新增环比箭头与着色（涨=绿、跌=红、持平=灰），并保留了悬停时的明细 tooltip。预览区的组件代码已更新到第 2 版。' }
+      ],
+      artifact: {
+        kind: 'component',
+        kindLabel: '前端组件',
+        title: '指标卡组布局 · v2',
+        turn: 2,
+        code:
+'<!-- 项目「极光数据看板」 · 第 2 轮会话产出 -->\n' +
+'<section class="metric-groups">\n' +
+'  <div class="metric-group" data-line="trade">\n' +
+'    <h3>交易主线</h3>\n' +
+'    <div class="metric-hero">\n' +
+'      <span class="value" id="gmv">--</span>\n' +
+'      <span class="delta" data-trend="auto">--%</span>\n' +
+'    </div>\n' +
+'    <ul class="metric-sub">\n' +
+'      <li>订单量 <b id="orders">--</b></li>\n' +
+'      <li>客单价 <b id="aov">--</b></li>\n' +
+'    </ul>\n' +
+'  </div>\n' +
+'  <!-- 转化主线 / 留存主线 结构同上 -->\n' +
+'</section>\n' +
+'<script>\n' +
+'  // 环比着色：涨=绿 跌=红 平=灰\n' +
+'  document.querySelectorAll(".delta").forEach(function (el) {\n' +
+'    var v = parseFloat(el.textContent);\n' +
+'    el.dataset.trend = v > 0 ? "up" : v < 0 ? "down" : "flat";\n' +
+'  });\n' +
+'</' + 'script>',
+        updatedAt: '今天 10:06'
+      }
+    },
+    {
+      id: 'order-fulfillment',
+      name: '订单履约服务',
+      slug: 'order-fulfillment',
+      model: 'orbit-large · v2.3',
+      status: 'running',
+      statusLabel: '运行中',
+      desc: '后端履约编排服务：拆单、寻源、分配仓、回传物流单号。',
+      lastActive: '昨天 18:40',
+      messages: [
+        { id: 'm-b1', role: 'user', time: '昨天 18:31', text: '履约服务的拆单逻辑现在写死在路由层，帮我看看怎么重构。' },
+        { id: 'm-b2', role: 'agent', time: '昨天 18:33', text: '看了下现状，拆单规则（按仓、按品类、按预售）确实耦合在路由处理器里。建议重构方向：\n\n1. 抽出 Splitter 策略接口，每种规则一个实现\n2. 用策略注册表替代 if/else 链\n3. 路由层只负责参数校验和调用编排\n\n预览区我放了重构后的核心骨架代码，你可以直接基于它继续。' }
+      ],
+      artifact: {
+        kind: 'api',
+        kindLabel: '后端代码',
+        title: '拆单策略骨架 · v1',
+        turn: 1,
+        code:
+'// 项目「订单履约服务」 · 第 1 轮会话产出\n' +
+'// 拆单策略接口 + 注册表\n' +
+'\n' +
+'const splitters = [];\n' +
+'\n' +
+'function registerSplitter(name, match, split) {\n' +
+'  splitters.push({ name, match, split });\n' +
+'}\n' +
+'\n' +
+'function splitOrder(order) {\n' +
+'  for (const s of splitters) {\n' +
+'    if (s.match(order)) return s.split(order);\n' +
+'  }\n' +
+'  return [order]; // 兜底：不拆单\n' +
+'}\n' +
+'\n' +
+'// 路由层只做编排\n' +
+'async function handleFulfill(req, res) {\n' +
+'  const order = validate(req.body);\n' +
+'  const subs = splitOrder(order);\n' +
+'  const result = await Promise.all(subs.map(dispatchToWarehouse));\n' +
+'  res.json({ subOrders: result });\n' +
+'}',
+        updatedAt: '昨天 18:33'
+      }
+    },
+    {
+      id: 'doc-qa-bot',
+      name: '文档智能问答',
+      slug: 'doc-qa-bot',
+      model: 'orbit-rag · v1.8',
+      status: 'pending',
+      statusLabel: '待接入',
+      desc: '基于内部文档库的 RAG 问答机器人，支持引用溯源。',
+      lastActive: '周一 14:02',
+      messages: [
+        { id: 'm-c1', role: 'user', time: '周一 13:55', text: '问答机器人经常引用错文档段落，有什么办法缓解？' },
+        { id: 'm-c2', role: 'agent', time: '周一 13:58', text: '引用错位通常有两个根因：\n\n1. 检索召回段与最终生成段不一致（rerank 阶段被换掉）\n2. 生成时模型自行"脑补"了出处编号\n\n缓解方案：让引用编号在检索阶段就绑定 chunk_id，生成阶段只允许引用传入的编号集合，输出后再做一次编号合法性校验，非法引用直接剔除。预览区有这个校验流程的说明文档草稿。' }
+      ],
+      artifact: {
+        kind: 'doc',
+        kindLabel: '设计文档',
+        title: '引用校验流程 · 草案',
+        turn: 1,
+        code:
+'# 引用合法性校验流程（草案）\n' +
+'\n' +
+'## 目标\n' +
+'保证答案中每个 [n] 引用都能映射到真实检索结果。\n' +
+'\n' +
+'## 流程\n' +
+'1. 检索阶段：召回 chunks，分配编号 [1..k]，绑定 chunk_id\n' +
+'2. 生成阶段：prompt 中声明「仅允许使用编号 1..k」\n' +
+'3. 校验阶段：\n' +
+'   - 解析答案中所有 [n]\n' +
+'   - n > k 或 n < 1 → 剔除该引用\n' +
+'   - 连续 3 次以上非法引用 → 触发重试\n' +
+'\n' +
+'## 待办\n' +
+'- [ ] 评估校验对答案可读性的影响\n' +
+'- [ ] 增加引用点击跳转的端到端测试',
+        updatedAt: '周一 13:58'
+      }
+    },
+    {
+      id: 'campaign-pages',
+      name: '营销活动落地页',
+      slug: 'campaign-pages',
+      model: 'orbit-lite · v1.1',
+      status: 'draft',
+      statusLabel: '草稿',
+      desc: '可配置的运营落地页生成器：拖拽区块 + 一键发布到 CDN。',
+      lastActive: '上周五 16:20',
+      messages: [
+        { id: 'm-d1', role: 'user', time: '上周五 16:12', text: '做一版抽奖活动的落地页骨架，要有报名表单。' },
+        { id: 'm-d2', role: 'agent', time: '上周五 16:15', text: '好的，我生成了一版基础骨架：顶部主视觉、奖品展示区、报名表单、活动规则四个区块。报名表单包含手机号校验和防重复提交，代码在预览区，你可以继续让我调整。' }
+      ],
+      artifact: {
+        kind: 'form',
+        kindLabel: '页面骨架',
+        title: '抽奖落地页 · v1',
+        turn: 1,
+        code:
+'<!-- 项目「营销活动落地页」 · 第 1 轮会话产出 -->\n' +
+'<main class="campaign">\n' +
+'  <section class="hero">\n' +
+'    <h1>幸运大转盘</h1>\n' +
+'    <p>活动时间：待定</p>\n' +
+'  </section>\n' +
+'  <section class="prizes">…奖品展示区…</section>\n' +
+'  <form class="signup" novalidate>\n' +
+'    <input name="phone" pattern="^1\\d{10}$"\n' +
+'           placeholder="手机号" required>\n' +
+'    <button type="submit">立即报名</button>\n' +
+'  </form>\n' +
+'  <section class="rules">…活动规则…</section>\n' +
+'</main>',
+        updatedAt: '上周五 16:15'
+      }
+    }
+  ];
+
+  var messageSeq = 100;
+  var globalTurn = {};
+
+  /* ---------------- 2. 工具函数 ---------------- */
+
+  function nowTime() {
+    return new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
+  }
+
+  function randomBetween(min, max) {
+    return Math.floor(min + Math.random() * (max - min));
+  }
+
+  function delay(ms, value) {
+    return new Promise(function (resolve) {
+      setTimeout(function () { resolve(value); }, ms);
+    });
+  }
+
+  function findProject(id) {
+    for (var i = 0; i < PROJECTS.length; i++) {
+      if (PROJECTS[i].id === id) return PROJECTS[i];
+    }
+    return null;
+  }
+
+  function excerpt(text, n) {
+    return String(text).replace(/\s+/g, ' ').trim().slice(0, n || 40);
+  }
+
+  /* ---------------- 3. Agent 回复引擎（规则 + 模板推导） ----------------
+   * 推导规则：按用户消息关键词匹配命中的「意图规则」，
+   * 用项目上下文 + 消息摘要填充模板，生成回复文本。
+   * 未命中任何规则时，按对话轮数轮换两个兜底模板。
+   * ------------------------------------------------------------------ */
+
+  var REPLY_RULES = [
+    {
+      test: /报错|错误|bug|异常|失败|崩溃|error|exception|crash/i,
+      build: function (p, ex) {
+        return '关于「' + ex + '」，我先给出排查思路：\n\n' +
+          '1. 先确认报错是稳定复现还是偶发——偶发优先考虑并发与超时\n' +
+          '2. 检查最近一次改动的提交，用二分法定位引入点\n' +
+          '3. 在「' + p.name + '」里给关键路径补上结构化日志，带上 trace_id\n\n' +
+          '如果你把完整的报错堆栈贴给我，我可以直接给出更具体的定位结论。';
+      }
+    },
+    {
+      test: /优化|性能|慢|卡顿|加速|提升/i,
+      build: function (p, ex) {
+        return '针对「' + ex + '」，我建议按这个顺序做性能优化：\n\n' +
+          '1. 先量化：在「' + p.name + '」里加上耗时埋点，确定瓶颈在 I/O 还是计算\n' +
+          '2. 大头优先：通常 80% 的耗时集中在 1~2 个热点上，先解决它们\n' +
+          '3. 再考虑缓存与并发：缓存只加在「读多写少且可容忍短暂不一致」的路径上\n\n' +
+          '告诉我目前的量化数据，我可以帮你排一个优化优先级清单。';
+      }
+    },
+    {
+      test: /解释|为什么|原理|怎么实现|如何/i,
+      build: function (p, ex) {
+        return '来解释一下「' + ex + '」：\n\n' +
+          '核心思路是把关注点拆开——输入校验、业务编排、副作用（写库/发消息）三层各管各的。' +
+          '这样在「' + p.name + '」的语境下，任何一层出问题都能独立定位、独立替换。\n\n' +
+          '需要的话我可以结合这个项目里的具体代码展开讲，直接说「展开第 X 点」即可。';
+      }
+    },
+    {
+      test: /部署|上线|发布|流水线|ci|cd/i,
+      build: function (p, ex) {
+        return '关于「' + ex + '」，给「' + p.name + '」的发布建议是：\n\n' +
+          '1. 主干开发 + 短生命周期分支，合并前跑单测与静态检查\n' +
+          '2. 发布走灰度：先 5% 流量观察 30 分钟核心指标，再全量\n' +
+          '3. 必备一键回滚：上一个稳定镜像保持热备\n\n' +
+          '要不要我顺手生成一份流水线配置草稿？';
+      }
+    },
+    {
+      test: /写|生成|实现|做一|加一|新增|开发|组件|页面|接口|功能/i,
+      build: function (p, ex) {
+        return '收到，我按「' + ex + '」生成了一版实现，已经更新到右侧预览区（' + p.name + '）。\n\n' +
+          '这版的处理要点：\n' +
+          '1. 结构尽量扁平，避免过度嵌套\n' +
+          '2. 关键分支都留了注释，方便你审阅\n' +
+          '3. 边界情况（空值、重复提交）做了兜底\n\n' +
+          '如果不符合预期，直接告诉我哪里要改，我会在预览区迭代下一版。';
+      }
+    }
+  ];
+
+  var FALLBACK_BUILDS = [
+    function (p, ex) {
+      return '我理解你的需求是「' + ex + '」。先给一个初步计划：\n\n' +
+        '1. 梳理现状：确认「' + p.name + '」里已有的相关模块与约束\n' +
+        '2. 小步落地：先做一个最小可用版本，验证方向\n' +
+        '3. 迭代完善：根据验证结果补齐边界情况\n\n' +
+        '你可以补充一些细节（比如期望的输入输出），我会把方案具体化。';
+    },
+    function (p, ex) {
+      return '关于「' + ex + '」，我有两点想先确认：\n\n' +
+        '1. 这个改动是只影响「' + p.name + '」，还是会牵连到上下游？\n' +
+        '2. 有没有时间或兼容性上的硬性约束？\n\n' +
+        '确认之后我就能给出可执行的步骤，必要时同步更新预览区的产出。';
+    }
+  ];
+
+  function generateAgentReply(project, userText) {
+    var turn = (globalTurn[project.id] = (globalTurn[project.id] || project.messages.length) + 1);
+    var ex = excerpt(userText);
+    for (var i = 0; i < REPLY_RULES.length; i++) {
+      if (REPLY_RULES[i].test.test(userText)) {
+        return { text: REPLY_RULES[i].build(project, ex), turn: turn };
+      }
+    }
+    return { text: FALLBACK_BUILDS[turn % FALLBACK_BUILDS.length](project, ex), turn: turn };
+  }
+
+  /* ---------------- 4. 预览产出生成器（关键词分类 + 模板推导） ----------------
+   * 推导规则：按用户消息关键词判断产出类型（表单/图表/接口/文档/组件），
+   * 再把项目名、需求摘要、轮次填入对应代码模板。
+   * ------------------------------------------------------------------ */
+
+  function detectArtifactKind(userText) {
+    if (/表单|报名|注册|登录|form/i.test(userText)) return 'form';
+    if (/图表|看板|可视化|曲线|柱状|chart|dashboard/i.test(userText)) return 'chart';
+    if (/接口|api|接口定义|路由|后端/i.test(userText)) return 'api';
+    if (/文档|说明|readme|手册|方案/i.test(userText)) return 'doc';
+    return 'component';
+  }
+
+  var KIND_LABELS = {
+    form: '页面骨架',
+    chart: '前端组件',
+    api: '后端代码',
+    doc: '设计文档',
+    component: '前端组件'
+  };
+
+  function buildArtifactCode(project, userText, kind, turn) {
+    var ex = excerpt(userText, 30);
+    var header = (kind === 'doc' ? '>' : kind === 'api' ? '//' : '<!--') +
+      ' 项目「' + project.name + '」 · 第 ' + turn + ' 轮会话产出 · 需求：' + ex +
+      (kind === 'doc' ? '' : kind === 'api' ? '' : ' -->') + '\n';
+
+    switch (kind) {
+      case 'form':
+        return header +
+'<form class="orbit-form" data-gen="' + turn + '" novalidate>\n' +
+'  <label>姓名 <input name="name" required maxlength="20"></label>\n' +
+'  <label>联系方式 <input name="contact" required></label>\n' +
+'  <label>备注 <textarea name="note" rows="2"></textarea></label>\n' +
+'  <button type="submit">提交</button>\n' +
+'</form>\n' +
+'<script>\n' +
+'  // 防重复提交 + 基础校验\n' +
+'  document.querySelector(".orbit-form").addEventListener("submit", function (e) {\n' +
+'    e.preventDefault();\n' +
+'    if (!e.target.reportValidity()) return;\n' +
+'    e.target.querySelector("button").disabled = true;\n' +
+'    // TODO: 接入提交接口\n' +
+'  });\n' +
+'</' + 'script>';
+      case 'chart':
+        return header +
+'<div class="orbit-chart" data-gen="' + turn + '">\n' +
+'  <canvas id="chart-' + project.slug + '" width="640" height="320"></canvas>\n' +
+'</div>\n' +
+'<script>\n' +
+'  // 轻量柱状图渲染（无第三方依赖）\n' +
+'  const data = [42, 68, 55, 91, 76, 83, 60]; // 示例数据，待接入真实数据源\n' +
+'  const ctx = document.getElementById("chart-' + project.slug + '").getContext("2d");\n' +
+'  const w = 640 / data.length;\n' +
+'  data.forEach(function (v, i) {\n' +
+'    ctx.fillStyle = "#5b8cff";\n' +
+'    ctx.fillRect(i * w + 12, 320 - v * 3, w - 24, v * 3);\n' +
+'  });\n' +
+'</' + 'script>';
+      case 'api':
+        return header +
+'// 路由注册\n' +
+'router.post("/v1/' + project.slug + '/action", async (req, res) => {\n' +
+'  const payload = validate(req.body, schema);\n' +
+'  if (!payload.ok) return res.status(400).json({ error: payload.error });\n' +
+'\n' +
+'  const result = await service.execute({\n' +
+'    ...payload.data,\n' +
+'    traceId: req.headers["x-trace-id"],\n' +
+'  });\n' +
+'\n' +
+'  res.json({ code: 0, data: result });\n' +
+'});\n' +
+'\n' +
+'// 错误兜底\n' +
+'router.use((err, req, res, next) => {\n' +
+'  logger.error({ traceId: req.headers["x-trace-id"], err });\n' +
+'  res.status(500).json({ code: 500, message: "internal error" });\n' +
+'});';
+      case 'doc':
+        return header +
+'# ' + ex + '\n\n' +
+'## 背景\n围绕「' + project.name + '」的当前约束整理。\n\n' +
+'## 方案\n1. 明确目标与不做的事\n' +
+'2. 拆解为可独立交付的步骤\n' +
+'3. 每一步给出验收标准\n\n' +
+'## 风险与对策\n- 方案变更 → 用灰度控制影响面\n' +
+'- 数据不一致 → 增加对账与告警\n\n' +
+'## 待办\n- [ ] 评审\n- [ ] 排期';
+      default:
+        return header +
+'<div class="orbit-widget" data-gen="' + turn + '" data-project="' + project.slug + '">\n' +
+'  <header class="widget-head">\n' +
+'    <strong>' + ex + '</strong>\n' +
+'    <button class="widget-action" type="button">操作</button>\n' +
+'  </header>\n' +
+'  <div class="widget-body">加载中…</div>\n' +
+'</div>\n' +
+'<script>\n' +
+'  (function () {\n' +
+'    var root = document.querySelector(\'[data-gen="' + turn + '"]\');\n' +
+'    root.querySelector(".widget-action").addEventListener("click", function () {\n' +
+'      root.querySelector(".widget-body").textContent = "已触发：" + new Date().toLocaleTimeString();\n' +
+'    });\n' +
+'  })();\n' +
+'</' + 'script>';
+    }
+  }
+
+  function generateArtifact(project, userText, turn) {
+    var kind = detectArtifactKind(userText);
+    return {
+      kind: kind,
+      kindLabel: KIND_LABELS[kind],
+      title: KIND_LABELS[kind] + ' · v' + turn,
+      turn: turn,
+      code: buildArtifactCode(project, userText, kind, turn),
+      updatedAt: nowTime()
+    };
+  }
+
+  /* ---------------- 5. 路由：拦截 /api/* ---------------- */
+
+  function jsonResponse(data, status) {
+    return new Response(JSON.stringify(data), {
+      status: status,
+      headers: { 'Content-Type': 'application/json', 'X-Mock-Layer': 'orbit-mock' }
+    });
+  }
+
+  function notFound(path) {
+    var err = new Error('mock 404: ' + path);
+    err.status = 404;
+    return Promise.reject(err);
+  }
+
+  function routeRequest(method, url, body) {
+    var path = String(url).replace(/^https?:\/\/[^/]+/, '');
+    var m;
+
+    // GET /api/projects —— 项目列表
+    if (method === 'GET' && path === '/api/projects') {
+      return delay(LATENCY.list, PROJECTS.map(function (p) {
+        return {
+          id: p.id, name: p.name, model: p.model, status: p.status,
+          statusLabel: p.statusLabel, desc: p.desc, lastActive: p.lastActive,
+          messageCount: p.messages.length
+        };
+      }));
+    }
+
+    // GET /api/projects/:id —— 项目详情
+    if (method === 'GET' && (m = path.match(/^\/api\/projects\/([\w-]+)$/))) {
+      var proj = findProject(m[1]);
+      if (!proj) return notFound(path);
+      return delay(LATENCY.detail, {
+        id: proj.id, name: proj.name, model: proj.model,
+        status: proj.status, statusLabel: proj.statusLabel, desc: proj.desc
+      });
+    }
+
+    // GET /api/projects/:id/messages —— 会话消息
+    if (method === 'GET' && (m = path.match(/^\/api\/projects\/([\w-]+)\/messages$/))) {
+      var proj2 = findProject(m[1]);
+      if (!proj2) return notFound(path);
+      return delay(LATENCY.detail, proj2.messages.slice());
+    }
+
+    // POST /api/projects/:id/messages —— 发送消息，返回用户消息 + agent 回复 + 更新后的预览
+    if (method === 'POST' && (m = path.match(/^\/api\/projects\/([\w-]+)\/messages$/))) {
+      var proj3 = findProject(m[1]);
+      if (!proj3) return notFound(path);
+      var payload;
+      try { payload = JSON.parse(body || '{}'); } catch (e) { payload = {}; }
+      var text = String(payload.text || '').trim();
+      if (!text) {
+        var badReq = new Error('mock 400: text is required');
+        badReq.status = 400;
+        return Promise.reject(badReq);
+      }
+
+      var userMsg = { id: 'm-' + (++messageSeq), role: 'user', time: nowTime(), text: text };
+      proj3.messages.push(userMsg);
+
+      var reply = generateAgentReply(proj3, text);
+      var agentMsg = { id: 'm-' + (++messageSeq), role: 'agent', time: nowTime(), text: reply.text };
+      proj3.messages.push(agentMsg);
+
+      // 发送消息后，预览产出按规则重新推导生成
+      proj3.artifact = generateArtifact(proj3, text, reply.turn);
+      proj3.lastActive = '刚刚';
+
+      return delay(randomBetween(LATENCY.replyMin, LATENCY.replyMax), {
+        userMessage: userMsg,
+        agentMessage: agentMsg,
+        preview: proj3.artifact,
+        project: {
+          id: proj3.id, lastActive: proj3.lastActive, messageCount: proj3.messages.length
+        }
+      });
+    }
+
+    // GET /api/projects/:id/preview —— 当前预览产出
+    if (method === 'GET' && (m = path.match(/^\/api\/projects\/([\w-]+)\/preview$/))) {
+      var proj4 = findProject(m[1]);
+      if (!proj4) return notFound(path);
+      return delay(LATENCY.detail, proj4.artifact);
+    }
+
+    return notFound(path);
+  }
+
+  /* ---------------- 6. 覆盖 window.fetch（仅拦截 /api/*） ---------------- */
+
+  var nativeFetch = typeof window.fetch === 'function' ? window.fetch.bind(window) : null;
+
+  window.fetch = function (input, init) {
+    var url = typeof input === 'string' ? input : (input && input.url) || '';
+    var method = ((init && init.method) || (typeof input === 'object' && input && input.method) || 'GET').toUpperCase();
+    var body = init && init.body;
+
+    if (url.indexOf('/api/') !== -1 && !/^https?:\/\/(?!mock\.local)/.test(url)) {
+      return routeRequest(method, url, body).then(
+        function (data) { return jsonResponse(data, 200); },
+        function (err) { return jsonResponse({ error: err.message }, err.status || 500); }
+      );
+    }
+
+    if (nativeFetch) return nativeFetch(input, init);
+    return Promise.reject(new Error('当前为纯 mock 环境，非 /api/* 请求不可用'));
+  };
+
+  /* ---------------- 7. 对外暴露 mock 客户端 ---------------- */
+
+  window.__mockApi__ = {
+    listProjects: function () {
+      return window.fetch('/api/projects').then(function (r) { return r.json(); });
+    },
+    getProject: function (id) {
+      return window.fetch('/api/projects/' + id).then(function (r) { return r.json(); });
+    },
+    getMessages: function (id) {
+      return window.fetch('/api/projects/' + id + '/messages').then(function (r) { return r.json(); });
+    },
+    sendMessage: function (id, text) {
+      return window.fetch('/api/projects/' + id + '/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: text })
+      }).then(function (r) { return r.json(); });
+    },
+    getPreview: function (id) {
+      return window.fetch('/api/projects/' + id + '/preview').then(function (r) { return r.json(); });
+    },
+    __debug: {
+      latency: LATENCY,
+      projects: PROJECTS
+    }
+  };
+})();

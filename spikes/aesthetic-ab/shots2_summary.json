@@ -1,0 +1,806 @@
+[
+  {
+    "run": "daylight-bespoke",
+    "anchors_section": 9,
+    "anchors_object": 9,
+    "layout": {
+      "viewport_w": 1440,
+      "tall_blocks": [
+        {
+          "w": 1440,
+          "x": 0,
+          "tag": "MAIN",
+          "sec": ""
+        },
+        {
+          "w": 352,
+          "x": 0,
+          "tag": "ASIDE",
+          "sec": "chat-rail"
+        },
+        {
+          "w": 351,
+          "x": 0,
+          "tag": "DIV",
+          "sec": ""
+        },
+        {
+          "w": 1088,
+          "x": 352,
+          "tag": "SECTION",
+          "sec": "bench"
+        },
+        {
+          "w": 1088,
+          "x": 352,
+          "tag": "DIV",
+          "sec": ""
+        },
+        {
+          "w": 1024,
+          "x": 384,
+          "tag": "DIV",
+          "sec": ""
+        }
+      ]
+    },
+    "title": "OEYdesign — 焙野咖啡 · 秋季落地页",
+    "contract": {
+      "colors": 13,
+      "font_families": [
+        "\"IBM Plex Mono\", monospace",
+        "\"IBM Plex Sans\", \"Noto Sans SC\", sans-serif",
+        "\"PingFang SC\", \"Hiragino Sans GB\", \"Microsoft YaHei\", sans-serif",
+        "Georgia, \"Songti SC\", STSong, serif",
+        "Georgia, \"Songti SC\", serif"
+      ],
+      "font_sizes": [
+        12.0,
+        13.0,
+        14.0,
+        15.0,
+        16.0,
+        18.0,
+        20.0,
+        22.0,
+        26.0
+      ],
+      "space": 21
+    },
+    "console_errors": [
+      "Failed to load resource: net::ERR_CONNECTION_TIMED_OUT"
+    ],
+    "failed_requests": [
+      "http://127.0.0.1:53143/assets/fonts/noto-sans-sc/k3kXo84MPvpLmixcA63oeALhLOCT-xWNm8Hqd37g1OkDRZe7lR4sg1IzSy-MNbE9VH8V.101.woff2"
+    ],
+    "blocked_external": [],
+    "truncated": false,
+    "files": [
+      "app.js",
+      "index.html",
+      "styles.css"
+    ],
+    "total_elapsed_s": 582.3,
+    "direction": {
+      "direction_name": "套准工作台（Registration Bench）",
+      "rationale": "OEYdesign 的核心信任问题是「我说改哪个对象，agent 改的到底是不是那个对象」。所以外壳取印刷/制版工台的气质：冷静的近白灰底、1px 发丝线、套准角标式的精确感，让界面像一把卡尺而不是一张海报。克制的灰阶把全部色彩注意力让给预览区里「别人的产品」，内外两层自然不会串味。",
+      "palette": {
+        "bg": "#F4F5F6",
+        "surface": "#FFFFFF",
+        "ink": "#191D22",
+        "ink_muted": "#4E5764",
+        "line": "#DFE3E7",
+        "accent": "#0A5C43",
+        "accent_role": "深绿只出现在三处且语义一致：对象锚点高亮（预览中的套准角标+对话中的对象引用 chip）、当前版本标记、主操作按钮（导出/发送）。三者都是「指向/确认」语义——绿色出现即代表这里有一个可定位、可操作的节点。不用它画背景、不做导航着色、不装饰图标。",
+        "contrast_check": "ink #191D22 对 bg #F4F5F6 约 14.8:1（≥7 达标）；ink_muted #4E5764 对 surface #FFFFFF 约 7.4:1（≥4.5 达标）；accent #0A5C43 对白色约 7.0:1，可用于白底文字与描边；白字对 accent 按钮底约 7.0:1 达标。"
+      },
+      "type": {
+        "display_family": "IBM Plex Sans",
+        "body_family": "IBM Plex Sans",
+        "cjk_family": "Noto Sans SC",
+        "mono_family": "IBM Plex Mono",
+        "pairing_rationale": "全壳统一在 Plex 体系：工程感、中性、屏幕优化，与「专业软件」定位一致；中文落 Noto Sans SC，与 Plex Sans 的灰度、x 高度和笔画密度接近，中英混排不打架。层级不靠换字体，靠字重（400/500/600）和字号拉开——字体的克制本身就是方向。IBM Plex Mono 严格限定于版本号（v4）、对象 ID（hero-title）、时间戳，给「机器产物」一个可识别的声部。",
+        "scale_px": [
+          12,
+          14,
+          15,
+          16,
+          20,
+          26
+        ],
+        "_scale_note": "12px 仅限 mono 的时间戳/ID，不承载连续阅读文字；正文与对话均为 14-15px；预览区工具条标签 14px；面板标题 16px；产物内标题（内层）20-26px。"
+      },
+      "space_scale_px": [
+        4,
+        8,
+        12,
+        16,
+        24,
+        32,
+        48
+      ],
+      "layout_archetype": "轨与台（Rail & Bench）：顶栏 48px 通栏，其下左 352px 固定对话轨、右侧弹性画布占满剩余宽度（约 75%+）。对话轨内部消息左对齐贴轨，agent 回复前有一条 2px 竖向引出线连到版本 chip，形成一条可读的时间脊线。预览区居中放置产物画板，四周留出均匀灰底呼吸位，工具条浮于画板正上方而非贴顶——视觉上强调「产物是被摆上台面的对象」，不是外壳的一部分。",
+      "signature_move": {
+        "what": "对象套准锚点系统：对话中凡是提及具体对象的回合，消息内嵌一个 mono 字体的对象 chip（如 hero-title，绿底白字或绿描边）；悬停/点击该 chip 时，预览画布中对应对象四角出现 accent 色的套准角标（⌐ ¬ ⌐ 式 1.5px 角线，不填充、不遮罩产物本体），角标旁浮出同款 mono ID 标签。选中状态下角标常驻，画布其他部分不加任何色块。",
+        "serves": "「这一轮对话改的到底是产物里的哪一个对象」这条信息——用户提出「主标题压到两行」，立刻能在画布上确认 agent 理解的对象就是 hero-title 而不是副标题或别处。",
+        "why_not_decoration": "它是一条双向引用链的 UI 化：chat 中的文字引用 ↔ 画布中的物理位置。去掉它，对象级反馈（产品核心卖点）就退化成纯文字描述，用户无法验证 agent 的理解是否正确；角标做成套准式而非高亮填充，正是为了不污染内层产物的真实观感——形式由「不得蔓延进内层」这条硬约束直接推导出来。"
+      },
+      "anti_patterns": [
+        "任何彩色渐变、彩色侧栏、彩色面板底——色彩只允许以 accent 单点出现",
+        "把工作台的灰底、发丝线、字体样式延伸进预览产物内部；产物画板必须有自己完整的视觉语言（本项目 mock 产物用暖橙+深墨，与外壳零共享色值）",
+        "大圆角卡片堆叠：圆角统一 ≤6px，层次靠 1px #DFE3E7 描边 + 一层 0 1px 2px rgba(25,29,34,0.06) 的轻阴影",
+        "空状态占位面板或 lorem ipsum：对话必须满载 ≥6 轮真实迭代记录，版本列表面板默认收起但点开即有内容"
+      ]
+    },
+    "total_tokens": 25069
+  },
+  {
+    "run": "daylight-system",
+    "anchors_section": 4,
+    "anchors_object": 7,
+    "layout": {
+      "viewport_w": 1440,
+      "tall_blocks": [
+        {
+          "w": 1440,
+          "x": 0,
+          "tag": "MAIN",
+          "sec": ""
+        },
+        {
+          "w": 352,
+          "x": 0,
+          "tag": "ASIDE",
+          "sec": ""
+        },
+        {
+          "w": 351,
+          "x": 0,
+          "tag": "DIV",
+          "sec": ""
+        },
+        {
+          "w": 1088,
+          "x": 352,
+          "tag": "SECTION",
+          "sec": ""
+        },
+        {
+          "w": 1088,
+          "x": 352,
+          "tag": "DIV",
+          "sec": ""
+        },
+        {
+          "w": 920,
+          "x": 436,
+          "tag": "DIV",
+          "sec": ""
+        }
+      ]
+    },
+    "title": "OEYdesign · 琥珀烘焙落地页",
+    "contract": {
+      "colors": 11,
+      "font_families": [
+        "\"Courier New\", ui-monospace, monospace",
+        "\"Helvetica Neue\", Arial, \"PingFang SC\", \"Hiragino Sans GB\", \"Microsoft YaHei\", sans-serif",
+        "\"IBM Plex Mono\", \"Noto Sans SC\", monospace",
+        "\"IBM Plex Mono\", monospace",
+        "\"IBM Plex Sans\", \"Noto Sans SC\", sans-serif",
+        "Georgia, \"Times New Roman\", \"Songti SC\", SimSun, serif"
+      ],
+      "font_sizes": [
+        12.0,
+        14.0,
+        15.0,
+        16.0,
+        17.0,
+        20.0,
+        26.0
+      ],
+      "space": 22
+    },
+    "console_errors": [
+      "Failed to load resource: net::ERR_CONNECTION_TIMED_OUT"
+    ],
+    "failed_requests": [
+      "http://127.0.0.1:16235/assets/fonts/noto-sans-sc/k3kXo84MPvpLmixcA63oeALhLOCT-xWNm8Hqd37g1OkDRZe7lR4sg1IzSy-MNbE9VH8V.109.woff2"
+    ],
+    "blocked_external": [],
+    "truncated": false,
+    "files": [
+      "app.js",
+      "index.html",
+      "styles.css"
+    ],
+    "total_elapsed_s": 913.5,
+    "direction": {
+      "direction_name": "套准工作台（Registration Bench）",
+      "rationale": "OEYdesign 的核心信任问题是「我说改哪个对象，agent 改的到底是不是那个对象」。所以外壳取印刷/制版工台的气质：冷静的近白灰底、1px 发丝线、套准角标式的精确感，让界面像一把卡尺而不是一张海报。克制的灰阶把全部色彩注意力让给预览区里「别人的产品」，内外两层自然不会串味。",
+      "palette": {
+        "bg": "#F4F5F6",
+        "surface": "#FFFFFF",
+        "ink": "#191D22",
+        "ink_muted": "#4E5764",
+        "line": "#DFE3E7",
+        "accent": "#0A5C43",
+        "accent_role": "深绿只出现在三处且语义一致：对象锚点高亮（预览中的套准角标+对话中的对象引用 chip）、当前版本标记、主操作按钮（导出/发送）。三者都是「指向/确认」语义——绿色出现即代表这里有一个可定位、可操作的节点。不用它画背景、不做导航着色、不装饰图标。",
+        "contrast_check": "ink #191D22 对 bg #F4F5F6 约 14.8:1（≥7 达标）；ink_muted #4E5764 对 surface #FFFFFF 约 7.4:1（≥4.5 达标）；accent #0A5C43 对白色约 7.0:1，可用于白底文字与描边；白字对 accent 按钮底约 7.0:1 达标。"
+      },
+      "type": {
+        "display_family": "IBM Plex Sans",
+        "body_family": "IBM Plex Sans",
+        "cjk_family": "Noto Sans SC",
+        "mono_family": "IBM Plex Mono",
+        "pairing_rationale": "全壳统一在 Plex 体系：工程感、中性、屏幕优化，与「专业软件」定位一致；中文落 Noto Sans SC，与 Plex Sans 的灰度、x 高度和笔画密度接近，中英混排不打架。层级不靠换字体，靠字重（400/500/600）和字号拉开——字体的克制本身就是方向。IBM Plex Mono 严格限定于版本号（v4）、对象 ID（hero-title）、时间戳，给「机器产物」一个可识别的声部。",
+        "scale_px": [
+          12,
+          14,
+          15,
+          16,
+          20,
+          26
+        ],
+        "_scale_note": "12px 仅限 mono 的时间戳/ID，不承载连续阅读文字；正文与对话均为 14-15px；预览区工具条标签 14px；面板标题 16px；产物内标题（内层）20-26px。"
+      },
+      "space_scale_px": [
+        4,
+        8,
+        12,
+        16,
+        24,
+        32,
+        48
+      ],
+      "layout_archetype": "轨与台（Rail & Bench）：顶栏 48px 通栏，其下左 352px 固定对话轨、右侧弹性画布占满剩余宽度（约 75%+）。对话轨内部消息左对齐贴轨，agent 回复前有一条 2px 竖向引出线连到版本 chip，形成一条可读的时间脊线。预览区居中放置产物画板，四周留出均匀灰底呼吸位，工具条浮于画板正上方而非贴顶——视觉上强调「产物是被摆上台面的对象」，不是外壳的一部分。",
+      "signature_move": {
+        "what": "对象套准锚点系统：对话中凡是提及具体对象的回合，消息内嵌一个 mono 字体的对象 chip（如 hero-title，绿底白字或绿描边）；悬停/点击该 chip 时，预览画布中对应对象四角出现 accent 色的套准角标（⌐ ¬ ⌐ 式 1.5px 角线，不填充、不遮罩产物本体），角标旁浮出同款 mono ID 标签。选中状态下角标常驻，画布其他部分不加任何色块。",
+        "serves": "「这一轮对话改的到底是产物里的哪一个对象」这条信息——用户提出「主标题压到两行」，立刻能在画布上确认 agent 理解的对象就是 hero-title 而不是副标题或别处。",
+        "why_not_decoration": "它是一条双向引用链的 UI 化：chat 中的文字引用 ↔ 画布中的物理位置。去掉它，对象级反馈（产品核心卖点）就退化成纯文字描述，用户无法验证 agent 的理解是否正确；角标做成套准式而非高亮填充，正是为了不污染内层产物的真实观感——形式由「不得蔓延进内层」这条硬约束直接推导出来。"
+      },
+      "anti_patterns": [
+        "任何彩色渐变、彩色侧栏、彩色面板底——色彩只允许以 accent 单点出现",
+        "把工作台的灰底、发丝线、字体样式延伸进预览产物内部；产物画板必须有自己完整的视觉语言（本项目 mock 产物用暖橙+深墨，与外壳零共享色值）",
+        "大圆角卡片堆叠：圆角统一 ≤6px，层次靠 1px #DFE3E7 描边 + 一层 0 1px 2px rgba(25,29,34,0.06) 的轻阴影",
+        "空状态占位面板或 lorem ipsum：对话必须满载 ≥6 轮真实迭代记录，版本列表面板默认收起但点开即有内容"
+      ]
+    },
+    "total_tokens": 36708
+  },
+  {
+    "run": "graphite-bespoke",
+    "anchors_section": 10,
+    "anchors_object": 21,
+    "layout": {
+      "viewport_w": 1440,
+      "tall_blocks": [
+        {
+          "w": 1440,
+          "x": 0,
+          "tag": "DIV",
+          "sec": "workbench"
+        },
+        {
+          "w": 1440,
+          "x": 0,
+          "tag": "MAIN",
+          "sec": ""
+        },
+        {
+          "w": 360,
+          "x": 0,
+          "tag": "ASIDE",
+          "sec": "conversation"
+        },
+        {
+          "w": 359,
+          "x": 0,
+          "tag": "DIV",
+          "sec": "message-list"
+        },
+        {
+          "w": 1080,
+          "x": 360,
+          "tag": "SECTION",
+          "sec": "preview"
+        },
+        {
+          "w": 1080,
+          "x": 360,
+          "tag": "DIV",
+          "sec": "lighttable"
+        }
+      ]
+    },
+    "title": "OEYdesign 工作台",
+    "contract": {
+      "colors": 15,
+      "font_families": [
+        "\"IBM Plex Mono\", monospace",
+        "\"IBM Plex Sans\", \"Noto Sans SC\", sans-serif",
+        "\"Space Grotesk\", \"Noto Sans SC\", sans-serif",
+        "Arial, Helvetica, sans-serif",
+        "Georgia, \"Times New Roman\", serif"
+      ],
+      "font_sizes": [
+        14.0,
+        15.0,
+        17.0,
+        20.0,
+        24.0,
+        56.0
+      ],
+      "space": 18
+    },
+    "console_errors": [
+      "Failed to load resource: net::ERR_CONNECTION_RESET"
+    ],
+    "failed_requests": [
+      "http://127.0.0.1:41249/assets/fonts/noto-sans-sc/k3kXo84MPvpLmixcA63oeALhLOCT-xWNm8Hqd37g1OkDRZe7lR4sg1IzSy-MNbE9VH8V.110.woff2"
+    ],
+    "blocked_external": [],
+    "truncated": false,
+    "files": [
+      "app.js",
+      "index.html",
+      "styles.css"
+    ],
+    "total_elapsed_s": 411.3,
+    "direction": {
+      "direction_name": "灯箱校样台（Light Table）",
+      "rationale": "这个产品的核心信任来自一句话：『我看到的就是我会拿到的成品。』因此外壳做成一张暗房里的灯箱校样台——中性近黑的台面把一切视觉权重让给中央那张白底样张，暖色朱砂只押在『发送生成』这一个动作上，像暗房里唯一的一盏安全灯。深色不是为了氛围，是为了让用户对成品白底的真实明度和边界有零干扰的判断。",
+      "palette": {
+        "bg": "#141311",
+        "surface": "#1E1C19",
+        "ink": "#EDEAE3",
+        "ink_muted": "#A8A29A",
+        "line": "#33302B",
+        "accent": "#E8602C",
+        "accent_role": "朱砂橙只用于对话栏底部的『发送 / 生成』按钮——这是整个产品里唯一让 agent 开始干活、产生价值的动作。按钮上用近黑文字（#141311，对 accent 约 4.9:1）。除此之外界面任何地方不用这个颜色：版本状态、导出、悬停反馈全部走中性灰阶，保证用户视线里唯一的暖色永远指向唯一的关键动作。",
+        "contrast_check": "ink #EDEAE3 对 bg #141311 约 14.3:1（≥7:1 达标）；ink_muted #A8A29A 对 surface #1E1C19 约 6.5:1（≥4.5:1 达标）；accent 上近黑文字约 4.9:1（≥4.5:1 达标）。分层只用 1px 的 #33302B 描边和 bg/surface 之间约 1.3:1 的底色差，不用阴影发光。"
+      },
+      "type": {
+        "display_family": "Space Grotesk",
+        "body_family": "IBM Plex Sans",
+        "cjk_family": "Noto Sans SC",
+        "mono_family": "IBM Plex Mono",
+        "pairing_rationale": "Space Grotesk 的几何骨架带一点工程仪器的冷感，适合顶栏产品名、版本号这类『工具铭牌』场景；正文与对话用 IBM Plex Sans 搭 Noto Sans SC——两者都是为长时间阅读优化的无衬线，字面宽度接近，中英混排时基线和灰度稳定，八小时不累。IBM Plex Mono 只出现在版本 ID（v1.3.2）、时间戳、对象锚点编号和文件体积这类纯数值上，等宽让一列版本号能垂直对齐扫描。",
+        "scale_px": [
+          14,
+          15,
+          17,
+          20,
+          24,
+          32
+        ]
+      },
+      "space_scale_px": [
+        4,
+        8,
+        12,
+        16,
+        24,
+        32,
+        48
+      ],
+      "layout_archetype": "左窄右阔的校样台：顶栏 48px 一条细线压顶；左侧对话栏固定 360px，像贴在灯箱边的批注条；右侧预览区吃掉全部剩余宽度（约 75%+），成品样张以真实白色页面居中悬浮在深灰台面上，上下各留 48px 呼吸位。版本与导出收进预览区顶部的工具条，检查器做成预览区内可展开的抽屉，绝不开第三栏。",
+      "signature_move": {
+        "what": "预览区是一台『灯箱』：被设计的产物渲染成一张带 1px 深色描边和极浅投影的纯白页面，居中放在 #141311 的暗台面上，页面四角外侧用等宽小字标注该产物画板的实际像素尺寸（如 1440×900）。工作台的一切配色、字体、圆角在这条白页边界处戛然而止。",
+        "serves": "它让『这个成品到底长什么样、多大尺寸、交付边界在哪』这条信息可以被瞬间判断——白页与暗台的强明度差给出无歧义的裁切线，四角尺寸标注让用户不用打开检查器就知道当前画板规格，也直接防止外壳的深色视觉语言污染对内层成品的判断。",
+        "why_not_decoration": "它同时完成两件功能事：一是把『外壳 / 产物』两层设计的边界变成一条物理可读的线，这是该产品核心功能（真实预览）成立的前提；二是四角尺寸标注承担了画板规格的常驻显示职责。去掉它，用户就无法区分自己在看工作台还是在看成品，方向也随之失效。"
+      },
+      "anti_patterns": [
+        "禁止蓝紫渐变、发光描边、玻璃拟态、霓虹色——分层只允许 1px 灰线加底色差",
+        "禁止把外壳的深色底、Noto/IBM 字体、朱砂橙蔓延进预览区内的产物——内层是别人的品牌，有自己的白底与自己的视觉语言",
+        "禁止正文和对话内容使用等宽字体或全大写句子——mono 只给版本号、时间戳、对象 ID，大写只给 ≤2 词的加字距标签",
+        "禁止空面板与装饰性留白块——对话栏必须呈现完整迭代史，预览区必须装着成型产物，任何可见面板都要有真实内容"
+      ]
+    },
+    "total_tokens": 20689
+  },
+  {
+    "run": "graphite-system",
+    "anchors_section": 6,
+    "anchors_object": 27,
+    "layout": {
+      "viewport_w": 1440,
+      "tall_blocks": [
+        {
+          "w": 1440,
+          "x": 0,
+          "tag": "MAIN",
+          "sec": ""
+        },
+        {
+          "w": 360,
+          "x": 0,
+          "tag": "ASIDE",
+          "sec": ""
+        },
+        {
+          "w": 359,
+          "x": 0,
+          "tag": "DIV",
+          "sec": ""
+        },
+        {
+          "w": 1080,
+          "x": 360,
+          "tag": "SECTION",
+          "sec": ""
+        },
+        {
+          "w": 1080,
+          "x": 360,
+          "tag": "DIV",
+          "sec": ""
+        },
+        {
+          "w": 984,
+          "x": 408,
+          "tag": "DIV",
+          "sec": ""
+        }
+      ]
+    },
+    "title": "OEYdesign — KILN Coffee 落地页",
+    "contract": {
+      "colors": 13,
+      "font_families": [
+        "\"Helvetica Neue\", Arial, \"PingFang SC\", \"Microsoft YaHei\", sans-serif",
+        "\"IBM Plex Mono\", monospace",
+        "\"IBM Plex Sans\", \"Noto Sans SC\", sans-serif",
+        "\"Space Grotesk\", \"Noto Sans SC\", sans-serif",
+        "Georgia, \"Times New Roman\", serif"
+      ],
+      "font_sizes": [
+        13.0,
+        14.0,
+        15.0,
+        16.0,
+        17.0,
+        18.0,
+        19.0,
+        20.0,
+        24.0,
+        26.0,
+        28.0,
+        58.0
+      ],
+      "space": 22
+    },
+    "console_errors": [],
+    "failed_requests": [],
+    "blocked_external": [],
+    "truncated": false,
+    "files": [
+      "index.html",
+      "styles.css"
+    ],
+    "total_elapsed_s": 419.6,
+    "direction": {
+      "direction_name": "灯箱校样台（Light Table）",
+      "rationale": "这个产品的核心信任来自一句话：『我看到的就是我会拿到的成品。』因此外壳做成一张暗房里的灯箱校样台——中性近黑的台面把一切视觉权重让给中央那张白底样张，暖色朱砂只押在『发送生成』这一个动作上，像暗房里唯一的一盏安全灯。深色不是为了氛围，是为了让用户对成品白底的真实明度和边界有零干扰的判断。",
+      "palette": {
+        "bg": "#141311",
+        "surface": "#1E1C19",
+        "ink": "#EDEAE3",
+        "ink_muted": "#A8A29A",
+        "line": "#33302B",
+        "accent": "#E8602C",
+        "accent_role": "朱砂橙只用于对话栏底部的『发送 / 生成』按钮——这是整个产品里唯一让 agent 开始干活、产生价值的动作。按钮上用近黑文字（#141311，对 accent 约 4.9:1）。除此之外界面任何地方不用这个颜色：版本状态、导出、悬停反馈全部走中性灰阶，保证用户视线里唯一的暖色永远指向唯一的关键动作。",
+        "contrast_check": "ink #EDEAE3 对 bg #141311 约 14.3:1（≥7:1 达标）；ink_muted #A8A29A 对 surface #1E1C19 约 6.5:1（≥4.5:1 达标）；accent 上近黑文字约 4.9:1（≥4.5:1 达标）。分层只用 1px 的 #33302B 描边和 bg/surface 之间约 1.3:1 的底色差，不用阴影发光。"
+      },
+      "type": {
+        "display_family": "Space Grotesk",
+        "body_family": "IBM Plex Sans",
+        "cjk_family": "Noto Sans SC",
+        "mono_family": "IBM Plex Mono",
+        "pairing_rationale": "Space Grotesk 的几何骨架带一点工程仪器的冷感，适合顶栏产品名、版本号这类『工具铭牌』场景；正文与对话用 IBM Plex Sans 搭 Noto Sans SC——两者都是为长时间阅读优化的无衬线，字面宽度接近，中英混排时基线和灰度稳定，八小时不累。IBM Plex Mono 只出现在版本 ID（v1.3.2）、时间戳、对象锚点编号和文件体积这类纯数值上，等宽让一列版本号能垂直对齐扫描。",
+        "scale_px": [
+          14,
+          15,
+          17,
+          20,
+          24,
+          32
+        ]
+      },
+      "space_scale_px": [
+        4,
+        8,
+        12,
+        16,
+        24,
+        32,
+        48
+      ],
+      "layout_archetype": "左窄右阔的校样台：顶栏 48px 一条细线压顶；左侧对话栏固定 360px，像贴在灯箱边的批注条；右侧预览区吃掉全部剩余宽度（约 75%+），成品样张以真实白色页面居中悬浮在深灰台面上，上下各留 48px 呼吸位。版本与导出收进预览区顶部的工具条，检查器做成预览区内可展开的抽屉，绝不开第三栏。",
+      "signature_move": {
+        "what": "预览区是一台『灯箱』：被设计的产物渲染成一张带 1px 深色描边和极浅投影的纯白页面，居中放在 #141311 的暗台面上，页面四角外侧用等宽小字标注该产物画板的实际像素尺寸（如 1440×900）。工作台的一切配色、字体、圆角在这条白页边界处戛然而止。",
+        "serves": "它让『这个成品到底长什么样、多大尺寸、交付边界在哪』这条信息可以被瞬间判断——白页与暗台的强明度差给出无歧义的裁切线，四角尺寸标注让用户不用打开检查器就知道当前画板规格，也直接防止外壳的深色视觉语言污染对内层成品的判断。",
+        "why_not_decoration": "它同时完成两件功能事：一是把『外壳 / 产物』两层设计的边界变成一条物理可读的线，这是该产品核心功能（真实预览）成立的前提；二是四角尺寸标注承担了画板规格的常驻显示职责。去掉它，用户就无法区分自己在看工作台还是在看成品，方向也随之失效。"
+      },
+      "anti_patterns": [
+        "禁止蓝紫渐变、发光描边、玻璃拟态、霓虹色——分层只允许 1px 灰线加底色差",
+        "禁止把外壳的深色底、Noto/IBM 字体、朱砂橙蔓延进预览区内的产物——内层是别人的品牌，有自己的白底与自己的视觉语言",
+        "禁止正文和对话内容使用等宽字体或全大写句子——mono 只给版本号、时间戳、对象 ID，大写只给 ≤2 词的加字距标签",
+        "禁止空面板与装饰性留白块——对话栏必须呈现完整迭代史，预览区必须装着成型产物，任何可见面板都要有真实内容"
+      ]
+    },
+    "total_tokens": 20319
+  },
+  {
+    "run": "paper-bespoke",
+    "anchors_section": 8,
+    "anchors_object": 7,
+    "layout": {
+      "viewport_w": 1440,
+      "tall_blocks": [
+        {
+          "w": 1440,
+          "x": 0,
+          "tag": "MAIN",
+          "sec": ""
+        },
+        {
+          "w": 340,
+          "x": 0,
+          "tag": "ASIDE",
+          "sec": "conversation"
+        },
+        {
+          "w": 339,
+          "x": 0,
+          "tag": "DIV",
+          "sec": ""
+        },
+        {
+          "w": 1100,
+          "x": 340,
+          "tag": "SECTION",
+          "sec": "preview"
+        },
+        {
+          "w": 972,
+          "x": 404,
+          "tag": "DIV",
+          "sec": ""
+        },
+        {
+          "w": 924,
+          "x": 428,
+          "tag": "DIV",
+          "sec": ""
+        }
+      ]
+    },
+    "title": "OEYdesign · 校样台",
+    "contract": {
+      "colors": 12,
+      "font_families": [
+        "\"Helvetica Neue\", Helvetica, Arial, \"PingFang SC\", \"Hiragino Sans GB\", \"Microsoft YaHei\", sans-serif",
+        "\"IBM Plex Mono\", ui-monospace, monospace",
+        "\"IBM Plex Sans\", \"PingFang SC\", \"Hiragino Sans GB\", \"Microsoft YaHei\", sans-serif",
+        "Fraunces, \"Noto Serif SC\", serif"
+      ],
+      "font_sizes": [
+        12.0,
+        13.0,
+        13.3,
+        14.0,
+        15.0,
+        16.0,
+        18.0,
+        21.0,
+        22.0,
+        28.0,
+        36.0,
+        64.0,
+        96.0,
+        220.0
+      ],
+      "space": 29
+    },
+    "console_errors": [
+      "Failed to load resource: the server responded with a status of 404 (File not found)"
+    ],
+    "failed_requests": [
+      "http://127.0.0.1:23745/app.js"
+    ],
+    "blocked_external": [],
+    "truncated": false,
+    "files": [
+      "index.html",
+      "styles.css"
+    ],
+    "total_elapsed_s": 722.2,
+    "direction": {
+      "direction_name": "红笔校样台（Red-Pen Proofing Table）",
+      "rationale": "OEYdesign 的本质是「人与 agent 反复改稿」，这和编辑桌上纸稿被红笔层层批注的工作流完全同构。用暖纸底 + 衬线标题 + 红笔批注语言，让「迭代」成为界面的一等视觉对象，而不是藏在聊天记录里。秩序全部靠基线、字重和留白建立，不用卡片和边框，让外壳退后、产物突出——这同时解决了内外层必须严格分离的硬性要求：纸桌是纸桌，稿子归稿子。",
+      "palette": {
+        "bg": "#F3EDE0",
+        "surface": "#FBF7EE",
+        "ink": "#231D13",
+        "ink_muted": "#6B604F",
+        "line": "#DDD2BE",
+        "accent": "#B93A22",
+        "accent_role": "accent 是「红笔」：只用于三处——①预览区产物上的对象级批注标记（数字圆点与圈线），②对话中 agent 确认改动的关键动词行首标记，③当前版本号与主导出按钮。其余位置一律禁色。红=「人的判断介入过的痕迹」，这是它唯一的语义，不摊薄到链接、图标、装饰上。",
+        "contrast_check": "ink #231D13 对 bg #F3EDE0 约 14.5:1（≥7:1 达标）；ink_muted #6B604F 对 surface #FBF7EE 约 5.4:1（≥4.5:1 达标）；accent #B93A22 对 surface 约 5.8:1，可用于 ≥14px 加粗文字与图形标记。"
+      },
+      "type": {
+        "display_family": "Fraunces",
+        "body_family": "IBM Plex Sans",
+        "cjk_family": "Noto Serif SC",
+        "mono_family": "IBM Plex Mono",
+        "pairing_rationale": "标题用 Fraunces + Noto Serif SC：Fraunces 的光学尺寸感和宋体的衬线在中文标题上能接得住，构成「编辑部」气质；正文与对话用 IBM Plex Sans 承中文回退到无衬线保证 ≥14px 连续阅读的清晰度，衬线只留在标题与产物名，不让长对话变累；IBM Plex Mono 只出现在版本号 v3.2、时间戳 14:02、对象 ID 这类纯数值/编码位置，绝不进正文。",
+        "scale_px": [
+          12,
+          14,
+          15,
+          17,
+          21,
+          27,
+          36
+        ]
+      },
+      "space_scale_px": [
+        4,
+        8,
+        12,
+        16,
+        24,
+        40,
+        64
+      ],
+      "layout_archetype": "校样桌两栏：左栏 340px 定宽对话栏（margin notes 心智），右栏弹性占满，预览产物以一张「稿纸」悬浮于纸桌之上，稿纸四周留出 40-64px 的桌边作为红笔批注的落点区。全外壳无卡片无边框，分区只靠 1px 发丝线（#DDD2BE）+ 字重层级 + 基线网格；顶栏高度 48px，版本、状态、导出以一排基线对齐的文字级控件呈现，不做按钮墙。",
+      "signature_move": {
+        "what": "「红笔批注层」：预览稿纸的边缘和对象上钉着带序号的红色标记（①-⑥，对应对话栏里每一轮修改），圈线手绘感地圈住被改过的对象（如主标题）；点击或悬停某个红色序号，对话栏自动滚动到对应那一轮对话并高亮，反向也成立——点对话里某轮，预览上对应的红圈闪烁。",
+        "serves": "它让「第几轮反馈改了产物上的哪个对象」这条信息从线性聊天记录里被提取成空间索引——用户一眼看到产物上有 6 处被改过、各自源自哪句话，而不是翻 6 屏对话去对。",
+        "why_not_decoration": "每个红圈都是一个 data-oey-object 锚点的可视化，承载双向导航功能；删掉它，用户就失去了「反馈→对象」的映射，只能靠记忆对稿。它是这个产品的核心功能（对象级反馈）的界面形态，不是皮肤。"
+      },
+      "anti_patterns": [
+        "禁止在外壳使用卡片、圆角盒子、投影分区——任何切块必须靠留白与发丝线完成，卡片感会破坏纸桌的整版感",
+        "禁止蓝紫渐变、毛玻璃、霓虹强调色——红笔 #B93A22 是唯一强调色，出现第二种强调色即视为失控",
+        "禁止外壳的纸色、衬线、红色蔓延进内层产物——预览稿纸内的产物用产物自己的视觉语言（示例产物为独立品牌风格），外壳与产物之间以稿纸白边物理隔开",
+        "禁止等宽字体出现在正文与对话，禁止全大写句子——mono 只许出现在版本号/时间戳/对象 ID，大写只许 ≤2 词标签并加字距"
+      ]
+    },
+    "total_tokens": 27181
+  },
+  {
+    "run": "paper-system",
+    "anchors_section": 9,
+    "anchors_object": 12,
+    "layout": {
+      "viewport_w": 1440,
+      "tall_blocks": [
+        {
+          "w": 1440,
+          "x": 0,
+          "tag": "MAIN",
+          "sec": ""
+        },
+        {
+          "w": 340,
+          "x": 0,
+          "tag": "ASIDE",
+          "sec": "chat"
+        },
+        {
+          "w": 339,
+          "x": 0,
+          "tag": "DIV",
+          "sec": ""
+        },
+        {
+          "w": 1100,
+          "x": 340,
+          "tag": "SECTION",
+          "sec": "preview"
+        },
+        {
+          "w": 1100,
+          "x": 340,
+          "tag": "DIV",
+          "sec": ""
+        },
+        {
+          "w": 972,
+          "x": 404,
+          "tag": "DIV",
+          "sec": "artifact"
+        }
+      ]
+    },
+    "title": "OEYdesign 工作台 · 云崖咖啡落地页",
+    "contract": {
+      "colors": 20,
+      "font_families": [
+        "\"Helvetica Neue\", Arial, \"PingFang SC\", \"Microsoft YaHei\", sans-serif",
+        "\"IBM Plex Mono\", monospace",
+        "\"IBM Plex Sans\", \"PingFang SC\", \"Microsoft YaHei\", sans-serif",
+        "Fraunces, \"Noto Serif SC\", serif",
+        "Georgia, \"Songti SC\", serif",
+        "Georgia, serif"
+      ],
+      "font_sizes": [
+        11.0,
+        12.0,
+        13.0,
+        14.0,
+        15.0,
+        16.0,
+        17.0,
+        20.0,
+        24.0,
+        30.0,
+        44.0,
+        54.0
+      ],
+      "space": 20
+    },
+    "console_errors": [],
+    "failed_requests": [],
+    "blocked_external": [],
+    "truncated": false,
+    "files": [
+      "index.html",
+      "styles.css"
+    ],
+    "total_elapsed_s": 655.5,
+    "direction": {
+      "direction_name": "红笔校样台（Red-Pen Proofing Table）",
+      "rationale": "OEYdesign 的本质是「人与 agent 反复改稿」，这和编辑桌上纸稿被红笔层层批注的工作流完全同构。用暖纸底 + 衬线标题 + 红笔批注语言，让「迭代」成为界面的一等视觉对象，而不是藏在聊天记录里。秩序全部靠基线、字重和留白建立，不用卡片和边框，让外壳退后、产物突出——这同时解决了内外层必须严格分离的硬性要求：纸桌是纸桌，稿子归稿子。",
+      "palette": {
+        "bg": "#F3EDE0",
+        "surface": "#FBF7EE",
+        "ink": "#231D13",
+        "ink_muted": "#6B604F",
+        "line": "#DDD2BE",
+        "accent": "#B93A22",
+        "accent_role": "accent 是「红笔」：只用于三处——①预览区产物上的对象级批注标记（数字圆点与圈线），②对话中 agent 确认改动的关键动词行首标记，③当前版本号与主导出按钮。其余位置一律禁色。红=「人的判断介入过的痕迹」，这是它唯一的语义，不摊薄到链接、图标、装饰上。",
+        "contrast_check": "ink #231D13 对 bg #F3EDE0 约 14.5:1（≥7:1 达标）；ink_muted #6B604F 对 surface #FBF7EE 约 5.4:1（≥4.5:1 达标）；accent #B93A22 对 surface 约 5.8:1，可用于 ≥14px 加粗文字与图形标记。"
+      },
+      "type": {
+        "display_family": "Fraunces",
+        "body_family": "IBM Plex Sans",
+        "cjk_family": "Noto Serif SC",
+        "mono_family": "IBM Plex Mono",
+        "pairing_rationale": "标题用 Fraunces + Noto Serif SC：Fraunces 的光学尺寸感和宋体的衬线在中文标题上能接得住，构成「编辑部」气质；正文与对话用 IBM Plex Sans 承中文回退到无衬线保证 ≥14px 连续阅读的清晰度，衬线只留在标题与产物名，不让长对话变累；IBM Plex Mono 只出现在版本号 v3.2、时间戳 14:02、对象 ID 这类纯数值/编码位置，绝不进正文。",
+        "scale_px": [
+          12,
+          14,
+          15,
+          17,
+          21,
+          27,
+          36
+        ]
+      },
+      "space_scale_px": [
+        4,
+        8,
+        12,
+        16,
+        24,
+        40,
+        64
+      ],
+      "layout_archetype": "校样桌两栏：左栏 340px 定宽对话栏（margin notes 心智），右栏弹性占满，预览产物以一张「稿纸」悬浮于纸桌之上，稿纸四周留出 40-64px 的桌边作为红笔批注的落点区。全外壳无卡片无边框，分区只靠 1px 发丝线（#DDD2BE）+ 字重层级 + 基线网格；顶栏高度 48px，版本、状态、导出以一排基线对齐的文字级控件呈现，不做按钮墙。",
+      "signature_move": {
+        "what": "「红笔批注层」：预览稿纸的边缘和对象上钉着带序号的红色标记（①-⑥，对应对话栏里每一轮修改），圈线手绘感地圈住被改过的对象（如主标题）；点击或悬停某个红色序号，对话栏自动滚动到对应那一轮对话并高亮，反向也成立——点对话里某轮，预览上对应的红圈闪烁。",
+        "serves": "它让「第几轮反馈改了产物上的哪个对象」这条信息从线性聊天记录里被提取成空间索引——用户一眼看到产物上有 6 处被改过、各自源自哪句话，而不是翻 6 屏对话去对。",
+        "why_not_decoration": "每个红圈都是一个 data-oey-object 锚点的可视化，承载双向导航功能；删掉它，用户就失去了「反馈→对象」的映射，只能靠记忆对稿。它是这个产品的核心功能（对象级反馈）的界面形态，不是皮肤。"
+      },
+      "anti_patterns": [
+        "禁止在外壳使用卡片、圆角盒子、投影分区——任何切块必须靠留白与发丝线完成，卡片感会破坏纸桌的整版感",
+        "禁止蓝紫渐变、毛玻璃、霓虹强调色——红笔 #B93A22 是唯一强调色，出现第二种强调色即视为失控",
+        "禁止外壳的纸色、衬线、红色蔓延进内层产物——预览稿纸内的产物用产物自己的视觉语言（示例产物为独立品牌风格），外壳与产物之间以稿纸白边物理隔开",
+        "禁止等宽字体出现在正文与对话，禁止全大写句子——mono 只许出现在版本号/时间戳/对象 ID，大写只许 ≤2 词标签并加字距"
+      ]
+    },
+    "total_tokens": 24368
+  }
+]

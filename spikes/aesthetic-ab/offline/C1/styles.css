@@ -1,0 +1,70 @@
+/* ===== OEYdesign workbench · 仅放 Tailwind 难以表达的部分 ===== */
+
+html, body { height: 100%; }
+
+/* 画布点阵背景 */
+.oey-canvas-bg {
+  background-color: #fafafa;
+  background-image: radial-gradient(circle, #d4d4d8 1px, transparent 1px);
+  background-size: 22px 22px;
+}
+
+/* 细滚动条 */
+#chatScroll::-webkit-scrollbar,
+#canvasScroll::-webkit-scrollbar { width: 8px; height: 8px; }
+#chatScroll::-webkit-scrollbar-thumb,
+#canvasScroll::-webkit-scrollbar-thumb {
+  background: #d4d4d8; border-radius: 8px;
+}
+#chatScroll::-webkit-scrollbar-thumb:hover,
+#canvasScroll::-webkit-scrollbar-thumb:hover { background: #a1a1aa; }
+#chatScroll::-webkit-scrollbar-track,
+#canvasScroll::-webkit-scrollbar-track { background: transparent; }
+
+/* 画布对象：悬停与选中（颜色由 --oey-accent 注入） */
+#artifactWrap [data-oey-object] { cursor: pointer; transition: outline-color .15s ease; outline: 2px solid transparent; outline-offset: 2px; border-radius: 4px; }
+#artifactWrap [data-oey-object].oey-hover { outline: 2px dashed var(--oey-accent, #6366f1); }
+#artifactWrap [data-oey-object].oey-selected {
+  outline: 2px solid var(--oey-accent, #6366f1);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--oey-accent, #6366f1) 18%, transparent);
+}
+
+/* “正在输入”三点动画 */
+.oey-typing span {
+  width: 6px; height: 6px; border-radius: 9999px; background: #a1a1aa;
+  display: inline-block; animation: oey-bounce 1.2s infinite ease-in-out;
+}
+.oey-typing span:nth-child(2) { animation-delay: .15s; }
+.oey-typing span:nth-child(3) { animation-delay: .3s; }
+@keyframes oey-bounce {
+  0%, 60%, 100% { transform: translateY(0); opacity: .5; }
+  30% { transform: translateY(-4px); opacity: 1; }
+}
+
+/* 消息进入动画 */
+.oey-msg { animation: oey-fade-up .28s ease both; }
+@keyframes oey-fade-up {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Toast */
+.oey-toast { animation: oey-toast-in .25s ease both; }
+.oey-toast.oey-leaving { animation: oey-toast-out .25s ease both; }
+@keyframes oey-toast-in {
+  from { opacity: 0; transform: translateY(10px) scale(.97); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes oey-toast-out {
+  from { opacity: 1; } to { opacity: 0; transform: translateY(8px) scale(.97); }
+}
+
+/* 激活的 segmented tab */
+.art-tab.is-active, .dev-tab.is-active {
+  background: #fff; color: #18181b;
+  box-shadow: 0 1px 2px rgb(0 0 0 / .08);
+}
+
+/* 选中版本项的勾 */
+.ver-check { visibility: hidden; }
+.ver-item.is-current .ver-check { visibility: visible; }

@@ -1,0 +1,209 @@
+<!doctype html><html lang="zh"><meta charset="utf-8">
+<title>OEYdesign 审美对比实验 — 人工审核</title>
+<style>
+body{font:15px/1.65 system-ui,"Microsoft YaHei",sans-serif;margin:0;background:#12100e;color:#f0ece6}
+header{padding:26px 32px;background:#1c1815;border-bottom:2px solid #d9762b}
+h1{margin:0 0 6px;font-size:23px}
+.sub{color:#a49585;font-size:14px}
+.note{background:#2a1f14;border-left:4px solid #d9762b;padding:14px 18px;margin:18px 32px;border-radius:4px}
+.note b{color:#f7b267}
+.arm{margin:30px 32px;padding:20px;background:#171412;border:1px solid #332c25;border-radius:10px}
+h2{margin:0 0 4px;font-size:19px}
+.tag{display:inline-block;background:#d9762b;color:#12100e;font-weight:700;padding:2px 10px;border-radius:4px;margin-right:8px}
+.armdesc{color:#a49585;font-size:14px;margin:0 0 16px}
+.cand{margin:16px 0;padding:16px;background:#1e1a17;border:1px solid #332c25;border-radius:8px}
+h3{margin:0 0 10px;font-size:16px}
+.b{font-size:11px;padding:2px 8px;border-radius:10px;margin-left:6px}
+.bad{background:#4b2020;color:#e28787}
+.m,.kv{border-collapse:collapse;font-size:13px;margin-bottom:12px}
+.m td,.kv td{border:1px solid #332c25;padding:5px 11px}
+.m td:nth-child(odd),.kv td:first-child{color:#a49585;white-space:nowrap}
+.shots{display:flex;gap:14px;overflow-x:auto;padding-bottom:6px}
+figure{margin:0;flex:0 0 auto}
+img{width:520px;border:1px solid #332c25;border-radius:5px;display:block;background:#000}
+figcaption{font-size:11px;color:#a49585;margin-top:5px}
+.dir{background:#141b18;border-left:3px solid #4a8f6b;padding:12px 14px;border-radius:4px;margin:12px 0}
+.dirname{font-weight:700;color:#7ee29b;margin-bottom:4px}
+.swrow{display:flex;gap:6px;margin:10px 0}
+.sw{width:34px;height:34px;border-radius:4px;border:1px solid #332c25}
+.move{background:#1c1712;padding:10px 12px;border-radius:4px;margin-top:10px}
+.ap ul{margin:4px 0 0 18px;padding:0}
+.muted{color:#a49585;font-size:13px}
+code{font-size:12px;color:#d9c9b5}
+.q{margin:20px 32px 44px;padding:16px 20px;background:#161e1a;border-left:4px solid #4a8f6b;border-radius:4px}
+.q h3{margin:0 0 8px;font-size:15px;color:#7ee29b}
+</style>
+<header>
+<h1>OEYdesign 审美对比实验 — 人工审核</h1>
+<div class="sub">同一份 brief（两栏：左窄聊天 / 右大预览）· 三组 × 2 次 · Kimi k3 · 流式生成 max_tokens=40000 · 真实 Chrome 渲染</div>
+</header>
+
+<div class="note">
+<b>agent 未做任何审美判断。</b>表格里全是客观指标（锚点数、console error、实际用了几个颜色/字号、
+栏宽、被阻断的外链、成本）。<b>「哪组好看」由你判断。</b><br><br>
+要检验的问题：<b>「AI 味」的根因是求平均</b>——那么破解它靠的是「换成人做的组件」（C 组）
+还是「强制模型先承诺一个具体观点」（B 组）？A 组是对照。
+</div>
+
+
+<div class="arm">
+  <h2><span class="tag">A</span> baseline 自由生成</h2>
+  <p class="armdesc">对照组。当前做法：把 brief 直接交给 agent，不加任何审美约束。</p>
+  
+<section class="cand">
+  <h3>A1 </h3>
+  <table class="m">
+    <tr><td>锚点 section/object</td><td>10 / 17</td>
+        <td>console error</td><td>0</td></tr>
+    <tr><td>实际用到的颜色数</td><td>31</td>
+        <td>字号阶数</td><td>21</td></tr>
+    <tr><td>字体族</td><td colspan="3"><code>-apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;PingFang SC&quot;, &quot;Hiragino Sans GB&quot;, &quot;Microsoft YaHei&quot;, sans-serif, ui-monospace, Menlo, monospace</code></td></tr>
+    <tr><td>最宽三块宽度</td><td>1440px / 360px / 359px</td>
+        <td>被阻断的外链</td><td>0</td></tr>
+    <tr><td>生成耗时</td><td>568.2s</td>
+        <td>总 token</td><td>21944</td></tr>
+    <tr><td>文件</td><td colspan="3"><code>app.js, index.html, styles.css</code></td></tr>
+  </table>
+  
+  <div class="shots"><figure><img src="shots/A1/desktop.png" alt="A1 桌面 1440×900"><figcaption>桌面 1440×900</figcaption></figure><figure><img src="shots/A1/fullpage.png" alt="A1 整页"><figcaption>整页</figcaption></figure></div>
+</section>
+<section class="cand">
+  <h3>A2 </h3>
+  <table class="m">
+    <tr><td>锚点 section/object</td><td>6 / 16</td>
+        <td>console error</td><td>0</td></tr>
+    <tr><td>实际用到的颜色数</td><td>23</td>
+        <td>字号阶数</td><td>27</td></tr>
+    <tr><td>字体族</td><td colspan="3"><code>&quot;JetBrains Mono&quot;, monospace, Inter, &quot;Noto Sans SC&quot;, sans-serif, Inter, &quot;Noto Sans SC&quot;, system-ui, sans-serif</code></td></tr>
+    <tr><td>最宽三块宽度</td><td>1440px / 1440px / 380px</td>
+        <td>被阻断的外链</td><td>0</td></tr>
+    <tr><td>生成耗时</td><td>274.4s</td>
+        <td>总 token</td><td>11387</td></tr>
+    <tr><td>文件</td><td colspan="3"><code>index.html, styles.css</code></td></tr>
+  </table>
+  
+  <div class="shots"><figure><img src="shots/A2/desktop.png" alt="A2 桌面 1440×900"><figcaption>桌面 1440×900</figcaption></figure><figure><img src="shots/A2/fullpage.png" alt="A2 整页"><figcaption>整页</figcaption></figure></div>
+</section>
+</div>
+<div class="arm">
+  <h2><span class="tag">B</span> 处方性艺术方向</h2>
+  <p class="armdesc">两阶段。先让 agent 输出确切色值/字体配对/间距阶/版式原型/<b>一处刻意的反常动作</b>，再严格按它实现。反均值化装置是「强制显式承诺 + 必须越界一次」。</p>
+  
+<section class="cand">
+  <h3>B1 </h3>
+  <table class="m">
+    <tr><td>锚点 section/object</td><td>12 / 6</td>
+        <td>console error</td><td>0</td></tr>
+    <tr><td>实际用到的颜色数</td><td>7</td>
+        <td>字号阶数</td><td>6</td></tr>
+    <tr><td>字体族</td><td colspan="3"><code>&quot;IBM Plex Mono&quot;, &quot;SF Mono&quot;, &quot;Noto Sans Mono CJK SC&quot;, monospace, Newsreader, &quot;Source Han Serif SC&quot;, Georgia, serif</code></td></tr>
+    <tr><td>最宽三块宽度</td><td>1440px / 340px / 339px</td>
+        <td>被阻断的外链</td><td>0</td></tr>
+    <tr><td>生成耗时</td><td>338.3s</td>
+        <td>总 token</td><td>13864</td></tr>
+    <tr><td>文件</td><td colspan="3"><code>index.html, styles.css</code></td></tr>
+  </table>
+  
+<div class="dir">
+  <div class="dirname">打样房 Proof Room</div>
+  <p class="muted">OEYdesign 的核心动作是「产出可交付物 + 对象级反馈 + 版本」，这与印刷打样房的心智完全同构：一张大台面上摊开校样，旁边是批注单。所以整个界面按「校样台」来做——纸面底色、印刷规矩线、批注红，让「预览」看起来像一张正在被打样的实物，而不是一个 dashboard。版本被当作批次号对待，而不是设置里的一个字符串。</p>
+  <div class="swrow"><span class="sw" style="background:#F2EFE6" title="bg: #F2EFE6"></span><span class="sw" style="background:#FBFAF5" title="surface: #FBFAF5"></span><span class="sw" style="background:#191712" title="ink: #191712"></span><span class="sw" style="background:#6F6A5C" title="ink_muted: #6F6A5C"></span><span class="sw" style="background:#E8490F" title="accent: #E8490F"></span></div>
+  <table class="kv">
+    <tr><td>标题字体</td><td><code>&quot;Newsreader&quot;, &quot;Source Han Serif SC&quot;, Georgia, serif</code></td></tr>
+    <tr><td>正文字体</td><td><code>&quot;IBM Plex Mono&quot;, &quot;SF Mono&quot;, &quot;Noto Sans Mono CJK SC&quot;, monospace</code></td></tr>
+    <tr><td>字号阶</td><td><code>[11, 13, 15, 18, 24, 40, 96]</code></td></tr>
+    <tr><td>间距阶</td><td><code>[4, 8, 12, 20, 32, 56, 96]</code></td></tr>
+    <tr><td>版式原型</td><td>批注单 + 校样台：左栏固定 340px 窄批注单（对话），右栏通吃剩余宽度做校样台，预览物居中悬浮于纸面上，四周留白不少于 56px；全界面用 1px 实线分隔，无圆角无卡片阴影，靠线、留白和字阶分区而不是靠容器套容器。</td></tr>
+    <tr><td>不常见的颜色关系</td><td>暖纸底 #F2EFE6 与工业安全橙红 #E8490F 的搭配。常规做法会用蓝或紫去配中性底求「科技感」；这里反用印刷车间的红笔逻辑，成立的原因是：强调色的语义就是「人对产物做的记号」，它和纸面天然属于同一个物理场景，比任何数字感的蓝都更贴合「对象级反馈」这个产品行为。</td></tr>
+  </table>
+  <div class="move"><b>刻意的反常动作：</b>当前版本号（如 v3）以 96px 衬线字、作为一枚「批次章」压在预览区右上角，颜色用批注红 #E8490F，透明度 100%，不换行不缩小；旁边竖排等宽小字标注该版本的时间戳与变更对象数。
+    <div class="muted">为什么成立：版本是这个产品的一等行为（可回滚、可对比、可导出），但几乎所有同类工具都把它塞进下拉框。把它放大成打样批次章，是把信息层级对齐到产品真实价值上：用户回到工作台第一眼就该知道「我现在看的是哪一版」。它成立还因为语义自洽——打样稿上本来就有批次章，这不是装饰，是借用了一个真实存在的物件。</div></div>
+  <div class="ap"><b>明确禁止：</b><ul><li>禁止任何渐变与玻璃拟态——纸面和红笔没有渐变</li><li>禁止圆角大于 2px，禁止卡片阴影堆叠分区——分区只用 1px 规矩线和留白</li><li>禁止蓝紫色系强调色——那是协作工具的默认肤色，会立刻稀释打样房语义</li><li>禁止把对话栏做成聊天气泡流——它是批注单，用户与 agent 的发言用左边线 + 角色标签区分，不用左右气泡</li></ul></div>
+</div>
+  <div class="shots"><figure><img src="shots/B1/desktop.png" alt="B1 桌面 1440×900"><figcaption>桌面 1440×900</figcaption></figure><figure><img src="shots/B1/fullpage.png" alt="B1 整页"><figcaption>整页</figcaption></figure></div>
+</section>
+<section class="cand">
+  <h3>B2 </h3>
+  <table class="m">
+    <tr><td>锚点 section/object</td><td>11 / 14</td>
+        <td>console error</td><td>0</td></tr>
+    <tr><td>实际用到的颜色数</td><td>5</td>
+        <td>字号阶数</td><td>7</td></tr>
+    <tr><td>字体族</td><td colspan="3"><code>&quot;IBM Plex Mono&quot;, &quot;SF Mono&quot;, &quot;Cascadia Mono&quot;, Menlo, monospace, Fraunces, &quot;Iowan Old Style&quot;, &quot;Palatino Linotype&quot;, Georgia, serif</code></td></tr>
+    <tr><td>最宽三块宽度</td><td>1440px / 340px / 339px</td>
+        <td>被阻断的外链</td><td>0</td></tr>
+    <tr><td>生成耗时</td><td>390.0s</td>
+        <td>总 token</td><td>13319</td></tr>
+    <tr><td>文件</td><td colspan="3"><code>app.js, index.html, styles.css</code></td></tr>
+  </table>
+  
+<div class="dir">
+  <div class="dirname">校对台 Proofing Table</div>
+  <p class="muted">OEYdesign 的本质是「人下指令、机器交稿、人批改」的循环，这个循环在物理世界的原型就是编辑的校对台：一张暖白纸、黑墨、一支红笔。把界面做成校对台而不是「科技深色舱」，能让版本、批注、导出这些核心动作获得天然的视觉语义（红=批改痕迹），也让 AI 产品少见地显得克制可信。</p>
+  <div class="swrow"><span class="sw" style="background:#F2EEE4" title="bg: #F2EEE4"></span><span class="sw" style="background:#FBF9F3" title="surface: #FBF9F3"></span><span class="sw" style="background:#1B1710" title="ink: #1B1710"></span><span class="sw" style="background:#8C8474" title="ink_muted: #8C8474"></span><span class="sw" style="background:#E03E12" title="accent: #E03E12"></span></div>
+  <table class="kv">
+    <tr><td>标题字体</td><td><code>Fraunces, &#x27;Iowan Old Style&#x27;, &#x27;Palatino Linotype&#x27;, Georgia, serif</code></td></tr>
+    <tr><td>正文字体</td><td><code>&#x27;IBM Plex Mono&#x27;, &#x27;SF Mono&#x27;, &#x27;Cascadia Mono&#x27;, Menlo, monospace</code></td></tr>
+    <tr><td>字号阶</td><td><code>[11, 13, 15, 20, 28, 44, 96]</code></td></tr>
+    <tr><td>间距阶</td><td><code>[4, 8, 12, 20, 32, 56]</code></td></tr>
+    <tr><td>版式原型</td><td>24/76 校对台：左侧对话栏固定 340px 窄条，右侧预览区吃掉其余全部宽度并上下通顶；两栏之间只有一根 1px 硬分隔线，没有任何卡片嵌套、没有悬浮面板，所有区块用 hairline 横线切分，对齐全部贴线不贴圆角容器。</td></tr>
+    <tr><td>不常见的颜色关系</td><td>朱红压在暖米纸上。红色在 UI 惯例里几乎只等于错误/危险，这里它被重新指派为「人工批注」的意思——像在稿纸上用红笔圈改，成立的原因是整个环境（纸色底、黑墨字、零圆角）都在暗示这是一张可被批改的稿子，而不是一块屏幕。</td></tr>
+  </table>
+  <div class="move"><b>刻意的反常动作：</b>预览区左上角的版本号做成 96px 的衬线巨字「v3」，压在预览画布的边缘线上，旁边配 11px 等宽大写小标签（STATUS: DRAFT · 2 PENDING MARKS）；同时对话栏的标题被故意缩成 11px 小字，对话正文反而是 15px。
+    <div class="muted">为什么成立：版本是这个产品唯一真正重要的状态——用户所有的焦虑都来自「我改的是哪一版、导出的是哪一版」。把版本号放大到印章尺度，等于在每张稿子上盖一个骑缝章，它不可误读、不可忽略；而界面标题缩成小字，是因为「工作台叫什么」从来不是用户要找的信息。这不是装饰性大字，是信息优先级的如实呈现。</div></div>
+  <div class="ap"><b>明确禁止：</b><ul><li>禁止任何圆角大于 2px，禁止卡片套卡片——稿纸没有圆角</li><li>禁止渐变、毛玻璃、投影，层次只允许靠 1px hairline 和留白</li><li>禁止蓝/紫系强调色，朱红 #E03E12 是全页唯一高饱和色</li><li>禁止把 agent 消息做成气泡——对话是校对记录，左右通栏排，不用聊天气泡 UI</li></ul></div>
+</div>
+  <div class="shots"><figure><img src="shots/B2/desktop.png" alt="B2 桌面 1440×900"><figcaption>桌面 1440×900</figcaption></figure><figure><img src="shots/B2/fullpage.png" alt="B2 整页"><figcaption>整页</figcaption></figure></div>
+</section>
+</div>
+<div class="arm">
+  <h2><span class="tag">C</span> Tailwind 组件框架</h2>
+  <p class="armdesc">引入 Tailwind CDN，用成熟组件模式（shadcn/Tailwind UI 风格）实现。</p>
+  
+<section class="cand">
+  <h3>C1 </h3>
+  <table class="m">
+    <tr><td>锚点 section/object</td><td>10 / 14</td>
+        <td>console error</td><td>0</td></tr>
+    <tr><td>实际用到的颜色数</td><td>17</td>
+        <td>字号阶数</td><td>9</td></tr>
+    <tr><td>字体族</td><td colspan="3"><code>&quot;JetBrains Mono&quot;, ui-monospace, monospace, Inter, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, system-ui, sans-serif</code></td></tr>
+    <tr><td>最宽三块宽度</td><td>1440px / 1440px / 380px</td>
+        <td>被阻断的外链</td><td>0</td></tr>
+    <tr><td>生成耗时</td><td>582.0s</td>
+        <td>总 token</td><td>21058</td></tr>
+    <tr><td>文件</td><td colspan="3"><code>app.js, index.html, styles.css</code></td></tr>
+  </table>
+  
+  <div class="shots"><figure><img src="shots/C1/desktop.png" alt="C1 桌面 1440×900"><figcaption>桌面 1440×900</figcaption></figure><figure><img src="shots/C1/fullpage.png" alt="C1 整页"><figcaption>整页</figcaption></figure></div>
+</section>
+<section class="cand">
+  <h3>C2 </h3>
+  <table class="m">
+    <tr><td>锚点 section/object</td><td>11 / 16</td>
+        <td>console error</td><td>0</td></tr>
+    <tr><td>实际用到的颜色数</td><td>30</td>
+        <td>字号阶数</td><td>12</td></tr>
+    <tr><td>字体族</td><td colspan="3"><code>-apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;PingFang SC&quot;, &quot;Hiragino Sans GB&quot;, &quot;Microsoft YaHei&quot;, sans-serif</code></td></tr>
+    <tr><td>最宽三块宽度</td><td>1440px / 1440px / 400px</td>
+        <td>被阻断的外链</td><td>0</td></tr>
+    <tr><td>生成耗时</td><td>765.3s</td>
+        <td>总 token</td><td>27906</td></tr>
+    <tr><td>文件</td><td colspan="3"><code>app.js, index.html, styles.css</code></td></tr>
+  </table>
+  
+  <div class="shots"><figure><img src="shots/C2/desktop.png" alt="C2 桌面 1440×900"><figcaption>桌面 1440×900</figcaption></figure><figure><img src="shots/C2/fullpage.png" alt="C2 整页"><figcaption>整页</figcaption></figure></div>
+</section>
+</div>
+
+<div class="q">
+<h3>需要你判断的</h3>
+<ol>
+<li><b>三组里哪一组明显更不像 AI 做的？</b> 还是都还不行？</li>
+<li><b>B 组的「刻意反常动作」有没有真的落地？</b> 卡片里写了它承诺做什么，看截图对不对得上。</li>
+<li><b>C 组值不值那个代价？</b> Tailwind 要走 CDN，意味着渲染沙箱必须放行网络——
+    而我们刚用 AppContainer 把网络彻底关掉。如果 C 组没有压倒性优势，这个代价不划算。</li>
+<li>如果都不满意，下一步该加什么：更强的方向策展库、参考图输入、还是自修复循环里加审美判据？</li>
+</ol>
+</div>
+</html>

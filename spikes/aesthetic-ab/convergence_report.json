@@ -1,0 +1,158 @@
+[
+  {
+    "label": "已知收敛组：agent 自选方向（气质种子）",
+    "n_directions": 3,
+    "n_pairs": 3,
+    "threshold": 25.0,
+    "separation_min": 6.710886215308625,
+    "separation_max": 12.174364917539021,
+    "palette_converged_pairs": 3,
+    "metaphor_overlap_pairs": 3,
+    "pairs": [
+      {
+        "pair": [
+          "校样台 Proof Desk",
+          "校准台（Calibration Bench）"
+        ],
+        "delta_e": {
+          "bg": 1.2583798386104976,
+          "ink": 2.6012006672875816,
+          "accent": 12.174364917539021
+        },
+        "separation": 12.174364917539021,
+        "shared_name_tokens": [
+          "校"
+        ],
+        "palette_converged": true,
+        "metaphor_overlap": true
+      },
+      {
+        "pair": [
+          "校样台 Proof Desk",
+          "校样台（Proofing Table）"
+        ],
+        "delta_e": {
+          "bg": 1.5749875087066914,
+          "ink": 0.666438816094752,
+          "accent": 6.710886215308625
+        },
+        "separation": 6.710886215308625,
+        "shared_name_tokens": [
+          "校",
+          "样"
+        ],
+        "palette_converged": true,
+        "metaphor_overlap": true
+      },
+      {
+        "pair": [
+          "校准台（Calibration Bench）",
+          "校样台（Proofing Table）"
+        ],
+        "delta_e": {
+          "bg": 1.5047381201391752,
+          "ink": 3.026939946953376,
+          "accent": 7.224207228527128
+        },
+        "separation": 7.224207228527128,
+        "shared_name_tokens": [
+          "校"
+        ],
+        "palette_converged": true,
+        "metaphor_overlap": true
+      }
+    ]
+  },
+  {
+    "label": "已知分开组：外部供给领地（含未采纳的 daylight）",
+    "n_directions": 3,
+    "n_pairs": 3,
+    "threshold": 25.0,
+    "separation_min": 87.11543318457898,
+    "separation_max": 95.03428790338167,
+    "palette_converged_pairs": 0,
+    "metaphor_overlap_pairs": 1,
+    "pairs": [
+      {
+        "pair": [
+          "套准工作台（Registration Bench）",
+          "灯箱校样台（Light Table）"
+        ],
+        "delta_e": {
+          "bg": 90.59261360485928,
+          "ink": 82.5536649770231,
+          "accent": 95.03428790338167
+        },
+        "separation": 95.03428790338167,
+        "shared_name_tokens": [],
+        "palette_converged": false,
+        "metaphor_overlap": false
+      },
+      {
+        "pair": [
+          "套准工作台（Registration Bench）",
+          "红笔校样台（Red-Pen Proofing Table）"
+        ],
+        "delta_e": {
+          "bg": 8.036855532239443,
+          "ink": 11.964892701786546,
+          "accent": 87.11543318457898
+        },
+        "separation": 87.11543318457898,
+        "shared_name_tokens": [],
+        "palette_converged": false,
+        "metaphor_overlap": false
+      },
+      {
+        "pair": [
+          "灯箱校样台（Light Table）",
+          "红笔校样台（Red-Pen Proofing Table）"
+        ],
+        "delta_e": {
+          "bg": 88.15525025059037,
+          "ink": 81.7034542281473,
+          "accent": 18.416496329250712
+        },
+        "separation": 88.15525025059037,
+        "shared_name_tokens": [
+          "table",
+          "校",
+          "样"
+        ],
+        "palette_converged": false,
+        "metaphor_overlap": true
+      }
+    ]
+  },
+  {
+    "label": "已冻结领地库：graphite + paper",
+    "n_directions": 2,
+    "n_pairs": 1,
+    "threshold": 25.0,
+    "separation_min": 88.15525025059037,
+    "separation_max": 88.15525025059037,
+    "palette_converged_pairs": 0,
+    "metaphor_overlap_pairs": 1,
+    "pairs": [
+      {
+        "pair": [
+          "灯箱校样台（Light Table）",
+          "红笔校样台（Red-Pen Proofing Table）"
+        ],
+        "delta_e": {
+          "bg": 88.15525025059037,
+          "ink": 81.7034542281473,
+          "accent": 18.416496329250712
+        },
+        "separation": 88.15525025059037,
+        "shared_name_tokens": [
+          "table",
+          "校",
+          "样"
+        ],
+        "palette_converged": false,
+        "metaphor_overlap": true
+      }
+    ]
+  }
+]

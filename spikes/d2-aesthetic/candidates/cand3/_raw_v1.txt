@@ -1,0 +1,1553 @@
+<<<FILE: index.html>>>
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DARKROOM · OEYdesign agent 工作台</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<header class="topbar" data-oey-section="topbar">
+  <div class="topbar-left">
+    <div class="brand">
+      <span class="brand-mark" aria-hidden="true"></span>
+      <span class="brand-name" data-oey-object="topbar.brand">DARKROOM</span>
+      <span class="brand-sub" data-oey-object="topbar.tagline">OEYdesign agent 暗房工作台</span>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <span class="edition" data-oey-object="topbar.edition">EDITION · 内部样机 R0</span>
+    <span class="status-stamp" id="topbarStatus" data-oey-object="topbar.status">未选择项目</span>
+  </div>
+</header>
+
+<main class="layout">
+
+  <!-- ============ 左栏：项目底片夹 ============ -->
+  <aside class="sidebar" data-oey-section="projects">
+    <div class="panel-head">
+      <h2 class="panel-title" data-oey-object="projects.title">底片夹</h2>
+      <p class="panel-hint" data-oey-object="projects.subtitle">项目列表 · 点击切换</p>
+    </div>
+    <ul class="project-list" id="projectList" data-oey-object="projects.list"></ul>
+    <div class="sidebar-foot">
+      <button class="btn btn-ghost btn-block" id="toggleNewProject" data-oey-object="projects.newButton">＋ 新建项目</button>
+    </div>
+
+    <form class="new-project hidden" id="newProjectForm" data-oey-section="newproject">
+      <h3 class="np-title" data-oey-object="newproject.title">登记一卷新底片</h3>
+      <label class="field">
+        <span class="field-label" data-oey-object="newproject.nameLabel">项目名称</span>
+        <input type="text" id="npName" data-oey-object="newproject.nameInput" placeholder="例如：新品发布落地页" required>
+      </label>
+      <label class="field">
+        <span class="field-label" data-oey-object="newproject.presetLabel">Constraint preset</span>
+        <select id="npPreset" data-oey-object="newproject.presetSelect">
+          <option value="开放探索">开放探索</option>
+          <option value="设计引导" selected>设计引导</option>
+          <option value="规范生产">规范生产</option>
+        </select>
+      </label>
+      <label class="field">
+        <span class="field-label" data-oey-object="newproject.roleLabel">Template role</span>
+        <select id="npRole" data-oey-object="newproject.roleSelect">
+          <option value="参考样例">参考样例</option>
+          <option value="起始脚手架" selected>起始脚手架</option>
+          <option value="设计系统">设计系统</option>
+          <option value="交付合同">交付合同</option>
+        </select>
+      </label>
+      <button type="submit" class="btn btn-accent btn-block" data-oey-object="newproject.submit">登记并开始生成方向</button>
+    </form>
+  </aside>
+
+  <!-- ============ 中栏：放大机（预览） ============ -->
+  <section class="stage" data-oey-section="preview">
+    <div class="stage-head">
+      <div class="stage-head-main">
+        <h2 class="stage-title" id="previewProjectName" data-oey-object="preview.projectName">—</h2>
+        <span class="rev-badge" id="previewRevision" data-oey-object="preview.revision">R–</span>
+      </div>
+      <div class="candidate-tabs" id="candidateTabs" data-oey-object="preview.candidates"></div>
+    </div>
+
+    <div class="canvas-wrap">
+      <div class="browser-chrome" aria-hidden="true">
+        <span class="chrome-dot"></span><span class="chrome-dot"></span><span class="chrome-dot"></span>
+        <span class="chrome-url" id="previewUrl" data-oey-object="preview.url">darkroom://proof</span>
+      </div>
+      <div class="canvas" id="previewCanvas" data-oey-object="preview.canvas">
+        <div class="empty-state" id="previewEmpty" data-oey-object="preview.empty">
+          <p class="empty-mark">◍</p>
+          <p>在左侧底片夹中选择或新建一个项目，开始冲洗方向。</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="canvas-meta" id="previewMeta">
+      <div class="meta-block">
+        <span class="meta-label" data-oey-object="preview.conceptLabel">方向概念</span>
+        <span class="meta-value" id="previewConcept" data-oey-object="preview.concept">—</span>
+      </div>
+      <div class="meta-block">
+        <span class="meta-label" data-oey-object="preview.paletteLabel">用色</span>
+        <span class="meta-value swatches" id="previewPalette" data-oey-object="preview.palette"></span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 右栏：记录 / 检查 / 标注 ============ -->
+  <aside class="inspector">
+
+    <section class="panel" data-oey-section="activity">
+      <div class="panel-head">
+        <h2 class="panel-title" data-oey-object="activity.title">冲洗记录</h2>
+        <p class="panel-hint" data-oey-object="activity.subtitle">agent 与系统的过程事件</p>
+      </div>
+      <ul class="activity-list" id="activityList" data-oey-object="activity.list"></ul>
+      <div class="next-step" id="nextStep" data-oey-object="activity.nextStep"></div>
+    </section>
+
+    <section class="panel" data-oey-section="quality">
+      <div class="panel-head">
+        <h2 class="panel-title" data-oey-object="quality.title">显影检查</h2>
+        <p class="panel-hint" data-oey-object="quality.subtitle">约束档案 · 质量双轨结论</p>
+      </div>
+
+      <div class="constraint-profile" data-oey-object="quality.constraints">
+        <div class="cp-row"><span class="cp-key">Preset</span><span class="cp-val" id="qPreset">—</span></div>
+        <div class="cp-row"><span class="cp-key">Template role</span><span class="cp-val" id="qRole">—</span></div>
+        <div class="cp-row"><span class="cp-key">媒介</span><span class="cp-val" id="qMedium">—</span></div>
+      </div>
+
+      <div class="gate" id="qualityGate" data-oey-object="quality.gate">—</div>
+
+      <div class="track track-hard">
+        <h3 class="track-title" data-oey-object="quality.hardTitle">硬错误 <span class="track-note">客观 · 阻挡交付</span></h3>
+        <ul class="track-list" id="hardList" data-oey-object="quality.hardErrors"></ul>
+      </div>
+
+      <div class="track track-aes">
+        <h3 class="track-title" data-oey-object="quality.aesTitle">审美发现 <span class="track-note">主观建议 · 不阻挡交付</span></h3>
+        <ul class="track-list" id="aesList" data-oey-object="quality.aesthetic"></ul>
+      </div>
+    </section>
+
+    <section class="panel" data-oey-section="feedback">
+      <div class="panel-head">
+        <h2 class="panel-title" data-oey-object="feedback.title">标注台</h2>
+        <p class="panel-hint" data-oey-object="feedback.subtitle">两种粒度的反馈，分开投递</p>
+      </div>
+
+      <form class="fb-form fb-direction" id="directionForm" data-oey-object="feedback.direction">
+        <h3 class="fb-title">① 对整体方向不满意 <span class="fb-tag">会要求换一个做法</span></h3>
+        <div class="chip-row" id="directionAspects">
+          <label class="chip"><input type="checkbox" value="叙事" checked><span>叙事</span></label>
+          <label class="chip"><input type="checkbox" value="语气"><span>语气</span></label>
+          <label class="chip"><input type="checkbox" value="视觉"><span>视觉</span></label>
+        </div>
+        <textarea id="directionText" rows="3" data-oey-object="feedback.directionText" placeholder="说清楚为什么不满意：例如「整体太像企业官网，想要更有刊物感」" required></textarea>
+        <button type="submit" class="btn btn-warn btn-block" data-oey-object="feedback.directionSubmit">要求换一个方向</button>
+      </form>
+
+      <form class="fb-form fb-local" id="localForm" data-oey-object="feedback.local">
+        <h3 class="fb-title">② 对局部内容不满意 <span class="fb-tag">只微调当前位置</span></h3>
+        <input type="text" id="localTarget" data-oey-object="feedback.localTarget" placeholder="定位：如「首屏标题」「第 2 屏配图」" required>
+        <select id="localKind" data-oey-object="feedback.localKind">
+          <option value="措辞">措辞</option>
+          <option value="事实">事实</option>
+          <option value="排版">排版</option>
+          <option value="配图">配图</option>
+        </select>
+        <textarea id="localText" rows="2" data-oey-object="feedback.localText" placeholder「微调要求：例如「标题去掉感叹号，语气收敛一点」" required></textarea>
+        <button type="submit" class="btn btn-accent btn-block" data-oey-object="feedback.localSubmit">提交局部微调</button>
+      </form>
+
+      <div class="fb-log-wrap">
+        <h3 class="fb-title fb-log-title" data-oey-object="feedback.logTitle">已投递的标注</h3>
+        <ul class="fb-log" id="feedbackLog" data-oey-object="feedback.log"></ul>
+      </div>
+    </section>
+
+  </aside>
+</main>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="app.js"></script>
+</body>
+</html>
+<<<END>>>
+
+<<<FILE: styles.css>>>
+/* ============================================================
+   DARKROOM · 深色暖调（暗房安全灯）主题
+   基调：暖黑背景 + 琥珀色安全灯强调 + 暖白纸感文字
+   ============================================================ */
+
+:root {
+  --bg: #16110d;            /* 暖黑 · 暗房 */
+  --bg-deep: #100c09;
+  --surface: #1f1913;       /* 卡片 */
+  --surface-2: #282018;
+  --border: #38302a;        /* 暖灰描边 */
+  --border-soft: #2b241d;
+  --text: #f0e7d8;          /* 暖白纸感 */
+  --text-muted: #a89880;
+  --text-faint: #7a6c5a;
+  --accent: #e8a33d;        /* 琥珀安全灯 */
+  --accent-dim: #b57d2c;
+  --accent-glow: rgba(232, 163, 61, 0.14);
+  --hard: #e0654f;          /* 硬错误 · 暖红 */
+  --hard-bg: rgba(224, 101, 79, 0.10);
+  --aes: #d9b95c;           /* 审美发现 · 暗金 */
+  --aes-bg: rgba(217, 185, 92, 0.08);
+  --ok: #8fae6e;            /* 可交付 · 苔绿 */
+  --ok-bg: rgba(143, 174, 110, 0.10);
+  --radius: 10px;
+  --font-ui: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  --font-display: Georgia, "Songti SC", "STSong", "SimSun", serif;
+  --font-mono: "SF Mono", Menlo, Consolas, "Courier New", monospace;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body { height: 100%; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-ui);
+  font-size: 14px;
+  line-height: 1.55;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* ---------------- 顶栏 ---------------- */
+
+.topbar {
+  height: 56px;
+  flex: 0 0 56px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  background: var(--bg-deep);
+  border-bottom: 1px solid var(--border);
+}
+
+.brand { display: flex; align-items: baseline; gap: 10px; }
+
+.brand-mark {
+  width: 12px; height: 12px;
+  align-self: center;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 12px 2px var(--accent-glow), 0 0 4px var(--accent);
+}
+
+.brand-name {
+  font-family: var(--font-display);
+  font-size: 19px;
+  letter-spacing: 0.22em;
+  color: var(--text);
+}
+
+.brand-sub {
+  font-size: 12px;
+  color: var(--text-muted);
+  letter-spacing: 0.08em;
+}
+
+.topbar-right { display: flex; align-items: center; gap: 14px; }
+
+.edition {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-faint);
+  letter-spacing: 0.12em;
+}
+
+.status-stamp {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  padding: 4px 12px;
+  border: 1px solid var(--accent-dim);
+  border-radius: 3px;
+  color: var(--accent);
+  background: var(--accent-glow);
+  transform: rotate(-1.2deg);
+  white-space: nowrap;
+}
+.status-stamp.is-ok { border-color: var(--ok); color: var(--ok); background: var(--ok-bg); }
+.status-stamp.is-hard { border-color: var(--hard); color: var(--hard); background: var(--hard-bg); }
+.status-stamp.is-idle { border-color: var(--border); color: var(--text-muted); background: transparent; }
+
+/* ---------------- 主布局 ---------------- */
+
+.layout {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 252px minmax(0, 1fr) 396px;
+  min-height: 0;
+}
+
+/* ---------------- 左栏 · 底片夹 ---------------- */
+
+.sidebar {
+  background: var(--bg-deep);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 16px 14px;
+}
+
+.panel-head { margin-bottom: 12px; }
+
+.panel-title {
+  font-family: var(--font-display);
+  font-size: 16px;
+  letter-spacing: 0.12em;
+  color: var(--text);
+}
+
+.panel-hint {
+  font-size: 11px;
+  color: var(--text-faint);
+  margin-top: 2px;
+  letter-spacing: 0.05em;
+}
+
+.project-list { list-style: none; display: flex; flex-direction: column; gap: 8px; flex: 1; }
+
+.project-item {
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius);
+  background: var(--surface);
+  padding: 11px 12px;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+.project-item:hover { border-color: var(--border); background: var(--surface-2); }
+.project-item.is-active {
+  border-color: var(--accent-dim);
+  background: var(--accent-glow);
+  box-shadow: inset 3px 0 0 var(--accent);
+}
+
+.project-item .p-name {
+  display: block;
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--text);
+}
+.project-item .p-meta {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 6px;
+  font-size: 11px;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+}
+.project-item .p-status { color: var(--accent); }
+.project-item.is-active .p-name { color: var(--accent); }
+
+.sidebar-foot { padding-top: 12px; border-top: 1px solid var(--border-soft); margin-top: 12px; }
+
+/* ---------------- 新建项目表单 ---------------- */
+
+.new-project {
+  margin-top: 12px;
+  padding: 12px;
+  border: 1px dashed var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+.np-title { font-size: 13px; margin-bottom: 10px; color: var(--accent); font-family: var(--font-display); letter-spacing: 0.1em; }
+
+.field { display: block; margin-bottom: 10px; }
+.field-label { display: block; font-size: 11px; color: var(--text-muted); margin-bottom: 4px; letter-spacing: 0.06em; }
+
+/* ---------------- 中栏 · 放大机 ---------------- */
+
+.stage {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  padding: 18px 22px;
+  overflow-y: auto;
+  background:
+    radial-gradient(1200px 500px at 50% -10%, rgba(232,163,61,0.05), transparent 60%),
+    var(--bg);
+}
+
+.stage-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+}
+
+.stage-head-main { display: flex; align-items: baseline; gap: 12px; }
+
+.stage-title {
+  font-family: var(--font-display);
+  font-size: 22px;
+  letter-spacing: 0.04em;
+}
+
+.rev-badge {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--accent);
+  border: 1px solid var(--accent-dim);
+  padding: 2px 8px;
+  border-radius: 3px;
+  background: var(--accent-glow);
+  white-space: nowrap;
+}
+
+.candidate-tabs { display: flex; gap: 6px; }
+
+.cand-tab {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  padding: 5px 12px;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.cand-tab:hover { color: var(--text); border-color: var(--accent-dim); }
+.cand-tab.is-active { color: var(--bg-deep); background: var(--accent); border-color: var(--accent); font-weight: 600; }
+
+.canvas-wrap {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: var(--surface);
+  box-shadow: 0 18px 50px rgba(0,0,0,0.45);
+}
+
+.browser-chrome {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  background: var(--bg-deep);
+  border-bottom: 1px solid var(--border-soft);
+}
+.chrome-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--border); }
+.chrome-url {
+  margin-left: 10px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-faint);
+}
+
+.canvas {
+  min-height: 380px;
+  max-height: 56vh;
+  overflow-y: auto;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 380px;
+  color: var(--text-faint);
+  font-size: 13px;
+  letter-spacing: 0.05em;
+}
+.empty-mark { font-size: 34px; color: var(--accent-dim); }
+
+/* --- 模拟网页预览（假页面） --- */
+
+.pg { font-family: var(--font-ui); }
+
+.pg-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 20px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+.pg-logo { font-weight: 700; font-size: 13px; letter-spacing: 0.1em; }
+.pg-links { display: flex; gap: 16px; font-size: 11px; opacity: 0.75; }
+
+.pg-hero { padding: 44px 26px 36px; }
+.pg-hero-img {
+  height: 130px;
+  border-radius: 8px;
+  margin-bottom: 22px;
+  position: relative;
+  overflow: hidden;
+}
+.pg-hero-img::after {
+  content: "AI 配图占位";
+  position: absolute;
+  right: 10px; bottom: 8px;
+  font-size: 10px;
+  font-family: var(--font-mono);
+  opacity: 0.55;
+  letter-spacing: 0.08em;
+}
+.pg-h1 { font-family: var(--font-display); font-size: 28px; line-height: 1.3; margin-bottom: 10px; }
+.pg-sub { font-size: 13px; opacity: 0.8; margin-bottom: 18px; max-width: 420px; }
+.pg-cta {
+  display: inline-block;
+  font-size: 12px;
+  padding: 8px 20px;
+  border-radius: 20px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+}
+
+.pg-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; padding: 0 26px 26px; }
+.pg-card { border-radius: 8px; padding: 14px; font-size: 11px; line-height: 1.5; }
+.pg-card b { display: block; font-size: 12px; margin-bottom: 4px; }
+
+.pg-text { padding: 0 26px 30px; font-size: 12px; opacity: 0.75; max-width: 480px; line-height: 1.8; }
+
+.pg-footer {
+  padding: 12px 20px;
+  font-size: 10px;
+  font-family: var(--font-mono);
+  opacity: 0.5;
+  border-top: 1px solid rgba(255,255,255,0.08);
+  letter-spacing: 0.08em;
+}
+
+/* --- 预览元信息 --- */
+
+.canvas-meta {
+  display: flex;
+  gap: 36px;
+  margin-top: 14px;
+  padding: 12px 16px;
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+.meta-block { display: flex; flex-direction: column; gap: 4px; }
+.meta-label { font-size: 10px; color: var(--text-faint); letter-spacing: 0.14em; }
+.meta-value { font-size: 13px; color: var(--text); }
+
+.swatches { display: flex; gap: 6px; align-items: center; }
+.swatch {
+  width: 22px; height: 22px;
+  border-radius: 5px;
+  border: 1px solid rgba(255,255,255,0.14);
+}
+
+/* ---------------- 右栏 ---------------- */
+
+.inspector {
+  border-left: 1px solid var(--border);
+  background: var(--bg-deep);
+  overflow-y: auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.panel {
+  padding: 16px;
+  border-bottom: 1px solid var(--border-soft);
+}
+
+/* --- 冲洗记录 --- */
+
+.activity-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+.activity-item {
+  display: grid;
+  grid-template-columns: 44px 14px 1fr;
+  gap: 8px;
+  padding: 7px 0;
+  border-bottom: 1px dashed var(--border-soft);
+  font-size: 12px;
+  align-items: start;
+}
+.activity-item .a-time { font-family: var(--font-mono); font-size: 10px; color: var(--text-faint); padding-top: 2px; }
+.activity-item .a-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  margin-top: 5px;
+  background: var(--border);
+}
+.activity-item.actor-agent .a-dot { background: var(--accent); box-shadow: 0 0 6px var(--accent-glow); }
+.activity-item.actor-user .a-dot { background: var(--ok); }
+.activity-item.actor-system .a-dot { background: var(--text-faint); }
+.activity-item .a-text { color: var(--text-muted); }
+.activity-item .a-text b { color: var(--text); font-weight: 600; }
+
+.next-step {
+  margin-top: 12px;
+  padding: 10px 12px;
+  border-radius: var(--radius);
+  background: var(--accent-glow);
+  border: 1px solid var(--accent-dim);
+  font-size: 12px;
+  color: var(--accent);
+}
+.next-step:empty { display: none; }
+.next-step b { display: block; font-size: 10px; letter-spacing: 0.14em; margin-bottom: 3px; color: var(--text-muted); }
+
+/* --- 显影检查 --- */
+
+.constraint-profile {
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius);
+  background: var(--surface);
+  padding: 10px 12px;
+  margin-bottom: 12px;
+}
+.cp-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  padding: 3px 0;
+}
+.cp-key { color: var(--text-faint); font-family: var(--font-mono); font-size: 11px; }
+.cp-val { color: var(--text); }
+
+.gate {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  padding: 8px 12px;
+  border-radius: 6px;
+  margin-bottom: 14px;
+  text-align: center;
+}
+.gate.is-blocked { background: var(--hard-bg); color: var(--hard); border: 1px solid var(--hard); }
+.gate.is-open { background: var(--ok-bg); color: var(--ok); border: 1px solid var(--ok); }
+.gate.is-pending { background: var(--accent-glow); color: var(--accent); border: 1px solid var(--accent-dim); }
+
+.track { margin-bottom: 12px; }
+
+.track-title {
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  margin-bottom: 6px;
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+.track-hard .track-title { color: var(--hard); }
+.track-aes .track-title { color: var(--aes); }
+
+.track-note {
+  font-size: 10px;
+  color: var(--text-faint);
+  font-weight: 400;
+  letter-spacing: 0.04em;
+}
+
+.track-list { list-style: none; display: flex; flex-direction: column; gap: 6px; }
+.track-list li {
+  font-size: 12px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  line-height: 1.5;
+}
+.track-hard .track-list li { background: var(--hard-bg); border-left: 3px solid var(--hard); color: var(--text); }
+.track-aes .track-list li { background: var(--aes-bg); border-left: 3px solid var(--aes); color: var(--text-muted); }
+.track-list li.li-empty { background: transparent; border-left: 3px solid var(--border); color: var(--text-faint); }
+
+/* --- 标注台 --- */
+
+.fb-form {
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius);
+  background: var(--surface);
+  padding: 12px;
+  margin-bottom: 12px;
+}
+.fb-direction { border-top: 2px solid var(--hard); }
+.fb-local { border-top: 2px solid var(--accent); }
+
+.fb-title {
+  font-size: 12px;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.fb-tag { font-size: 10px; color: var(--text-faint); font-weight: 400; }
+
+.chip-row { display: flex; gap: 6px; margin-bottom: 8px; }
+.chip { cursor: pointer; }
+.chip input { display: none; }
+.chip span {
+  display: inline-block;
+  font-size: 11px;
+  padding: 3px 12px;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  transition: all 0.15s;
+}
+.chip input:checked + span {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--bg-deep);
+  font-weight: 600;
+}
+
+textarea, input[type="text"], select {
+  width: 100%;
+  background: var(--bg-deep);
+  border: 1px solid var(--border-soft);
+  border-radius: 6px;
+  color: var(--text);
+  font-family: var(--font-ui);
+  font-size: 12px;
+  padding: 8px 10px;
+  margin-bottom: 8px;
+  resize: vertical;
+  outline: none;
+  transition: border-color 0.15s;
+}
+textarea:focus, input[type="text"]:focus, select:focus { border-color: var(--accent-dim); }
+textarea::placeholder, input::placeholder { color: var(--text-faint); }
+
+/* --- 按钮 --- */
+
+.btn {
+  font-family: var(--font-ui);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  padding: 9px 14px;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.btn-block { width: 100%; }
+.btn:disabled { opacity: 0.5; cursor: wait; }
+
+.btn-accent { background: var(--accent); color: var(--bg-deep); }
+.btn-accent:hover:not(:disabled) { background: #f2b355; box-shadow: 0 0 16px var(--accent-glow); }
+
+.btn-warn { background: transparent; color: var(--hard); border-color: var(--hard); }
+.btn-warn:hover:not(:disabled) { background: var(--hard-bg); }
+
+.btn-ghost { background: transparent; color: var(--text-muted); border-color: var(--border); }
+.btn-ghost:hover { color: var(--accent); border-color: var(--accent-dim); }
+
+/* --- 标注记录 --- */
+
+.fb-log-title { margin: 4px 0 8px; color: var(--text-muted); }
+
+.fb-log { list-style: none; display: flex; flex-direction: column; gap: 6px; max-height: 160px; overflow-y: auto; }
+.fb-log li {
+  font-size: 11px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  background: var(--surface);
+  border: 1px solid var(--border-soft);
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+.fb-log li .fl-kind {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  margin-right: 6px;
+  padding: 1px 6px;
+  border-radius: 3px;
+}
+.fb-log li .fl-kind.k-direction { color: var(--hard); border: 1px solid var(--hard); }
+.fb-log li .fl-kind.k-local { color: var(--accent); border: 1px solid var(--accent-dim); }
+.fb-log li .fl-time { float: right; font-family: var(--font-mono); font-size: 10px; color: var(--text-faint); }
+.fb-log li.li-empty { color: var(--text-faint); border-style: dashed; background: transparent; }
+
+/* --- Toast --- */
+
+.toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%) translateY(80px);
+  background: var(--surface-2);
+  border: 1px solid var(--accent-dim);
+  color: var(--accent);
+  font-size: 13px;
+  padding: 10px 22px;
+  border-radius: 24px;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.5), 0 0 20px var(--accent-glow);
+  opacity: 0;
+  transition: all 0.3s ease;
+  pointer-events: none;
+  z-index: 100;
+  letter-spacing: 0.04em;
+}
+.toast.is-show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* --- 工具 --- */
+
+.hidden { display: none !important; }
+
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: var(--accent-dim); }
+<<<END>>>
+
+<<<FILE: app.js>>>
+/* ============================================================
+   DARKROOM · OEYdesign agent 工作台（纯前端 mock 原型）
+   mock 实现：内存数据 + window.__oeyMock__ 假客户端 +
+   setTimeout 模拟网络延迟。无任何外部依赖。
+   ============================================================ */
+
+(function () {
+  "use strict";
+
+  /* ----------------------------------------------------------
+   * 1. Mock 数据层（数据声明详见 MOCK.md）
+   * ---------------------------------------------------------- */
+
+  var DB = {
+    projects: [
+      {
+        id: "p-tea",
+        name: "霓虹茶室 · 品牌官网",
+        medium: "网页",
+        status: "方向待确认",
+        preset: "设计引导",
+        role: "起始脚手架",
+        revision: 3,
+        activeCandidateId: "a",
+        nextStep: "在两个候选方向中选定一个，或投递整体方向反馈要求换一批。",
+        candidates: [
+          {
+            id: "a",
+            label: "候选 A",
+            concept: "夜色茶单 · 深沉暖调，强调营业至凌晨的城市感",
+            palette: ["#1a120c", "#e8a33d", "#f0e7d8", "#6e4a2a"],
+            page: {
+              bg: "#1a120c", fg: "#f0e7d8", accent: "#e8a33d",
+              heroImg: "linear-gradient(135deg,#3a2410 0%,#e8a33d 130%,#5a3418 100%)",
+              logo: "霓虹茶室",
+              links: ["茶单", "空间", "预约"],
+              h1: "把夜晚泡进一盏茶里",
+              sub: "营业至凌晨两点的城市茶室。今晚供应：焙火乌龙、冷萃白牡丹。",
+              cta: "查看今晚茶单",
+              cards: [
+                { t: "深夜茶单", d: "22:00 后限定三支茶，配一份手写笺。" },
+                { t: "吧台预约", d: "仅八个位置，建议提前一天留位。" },
+                { t: "茶寄服务", d: "当月茶样可邮寄，附冲泡卡。" }
+              ],
+              text: "我们相信茶不只属于白天。霓虹茶室想把「夜里也有一个安静去处」这件事，做得像街灯一样理所当然。",
+              footer: "NEON TEAHOUSE · 02:00 CLOSE"
+            }
+          },
+          {
+            id: "b",
+            label: "候选 B",
+            concept: "晨雾茶山 · 浅色清新，强调产地与四季",
+            palette: ["#f4efe4", "#5d7a52", "#2c2a24", "#c9b48a"],
+            page: {
+              bg: "#f4efe4", fg: "#2c2a24", accent: "#5d7a52",
+              heroImg: "linear-gradient(160deg,#dfe7d2 0%,#8aa87c 80%,#5d7a52 100%)",
+              logo: "霓虹茶室",
+              links: ["产地", "四季茶", "到店"],
+              h1: "从山雾到茶杯，只要一个清晨",
+              sub: "与三处小产区茶园直采合作，按节气轮换供应。",
+              cta: "看看本季茶",
+              cards: [
+                { t: "直采产地", d: "安溪、阿里山、狮峰，三处小茶园。" },
+                { t: "节气轮换", d: "每个节气上新一支，过季即下架。" },
+                { t: "清晨焙茶", d: "每日 6:00 开炉，店内可见焙茶过程。" }
+              ],
+              text: "茶的味道从山里开始。我们把产地的清晨搬进城里，让你在第一杯茶里喝到当天刚焙好的火香。",
+              footer: "NEON TEAHOUSE · SEASONAL"
+            }
+          }
+        ],
+        activity: [
+          { time: "09:02", actor: "system", text: "项目创建于「设计引导」preset，模板角色：起始脚手架。" },
+          { time: "09:03", actor: "agent", text: "理解需求：为一家夜间营业的茶室做品牌官网，风格描述模糊（“有氛围感”）。" },
+          { time: "09:05", actor: "agent", text: "需求存在不确定处，已向用户提问：目标客群是夜归上班族还是茶爱好者？" },
+          { time: "09:11", actor: "user", text: "回答提问：两类都要兼顾，但优先夜归人群。" },
+          { time: "09:18", actor: "agent", text: "产出 R3 两个候选方向：「夜色茶单」与「晨雾茶山」，等待用户选择或反馈。" }
+        ],
+        quality: { hard: [], aesthetic: [], ran: false },
+        feedbackLog: []
+      },
+      {
+        id: "p-report",
+        name: "季度财报 · 管理层 PPT",
+        medium: "PPT",
+        status: "质量复核中",
+        preset: "规范生产",
+        role: "交付合同",
+        revision: 5,
+        activeCandidateId: "a",
+        nextStep: "等待质量复核完成；已发现 1 个硬错误，修复前不可导出。",
+        candidates: [
+          {
+            id: "a",
+            label: "校样 R5",
+            concept: "深色财务底 + 单页一个结论，图表去装饰",
+            palette: ["#14161c", "#e8a33d", "#e8e6df", "#4a5568"],
+            page: {
+              bg: "#14161c", fg: "#e8e6df", accent: "#e8a33d",
+              heroImg: "linear-gradient(120deg,#232936 0%,#4a5568 60%,#e8a33d 160%)",
+              logo: "Q3 财报",
+              links: ["摘要", "收入", "风险"],
+              h1: "本季度只有一个结论：增长回到产品线 A",
+              sub: "管理层版 · 12 页 · 每页一个论点，数据均可溯源至附表。",
+              cta: "翻到摘要页",
+              cards: [
+                { t: "P2 摘要", d: "营收 +14%，全部由产品线 A 贡献。" },
+                { t: "P6 明细", d: "区域数据表格 · 当前存在溢出问题。" },
+                { t: "P10 风险", d: "三条风险，按影响排序。" }
+              ],
+              text: "设计原则：数字先行，装饰让位。所有图表仅使用两种明度，避免彩虹配色干扰判断。",
+              footer: "CONFIDENTIAL · Q3 REVIEW"
+            }
+          }
+        ],
+        activity: [
+          { time: "08:30", actor: "user", text: "批准了 R4 方向「深色财务底」，进入正式 Artifact 产出。" },
+          { time: "08:41", actor: "agent", text: "产出 R5 正式校样（12 页），提交质量复核。" },
+          { time: "08:52", actor: "system", text: "质量复核启动：硬检查与审美检查两条轨道并行。" },
+          { time: "08:53", actor: "system", text: "硬检查发现 1 项问题：P6 数据表格溢出页面边界。" }
+        ],
+        quality: {
+          ran: true,
+          hard: ["P6 区域数据表格横向溢出页面边界（超出 24pt），导出会裁切内容。"],
+          aesthetic: [
+            "P3 图表配色与封面主色不完全一致，建议统一为同一琥珀色系。",
+            "页脚页码字号偏小（9pt），投影场景下可能看不清。"
+          ]
+        },
+        feedbackLog: [
+          { kind: "direction", time: "08:12", text: "R3 整体太像营销物料，要求换成“董事会阅读”的语气。", aspects: ["叙事", "语气"] }
+        ]
+      },
+      {
+        id: "p-slowpost",
+        name: "独立刊物《慢递》· 创刊号网页",
+        medium: "网页",
+        status: "已批准 · 可交付",
+        preset: "开放探索",
+        role: "参考样例",
+        revision: 7,
+        activeCandidateId: "a",
+        nextStep: "硬检查已通过，可以导出交付；2 条审美建议由你自行判断是否采纳。",
+        candidates: [
+          {
+            id: "a",
+            label: "校样 R7",
+            concept: "报纸排版感 + 大幅留白，刊物编号系统",
+            palette: ["#f6f1e7", "#22201b", "#b3492e", "#8a8378"],
+            page: {
+              bg: "#f6f1e7", fg: "#22201b", accent: "#b3492e",
+              heroImg: "linear-gradient(105deg,#e8e0cf 0%,#b3492e 220%)",
+              logo: "慢递 · SLOW POST",
+              links: ["创刊词", "目录", "订阅"],
+              h1: "一封走得很慢的刊物",
+              sub: "创刊号 · 六篇长文，关于「等待」这件事。纸质同期发行。",
+              cta: "读创刊词",
+              cards: [
+                { t: "栏目 · 驿站", d: "城市角落的等待场景速写。" },
+                { t: "栏目 · 回信", d: "读者来信的延迟回复计划。" },
+                { t: "栏目 · 慢评", d: "出版三个月后才写的书评。" }
+              ],
+              text: "《慢递》不追热点。所有文章至少在事件发生一个月后才动笔，我们相信时间是一种编辑。",
+              footer: "ISSUE 001 · PRINTED & WEB"
+            }
+          }
+        ],
+        activity: [
+          { time: "10:05", actor: "user", text: "批准 R6 方向「报纸排版感」。" },
+          { time: "10:20", actor: "agent", text: "产出 R7 正式 Artifact，并调用生图能力补齐 2 张栏目标题配图。" },
+          { time: "10:31", actor: "system", text: "质量复核完成：硬检查 0 项问题；审美发现 2 项（不阻挡交付）。" },
+          { time: "10:31", actor: "system", text: "交付闸口已打开，可导出。" }
+        ],
+        quality: {
+          ran: true,
+          hard: [],
+          aesthetic: [
+            "首屏留白可以再多一档，刊物感会更强。",
+            "栏目卡片标题的衬线字与正文混排时灰度略跳，建议正文降半档字重。"
+          ]
+        },
+        feedbackLog: [
+          { kind: "local", time: "09:58", target: "创刊词第二段", fkind: "措辞", text: "「拖延」改成「等待」，避免负面联想。" }
+        ]
+      },
+      {
+        id: "p-fest",
+        name: "山地音乐节 · 海报落地页",
+        medium: "网页",
+        status: "方向生成中",
+        preset: "开放探索",
+        role: "参考样例",
+        revision: 0,
+        activeCandidateId: null,
+        nextStep: "agent 正在生成第一批候选方向，稍候回来查看。",
+        candidates: [],
+        activity: [
+          { time: "11:40", actor: "system", text: "项目创建，需求原文：“海报风格的落地页，要野一点”。" },
+          { time: "11:41", actor: "agent", text: "需求模糊（“野一点”），已提问：偏向自然山野还是街头涂鸦气质？" },
+          { time: "11:42", actor: "agent", text: "正在生成候选方向…" }
+        ],
+        quality: { hard: [], aesthetic: [], ran: false },
+        feedbackLog: []
+      }
+    ]
+  };
+
+  /* ----------------------------------------------------------
+   * 2. Mock API 客户端（setTimeout 模拟延迟）
+   * ---------------------------------------------------------- */
+
+  function delay(ms) {
+    return new Promise(function (resolve) { setTimeout(resolve, ms); });
+  }
+
+  function nowTime() {
+    var d = new Date();
+    return ("0" + d.getHours()).slice(-2) + ":" + ("0" + d.getMinutes()).slice(-2);
+  }
+
+  function findProject(id) {
+    for (var i = 0; i < DB.projects.length; i++) {
+      if (DB.projects[i].id === id) return DB.projects[i];
+    }
+    return null;
+  }
+
+  var __oeyMock__ = {
+    listProjects: function () {
+      return delay(120).then(function () { return DB.projects.slice(); });
+    },
+    getProject: function (id) {
+      return delay(180).then(function () { return findProject(id) || null; });
+    },
+    selectCandidate: function (projectId, candidateId) {
+      return delay(150).then(function () {
+        var p = findProject(projectId);
+        if (!p) return null;
+        p.activeCandidateId = candidateId;
+        p.activity.unshift({
+          time: nowTime(), actor: "user",
+          text: "查看了「" + candLabel(p, candidateId) + "」。"
+        });
+        return p;
+      });
+    },
+    submitDirectionFeedback: function (projectId, payload) {
+      return delay(650).then(function () {
+        var p = findProject(projectId);
+        if (!p) return null;
+        p.feedbackLog.unshift({
+          kind: "direction", time: nowTime(),
+          aspects: payload.aspects, text: payload.text
+        });
+        p.status = "已提交方向反馈";
+        p.revision += 1;
+        p.nextStep = "方向反馈已收到：agent 将基于批注生成新一批候选方向。";
+        p.activity.unshift({
+          time: nowTime(), actor: "user",
+          text: "投递<b>整体方向反馈</b>（" + payload.aspects.join("/") + "）：" + escapeText(payload.text)
+        });
+        p.activity.unshift({
+          time: nowTime(), actor: "agent",
+          text: "收到方向反馈，将放弃当前方向，重新生成候选（进入 R" + p.revision + "）。"
+        });
+        return p;
+      });
+    },
+    submitLocalFeedback: function (projectId, payload) {
+      return delay(500).then(function () {
+        var p = findProject(projectId);
+        if (!p) return null;
+        p.feedbackLog.unshift({
+          kind: "local", time: nowTime(),
+          target: payload.target, fkind: payload.fkind, text: payload.text
+        });
+        p.nextStep = "局部微调已记录：agent 将在当前校样上原位修改「" + payload.target + "」，方向不变。";
+        p.activity.unshift({
+          time: nowTime(), actor: "user",
+          text: "投递<b>局部微调</b>（" + payload.fkind + " · " + escapeText(payload.target) + "）：" + escapeText(payload.text)
+        });
+        p.activity.unshift({
+          time: nowTime(), actor: "agent",
+          text: "已登记局部微调，将在当前校样原位处理，不影响整体方向。"
+        });
+        return p;
+      });
+    },
+    createProject: function (data) {
+      return delay(700).then(function () {
+        var p = {
+          id: "p-" + Math.random().toString(36).slice(2, 8),
+          name: data.name,
+          medium: "网页",
+          status: "方向生成中",
+          preset: data.preset,
+          role: data.role,
+          revision: 0,
+          activeCandidateId: null,
+          nextStep: "agent 正在理解需求并生成第一批候选方向。",
+          candidates: [],
+          activity: [
+            { time: nowTime(), actor: "system", text: "项目创建于「" + data.preset + "」preset，模板角色：" + data.role + "。" },
+            { time: nowTime(), actor: "agent", text: "开始理解需求，正在生成候选方向…" }
+          ],
+          quality: { hard: [], aesthetic: [], ran: false },
+          feedbackLog: []
+        };
+        DB.projects.unshift(p);
+        return p;
+      });
+    }
+  };
+
+  window.__oeyMock__ = __oeyMock__;
+
+  /* ----------------------------------------------------------
+   * 3. 视图渲染
+   * ---------------------------------------------------------- */
+
+  var state = { activeProjectId: null };
+
+  var el = {};
+  function $(id) { return document.getElementById(id); }
+
+  function escapeText(s) {
+    return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  }
+
+  function candLabel(p, cid) {
+    for (var i = 0; i < p.candidates.length; i++) {
+      if (p.candidates[i].id === cid) return p.candidates[i].label;
+    }
+    return cid;
+  }
+
+  function activeCandidate(p) {
+    if (!p || !p.candidates.length) return null;
+    for (var i = 0; i < p.candidates.length; i++) {
+      if (p.candidates[i].id === p.activeCandidateId) return p.candidates[i];
+    }
+    return p.candidates[0];
+  }
+
+  /* --- 顶栏状态戳 --- */
+  function renderTopbar(p) {
+    var stamp = el.topbarStatus;
+    stamp.className = "status-stamp";
+    if (!p) {
+      stamp.textContent = "未选择项目";
+      stamp.classList.add("is-idle");
+      return;
+    }
+    stamp.textContent = p.status.toUpperCase ? p.status : p.status;
+    if (p.quality.ran && p.quality.hard.length > 0) stamp.classList.add("is-hard");
+    else if (p.quality.ran && p.quality.hard.length === 0) stamp.classList.add("is-ok");
+  }
+
+  /* --- 左栏项目列表 --- */
+  function renderProjects() {
+    el.projectList.innerHTML = "";
+    DB.projects.forEach(function (p) {
+      var li = document.createElement("li");
+      li.className = "project-item" + (p.id === state.activeProjectId ? " is-active" : "");
+      li.setAttribute("data-oey-object", "projects.item");
+      li.setAttribute("data-project-id", p.id);
+      li.innerHTML =
+        '<span class="p-name" data-oey-object="projects.item.name">' + escapeText(p.name) + "</span>" +
+        '<span class="p-meta">' +
+        '<span class="p-status" data-oey-object="projects.item.status">' + escapeText(p.status) + "</span>" +
+        "<span>" + escapeText(p.medium) + " · R" + p.revision + "</span>" +
+        "</span>";
+      li.addEventListener("click", function () { selectProject(p.id); });
+      el.projectList.appendChild(li);
+    });
+  }
+
+  /* --- 中栏预览 --- */
+  function renderPreview(p) {
+    var c = activeCandidate(p);
+    el.previewProjectName.textContent = p ? p.name : "—";
+    el.previewRevision.textContent = p ? "REVISION R" + p.revision : "R–";
+    el.previewUrl.textContent = p ? "darkroom://proof/" + p.id : "darkroom://proof";
+
+    // 候选 tab
+    el.candidateTabs.innerHTML = "";
+    if (p && p.candidates.length) {
+      p.candidates.forEach(function (cand) {
+        var b = document.createElement("button");
+        b.className = "cand-tab" + (cand.id === p.activeCandidateId ? " is-active" : "");
+        b.textContent = cand.label;
+        b.setAttribute("data-oey-object", "preview.candidateTab");
+        b.addEventListener("click", function () {
+          __oeyMock__.selectCandidate(p.id, cand.id).then(function (updated) {
+            renderAll(updated);
+          });
+        });
+        el.candidateTabs.appendChild(b);
+      });
+    }
+
+    // 画布
+    if (!p) {
+      el.previewCanvas.innerHTML =
+        '<div class="empty-state" data-oey-object="preview.empty">' +
+        '<p class="empty-mark">◍</p><p>在左侧底片夹中选择或新建一个项目，开始冲洗方向。</p></div>';
+    } else if (!c) {
+      el.previewCanvas.innerHTML =
+        '<div class="empty-state" data-oey-object="preview.empty">' +
+        '<p class="empty-mark">◌</p><p>方向正在生成中——agent 产出第一批候选后会出现在这里。</p></div>';
+    } else {
+      el.previewCanvas.innerHTML = pageHTML(c.page);
+    }
+
+    // 元信息
+    el.previewConcept.textContent = c ? c.concept : "—";
+    el.previewPalette.innerHTML = "";
+    if (c) {
+      c.palette.forEach(function (hex) {
+        var s = document.createElement("span");
+        s.className = "swatch";
+        s.style.background = hex;
+        s.title = hex;
+        el.previewPalette.appendChild(s);
+      });
+    }
+  }
+
+  function pageHTML(pg) {
+    var cards = pg.cards.map(function (c) {
+      return '<div class="pg-card" style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);">' +
+        "<b>" + escapeText(c.t) + "</b>" + escapeText(c.d) + "</div>";
+    }).join("");
+    return (
+      '<div class="pg" style="background:' + pg.bg + ";color:" + pg.fg + ';">' +
+        '<div class="pg-nav">' +
+          '<span class="pg-logo" style="color:' + pg.accent + ';">' + escapeText(pg.logo) + "</span>" +
+          '<span class="pg-links">' + pg.links.map(escapeText).join("<span></span>") + "</span>" +
+        "</div>" +
+        '<div class="pg-hero">' +
+          '<div class="pg-hero-img" style="background:' + pg.heroImg + ';"></div>' +
+          '<div class="pg-h1">' + escapeText(pg.h1) + "</div>" +
+          '<div class="pg-sub">' + escapeText(pg.sub) + "</div>" +
+          '<span class="pg-cta" style="background:' + pg.accent + ";color:" + pg.bg + ';">' + escapeText(pg.cta) + "</span>" +
+        "</div>" +
+        '<div class="pg-cards">' + cards + "</div>" +
+        '<div class="pg-text">' + escapeText(pg.text) + "</div>" +
+        '<div class="pg-footer">' + escapeText(pg.footer) + "</div>" +
+      "</div>"
+    );
+  }
+
+  /* --- 右栏 · 冲洗记录 --- */
+  function renderActivity(p) {
+    el.activityList.innerHTML = "";
+    if (!p) {
+      el.nextStep.textContent = "";
+      return;
+    }
+    p.activity.forEach(function (ev) {
+      var li = document.createElement("li");
+      li.className = "activity-item actor-" + ev.actor;
+      li.setAttribute("data-oey-object", "activity.item");
+      li.innerHTML =
+        '<span class="a-time">' + escapeText(ev.time) + "</span>" +
+        '<span class="a-dot"></span>' +
+        '<span class="a-text">' + ev.text + "</span>";
+      el.activityList.appendChild(li);
+    });
+    el.nextStep.innerHTML = p.nextStep ? "<b>下一步</b>" + escapeText(p.nextStep) : "";
+  }
+
+  /* --- 右栏 · 显影检查 --- */
+  function renderQuality(p) {
+    if (!p) {
+      el.qPreset.textContent = el.qRole.textContent = el.qMedium.textContent = "—";
+      el.qualityGate.textContent = "—";
+      el.qualityGate.className = "gate";
+      el.hardList.innerHTML = el.aesList.innerHTML = "";
+      return;
+    }
+    el.qPreset.textContent = p.preset;
+    el.qRole.textContent = p.role;
+    el.qMedium.textContent = p.medium;
+
+    var gate = el.qualityGate;
+    if (!p.quality.ran) {
+      gate.textContent = "质量复核尚未运行（产出正式 Artifact 后自动启动）";
+      gate.className = "gate is-pending";
+    } else if (p.quality.hard.length > 0) {
+      gate.textContent = "✕ 交付闸口关闭：存在 " + p.quality.hard.length + " 个硬错误";
+      gate.className = "gate is-blocked";
+    } else {
+      gate.textContent = "✓ 硬检查通过 · 交付闸口打开（审美发现不阻挡交付）";
+      gate.className = "gate is-open";
+    }
+
+    fillTrack(el.hardList, p.quality.ran ? p.quality.hard : [], p.quality.ran ? "硬检查未发现客观错误。" : "尚未运行。");
+    fillTrack(el.aesList, p.quality.ran ? p.quality.aesthetic : [], p.quality.ran ? "暂无审美建议。" : "尚未运行。");
+  }
+
+  function fillTrack(ul, items, emptyText) {
+    ul.innerHTML = "";
+    if (!items.length) {
+      var li = document.createElement("li");
+      li.className = "li-empty";
+      li.textContent = emptyText;
+      ul.appendChild(li);
+      return;
+    }
+    items.forEach(function (t) {
+      var li = document.createElement("li");
+      li.textContent = t;
+      ul.appendChild(li);
+    });
+  }
+
+  /* --- 右栏 · 标注记录 --- */
+  function renderFeedbackLog(p) {
+    el.feedbackLog.innerHTML = "";
+    if (!p || !p.feedbackLog.length) {
+      el.feedbackLog.innerHTML = '<li class="li-empty">当前项目还没有投递过标注。</li>';
+      return;
+    }
+    p.feedbackLog.forEach(function (f) {
+      var li = document.createElement("li");
+      var kindLabel = f.kind === "direction" ? "整体方向" : "局部微调";
+      var kindCls = f.kind === "direction" ? "k-direction" : "k-local";
+      var body = f.kind === "direction"
+        ? "[" + f.aspects.join("/") + "] " + f.text
+        : "[" + f.fkind + " · " + f.target + "] " + f.text;
+      li.innerHTML =
+        '<span class="fl-kind ' + kindCls + '">' + kindLabel + "</span>" +
+        '<span class="fl-time">' + escapeText(f.time) + "</span>" +
+        escapeText(body);
+      el.feedbackLog.appendChild(li);
+    });
+  }
+
+  function renderAll(p) {
+    renderTopbar(p);
+    renderProjects();
+    renderPreview(p);
+    renderActivity(p);
+    renderQuality(p);
+    renderFeedbackLog(p);
+  }
+
+  function selectProject(id) {
+    state.activeProjectId = id;
+    __oeyMock__.getProject(id).then(function (p) { renderAll(p); });
+  }
+
+  /* ----------------------------------------------------------
+   * 4. Toast
+   * ---------------------------------------------------------- */
+
+  var toastTimer = null;
+  function toast(msg) {
+    el.toast.textContent = msg;
+    el.toast.classList.add("is-show");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { el.toast.classList.remove("is-show"); }, 2600);
+  }
+
+  /* ----------------------------------------------------------
+   * 5. 事件绑定
+   * ---------------------------------------------------------- */
+
+  function bind() {
+    el.directionForm.addEventListener("submit", function (e) {
+      e.preventDefault();
+      var p = findProject(state.activeProjectId);
+      if (!p) { toast("请先选择一个项目"); return; }
+      var aspects = [];
+      el.directionForm.querySelectorAll("input[type=checkbox]:checked").forEach(function (cb) {
+        aspects.push(cb.value);
+      });
+      if (!aspects.length) { toast("请至少勾选一个不满意的方面"); return; }
+      var text = el.directionText.value.trim();
+      if (!text) return;
+      var btn = el.directionForm.querySelector("button[type=submit]");
+      btn.disabled = true;
+      btn.textContent = "投递中…";
+      __oeyMock__.submitDirectionFeedback(p.id, { aspects: aspects, text: text }).then(function (updated) {
+        btn.disabled = false;
+        btn.textContent = "要求换一个方向";
+        el.directionText.value = "";
+        renderAll(updated);
+        toast("方向反馈已投递 · 当前方向将被放弃，等待新一批候选");
+      });
+    });
+
+    el.localForm.addEventListener("submit", function (e) {
+      e.preventDefault();
+      var p = findProject(state.activeProjectId);
+      if (!p) { toast("请先选择一个项目"); return; }
+      var target = el.localTarget.value.trim();
+      var text = el.localText.value.trim();
+      if (!target || !text) return;
+      var btn = el.localForm.querySelector("button[type=submit]");
+      btn.disabled = true;
+      btn.textContent = "投递中…";
+      __oeyMock__.submitLocalFeedback(p.id, {
+        target: target, fkind: el.localKind.value, text: text
+      }).then(function (updated) {
+        btn.disabled = false;
+        btn.textContent = "提交局部微调";
+        el.localTarget.value = "";
+        el.localText.value = "";
+        renderAll(updated);
+        toast("局部微调已记录 · 将在当前校样原位处理");
+      });
+    });
+
+    el.toggleNewProject.addEventListener("click", function () {
+      el.newProjectForm.classList.toggle("hidden");
+    });
+
+    el.newProjectForm.addEventListener("submit", function (e) {
+      e.preventDefault();
+      var name = el.npName.value.trim();
+      if (!name) return;
+      var btn = el.newProjectForm.querySelector("button[type=submit]");
+      btn.disabled = true;
+      btn.textContent = "登记中…";
+      __oeyMock__.createProject({
+        name: name,
+        preset: el.npPreset.value,
+        role: el.npRole.value
+      }).then(function (p) {
+        btn.disabled = false;
+        btn.textContent = "登记并开始生成方向";
+        el.npName.value = "";
+        el.newProjectForm.classList.add("hidden");
+        state.activeProjectId = p.id;
+        renderAll(p);
+        toast("新项目已登记 · agent 正在生成候选方向");
+      });
+    });
+  }
+
+  /* ----------------------------------------------------------
+   * 6. 启动
+   * ---------------------------------------------------------- */
+
+  function boot() {
+    [
+      "topbarStatus", "projectList", "toggleNewProject", "newProjectForm",
+      "npName", "npPreset", "npRole",
+      "previewProjectName", "previewRevision", "previewUrl", "candidateTabs",
+      "previewCanvas", "previewConcept", "previewPalette",
+      "activityList", "nextStep",
+      "qPreset", "qRole", "qMedium", "qualityGate", "hardList", "aesList",
+      "directionForm", "directionText", "localForm", "localTarget", "localKind", "localText",
+      "feedbackLog", "toast"
+    ].forEach(function (id) { el[id] = $(id); });
+
+    bind();
+
+    __oeyMock__.listProjects().then(function (projects) {
+      if (projects.length) {
+        state.activeProjectId = projects[0].id;
+        renderAll(projects[0]);
+      } else {
+        renderAll(null);
+      }
+    });
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", boot);
+  } else {
+    boot();
+  }
+})();
+<<<END>>>
+
+<<<FILE: MOCK.md>>>
+# MOCK.md — DARKROOM 工作台 mock 声明
+
+本原型没有任何真实后端。所有数据与交互由前端内置 mock 层驱动，技术栈为原生 HTML/CSS/JS，零外部依赖（无 CDN、无外链字体/图片/图标）。
+
+## 一、mock 的接口 / 交互点
+
+mock 客户端挂在 `window.__oeyMock__` 上，共 6 个方法，全部返回 Promise：
+
+| 方法 | 模拟的真实接口 | 说明 |
+|---|---|---|
+| `listProjects()` | 获取项目列表 | 返回全部项目摘要 |
+| `getProject(id)` | 获取单个项目详情 | 项目切换时调用，界面各区域随返回值整体重绘 |
+| `selectCandidate(projectId, candidateId)` | 切换候选/校样 | 切换预览，并向活动记录追加一条「查看了某候选」事件 |
+| `submitDirectionFeedback(projectId, payload)` | 提交整体方向反馈 | 写入反馈日志、把项目状态改为「已提交方向反馈」、revision +1、追加两条活动事件（用户投递 + agent 确认换方向） |
+| `submitLocalFeedback(projectId, payload)` | 提交局部微调反馈 | 写入反馈日志、追加两条活动事件、更新「下一步」提示；不改变项目状态与 revision（模拟「原位微调不打断流程」） |
+| `createProject(data)` | 创建新项目 | 按提交的 preset / template role 生成一个空项目（无候选、质量未运行、状态为「方向生成中」），并自动选中 |
+
+界面上的真实可见响应：项目切换后中栏预览、右栏活动记录/质量/反馈日志全部变化；提交反馈后按钮出现「投递中…」loading 态、toast 确认、活动记录新增事件、状态戳变色、revision 号递增（仅方向反馈）。
+
+## 二、数据来源声明
+
+1. **四个内置项目（霓虹茶室官网 / 季度财报 PPT / 《慢递》创刊号 / 山地音乐节落地页）**：全部为**纯虚构编造**的演示数据，包括项目名、候选方向概念、假网页文案、活动记录、质量结论、既有反馈日志。不来自任何真实仓库数据；仅流程语义参照 OEYdesign 的真实领域模型（候选方向 → 反馈/批准 → Artifact → 双轨质量复核 → 导出）。
+2. **预览中的「网页」**：由内联的 page 描述对象（背景色/强调色/标题/卡片/正文等字段）经 `pageHTML()` 模板函数渲染成 DOM，属**规则推导**（数据 + 固定模板），不是截图或外链。配图位置用 CSS 渐变块表示，标注「AI 配图占位」，对应 prd 中「必要时用生图能力配图」的事实，不假装有真实图片。
+3. **质量结论**：硬错误与审美发现是两个独立数组，分开渲染、分开配色，从不合并成分数。内容为虚构；「交付闸口」状态按规则推导：`quality.ran === false` → 未运行；`hard.length > 0` → 闸口关闭；否则 → 闸口打开。
+4. **时间戳**：内置种子活动记录的时间是虚构的固定字符串（如 "09:18"）；**用户交互产生的新事件**（查看候选、提交反馈、新建项目）的时间由 `new Date()` 按 `HH:MM` 规则生成，属规则推导。
+5. **新建项目**：除用户输入的名称/preset/role 外，其余字段（空候选、初始活动事件、「方向生成中」状态）由 `createProject` 内的固定模板生成，属规则推导。
+
+## 三、mock 技术手段
+
+- **内联内存数据库**：`app.js` 顶部的 `DB` 对象，所有读写直接在内存数组上进行，页面刷新即重置。
+- **setTimeout 模拟延迟**：`delay()` 函数包装所有 mock 方法（120ms–700ms 不等，反馈提交类操作延迟更长，以露出 loading 态）。
+- **假客户端暴露**：`window.__oeyMock__` 全局可访问，方便后续替换成真实 API 时对照接口形状；UI 层只通过该客户端取数，不直接读 `DB`（渲染函数除外）。
+- **未使用** fetch 拦截 / ServiceWorker / localStorage；无任何网络请求。
+<<<END>>>
+
+<<<FILE: INTENT.md>>>
+# INTENT.md
+
+## 差异轴选择：色彩温度与基调
+
+我选的方向是**深色沉浸 + 暖色温**，具体化为「暗房安全灯」基调：背景不是中性灰黑而是带棕意的暖黑（#16110d），卡片、描边、文字全部暖化（文字是暖白纸感 #f0e7d8 而非纯白），唯一强调色是琥珀色（#e8a33d），模拟暗房里那盏不曝光底片的橙色安全灯。功能色也服从暖调：硬错误用暖红、审美发现用暗金、可交付用苔绿，没有冷蓝色出现。状态戳做成微微倾斜的印章样式，配合衬线展示字体（Georgia/宋体系），让工具感里带一点手工温度。
+
+## 命名与定位
+
+产品名 **DARKROOM（暗房）**。叙事隐喻：项目是「底片夹」，agent 产出过程是「冲洗记录」，预览区是「放大机」，质量复核是「显影检查」，反馈是「标注」。隐喻只停留在栏目命名和氛围层，功能语义严格对齐 OEYdesign 真实流程（候选方向→反馈→Artifact→双轨质量→交付闸口），两种反馈粒度分开成两个表单，硬错误与审美发现分两轨展示。
+
+## 最能体现差异轴的位置
+
+1. **整体底色与发光细节**（`topbar` 的品牌灯点、`preview` 区顶部的琥珀色径向微光）：暗房氛围靠这些「光源」而非大块色彩建立。
+2. **状态与质量配色**（`quality` 区的 gate 闸口条、硬错误/暗金双轨、`topbar.status` 印章）：功能色全部暖化，红是金红、绿是苔绿，冷色缺席。
+3. **纸感文字对比**（全站 #f0e7d8 暖白文字配衬线标题，`preview` 内嵌假网页也各自带暖调配色方案）：可读对比度保持在暖色系内解决，而不是退回纯白。
+<<<END>>>

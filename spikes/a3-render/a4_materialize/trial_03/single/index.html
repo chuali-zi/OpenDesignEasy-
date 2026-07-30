@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>林一然 · 自由职业设计师作品集</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    color: #1a1a2e;
+    background: #fafaf7;
+    line-height: 1.6;
+  }
+  img { display: block; }
+  a { text-decoration: none; color: inherit; }
+  .wrap { max-width: 1120px; margin: 0 auto; padding: 0 24px; }
+
+  /* ---------- header ---------- */
+  .site-header {
+    background: #fafaf7;
+    border-bottom: 1px solid #e8e6df;
+    position: sticky;
+    top: 0;
+  }
+  .site-header .wrap {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 72px;
+  }
+  .brand { display: flex; align-items: center; gap: 12px; }
+  .brand img { width: 36px; height: 36px; }
+  .brand-name { font-size: 18px; font-weight: 700; letter-spacing: 1px; }
+  .nav { display: flex; align-items: center; gap: 28px; }
+  .nav a { font-size: 14px; color: #4a4a5a; }
+  .nav a:hover { color: #ff5c39; }
+  .btn {
+    display: inline-block;
+    padding: 10px 22px;
+    border-radius: 999px;
+    font-size: 14px;
+    font-weight: 600;
+  }
+  .btn-primary { background: #ff5c39; color: #fff; }
+  .btn-ghost { border: 1px solid #1a1a2e; color: #1a1a2e; background: transparent; }
+
+  /* ---------- hero ---------- */
+  .hero { padding: 96px 0 80px; }
+  .hero .wrap {
+    display: grid;
+    grid-template-columns: 1.2fr 1fr;
+    gap: 48px;
+    align-items: center;
+  }
+  .hero-tag {
+    display: inline-block;
+    font-size: 13px;
+    font-weight: 600;
+    color: #ff5c39;
+    background: #ffe9e3;
+    padding: 6px 14px;
+    border-radius: 999px;
+    margin-bottom: 20px;
+  }
+  .hero h1 {
+    font-size: 48px;
+    line-height: 1.2;
+    letter-spacing: -1px;
+    margin-bottom: 20px;
+  }
+  .hero h1 em { font-style: normal; color: #ff5c39; }
+  .hero p.lead { font-size: 17px; color: #55555f; max-width: 520px; margin-bottom: 32px; }
+  .hero-actions { display: flex; gap: 16px; }
+  .hero-card {
+    background: #1a1a2e;
+    border-radius: 24px;
+    padding: 40px 32px;
+    color: #fff;
+  }
+  .hero-card img { width: 56px; height: 56px; margin-bottom: 24px; }
+  .hero-stat { display: flex; justify-content: space-between; border-top: 1px solid #33334d; padding: 16px 0; }
+  .hero-stat:first-of-type { border-top: none; }
+  .hero-stat .num { font-size: 26px; font-weight: 700; color: #ffb199; }
+  .hero-stat .lbl { font-size: 13px; color: #9a9ab0; margin-top: 4px; }
+
+  /* ---------- section common ---------- */
+  section { padding: 80px 0; }
+  .sec-head { margin-bottom: 48px; }
+  .sec-kicker { font-size: 13px; font-weight: 700; letter-spacing: 2px; color: #ff5c39; text-transform: uppercase; margin-bottom: 10px; }
+  .sec-title { font-size: 34px; letter-spacing: -0.5px; }
+  .sec-desc { color: #55555f; max-width: 560px; margin-top: 12px; }
+
+  /* ---------- works ---------- */
+  .works { background: #fff; }
+  .works-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 28px;
+  }
+  .work-card { border-radius: 18px; overflow: hidden; border: 1px solid #eceae2; background: #fff; }
+  .work-thumb { height: 190px; }
+  .t1 { background: linear-gradient(135deg, #ff5c39, #ffb199); }
+  .t2 { background: linear-gradient(135deg, #1a1a2e, #4a4a72); }
+  .t3 { background: linear-gradient(135deg, #0e8f6e, #7ad3b7); }
+  .work-body { padding: 22px 22px 26px; }
+  .work-cat { font-size: 12px; font-weight: 700; letter-spacing: 1px; color: #ff5c39; }
+  .work-title { font-size: 19px; margin: 8px 0 6px; }
+  .work-text { font-size: 14px; color: #55555f; }
+
+  /* ---------- services ---------- */
+  .services-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 28px;
+  }
+  .svc {
+    background: #fff;
+    border: 1px solid #eceae2;
+    border-radius: 18px;
+    padding: 32px 28px;
+  }
+  .svc-icon {
+    width: 48px; height: 48px;
+    border-radius: 12px;
+    background: #ffe9e3;
+    color: #ff5c39;
+    font-size: 22px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 18px;
+  }
+  .svc h3 { font-size: 19px; margin-bottom: 8px; }
+  .svc p { font-size: 14px; color: #55555f; }
+
+  /* ---------- about ---------- */
+  .about { background: #1a1a2e; color: #fff; }
+  .about .sec-kicker { color: #ffb199; }
+  .about .sec-desc { color: #b9b9cc; }
+  .about .wrap {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 56px;
+    align-items: center;
+  }
+  .about p.body { color: #b9b9cc; font-size: 15px; margin-bottom: 18px; }
+  .skill { margin-bottom: 18px; }
+  .skill .row { display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 8px; color: #d8d8e6; }
+  .bar { height: 8px; background: #33334d; border-radius: 999px; overflow: hidden; }
+  .bar span { display: block; height: 100%; background: #ff5c39; border-radius: 999px; }
+
+  /* ---------- contact ---------- */
+  .contact-card {
+    background: #fff;
+    border: 1px solid #eceae2;
+    border-radius: 24px;
+    padding: 56px;
+    display: grid;
+    grid-template-columns: 1.2fr 1fr;
+    gap: 40px;
+    align-items: center;
+  }
+  .contact-card h2 { font-size: 30px; margin-bottom: 12px; }
+  .contact-card p { color: #55555f; font-size: 15px; margin-bottom: 24px; }
+  .contact-list { list-style: none; }
+  .contact-list li { padding: 12px 0; border-bottom: 1px solid #eceae2; font-size: 14px; }
+  .contact-list li:last-child { border-bottom: none; }
+  .contact-list .k { color: #999; display: inline-block; width: 72px; }
+
+  /* ---------- footer ---------- */
+  .site-footer {
+    border-top: 1px solid #e8e6df;
+    padding: 32px 0;
+  }
+  .site-footer .wrap {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .site-footer small { color: #999; font-size: 13px; }
+  .footer-links { display: flex; gap: 20px; font-size: 13px; color: #55555f; }
+
+  @media (max-width: 860px) {
+    .hero .wrap, .about .wrap, .contact-card { grid-template-columns: 1fr; }
+    .works-grid, .services-grid { grid-template-columns: 1fr; }
+    .hero h1 { font-size: 36px; }
+    .nav a.hide-m { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ============ 顶部导航 ============ -->
+<header class="site-header" data-oey-section="header">
+  <div class="wrap">
+    <div class="brand">
+      <img data-oey-object="header.logo" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0OCIgaGVpZ2h0PSI0OCI+PHJlY3Qgd2lkdGg9IjQ4IiBoZWlnaHQ9IjQ4IiByeD0iMTIiIGZpbGw9IiNmZjVjMzkiLz48Y2lyY2xlIGN4PSIyNCIgY3k9IjI0IiByPSIxMCIgZmlsbD0iI2ZmZiIvPjwvc3ZnPg==" alt="林一然设计工作室标志">
+      <span class="brand-name" data-oey-object="header.brand-name">林一然 · 设计</span>
+    </div>
+    <nav class="nav">
+      <a class="hide-m" href="#works" data-oey-object="header.nav-works">作品</a>
+      <a class="hide-m" href="#services" data-oey-object="header.nav-services">服务</a>
+      <a class="hide-m" href="#about" data-oey-object="header.nav-about">关于</a>
+      <a class="btn btn-primary" href="#contact" data-oey-object="header.cta-button">预约合作</a>
+    </nav>
+  </div>
+</header>
+
+<!-- ============ 首屏 Hero ============ -->
+<section class="hero" data-oey-section="hero">
+  <div class="wrap">
+    <div>
+      <span class="hero-tag" data-oey-object="hero.tag">自由职业 · 品牌与界面设计师</span>
+      <h1 data-oey-object="hero.title">用设计讲述品牌故事，<br>让每一个像素都<em>有意义</em>。</h1>
+      <p class="lead" data-oey-object="hero.subtitle">你好，我是林一然，一名独立设计师。过去八年里，我帮助初创公司与成熟品牌打造视觉识别、网站与移动应用体验，让好想法被更多人看见。</p>
+      <div class="hero-actions">
+        <a class="btn btn-primary" href="#works" data-oey-object="hero.primary-button">查看精选作品</a>
+        <a class="btn btn-ghost" href="#contact" data-oey-object="hero.secondary-button">聊聊你的项目</a>
+      </div>
+    </div>
+    <aside class="hero-card" data-oey-object="hero.stats-card">
+      <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0OCIgaGVpZ2h0PSI0OCI+PHJlY3Qgd2lkdGg9IjQ4IiBoZWlnaHQ9IjQ4IiByeD0iMTIiIGZpbGw9IiNmZjVjMzkiLz48Y2lyY2xlIGN4PSIyNCIgY3k9IjI0IiByPSIxMCIgZmlsbD0iI2ZmZiIvPjwvc3ZnPg==" alt="工作室图标" data-oey-object="hero.card-icon">
+      <div class="hero-stat">
+        <div>
+          <div class="num" data-oey-object="hero.stat-years">8 年</div>
+          <div class="lbl">行业经验</div>
+        </div>
+        <div>
+          <div class="num" data-oey-object="hero.stat-projects">120+</div>
+          <div class="lbl">交付项目</div>
+        </div>
+        <div>
+          <div class="num" data-oey-object="hero.stat-clients">60+</div>
+          <div class="lbl">合作客户</div>
+        </div>
+      </div>
+      <div class="hero-stat">
+        <div>
+          <div class="lbl" data-oey-object="hero.card-note">专注领域：品牌识别 / Web 与 App 界面 / 设计系统</div>
+        </div>
+      </div>
+    </aside>
+  </div>
+</section>
+
+<!-- ============ 精选作品 ============ -->
+<section class="works" id="works" data-oey-section="works">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="sec-kicker" data-oey-object="works.kicker">Selected Works</div>
+      <h2 class="sec-title" data-oey-object="works.title">精选作品</h2>
+      <p class="sec-desc" data-oey-object="works.description">每一个项目都从倾听开始。以下是近期三个不同领域的代表案例。</p>
+    </div>
+    <div class="works-grid">
+      <article class="work-card">
+        <div class="work-thumb t1" data-oey-object="works.project1-image"></div>
+        <div class="work-body">
+          <div class="work-cat" data-oey-object="works.project1-cat">品牌识别</div>
+          <h3 class="work-title" data-oey-object="works.project1-title">山丘咖啡 · 品牌焕新</h3>
+          <p class="work-text" data-oey-object="works.project1-text">为精品咖啡品牌重塑视觉系统，包括标志、包装与门店导视，上线三个月复购率提升 24%。</p>
+        </div>
+      </article>
+      <article class="work-card">
+        <div class="work-thumb t2" data-oey-object="works.project2-image"></div>
+        <div class="work-body">
+          <div class="work-cat" data-oey-object="works.project2-cat">网页设计</div>
+          <h3 class="work-title" data-oey-object="works.project2-title">北极星 SaaS 官网</h3>
+          <p class="work-text" data-oey-object="works.project2-text">从信息架构到高保真界面全流程设计，配合开发团队落地，注册转化率提升 41%。</p>
+        </div>
+      </article>
+      <article class="work-card">
+        <div class="work-thumb t3" data-oey-object="works.project3-image"></div>
+        <div class="work-body">
+          <div class="work-cat" data-oey-object="works.project3-cat">移动应用</div>
+          <h3 class="work-title" data-oey-object="works.project3-title">青苔手账 App</h3>
+          <p class="work-text" data-oey-object="works.project3-text">一款极简记录工具的完整体验设计，覆盖 iOS 与 Android 双端，获应用商店编辑推荐。</p>
+        </div>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 服务 ============ -->
+<section id="services" data-oey-section="services">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="sec-kicker" data-oey-object="services.kicker">Services</div>
+      <h2 class="sec-title" data-oey-object="services.title">我能为你做什么</h2>
+      <p class="sec-desc" data-oey-object="services.description">从概念到上线，提供灵活、透明、按阶段交付的设计服务。</p>
+    </div>
+    <div class="services-grid">
+      <div class="svc">
+        <div class="svc-icon" data-oey-object="services.svc1-icon">01</div>
+        <h3 data-oey-object="services.svc1-title">品牌视觉设计</h3>
+        <p data-oey-object="services.svc1-text">标志、色彩、字体与延展物料，构建一套有辨识度且可持续生长的品牌语言。</p>
+      </div>
+      <div class="svc">
+        <div class="svc-icon" data-oey-object="services.svc2-icon">02</div>
+        <h3 data-oey-object="services.svc2-title">UI / UX 设计</h3>
+        <p data-oey-object="services.svc2-text">以用户旅程为核心，输出线框图、交互原型与高保真界面，并与开发无缝协作。</p>
+      </div>
+      <div class="svc">
+        <div class="svc-icon" data-oey-object="services.svc3-icon">03</div>
+        <h3 data-oey-object="services.svc3-title">设计系统搭建</h3>
+        <p data-oey-object="services.svc3-text">组件库、设计规范与文档，让团队在多产品线之间保持一致与高效。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 关于我 ============ -->
+<section class="about" id="about" data-oey-section="about">
+  <div class="wrap">
+    <div>
+      <div class="sec-kicker" data-oey-object="about.kicker">About Me</div>
+      <h2 class="sec-title" data-oey-object="about.title">关于我</h2>
+      <p class="sec-desc" data-oey-object="about.intro">设计于我，是理性与感性之间的桥。</p>
+      <p class="body" data-oey-object="about.paragraph1">曾任职于两家一线互联网公司，2019 年起成为独立设计师，与全球客户远程协作。我相信好设计来自对业务的理解与对人的同理心。</p>
+      <p class="body" data-oey-object="about.paragraph2">工作之外，我坚持手写笔记与胶片摄影，这些慢习惯让我在快节奏的项目中保持清醒与好奇心。</p>
+    </div>
+    <div>
+      <div class="skill">
+        <div class="row"><span data-oey-object="about.skill1-name">品牌设计</span><span data-oey-object="about.skill1-level">95%</span></div>
+        <div class="bar"><span style="width:95%"></span></div>
+      </div>
+      <div class="skill">
+        <div class="row"><span data-oey-object="about.skill2-name">界面与交互</span><span data-oey-object="about.skill2-level">90%</span></div>
+        <div class="bar"><span style="width:90%"></span></div>
+      </div>
+      <div class="skill">
+        <div class="row"><span data-oey-object="about.skill3-name">动效与原型</span><span data-oey-object="about.skill3-level">80%</span></div>
+        <div class="bar"><span style="width:80%"></span></div>
+      </div>
+      <div class="skill">
+        <div class="row"><span data-oey-object="about.skill4-name">前端协作</span><span data-oey-object="about.skill4-level">75%</span></div>
+        <div class="bar"><span style="width:75%"></span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 联系方式 ============ -->
+<section id="contact" data-oey-section="contact">
+  <div class="wrap">
+    <div class="contact-card">
+      <div>
+        <div class="sec-kicker" data-oey-object="contact.kicker">Contact</div>
+        <h2 data-oey-object="contact.title">有一个想法？<br>让我们把它变成现实。</h2>
+        <p data-oey-object="contact.description">目前接受 2025 年下半年的项目预约。欢迎来信简述你的需求，我会在两个工作日内回复。</p>
+        <a class="btn btn-primary" href="#" data-oey-object="contact.email-button">发送邮件</a>
+      </div>
+      <ul class="contact-list">
+        <li><span class="k">邮箱</span><span data-oey-object="contact.email">hello@linyiran.design</span></li>
+        <li><span class="k">微信</span><span data-oey-object="contact.wechat">linyiran_design</span></li>
+        <li><span class="k">城市</span><span data-oey-object="contact.city">杭州 · 可远程协作</span></li>
+        <li><span class="k">档期</span><span data-oey-object="contact.availability">2025 年 9 月起可预约</span></li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 页脚 ============ -->
+<footer class="site-footer" data-oey-section="footer">
+  <div class="wrap">
+    <small data-oey-object="footer.copyright">© 2025 林一然设计工作室 · 保留所有权利</small>
+    <div class="footer-links">
+      <a href="#" data-oey-object="footer.link-behance">Behance</a>
+      <a href="#" data-oey-object="footer.link-dribbble">Dribbble</a>
+      <a href="#" data-oey-object="footer.link-zhihu">知乎</a>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>

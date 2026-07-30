@@ -1,0 +1,23 @@
+{
+  "profile": "OEYdesignSpikeAC2",
+  "ac_sid": "S-1-15-2-1913600469-3048443276-993218475-2851901795-388325919-3465850541-3166567087",
+  "scratch": "C:\\Users\\chual\\AppData\\Local\\Packages\\OEYdesignSpikeAC2\\AC\\Temp\\oey",
+  "scratch_strategy": "AppContainer package AC folder (auto-ACLed by OS)",
+  "launch_ok": true,
+  "exit_code": 1,
+  "probes": {
+    "A_read_granted_scratch": null,
+    "B_read_ungranted_outside": null,
+    "C_read_win_ini": "",
+    "D_network": null,
+    "E_write_granted_scratch": null,
+    "F_write_ungranted_outside": null
+  },
+  "verdicts": {
+    "A_read_granted_scratch": "NO-OUTPUT (blocked)",
+    "B_read_ungranted_outside": "NO-OUTPUT (blocked)",
+    "D_network": "DENIED",
+    "E_write_granted_scratch": "NO-OUTPUT (blocked)",
+    "F_write_ungranted_outside": "DENIED"
+  }
+}

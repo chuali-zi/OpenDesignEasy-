@@ -1,0 +1,15 @@
+The screenshot shows the app in an empty state. No console errors, no overflow. Let me check the INTENT claims:
+
+1. `hail-direction` and `hail-patch` — screenshot shows "喊话·要求改航线" and "喊话·局部修补" panels. But do the data-oey anchors exist? Can't verify from screenshot. The intent says anchors `hail-direction`, `hail-patch`, `ship-instruments`, `logbook`. The screenshot shows panels but I can't see data attributes. However, this is self-validation — I should judge from screenshot. The panels are visible.
+
+Potential issues visible:
+- Left column "喊话·局部修补" panel extends below viewport (bottom cut off at 900px). The page is scrollable presumably; not overflow horizontally. That's fine.
+- Empty state looks reasonable.
+
+Honestly, everything seems fine. No console errors, no overflow. I could output empty issues.
+
+But should I dig? The visible things: header "驾驶台" button highlighted. Right panel sections present. The empty state is well done. I think no problems — output empty array.
+
+One possible minor issue: the left column bottom panel is cut off at viewport bottom — but page scrolls, that's normal.
+
+Output empty ISSUES.

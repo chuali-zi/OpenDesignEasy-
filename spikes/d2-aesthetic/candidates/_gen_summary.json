@@ -1,0 +1,120 @@
+[
+  {
+    "cand_id": 1,
+    "axis_key": "narrative",
+    "axis_label": "叙事框架 / narrative metaphor",
+    "elapsed_s": 512.9,
+    "usage": {
+      "prompt_tokens": 1836,
+      "completion_tokens": 18636,
+      "total_tokens": 20472,
+      "completion_tokens_details": {
+        "reasoning_tokens": 1214
+      }
+    },
+    "file_count": 5,
+    "files": [
+      "index.html",
+      "styles.css",
+      "app.js",
+      "MOCK.md",
+      "INTENT.md"
+    ],
+    "has_index_html": true,
+    "has_mock_md": true,
+    "has_intent_md": true,
+    "raw_response_chars": 52586
+  },
+  {
+    "cand_id": 2,
+    "axis_key": "layout",
+    "axis_label": "版式结构 / layout & information architecture",
+    "elapsed_s": 506.3,
+    "usage": {
+      "prompt_tokens": 1823,
+      "completion_tokens": 17997,
+      "total_tokens": 19820,
+      "cached_tokens": 1792,
+      "completion_tokens_details": {
+        "reasoning_tokens": 3069
+      },
+      "prompt_tokens_details": {
+        "cached_tokens": 1792
+      }
+    },
+    "file_count": 7,
+    "files": [
+      "index.html",
+      "styles.css",
+      "data.js",
+      "api.js",
+      "app.js",
+      "MOCK.md",
+      "INTENT.md"
+    ],
+    "has_index_html": true,
+    "has_mock_md": true,
+    "has_intent_md": true,
+    "raw_response_chars": 45512
+  },
+  {
+    "cand_id": 3,
+    "axis_key": "color_temperature",
+    "axis_label": "色彩温度与基调 / color temperature & mood",
+    "elapsed_s": 567.5,
+    "usage": {
+      "prompt_tokens": 1822,
+      "completion_tokens": 19091,
+      "total_tokens": 20913,
+      "cached_tokens": 1792,
+      "completion_tokens_details": {
+        "reasoning_tokens": 2764
+      },
+      "prompt_tokens_details": {
+        "cached_tokens": 1792
+      }
+    },
+    "file_count": 5,
+    "files": [
+      "index.html",
+      "styles.css",
+      "app.js",
+      "MOCK.md",
+      "INTENT.md"
+    ],
+    "has_index_html": true,
+    "has_mock_md": true,
+    "has_intent_md": true,
+    "raw_response_chars": 51777
+  },
+  {
+    "cand_id": 4,
+    "axis_key": "density",
+    "axis_label": "信息密度与节奏 / information density & rhythm",
+    "elapsed_s": 503.8,
+    "usage": {
+      "prompt_tokens": 1817,
+      "completion_tokens": 16923,
+      "total_tokens": 18740,
+      "cached_tokens": 1792,
+      "completion_tokens_details": {
+        "reasoning_tokens": 2601
+      },
+      "prompt_tokens_details": {
+        "cached_tokens": 1792
+      }
+    },
+    "file_count": 5,
+    "files": [
+      "index.html",
+      "styles.css",
+      "app.js",
+      "MOCK.md",
+      "INTENT.md"
+    ],
+    "has_index_html": true,
+    "has_mock_md": true,
+    "has_intent_md": true,
+    "raw_response_chars": 45682
+  }
+]

@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>OEYdesign · 编辑部校样台</title>
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <a class="skip" href="#proof">跳至校样画布</a>
+    <header class="masthead">
+      <a class="wordmark" href="/" aria-label="OEYdesign 首页"><b>OEY</b><i>design</i></a>
+      <span class="edition">PROOF DESK / 04</span>
+      <label class="picker"><span>Current project</span><select id="projectSelect" aria-label="切换项目"></select></label>
+      <output id="stamp" class="stamp">未载入项目</output>
+      <nav aria-label="工作台视图">
+        <button type="button" data-panel="workspace" aria-pressed="true">Workspace</button>
+        <button type="button" data-panel="settings" aria-pressed="false">Settings</button>
+      </nav>
+    </header>
+    <main id="workspace" class="desk">
+      <aside id="activityRail" class="rail" aria-labelledby="activityTitle">
+        <span class="index">01 / LIVE LOG</span>
+        <div class="state"><small>PROJECT STATE</small><strong id="status">NO PROJECT</strong></div>
+        <h1 id="activityTitle">Activity</h1>
+        <ol id="activity" aria-live="polite"></ol>
+        <section><h2>Next move</h2><div id="actions" class="actions"></div></section>
+        <form id="directionForm" class="note-form"><label for="directionFeedback">Ⓐ 整体方向批注</label><textarea id="directionFeedback" required placeholder="换一种叙事、语气或视觉方向"></textarea><button>提交方向批注</button></form>
+        <form id="factForm" class="note-form"><label for="factFeedback">Ⓕ 事实 / 策略纠正</label><textarea id="factFeedback" required placeholder="指出事实、权利或策略问题"></textarea><button>提交事实纠正</button></form>
+      </aside>
+      <section id="proof" class="proof" tabindex="-1" aria-labelledby="proofTitle">
+        <header class="proof-head"><div><span class="index">02 / PROOF CANVAS</span><h1 id="proofTitle">校样画布</h1></div><div class="ruler" aria-hidden="true"><span>0</span><span>20</span><span>40</span><span>60</span><span>80</span><span>100</span></div><span class="proof-rev">REV <b id="proofRevision">—</b></span></header>
+        <nav class="mobile-toggles" aria-label="窄屏工作台面板"><button type="button" data-mobile-panel="activityRail" aria-controls="activityRail" aria-expanded="false">Activity</button><button type="button" data-mobile-panel="inspectorPanel" aria-controls="inspectorPanel" aria-expanded="false">Inspector</button></nav>
+        <div id="canvas" class="canvas" aria-live="polite"><div class="empty"><span>NO. 000</span><p>选择或新建一个项目以开始校样。</p></div></div>
+        <form id="localForm" class="local-note" hidden><label for="objectRef">修改对象</label><select id="objectRef"><option value="hero:title">hero:title</option><option value="hero:summary">hero:summary</option><option value="page:1">page:1</option></select><label for="localFeedback">修改说明</label><input id="localFeedback" required placeholder="例如：把 hero 标题改短"><button>应用到当前 revision</button><label class="qa-demo"><input id="breakContract" type="checkbox"> Deterministic QA 演示：注入 [break-contract]（非真实质量）</label></form>
+      </section>
+      <aside id="inspectorPanel" class="inspector" aria-labelledby="inspectorTitle">
+        <span class="index">03 / PROJECT FILE</span><h1 id="inspectorTitle">Inspector</h1><div id="tree" class="project-file"></div>
+        <details open><summary>Constraint profile</summary><dl id="constraints"></dl></details>
+        <details open><summary>Quality & approvals</summary><div id="quality"></div><div id="approvals"></div></details>
+        <details><summary>Feedback & delivery</summary><div id="feedback"></div><div id="delivery"></div></details>
+      </aside>
+    </main>
+    <main id="settings" class="settings" hidden>
+      <header><span class="index">CONFIGURATION FOLIO</span><h1>Workspace settings</h1><p>能力、模板、权限与导出配置在这里显影。密钥和供应商 payload 不进入校样台。</p></header>
+      <div class="settings-grid">
+        <section><h2>New demo project</h2><form id="createForm" class="create-form">
+          <label for="projectName">项目名称</label><input id="projectName" name="name" value="Editorial proof demo" required>
+          <label for="preset">Constraint preset</label><select id="preset" name="preset"><option value="OPEN_EXPLORATION">开放探索</option><option value="DESIGN_GUIDED" selected>设计引导</option><option value="GOVERNED_PRODUCTION">规范生产</option></select>
+          <label for="templateRole">Template role</label><select id="templateRole" name="template_role"><option value="REFERENCE_SAMPLE">参考样例</option><option value="STARTER_SCAFFOLD">起始脚手架</option><option value="DESIGN_SYSTEM">设计系统</option><option value="DELIVERY_CONTRACT">交付合同</option></select>
+          <button type="submit" class="primary">创建并准备 Demo</button>
+        </form></section>
+        <section><h2>Current project</h2><dl id="projectSettings"></dl></section>
+      </div>
+    </main>
+    <div id="notice" role="status" aria-live="assertive"></div>
+    <script src="app.js"></script>
+  </body>
+</html>

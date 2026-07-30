@@ -1,0 +1,102 @@
+[s01] starting, workspace=D:\projects2\OEYdesign\spikes\d1-agent-loop\workspaces\s01
+[s01] done: termination=self_terminated steps=6 tool_calls=6 format_errors=0 artifact_valid=True read_recovery=recovered cmd_recovery=recovered tokens=13381 wall_s=69.72
+[s02] starting, workspace=D:\projects2\OEYdesign\spikes\d1-agent-loop\workspaces\s02
+[s02] done: termination=self_terminated steps=6 tool_calls=6 format_errors=0 artifact_valid=True read_recovery=recovered cmd_recovery=recovered tokens=15001 wall_s=110.14
+[s03] starting, workspace=D:\projects2\OEYdesign\spikes\d1-agent-loop\workspaces\s03
+[s03] done: termination=self_terminated steps=6 tool_calls=6 format_errors=0 artifact_valid=True read_recovery=recovered cmd_recovery=recovered tokens=10896 wall_s=54.82
+[s04] starting, workspace=D:\projects2\OEYdesign\spikes\d1-agent-loop\workspaces\s04
+[s04] done: termination=self_terminated steps=5 tool_calls=6 format_errors=0 artifact_valid=True read_recovery=recovered cmd_recovery=recovered tokens=13453 wall_s=68.41
+[s05] starting, workspace=D:\projects2\OEYdesign\spikes\d1-agent-loop\workspaces\s05
+[s05] done: termination=self_terminated steps=6 tool_calls=6 format_errors=0 artifact_valid=True read_recovery=recovered cmd_recovery=recovered tokens=13713 wall_s=69.1
+[s06] starting, workspace=D:\projects2\OEYdesign\spikes\d1-agent-loop\workspaces\s06
+[s06] done: termination=self_terminated steps=6 tool_calls=6 format_errors=0 artifact_valid=True read_recovery=recovered cmd_recovery=recovered tokens=13738 wall_s=76.78
+[s07] starting, workspace=D:\projects2\OEYdesign\spikes\d1-agent-loop\workspaces\s07
+[s07] done: termination=self_terminated steps=6 tool_calls=6 format_errors=0 artifact_valid=True read_recovery=recovered cmd_recovery=recovered tokens=14287 wall_s=72.98
+[s08] starting, workspace=D:\projects2\OEYdesign\spikes\d1-agent-loop\workspaces\s08
+[s08] done: termination=self_terminated steps=8 tool_calls=7 format_errors=0 artifact_valid=True read_recovery=recovered cmd_recovery=recovered tokens=15409 wall_s=70.21
+[s09] starting, workspace=D:\projects2\OEYdesign\spikes\d1-agent-loop\workspaces\s09
+[s09] done: termination=self_terminated steps=4 tool_calls=4 format_errors=0 artifact_valid=True read_recovery=recovered cmd_recovery=not_triggered tokens=10447 wall_s=54.72
+[s10] starting, workspace=D:\projects2\OEYdesign\spikes\d1-agent-loop\workspaces\s10
+[s10] done: termination=self_terminated steps=6 tool_calls=6 format_errors=0 artifact_valid=True read_recovery=recovered cmd_recovery=recovered tokens=11366 wall_s=62.36
+[s11] starting, workspace=D:\projects2\OEYdesign\spikes\d1-agent-loop\workspaces\s11
+[s11] done: termination=self_terminated steps=4 tool_calls=4 format_errors=0 artifact_valid=True read_recovery=recovered cmd_recovery=not_triggered tokens=10145 wall_s=80.07
+[s12] starting, workspace=D:\projects2\OEYdesign\spikes\d1-agent-loop\workspaces\s12
+[s12] done: termination=self_terminated steps=5 tool_calls=6 format_errors=0 artifact_valid=True read_recovery=recovered cmd_recovery=recovered tokens=11048 wall_s=62.55
+[s13] starting, workspace=D:\projects2\OEYdesign\spikes\d1-agent-loop\workspaces\s13
+[s13] done: termination=self_terminated steps=6 tool_calls=7 format_errors=0 artifact_valid=True read_recovery=recovered cmd_recovery=recovered tokens=14701 wall_s=70.71
+[s14] starting, workspace=D:\projects2\OEYdesign\spikes\d1-agent-loop\workspaces\s14
+[s14] done: termination=self_terminated steps=6 tool_calls=6 format_errors=0 artifact_valid=True read_recovery=recovered cmd_recovery=recovered tokens=10341 wall_s=58.65
+[s15] starting, workspace=D:\projects2\OEYdesign\spikes\d1-agent-loop\workspaces\s15
+[s15] done: termination=self_terminated steps=6 tool_calls=6 format_errors=0 artifact_valid=True read_recovery=recovered cmd_recovery=recovered tokens=13448 wall_s=73.14
+[s16] starting, workspace=D:\projects2\OEYdesign\spikes\d1-agent-loop\workspaces\s16
+[s16] done: termination=self_terminated steps=6 tool_calls=6 format_errors=0 artifact_valid=True read_recovery=recovered cmd_recovery=recovered tokens=14247 wall_s=71.87
+[s17] starting, workspace=D:\projects2\OEYdesign\spikes\d1-agent-loop\workspaces\s17
+[s17] done: termination=self_terminated steps=6 tool_calls=6 format_errors=0 artifact_valid=True read_recovery=recovered cmd_recovery=recovered tokens=11734 wall_s=58.95
+[s18] starting, workspace=D:\projects2\OEYdesign\spikes\d1-agent-loop\workspaces\s18
+[s18] done: termination=self_terminated steps=8 tool_calls=8 format_errors=0 artifact_valid=True read_recovery=recovered cmd_recovery=recovered tokens=23745 wall_s=105.82
+[s19] starting, workspace=D:\projects2\OEYdesign\spikes\d1-agent-loop\workspaces\s19
+[s19] done: termination=self_terminated steps=6 tool_calls=6 format_errors=0 artifact_valid=True read_recovery=recovered cmd_recovery=recovered tokens=13587 wall_s=67.95
+[s20] starting, workspace=D:\projects2\OEYdesign\spikes\d1-agent-loop\workspaces\s20
+[s20] done: termination=self_terminated steps=6 tool_calls=6 format_errors=0 artifact_valid=True read_recovery=recovered cmd_recovery=recovered tokens=14538 wall_s=75.2
+
+=== SUMMARY ===
+{
+  "n_sessions": 20,
+  "completed_self_terminated": 20,
+  "step_limited": 0,
+  "api_errors": 0,
+  "artifact_valid_count": 20,
+  "completion_rate": 1.0,
+  "artifact_valid_rate": 1.0,
+  "tool_calls_total_all_sessions": 120,
+  "format_errors_total": 0,
+  "format_error_rate": 0.0,
+  "steps": {
+    "min": 4,
+    "median": 6.0,
+    "max": 8
+  },
+  "total_tokens": {
+    "min": 10145,
+    "median": 13520.0,
+    "max": 23745
+  },
+  "prompt_tokens": {
+    "min": 8404,
+    "median": 11771.5,
+    "max": 20869
+  },
+  "completion_tokens": {
+    "min": 1277,
+    "median": 1749.0,
+    "max": 2876
+  },
+  "reasoning_tokens": {
+    "min": 64,
+    "median": 148.5,
+    "max": 284
+  },
+  "wall_clock_s": {
+    "min": 54.72,
+    "median": 70.0,
+    "max": 110.14
+  },
+  "tool_calls_per_session": {
+    "min": 4,
+    "median": 6.0,
+    "max": 8
+  },
+  "read_file_fault_recovery": {
+    "triggered_count": 20,
+    "recovered_count": 20,
+    "rate": 1.0
+  },
+  "run_command_fault_recovery": {
+    "triggered_count": 18,
+    "recovered_count": 18,
+    "rate": 1.0
+  },
+  "sandbox_violations_total": 0
+}
+
+wrote spikes/d1-agent-loop/results/raw.json and D:\projects2\OEYdesign\spikes\d1-agent-loop\results\summary.json

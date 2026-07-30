@@ -1,0 +1,45 @@
+body {
+  margin: 0;
+  padding: 2rem 1rem;
+  font-family: Georgia, 'Times New Roman', serif;
+  background-color: #f5efe6;
+  color: #2e2620;
+  line-height: 1.6;
+}
+
+main {
+  max-width: 40rem;
+  margin: 0 auto;
+}
+
+h1#page-heading {
+  font-size: 2.5rem;
+  color: #8c4a1f;
+  border-bottom: 3px solid #c98a4b;
+  padding-bottom: 0.4rem;
+  margin-bottom: 1.2rem;
+}
+
+p#product-blurb {
+  font-size: 1.05rem;
+  background-color: #fffaf2;
+  padding: 1.2rem 1.4rem;
+  border-left: 4px solid #c98a4b;
+  border-radius: 0 6px 6px 0;
+}
+
+button#greet-button {
+  margin-top: 1rem;
+  padding: 0.6rem 1.2rem;
+  font-size: 1rem;
+  font-family: inherit;
+  color: #fffaf2;
+  background-color: #8c4a1f;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+button#greet-button:hover {
+  background-color: #a85d2a;
+}

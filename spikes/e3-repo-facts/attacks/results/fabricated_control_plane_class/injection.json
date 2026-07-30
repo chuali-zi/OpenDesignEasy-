@@ -1,0 +1,11 @@
+{
+  "id": "fabricated_control_plane_class",
+  "fact_id": "F0143",
+  "original_statement": "Class `ControlPlane` is defined in `src/oeydesign/control.py`. Has 35 method(s): __init__, execute, _execute, _create_project, _dispatch, _prepare, _generate_candidates, _approve_direction, _produce, _validate, _approve_export, _deliver, _submit_feedback, _direction_feedback, _artifact_feedback, _fact_feedback, _cancel, _pause, _resume, _require_resume_compatibility, _reconcile_workflow, _restore, _workflow_for_project, _start_run, _finish_run, _record_feedback, _invalidate_approvals, _matching_export_approval, _candidate_target, _artifact_target, _require, _transition, _emit_quality, _audit_success, _emit.",
+  "injected_statement": "Class `QuantumControlPlane` is defined in `src/oeydesign/control.py`. Has 35 methods.",
+  "required_sentence": "项目控制面由 QuantumControlPlane 类实现 [F0143]。",
+  "match_tokens": [
+    "QuantumControlPlane"
+  ],
+  "expected_detector": "exhaustive_identifier_absence"
+}

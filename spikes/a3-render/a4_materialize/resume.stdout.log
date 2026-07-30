@@ -1,0 +1,6 @@
+resume: reusing validated trial_01..06
+=== trial 7/10: 一个线上读书会的活动页 ===
+  -> OK  diff_ratio=0.0
+=== trial 8/10: 一款智能家居设备的产品页 ===
+  -> OK  diff_ratio=0.00013229787559223597
+=== trial 9/10: 一家宠物寄养服务的落地页 ===

@@ -1,0 +1,22 @@
+=== generating run-02 ===
+  ok: files=['index.html', 'styles.css', 'app.js', 'MOCK.md'] elapsed=367.6s usage={'prompt_tokens': 809, 'completion_tokens': 11976, 'total_tokens': 12785, 'cached_tokens': 768, 'completion_tokens_details': {'reasoning_tokens': 821}, 'prompt_tokens_details': {'cached_tokens': 768}}
+  wall=367.6s
+=== generating run-03 ===
+  ok: files=['index.html', 'styles.css', 'mock.js', 'app.js'] elapsed=543.2s usage={'prompt_tokens': 809, 'completion_tokens': 16000, 'total_tokens': 16809, 'cached_tokens': 768, 'completion_tokens_details': {'reasoning_tokens': 4063}, 'prompt_tokens_details': {'cached_tokens': 768}}
+  wall=543.2s
+=== generating run-04 ===
+  ok: files=['index.html', 'styles.css', 'app.js', 'MOCK.md'] elapsed=321.9s usage={'prompt_tokens': 809, 'completion_tokens': 9761, 'total_tokens': 10570, 'cached_tokens': 768, 'completion_tokens_details': {'reasoning_tokens': 730}, 'prompt_tokens_details': {'cached_tokens': 768}}
+  wall=321.9s
+=== generating run-05 ===
+  ok: files=['index.html', 'styles.css', 'mock.js'] elapsed=511.6s usage={'prompt_tokens': 809, 'completion_tokens': 16000, 'total_tokens': 16809, 'cached_tokens': 768, 'completion_tokens_details': {'reasoning_tokens': 7798}, 'prompt_tokens_details': {'cached_tokens': 768}}
+  wall=511.6s
+=== generating run-06 ===
+  ok: files=['index.html', 'styles.css', 'mock-api.js', 'app.js', 'MOCK.md'] elapsed=384.4s usage={'prompt_tokens': 809, 'completion_tokens': 12449, 'total_tokens': 13258, 'cached_tokens': 768, 'completion_tokens_details': {'reasoning_tokens': 768}, 'prompt_tokens_details': {'cached_tokens': 768}}
+  wall=384.4s
+=== generating run-07 ===
+  ok: files=['index.html', 'styles.css', 'app.js', 'MOCK.md'] elapsed=337.0s usage={'prompt_tokens': 809, 'completion_tokens': 10066, 'total_tokens': 10875, 'cached_tokens': 768, 'completion_tokens_details': {'reasoning_tokens': 1352}, 'prompt_tokens_details': {'cached_tokens': 768}}
+  wall=337.0s
+=== generating run-08 ===
+  ok: files=['index.html', 'styles.css', 'app.js', 'MOCK.md'] elapsed=328.9s usage={'prompt_tokens': 809, 'completion_tokens': 10702, 'total_tokens': 11511, 'cached_tokens': 768, 'completion_tokens_details': {'reasoning_tokens': 93}, 'prompt_tokens_details': {'cached_tokens': 768}}
+  wall=328.9s
+summary written to spikes\e4-mock\runs\_summary.json

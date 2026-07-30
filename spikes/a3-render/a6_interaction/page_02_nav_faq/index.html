@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>移动端导航与 FAQ 手风琴</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: #f4f6f8;
+    color: #222;
+  }
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 20px;
+    background: #1f2937;
+    color: #fff;
+    position: sticky;
+    top: 0;
+  }
+  .logo { font-size: 18px; font-weight: 600; }
+  .nav-toggle {
+    background: none;
+    border: 1px solid rgba(255,255,255,.4);
+    color: #fff;
+    font-size: 20px;
+    line-height: 1;
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+  .nav-toggle:hover { background: rgba(255,255,255,.12); }
+  .nav-menu {
+    display: none;
+    flex-direction: column;
+    background: #111827;
+    padding: 8px 0;
+  }
+  .nav-menu.open { display: flex; }
+  .nav-menu a {
+    color: #e5e7eb;
+    text-decoration: none;
+    padding: 12px 20px;
+    border-bottom: 1px solid rgba(255,255,255,.06);
+  }
+  .nav-menu a:hover { background: rgba(255,255,255,.06); }
+  main { max-width: 720px; margin: 40px auto; padding: 0 20px; }
+  h1 { font-size: 22px; margin-bottom: 20px; }
+  .faq-item {
+    background: #fff;
+    border: 1px solid #e2e5ea;
+    border-radius: 10px;
+    margin-bottom: 14px;
+    overflow: hidden;
+  }
+  .faq-question {
+    width: 100%;
+    text-align: left;
+    background: none;
+    border: none;
+    padding: 16px 18px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .faq-question:hover { background: #f8fafc; }
+  .faq-question .chev { transition: transform .2s; font-size: 14px; color: #6b7280; }
+  .faq-answer {
+    padding: 0 18px 16px;
+    color: #4b5563;
+    font-size: 15px;
+    line-height: 1.7;
+    border-top: 1px solid #eef1f4;
+    padding-top: 14px;
+  }
+  .faq-answer[aria-hidden="true"] { display: none; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">MySite</div>
+  <button class="nav-toggle" data-oey-object="nav.toggle" aria-label="打开导航菜单">☰</button>
+</header>
+<nav class="nav-menu" data-oey-object="nav.menu">
+  <a href="#">首页</a>
+  <a href="#">产品</a>
+  <a href="#">关于我们</a>
+  <a href="#">联系</a>
+</nav>
+
+<main>
+  <h1>常见问题</h1>
+  <div class="faq-item">
+    <button class="faq-question" data-oey-object="faq.question-1" aria-expanded="false">
+      <span>如何重置我的账户密码？</span>
+      <span class="chev">▼</span>
+    </button>
+    <div class="faq-answer" data-oey-object="faq.answer-1" aria-hidden="true">
+      你可以在登录页面点击「忘记密码」，输入注册邮箱后，我们会发送一封包含重置链接的邮件。点击链接即可设置新密码，链接 24 小时内有效。
+    </div>
+  </div>
+</main>
+
+<script>
+(function () {
+  // 1. 移动端导航开关
+  var navToggle = document.querySelector('[data-oey-object="nav.toggle"]');
+  var navMenu = document.querySelector('[data-oey-object="nav.menu"]');
+  navToggle.addEventListener('click', function () {
+    if (navMenu.classList.contains('open')) {
+      navMenu.classList.remove('open');
+    } else {
+      navMenu.classList.add('open');
+    }
+  });
+
+  // 2. FAQ 手风琴
+  var faqQuestion = document.querySelector('[data-oey-object="faq.question-1"]');
+  var faqAnswer = document.querySelector('[data-oey-object="faq.answer-1"]');
+  faqQuestion.addEventListener('click', function () {
+    var hidden = faqAnswer.getAttribute('aria-hidden');
+    if (hidden === 'true') {
+      faqAnswer.setAttribute('aria-hidden', 'false');
+      faqQuestion.setAttribute('aria-expanded', 'true');
+    } else {
+      faqAnswer.setAttribute('aria-hidden', 'true');
+      faqQuestion.setAttribute('aria-expanded', 'false');
+    }
+  });
+})();
+</script>
+
+</body>
+</html>

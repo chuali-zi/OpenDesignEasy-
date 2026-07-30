@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ForgeDesk · Agent 工作台</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<div class="app-shell">
+
+  <!-- ============ 左侧：项目列表区 ============ -->
+  <aside class="sidebar" data-oey-section="projects">
+    <div class="sidebar-header">
+      <div class="brand" data-oey-object="projects.brand">
+        <span class="brand-mark">F</span>
+        <span class="brand-name">ForgeDesk</span>
+      </div>
+      <div class="sidebar-sub" data-oey-object="projects.subtitle">Agent 工作台 · 本地原型</div>
+    </div>
+
+    <div class="sidebar-toolbar">
+      <input type="text" class="search-input" id="projectSearch"
+             placeholder="搜索项目…"
+             data-oey-object="projects.searchInput">
+      <button class="btn-new" id="btnNewProject"
+              data-oey-object="projects.newButton">+ 新建</button>
+    </div>
+
+    <ul class="project-list" id="projectList"
+        data-oey-object="projects.list">
+      <!-- 列表项由 app.js 渲染 -->
+    </ul>
+
+    <div class="sidebar-footer" data-oey-object="projects.footer">
+      <span id="projectCount">0 个项目</span>
+      <span class="dot-sep">·</span>
+      <span>Mock 模式运行中</span>
+    </div>
+  </aside>
+
+  <!-- ============ 中间：对话区 ============ -->
+  <main class="chat-pane" data-oey-section="chat">
+    <header class="chat-header">
+      <div class="chat-header-main">
+        <h1 class="chat-title" id="chatTitle"
+            data-oey-object="chat.title">—</h1>
+        <div class="chat-meta">
+          <span class="badge badge-model" id="chatModel"
+                data-oey-object="chat.model">—</span>
+          <span class="badge badge-status" id="chatStatus"
+                data-oey-object="chat.status">空闲</span>
+          <span class="chat-meta-text" id="chatMetaText"
+                data-oey-object="chat.meta">—</span>
+        </div>
+      </div>
+      <button class="btn-ghost" id="btnClearChat"
+              data-oey-object="chat.clearButton">清空对话</button>
+    </header>
+
+    <div class="message-scroll" id="messageScroll"
+         data-oey-object="chat.messages">
+      <!-- 消息气泡由 app.js 渲染 -->
+    </div>
+
+    <div class="typing-indicator hidden" id="typingIndicator"
+         data-oey-object="chat.typing">
+      <span class="typing-dot"></span>
+      <span class="typing-dot"></span>
+      <span class="typing-dot"></span>
+      <span class="typing-label">Agent 正在生成回复…</span>
+    </div>
+
+    <form class="composer" id="composer" data-oey-object="chat.composer">
+      <textarea class="composer-input" id="composerInput" rows="2"
+                placeholder="输入消息，Enter 发送，Shift+Enter 换行…"
+                data-oey-object="chat.input"></textarea>
+      <button type="submit" class="btn-send" id="btnSend"
+              data-oey-object="chat.sendButton">发送</button>
+    </form>
+  </main>
+
+  <!-- ============ 右侧：预览区 ============ -->
+  <section class="preview-pane" data-oey-section="preview">
+    <header class="preview-header">
+      <div>
+        <div class="preview-title" id="previewTitle"
+             data-oey-object="preview.title">产出预览</div>
+        <div class="preview-sub" id="previewSub"
+             data-oey-object="preview.subtitle">—</div>
+      </div>
+      <div class="preview-tabs" id="previewTabs"
+           data-oey-object="preview.tabs">
+        <button class="tab-btn active" data-tab="code">代码</button>
+        <button class="tab-btn" data-tab="summary">摘要</button>
+        <button class="tab-btn" data-tab="stats">指标</button>
+      </div>
+    </header>
+
+    <div class="preview-body">
+
+      <div class="preview-panel" id="panelCode"
+           data-oey-object="preview.codePanel">
+        <div class="code-card" data-oey-object="preview.codeCard">
+          <div class="code-card-head">
+            <span class="code-file" id="codeFileName"
+                  data-oey-object="preview.fileName">—</span>
+            <button class="btn-copy" id="btnCopy"
+                    data-oey-object="preview.copyButton">复制</button>
+          </div>
+          <pre class="code-block"><code id="codeContent"
+                data-oey-object="preview.codeContent"></code></pre>
+        </div>
+      </div>
+
+      <div class="preview-panel hidden" id="panelSummary"
+           data-oey-object="preview.summaryPanel">
+        <div class="summary-card" data-oey-object="preview.summaryCard">
+          <h3 class="summary-heading">项目摘要</h3>
+          <p id="summaryText" data-oey-object="preview.summaryText">—</p>
+          <h3 class="summary-heading">最近动态</h3>
+          <ul class="activity-list" id="activityList"
+              data-oey-object="preview.activityList"></ul>
+        </div>
+      </div>
+
+      <div class="preview-panel hidden" id="panelStats"
+           data-oey-object="preview.statsPanel">
+        <div class="stats-grid" data-oey-object="preview.statsGrid">
+          <div class="stat-card">
+            <div class="stat-num" id="statMessages"
+                 data-oey-object="preview.statMessages">0</div>
+            <div class="stat-label">消息总数</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-num" id="statRounds"
+                 data-oey-object="preview.statRounds">0</div>
+            <div class="stat-label">对话轮次</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-num" id="statTokens"
+                 data-oey-object="preview.statTokens">0</div>
+            <div class="stat-label">模拟 Token 消耗</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-num" id="statLatency"
+                 data-oey-object="preview.statLatency">—</div>
+            <div class="stat-label">上次响应耗时</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>

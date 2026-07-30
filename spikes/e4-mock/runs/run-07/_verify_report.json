@@ -1,0 +1,33 @@
+{
+  "run": "run-07",
+  "load_ok": true,
+  "console_errors": [
+    "Failed to load resource: the server responded with a status of 404 (File not found)"
+  ],
+  "failed_requests": [],
+  "sections_found": [
+    "topbar",
+    "sidebar",
+    "chat",
+    "preview"
+  ],
+  "project_switch": {
+    "attempted": true,
+    "changed": false,
+    "detail": "no clickable candidate rows found"
+  },
+  "chat_send": {
+    "attempted": true,
+    "changed": true,
+    "detail": "chat area innerHTML length 1109 -> 1336; probe text present=True"
+  },
+  "classification": "PARTIALLY_INTERACTIVE",
+  "screenshots": [
+    "spikes\\e4-mock\\shots\\run-07\\01-initial.png",
+    "spikes\\e4-mock\\shots\\run-07\\03-after-chat-send.png"
+  ],
+  "console_errors_excluding_favicon": [
+    "Failed to load resource: the server responded with a status of 404 (File not found)"
+  ],
+  "failed_requests_excluding_favicon": []
+}

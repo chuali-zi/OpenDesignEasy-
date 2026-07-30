@@ -1,0 +1,104 @@
+{
+  "run_id": "ip6_r2",
+  "interrupt_step_target": 6,
+  "finished_before_interrupt": false,
+  "precrash": {
+    "termination_reason": "simulated_crash",
+    "budget": {
+      "steps": 6,
+      "prompt_tokens": 9349,
+      "completion_tokens": 1021,
+      "reasoning_tokens": 46,
+      "total_tokens": 10370,
+      "api_elapsed_s": 40.997,
+      "wall_clock_s": 41.041
+    },
+    "written_paths": [
+      "index.html",
+      "script.js",
+      "styles.css"
+    ]
+  },
+  "path_a_resume": {
+    "termination_reason": "self_terminated",
+    "total_budget": {
+      "steps": 8,
+      "prompt_tokens": 14605,
+      "completion_tokens": 1297,
+      "reasoning_tokens": 48,
+      "total_tokens": 15902,
+      "api_elapsed_s": 52.8,
+      "wall_clock_s": 52.845
+    },
+    "post_resume_tool_calls": 1,
+    "duplicate_writes": [],
+    "duplicate_reads": [],
+    "validate": {
+      "ok": true,
+      "files": {
+        "index.html": {
+          "exists": true,
+          "structurally_ok": true,
+          "bytes": 703
+        },
+        "styles.css": {
+          "exists": true,
+          "structurally_ok": true,
+          "bytes": 602
+        },
+        "script.js": {
+          "exists": true,
+          "structurally_ok": true,
+          "bytes": 387
+        }
+      }
+    },
+    "final_message_preview": "All three files exist and each was read back and verified right after creation.\n\nSummary of what I built:\n- **index.html** \u2014 A valid HTML5 page titled \"Pebblelamp \u2014 A Tiny Night Light\" with an `<h1>` heading, a real descriptive paragraph about a fictional pebble-shaped night light, a \"Say hello\" but"
+  },
+  "path_b_rerun": {
+    "termination_reason": "self_terminated",
+    "fresh_only_budget": {
+      "steps": 9,
+      "prompt_tokens": 15812,
+      "completion_tokens": 1389,
+      "reasoning_tokens": 89,
+      "total_tokens": 17201,
+      "api_elapsed_s": 55.592,
+      "wall_clock_s": 55.632
+    },
+    "total_budget": {
+      "steps": 15,
+      "prompt_tokens": 25161,
+      "completion_tokens": 2410,
+      "reasoning_tokens": 135,
+      "total_tokens": 27571,
+      "api_elapsed_s": 96.589,
+      "wall_clock_s": 96.673
+    },
+    "validate": {
+      "ok": true,
+      "files": {
+        "index.html": {
+          "exists": true,
+          "structurally_ok": true,
+          "bytes": 842
+        },
+        "styles.css": {
+          "exists": true,
+          "structurally_ok": true,
+          "bytes": 437
+        },
+        "script.js": {
+          "exists": true,
+          "structurally_ok": true,
+          "bytes": 480
+        }
+      }
+    }
+  },
+  "savings_pct_resume_vs_rerun": {
+    "steps": 46.7,
+    "total_tokens": 42.3,
+    "wall_clock_s": 45.3
+  }
+}

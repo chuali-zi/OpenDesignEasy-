@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Fixed width overflow</title>
+  <style>
+    * { box-sizing: border-box; }
+    html, body { margin: 0; min-height: 100%; }
+    body { background: #ffffff; color: #161616; font: 16px/1.5 Arial, sans-serif; }
+    main { width: calc(100% - 32px); max-width: 760px; margin: 24px auto; }
+    .panel { padding: 24px; border: 1px solid #767676; border-radius: 8px; }
+    button, input, a, [tabindex] { font: inherit; }
+    .target { width:1400px; padding:16px; background:#e7eef8; }
+  </style>
+</head>
+<body>
+  <main data-oey-section="fixture"><div class="target" data-oey-object="fixture.target">A fixed 1400 pixel panel</div></main>
+  
+</body>
+</html>

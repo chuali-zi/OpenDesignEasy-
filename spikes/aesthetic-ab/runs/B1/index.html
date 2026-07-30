@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OEYdesign · 打样房</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<!-- 顶栏 -->
+<header class="topbar" data-oey-section="topbar">
+  <div class="brand">
+    <span class="brand-name">OEYdesign</span>
+    <span class="brand-sub">多模态设计 AGENT · 打样房 PROOF ROOM</span>
+  </div>
+  <div class="topbar-right">
+    <span class="topbar-status" data-oey-section="status">
+      <span class="status-dot"></span>状态 · 打样中 PROOFING
+    </span>
+    <div class="export-wrap" data-oey-section="export">
+      <button class="btn-ghost" id="exportBtn" type="button">导出 EXPORT ↓</button>
+      <div class="export-menu" id="exportMenu" hidden>
+        <button type="button" data-export="png">PNG · 校样图</button>
+        <button type="button" data-export="pdf">PDF · 印刷级</button>
+        <button type="button" data-export="web">Web 包 · HTML+CSS</button>
+        <button type="button" data-export="docx">DOCX · 设计说明稿</button>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main class="workbench">
+
+  <!-- 左栏：批注单（对话） -->
+  <aside class="annot" data-oey-section="conversation">
+    <div class="annot-head">
+      <div class="annot-title">批注单 ANNOTATION SHEET</div>
+      <div class="annot-project">项目 · 北屿咖啡官网首屏<br>编号 · OEY-2025-0114-03</div>
+    </div>
+
+    <div class="messages" id="messages" data-oey-section="messages"><!-- JS 渲染 --></div>
+
+    <form class="composer" id="composer" data-oey-section="composer">
+      <label class="composer-label" for="composerInput">新批注 / 新需求</label>
+      <textarea id="composerInput" rows="3" placeholder="描述修改意见，例如：标题再收一点，CTA 弱化电商感…"></textarea>
+      <div class="composer-row">
+        <span class="composer-hint">ENTER 发送 · SHIFT+ENTER 换行</span>
+        <button class="btn-send" type="submit">发送 →</button>
+      </div>
+    </form>
+  </aside>
+
+  <!-- 右栏：校样台（预览） -->
+  <section class="proof" data-oey-section="preview">
+
+    <div class="proof-toolbar" data-oey-section="preview-toolbar">
+      <span class="toolbar-label">校样台 PROOF TABLE</span>
+      <div class="version-tabs" id="versionTabs" data-oey-section="versions"><!-- JS 渲染 --></div>
+      <div class="toolbar-actions">
+        <button class="btn-ghost" id="objectsToggle" type="button">对象清单 OBJECTS</button>
+      </div>
+    </div>
+
+    <div class="proof-table" id="proofTable">
+
+      <!-- 批次章：distinctive_move -->
+      <div class="stamp" id="stamp" data-oey-section="version-stamp" aria-label="当前版本">
+        <div class="stamp-meta" id="stampMeta">2025-01-14 16:42 · 变更对象 3 · 批次 OEY-03</div>
+        <div class="stamp-v" id="stampV">v3</div>
+      </div>
+
+      <!-- 校样纸面 -->
+      <article class="sheet" id="sheet" data-oey-section="artifact">
+        <span class="crop tl"></span><span class="crop tr"></span>
+        <span class="crop bl"></span><span class="crop br"></span>
+
+        <!-- OBJ-01 导航 -->
+        <nav class="a-nav" data-oey-object="OBJ-01" data-oey-name="顶部导航" data-oey-type="NAV" tabindex="0">
+          <span class="a-logo">北屿咖啡</span>
+          <span class="a-navlinks">豆单　烘焙所　订阅　关于</span>
+          <span class="a-navmeta">EN / 中</span>
+        </nav>
+
+        <div class="a-hero">
+          <div class="a-hero-text">
+            <!-- OBJ-02 标题 -->
+            <h1 class="a-headline" id="aHeadline" data-oey-object="OBJ-02" data-oey-name="主标题" data-oey-type="HEADLINE" tabindex="0">把山里的咖啡，<br>寄到你桌上</h1>
+            <!-- OBJ-03 正文 -->
+            <p class="a-body" data-oey-object="OBJ-03" data-oey-name="正文段落" data-oey-type="COPY" tabindex="0">北屿只跟海拔 1,200m 以上的小农合作。每一批豆子在烘焙后 48 小时内封装寄出，随包裹附上当批的杯测记录与烘焙曲线——你喝到的是什么，我们说清楚。</p>
+            <!-- OBJ-04 CTA -->
+            <button class="a-cta" id="aCta" data-oey-object="OBJ-04" data-oey-name="行动按钮" data-oey-type="CTA" type="button">查看烘焙批次 →</button>
+          </div>
+          <!-- OBJ-05 首屏图 -->
+          <figure class="a-figure" data-oey-object="OBJ-05" data-oey-name="首屏主图" data-oey-type="IMAGE" tabindex="0">
+            <span class="a-figure-char" id="aFigureChar">焙</span>
+            <figcaption class="a-figure-cap">HERO IMAGE · 1800 × 1200 · 暖调</figcaption>
+          </figure>
+        </div>
+
+        <!-- OBJ-06 页脚数据行 -->
+        <footer class="a-foot" data-oey-object="OBJ-06" data-oey-name="溯源数据行" data-oey-type="DATA-ROW" tabindex="0">
+          <span>海拔 1,280m</span><span>中深烘 · AGTRON 58</span><span>48h 内发货</span><span>当批杯测 86.5</span>
+        </footer>
+      </article>
+    </div>
+
+    <!-- 对象清单 / 检查器（可展开，次级位置） -->
+    <div class="objects-panel" id="objectsPanel" data-oey-section="objects-panel">
+      <div class="objects-head">
+        <span>对象清单 · 点击校样上的对象可定位</span>
+        <span id="objectsCount"></span>
+      </div>
+      <table class="objects-table" id="objectsTable">
+        <thead>
+          <tr><th>ID</th><th>名称</th><th>类型</th><th>状态</th><th>批注</th></tr>
+        </thead>
+        <tbody><!-- JS 渲染 --></tbody>
+      </table>
+      <div class="obj-annot" id="objAnnot" hidden>
+        <span class="obj-annot-label" id="objAnnotLabel">批注 OBJ-02：</span>
+        <input type="text" id="objAnnotInput" placeholder="对该对象的修改意见，例如：字重再轻一档">
+        <button class="btn-send" id="objAnnotBtn" type="button">添加批注</button>
+      </div>
+    </div>
+
+  </section>
+</main>
+
+<div class="toast" id="toast" hidden></div>
+
+<script src="app.js"></script>
+</body>
+</html>

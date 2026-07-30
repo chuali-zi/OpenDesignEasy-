@@ -1,0 +1,32 @@
+{
+  "arm": "C",
+  "idx": 2,
+  "max_tokens": 40000,
+  "stages": [
+    {
+      "stage": "gen",
+      "usage": {
+        "prompt_tokens": 516,
+        "completion_tokens": 27390,
+        "total_tokens": 27906,
+        "cached_tokens": 512,
+        "completion_tokens_details": {
+          "reasoning_tokens": 8339
+        },
+        "prompt_tokens_details": {
+          "cached_tokens": 512
+        },
+        "_finish_reason": "stop"
+      },
+      "elapsed_s": 765.2904722690582
+    }
+  ],
+  "files": [
+    "app.js",
+    "index.html",
+    "styles.css"
+  ],
+  "raw_chars": 59351,
+  "total_elapsed_s": 765.3,
+  "truncated": false
+}

@@ -1,0 +1,9 @@
+{
+  "steps": 9,
+  "prompt_tokens": 18291,
+  "completion_tokens": 1673,
+  "reasoning_tokens": 107,
+  "total_tokens": 19964,
+  "api_elapsed_s": 74.354,
+  "wall_clock_s": 74.406
+}

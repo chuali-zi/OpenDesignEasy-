@@ -1,0 +1,170 @@
+{
+  "started_at": "2026-07-28T02:05:50.212226+00:00",
+  "endpoint": "https://ark.cn-beijing.volces.com/api/v3/images/generations",
+  "model": "doubao-seedream-5-0-260128",
+  "retry_policy": {
+    "statuses": [
+      429,
+      500,
+      502,
+      503,
+      504
+    ],
+    "delays_seconds": [
+      2,
+      4
+    ]
+  },
+  "cases": [
+    {
+      "case_id": "square-paper-cut",
+      "style": "paper_cut",
+      "request": {
+        "model": "doubao-seedream-5-0-260128",
+        "prompt": "A single cobalt-blue ceramic teapot with one orange leaf beside it, centered on a warm cream background. Handmade layered paper-cut illustration, visibly cut paper edges, flat shapes, limited cobalt orange and cream palette, soft cast shadows, no text, no logo.",
+        "size": "2048x2048",
+        "response_format": "url",
+        "watermark": false
+      },
+      "http_status": 200,
+      "generation_latency_ms": 28445,
+      "response_metadata": {
+        "model": "doubao-seedream-5-0-260128",
+        "created": 1785204379,
+        "data": [
+          {
+            "size": "2048x2048"
+          }
+        ],
+        "usage": {
+          "generated_images": 1,
+          "output_tokens": 16384,
+          "total_tokens": 16384
+        }
+      },
+      "image": {
+        "path": "images/square-paper-cut.jpg",
+        "content_type": "image/jpeg",
+        "bytes": 174493,
+        "sha256": "f277ffa19335290c67c7b640b8065e87c1e5ba2c126e37144e4e545be2383f5a",
+        "width": 2048,
+        "height": 2048,
+        "download_latency_ms": 2569,
+        "requested_size_match": true
+      }
+    },
+    {
+      "case_id": "square-studio-photo",
+      "style": "studio_photo",
+      "request": {
+        "model": "doubao-seedream-5-0-260128",
+        "prompt": "A single cobalt-blue ceramic teapot with one orange leaf beside it, centered on a warm cream seamless background. Premium studio product photograph, physically realistic glazed ceramic, crisp specular highlights, shallow depth of field, softbox lighting, no text, no logo.",
+        "size": "2048x2048",
+        "response_format": "url",
+        "watermark": false
+      },
+      "http_status": 200,
+      "generation_latency_ms": 25997,
+      "response_metadata": {
+        "model": "doubao-seedream-5-0-260128",
+        "created": 1785204407,
+        "data": [
+          {
+            "size": "2048x2048"
+          }
+        ],
+        "usage": {
+          "generated_images": 1,
+          "output_tokens": 16384,
+          "total_tokens": 16384
+        }
+      },
+      "image": {
+        "path": "images/square-studio-photo.jpg",
+        "content_type": "image/jpeg",
+        "bytes": 163819,
+        "sha256": "bfef7b0ca6a3df89b2f481f83d90f11b79212a9e2584a22bc255f16db178597d",
+        "width": 2048,
+        "height": 2048,
+        "download_latency_ms": 828,
+        "requested_size_match": true
+      }
+    },
+    {
+      "case_id": "wide-paper-cut",
+      "style": "paper_cut",
+      "request": {
+        "model": "doubao-seedream-5-0-260128",
+        "prompt": "A single cobalt-blue ceramic teapot with one orange leaf beside it, centered on a warm cream background. Handmade layered paper-cut illustration, visibly cut paper edges, flat shapes, limited cobalt orange and cream palette, soft cast shadows, no text, no logo.",
+        "size": "2560x1440",
+        "response_format": "url",
+        "watermark": false
+      },
+      "http_status": 200,
+      "generation_latency_ms": 25007,
+      "response_metadata": {
+        "model": "doubao-seedream-5-0-260128",
+        "created": 1785204433,
+        "data": [
+          {
+            "size": "2560x1440"
+          }
+        ],
+        "usage": {
+          "generated_images": 1,
+          "output_tokens": 14400,
+          "total_tokens": 14400
+        }
+      },
+      "image": {
+        "path": "images/wide-paper-cut.jpg",
+        "content_type": "image/jpeg",
+        "bytes": 202380,
+        "sha256": "9f81a1df2eab0f7b4b4ee9f259177a0a3e4209810e941b289326c63861cb01b8",
+        "width": 2560,
+        "height": 1440,
+        "download_latency_ms": 911,
+        "requested_size_match": true
+      }
+    },
+    {
+      "case_id": "wide-studio-photo",
+      "style": "studio_photo",
+      "request": {
+        "model": "doubao-seedream-5-0-260128",
+        "prompt": "A single cobalt-blue ceramic teapot with one orange leaf beside it, centered on a warm cream seamless background. Premium studio product photograph, physically realistic glazed ceramic, crisp specular highlights, shallow depth of field, softbox lighting, no text, no logo.",
+        "size": "2560x1440",
+        "response_format": "url",
+        "watermark": false
+      },
+      "http_status": 200,
+      "generation_latency_ms": 24813,
+      "response_metadata": {
+        "model": "doubao-seedream-5-0-260128",
+        "created": 1785204459,
+        "data": [
+          {
+            "size": "2560x1440"
+          }
+        ],
+        "usage": {
+          "generated_images": 1,
+          "output_tokens": 14400,
+          "total_tokens": 14400
+        }
+      },
+      "image": {
+        "path": "images/wide-studio-photo.jpg",
+        "content_type": "image/jpeg",
+        "bytes": 118239,
+        "sha256": "37566933794accd65b6a2e3c5a692d2aee57f9da0b44134a33c66b3df004385e",
+        "width": 2560,
+        "height": 1440,
+        "download_latency_ms": 998,
+        "requested_size_match": true
+      }
+    }
+  ],
+  "status": "COMPLETED",
+  "finished_at": "2026-07-28T02:07:39.787221+00:00"
+}

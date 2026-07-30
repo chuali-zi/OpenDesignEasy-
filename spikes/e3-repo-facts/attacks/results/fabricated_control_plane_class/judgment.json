@@ -1,0 +1,26 @@
+{
+  "attack_id": "fabricated_control_plane_class",
+  "fact_id": "F0143",
+  "expected_canonical_label": "traceable_but_contradictory",
+  "raw_equivalent_label": "traceable_contradict",
+  "claim_emitted": true,
+  "required_citation_emitted": true,
+  "primary_detected": true,
+  "closed_world_detected": true,
+  "detected_by_either_pass": true,
+  "matched_statements": [
+    {
+      "statement_index": 0,
+      "sentence": "项目控制面由 QuantumControlPlane 类实现 [F0143]",
+      "cited_ids": [
+        "F0143"
+      ],
+      "raw_primary": "traceable_contradict",
+      "raw_closed_world": "traceable_contradict",
+      "canonical_primary": "traceable_but_contradictory",
+      "canonical_closed_world": "traceable_but_contradictory",
+      "detail": "cited, but claims content absent from entire repo scan: ['identifier:QuantumControlPlane']",
+      "closed_world_detail": "exhaustive-absence: ['QuantumControlPlane'] not found anywhere in repo scan"
+    }
+  ]
+}

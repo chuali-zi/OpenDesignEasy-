@@ -1,0 +1,122 @@
+[
+  {
+    "round": 1,
+    "kind": "text",
+    "ref": "hero-subtitle",
+    "baseline_tag": "p"
+  },
+  {
+    "round": 2,
+    "kind": "attribute",
+    "ref": "hero-cta-primary",
+    "baseline_tag": "a"
+  },
+  {
+    "round": 3,
+    "kind": "structure",
+    "ref": "intro-title",
+    "baseline_tag": "h2"
+  },
+  {
+    "round": 4,
+    "kind": "delete-element",
+    "ref": "nav-menu",
+    "baseline_tag": "ul"
+  },
+  {
+    "round": 5,
+    "kind": "add-element",
+    "ref": "hero-visual",
+    "baseline_tag": "svg"
+  },
+  {
+    "round": 6,
+    "kind": "text",
+    "ref": "cases-title",
+    "baseline_tag": "h2"
+  },
+  {
+    "round": 7,
+    "kind": "attribute",
+    "ref": "cases-lead",
+    "baseline_tag": "p"
+  },
+  {
+    "round": 8,
+    "kind": "structure",
+    "ref": "services-cta-link",
+    "baseline_tag": "a"
+  },
+  {
+    "round": 9,
+    "kind": "delete-element",
+    "ref": "intro-feature-grid",
+    "baseline_tag": "div"
+  },
+  {
+    "round": 10,
+    "kind": "add-element",
+    "ref": "case-card-grid",
+    "baseline_tag": "div"
+  },
+  {
+    "round": 11,
+    "kind": "text",
+    "ref": "contact-title",
+    "baseline_tag": "h2"
+  },
+  {
+    "round": 12,
+    "kind": "attribute",
+    "ref": "contact-email-label",
+    "baseline_tag": "span"
+  },
+  {
+    "round": 13,
+    "kind": "structure",
+    "ref": "contact-phone",
+    "baseline_tag": "span"
+  },
+  {
+    "round": 14,
+    "kind": "delete-element",
+    "ref": "testimonial-cards",
+    "baseline_tag": "div"
+  },
+  {
+    "round": 15,
+    "kind": "add-element",
+    "ref": "contact-form",
+    "baseline_tag": "form"
+  },
+  {
+    "round": 16,
+    "kind": "text",
+    "ref": "footer-brand",
+    "baseline_tag": "h4"
+  },
+  {
+    "round": 17,
+    "kind": "attribute",
+    "ref": "footer-social-title",
+    "baseline_tag": "h5"
+  },
+  {
+    "round": 18,
+    "kind": "structure",
+    "ref": "footer-join-title",
+    "baseline_tag": "h5"
+  },
+  {
+    "round": 19,
+    "kind": "delete-element",
+    "ref": "footer-nav-list",
+    "baseline_tag": "ul"
+  },
+  {
+    "round": 20,
+    "kind": "add-element",
+    "ref": "footer-join-list",
+    "baseline_tag": "ul"
+  }
+]

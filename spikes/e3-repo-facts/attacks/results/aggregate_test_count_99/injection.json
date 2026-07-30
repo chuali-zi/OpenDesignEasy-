@@ -1,0 +1,12 @@
+{
+  "id": "aggregate_test_count_99",
+  "fact_id": "F0535",
+  "original_statement": "Repository has 8 test files under tests/ containing 42 test function(s) in total (statically counted via ast, tests not executed).",
+  "injected_statement": "Repository has 8 test files under tests/ containing 99 test function(s) in total (statically counted via ast, tests not executed).",
+  "required_sentence": "仓库有 8 个测试文件，共 99 个测试函数 [F0535]。",
+  "match_tokens": [
+    "99",
+    "测试函数"
+  ],
+  "expected_detector": "aggregate_number_contradiction"
+}

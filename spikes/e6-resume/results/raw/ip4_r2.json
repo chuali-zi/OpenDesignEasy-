@@ -1,0 +1,103 @@
+{
+  "run_id": "ip4_r2",
+  "interrupt_step_target": 4,
+  "finished_before_interrupt": false,
+  "precrash": {
+    "termination_reason": "simulated_crash",
+    "budget": {
+      "steps": 4,
+      "prompt_tokens": 4263,
+      "completion_tokens": 728,
+      "reasoning_tokens": 34,
+      "total_tokens": 4991,
+      "api_elapsed_s": 28.518,
+      "wall_clock_s": 28.532
+    },
+    "written_paths": [
+      "index.html",
+      "styles.css"
+    ]
+  },
+  "path_a_resume": {
+    "termination_reason": "self_terminated",
+    "total_budget": {
+      "steps": 9,
+      "prompt_tokens": 16465,
+      "completion_tokens": 1418,
+      "reasoning_tokens": 39,
+      "total_tokens": 17883,
+      "api_elapsed_s": 65.161,
+      "wall_clock_s": 65.198
+    },
+    "post_resume_tool_calls": 4,
+    "duplicate_writes": [],
+    "duplicate_reads": [],
+    "validate": {
+      "ok": true,
+      "files": {
+        "index.html": {
+          "exists": true,
+          "structurally_ok": true,
+          "bytes": 851
+        },
+        "styles.css": {
+          "exists": true,
+          "structurally_ok": true,
+          "bytes": 543
+        },
+        "script.js": {
+          "exists": true,
+          "structurally_ok": true,
+          "bytes": 760
+        }
+      }
+    },
+    "final_message_preview": "All three files exist and each was read back and verified right after creation.\n\nSummary of what I built:\n\n- **index.html** \u2014 A valid HTML5 page titled \"Moonjar \u2014 The Bedside Light That Wakes You Gently.\" It contains an `<h1>` heading and a real paragraph describing Moonjar, a fictional jar-shaped s"
+  },
+  "path_b_rerun": {
+    "termination_reason": "self_terminated",
+    "fresh_only_budget": {
+      "steps": 9,
+      "prompt_tokens": 16752,
+      "completion_tokens": 1518,
+      "reasoning_tokens": 132,
+      "total_tokens": 18270,
+      "api_elapsed_s": 75.878,
+      "wall_clock_s": 75.916
+    },
+    "total_budget": {
+      "steps": 13,
+      "prompt_tokens": 21015,
+      "completion_tokens": 2246,
+      "reasoning_tokens": 166,
+      "total_tokens": 23261,
+      "api_elapsed_s": 104.396,
+      "wall_clock_s": 104.448
+    },
+    "validate": {
+      "ok": true,
+      "files": {
+        "index.html": {
+          "exists": true,
+          "structurally_ok": true,
+          "bytes": 783
+        },
+        "styles.css": {
+          "exists": true,
+          "structurally_ok": true,
+          "bytes": 724
+        },
+        "script.js": {
+          "exists": true,
+          "structurally_ok": true,
+          "bytes": 477
+        }
+      }
+    }
+  },
+  "savings_pct_resume_vs_rerun": {
+    "steps": 30.8,
+    "total_tokens": 23.1,
+    "wall_clock_s": 37.6
+  }
+}

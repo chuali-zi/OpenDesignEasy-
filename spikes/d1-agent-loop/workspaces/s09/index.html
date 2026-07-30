@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EmberMug Go — Coffee That Stays Perfect</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      color: #2b2118;
+      background: #faf6f1;
+      line-height: 1.6;
+    }
+    header {
+      background: #3b2a1e;
+      color: #faf6f1;
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    header .logo { font-size: 1.4rem; font-weight: bold; letter-spacing: 1px; }
+    nav a {
+      color: #e8d5c0;
+      text-decoration: none;
+      margin-left: 1.5rem;
+      font-size: 0.95rem;
+    }
+    nav a:hover { color: #ffffff; text-decoration: underline; }
+    main {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 3rem 1.5rem;
+    }
+    .hero { text-align: center; margin-bottom: 3rem; }
+    .hero h1 { font-size: 2.4rem; margin-bottom: 1rem; color: #3b2a1e; }
+    .hero p { font-size: 1.15rem; color: #5c4a3a; max-width: 620px; margin: 0 auto 1.5rem; }
+    .cta {
+      display: inline-block;
+      background: #c4622d;
+      color: #fff;
+      padding: 0.8rem 2rem;
+      border-radius: 30px;
+      text-decoration: none;
+      font-weight: bold;
+      transition: background 0.2s ease;
+    }
+    .cta:hover { background: #a34f22; }
+    .features { display: flex; gap: 1.5rem; flex-wrap: wrap; margin-top: 1rem; }
+    .feature {
+      flex: 1 1 200px;
+      background: #fff;
+      border: 1px solid #e5d9cb;
+      border-radius: 10px;
+      padding: 1.5rem;
+    }
+    .feature h2 { font-size: 1.1rem; margin-bottom: 0.5rem; color: #3b2a1e; }
+    .feature p { font-size: 0.95rem; color: #5c4a3a; }
+    footer {
+      background: #3b2a1e;
+      color: #cbb69e;
+      text-align: center;
+      padding: 1.5rem;
+      font-size: 0.9rem;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo">☕ EmberMug Go</div>
+    <nav>
+      <a href="#features">Features</a>
+      <a href="#story">Our Story</a>
+      <a href="#buy">Buy Now</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero" id="buy">
+      <h1>EmberMug Go: Coffee That Stays Perfect</h1>
+      <p>
+        EmberMug Go is a self-heating travel mug that keeps your coffee at exactly
+        57°C for up to six hours — no microwave, no thermos roulette. A slim heating
+        element in the base, paired with a quiet temperature sensor, adjusts itself
+        every few seconds so your last sip tastes like your first. It charges over
+        USB-C, fits in any car cup holder, and survives the dishwasher.
+      </p>
+      <a class="cta" href="#features">See How It Works</a>
+    </section>
+
+    <section id="features">
+      <div class="features">
+        <div class="feature">
+          <h2>Precision Heat</h2>
+          <p>Choose any temperature between 50°C and 65°C with a twist of the base ring. The mug holds it steady within half a degree.</p>
+        </div>
+        <div class="feature">
+          <h2>All-Day Battery</h2>
+          <p>A full charge lasts six hours of heating, and a 20-minute USB-C top-up gets you through the morning commute.</p>
+        </div>
+        <div class="feature">
+          <h2 id="story">Built for Real Life</h2>
+          <p>Spill-proof lid, one-hand opening, and a ceramic-coated interior that never holds flavors — tea today won't haunt tomorrow's espresso.</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <p>&copy; 2025 EmberMug Go. A fictional product, brewed with care.</p>
+  </footer>
+</body>
+</html>

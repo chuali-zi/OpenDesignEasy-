@@ -1,0 +1,57 @@
+The user wants a static prototype with a distinctive narrative metaphor. Let me choose one: I could do "飞行驾驶舱" but the example mentions it. Let me pick something concrete and distinctive — maybe a "印刷工坊/活字排印车间" is too close to PROOF DESK. Let me do "航行/航海日志 — 领航台 (voyage/helm)"? Or "录音棚 / 排演厅"? Let me choose "天文观测站 / 观星台"? Hmm.
+
+The agent workbench: candidates → feedback → artifact → quality → delivery. A good metaphor: 「航海 · 领航台 VOYAGE HELM」: projects = 航线 (voyages), candidates = 航向候选 (headings), feedback = 修正航向 / 微调舵角 (two granularities: 改变航线 vs 微调), quality = 海图核验 (硬错误 = 暗礁警告 blocking departure; 审美 = 瞭望员建议), delivery = 离港/交付. That works nicely.
+
+Alternative: 「乐谱/排练室」: projects = 曲目, candidates = 编曲版本, feedback = 整首重排 vs 小节批注, quality = 调音硬检查 + 艺术建议. Also good.
+
+I'll go with the voyage/helm metaphor: product name "VOYAGE DESK · 远航台" or "HELM · 舵楼". Let's call it "OEYdesign · 远航台 VOYAGE HELM".
+
+Sections:
+- header: brand, current "voyage" marker, project switcher (航线), status stamp, views Workspace/Logbook? Keep two views: 驾驶舱 (Bridge) and 船坞 (Harbor/Settings for creating new voyage).
+- Left: 航海日志 (Logbook) — activity log, next actions, two feedback forms: 「改航线」(overall direction — 换叙事/语气/视觉) and 「修船板/局部修正」(local factual/strategic correction).
+- Center: 海图桌 (Chart Table) — preview of candidates/revisions, REV number, empty state.
+- Right: 船况仪 (Ship's Instruments / Inspector) — file tree (载货清单 manifest), constraint profile (航行规则 Sailing Orders), quality (出港检查: 硬错误 = 搁浅风险 blocking; 审美 = 瞭望建议), feedback & delivery records (航次记录).
+
+Settings view (Harbor 船坞): create new voyage form — 项目名, Constraint preset (开放探索/设计引导/规范生产 → maybe rename as 航行令: 自由海域 / 领航员随行 / 班轮时刻表? But the constraint preset names are facts from product-client... Actually the three presets are factual domain concepts; I should keep them or map: 开放探索 / 设计引导 / 规范生产. Keep Chinese original names to be safe, maybe with metaphor subtitles). Template role: 参考样例 / 起始脚手架 / 设计系统 / 交付合同.
+
+Mock: window.__mockApi__ with async methods returning promises with setTimeout latency; data inline. Projects: 3-4 demo projects each with own log entries, candidates, constraints, quality results. Feedback submission → adds log entry, shows confirmation state, maybe increments revision after delay.
+
+Data anchors: data-oey-section on: header (bridge-head), project switcher section, logbook, chart (canvas), feedback (two forms maybe sections within logbook or separate sections), instruments/inspector (files, constraints, quality), harbor (settings). Each key element data-oey-object.
+
+No external resources: inline SVG icons, system fonts, CSS custom.
+
+Files: index.html, styles.css, app.js, MOCK.md, INTENT.md.
+
+Quality: hard errors （触礁警报/红灯， block departure) vs aesthetic observations （瞭望员笔记， non-blocking). Not one score.
+
+Let me design layout: dark navy/teal nautical theme, brass accents. Mono-ish for log. Grid: left 300px, center flexible, right 320px. Header top bar.
+
+Candidates: each project has 1-2 candidate directions with preview cards rendered as mock design thumbnails (CSS-built mini layouts, e.g., a webpage wireframe drawn with divs). Current revision preview in chart table.
+
+Interactions:
+- Project switch → updates all sections with small fade.
+- Next action buttons → simulated: appends log entry, maybe advances state.
+- Feedback form A （整体方向 / 请求改航线）: select aspect （叙事/语气/视觉） + text → submit → log entry + status change "等待新候选".
+- Feedback form B （局部/事实策略纠正）: target field + text → submit → log entry.
+- Approve candidate → triggers quality run (setTimeout sequence appending log steps), quality results update, then "可交付" state, then export button marks delivered.
+- Settings: create project form → adds project to switcher and switches to it.
+
+Write code carefully but keep reasonable size. Let me write it.
+
+Data model:
+
+projects: [
+ { id, name, code (voyage code like VOY-07), status, constraintPreset, templateRole, revision, candidates: [{id, title, summary, palette, type}], approvedCandidate, quality: {hard: [...], aesthetic: [...]}, log: [{time, kind, text}], files: [...], deliveries: [...] }
+]
+
+Render functions per section. Mock API with delay.
+
+Empty state: maybe include a "no project" option? Add a "— 未选定航线 —" placeholder option in select to show empty state.
+
+Let me write the HTML with all sections and anchors, JS builds content.
+
+Time to write. Keep CSS ~300 lines, JS ~400 lines. Fine.
+
+Icons: inline SVG compass, anchor, lighthouse etc. Use simple SVG symbols.
+
+Write files now.

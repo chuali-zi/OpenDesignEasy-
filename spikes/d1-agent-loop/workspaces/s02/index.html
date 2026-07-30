@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LumaBrew — The Self-Cleaning Smart Kettle</title>
+  <style>
+    :root {
+      --ink: #1e2936;
+      --accent: #c2611f;
+      --bg: #faf7f2;
+      --card: #ffffff;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: Georgia, 'Times New Roman', serif;
+      background: var(--bg);
+      color: var(--ink);
+      line-height: 1.6;
+    }
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 2rem;
+      background: var(--card);
+      border-bottom: 1px solid #e5ddd2;
+      position: sticky;
+      top: 0;
+    }
+    .logo {
+      font-size: 1.4rem;
+      font-weight: bold;
+      color: var(--accent);
+      letter-spacing: 0.5px;
+    }
+    nav ul {
+      display: flex;
+      gap: 1.5rem;
+      list-style: none;
+    }
+    nav a {
+      text-decoration: none;
+      color: var(--ink);
+      font-size: 0.95rem;
+    }
+    nav a:hover { color: var(--accent); }
+    main {
+      max-width: 760px;
+      margin: 0 auto;
+      padding: 3rem 1.5rem;
+    }
+    .hero h1 {
+      font-size: 2.6rem;
+      line-height: 1.2;
+      margin-bottom: 1rem;
+    }
+    .hero p {
+      font-size: 1.15rem;
+      margin-bottom: 2.5rem;
+    }
+    .features {
+      display: grid;
+      gap: 1.25rem;
+      margin-bottom: 2.5rem;
+    }
+    .feature {
+      background: var(--card);
+      border: 1px solid #e5ddd2;
+      border-radius: 8px;
+      padding: 1.25rem 1.5rem;
+    }
+    .feature h2 {
+      font-size: 1.15rem;
+      color: var(--accent);
+      margin-bottom: 0.4rem;
+    }
+    .cta {
+      text-align: center;
+      margin-bottom: 3rem;
+    }
+    .cta a {
+      display: inline-block;
+      background: var(--accent);
+      color: #fff;
+      padding: 0.85rem 2.25rem;
+      border-radius: 6px;
+      text-decoration: none;
+      font-size: 1.05rem;
+    }
+    .cta a:hover { background: #a94f15; }
+    footer {
+      text-align: center;
+      padding: 1.5rem;
+      font-size: 0.85rem;
+      color: #7a7166;
+      border-top: 1px solid #e5ddd2;
+      background: var(--card);
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <span class="logo">LumaBrew</span>
+    <nav>
+      <ul>
+        <li><a href="#features">Features</a></li>
+        <li><a href="#order">Order</a></li>
+        <li><a href="#contact">Contact</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero">
+      <h1>Meet LumaBrew, the kettle that cleans itself.</h1>
+      <p>
+        LumaBrew is a countertop smart kettle built for people who love tea but hate
+        scrubbing limescale. Its stainless interior uses a gentle ultrasonic cycle
+        after every tenth boil to dissolve mineral buildup on its own, so the water
+        you taste is always pure — never chalky. Set your preferred temperature
+        between 40&deg;C and 100&deg;C in one-degree steps, and LumaBrew holds it
+        there silently for up to two hours.
+      </p>
+    </section>
+
+    <section class="features" id="features">
+      <div class="feature">
+        <h2>Self-cleaning ultrasonic cycle</h2>
+        <p>
+          A 90-second pulse cycle breaks down limescale while you sleep. No vinegar,
+          no brushes, no forgotten descaling tablets.
+        </p>
+      </div>
+      <div class="feature">
+        <h2>Degree-perfect temperature control</h2>
+        <p>
+          Dial in exactly 65&deg;C for green tea or 92&deg;C for pour-over coffee.
+          A quiet heating element keeps the water there without re-boiling.
+        </p>
+      </div>
+      <div class="feature">
+        <h2>Designed for small kitchens</h2>
+        <p>
+          At just 22&nbsp;cm tall with a 1-litre capacity, LumaBrew fits under any
+          cabinet and pours with a counterbalanced, drip-free spout.
+        </p>
+      </div>
+    </section>
+
+    <section class="cta" id="order">
+      <a href="#contact">Pre-order for $129</a>
+    </section>
+  </main>
+
+  <footer id="contact">
+    <p>&copy; 2025 LumaBrew Appliances. Fictional product page. Questions? hello@lumabrew.example</p>
+  </footer>
+</body>
+</html>

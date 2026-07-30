@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ForgeCLI — 开源命令行工具文档</title>
+
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<header class="site-header" data-oey-section="site-header">
+  <div class="header-inner">
+    <div class="brand">
+      <img data-oey-object="site-header.logo" alt="ForgeCLI 标志" src="assets/asset_1.svg">
+      <span class="brand-name" data-oey-object="site-header.brand-name">Forge<span>CLI</span></span>
+    </div>
+    <nav class="nav">
+      <a href="#features" data-oey-object="site-header.nav-docs">文档</a>
+      <a href="#install" data-oey-object="site-header.nav-install">安装</a>
+      <a href="#stats" data-oey-object="site-header.nav-community">社区</a>
+      <span class="nav-badge" data-oey-object="site-header.version-badge">v3.2.1</span>
+    </nav>
+  </div>
+</header>
+
+<section class="hero" data-oey-section="hero">
+  <div class="hero-copy">
+    <span class="hero-tag" data-oey-object="hero.tag">MIT 许可 · 完全开源</span>
+    <h1 data-oey-object="hero.title">为开发者打造的<br><em>极速构建</em>命令行工具</h1>
+    <p class="lead" data-oey-object="hero.subtitle">ForgeCLI 用 Rust 编写，启动毫秒级、插件化架构、零配置上手。一条命令完成项目脚手架、构建、测试与发布全流程。</p>
+    <div class="hero-actions">
+      <a class="btn btn-primary" href="#install" data-oey-object="hero.cta-primary">快速开始</a>
+      <a class="btn btn-ghost" href="#features" data-oey-object="hero.cta-secondary">查看文档</a>
+    </div>
+  </div>
+  <div class="terminal" data-oey-object="hero.terminal-demo">
+    <div class="terminal-bar">
+      <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+      <span class="terminal-title">bash — forge</span>
+    </div>
+    <div class="terminal-body"><span class="prompt">$</span> <span class="cmd">forge init my-app</span>
+<span class="out">  正在创建项目脚手架...</span>
+<span class="ok">  ✓ 生成 12 个文件 (84ms)</span>
+
+<span class="prompt">$</span> <span class="cmd">cd my-app && forge build</span>
+<span class="out">  编译 128 个模块...</span>
+<span class="ok">  ✓ 构建完成 dist/ (1.2s)</span>
+
+<span class="prompt">$</span> <span class="cmd">forge test --coverage</span>
+<span class="ok">  ✓ 42 个测试全部通过</span></div>
+  </div>
+</section>
+
+<section class="features" id="features" data-oey-section="features">
+  <div class="features-inner">
+    <div class="section-heading">
+      <h2 data-oey-object="features.heading">为什么选择 ForgeCLI</h2>
+      <p data-oey-object="features.subheading">四个核心设计理念，覆盖从初始化到发布的每一个环节。</p>
+    </div>
+    <div class="feature-grid">
+      <div class="feature-card">
+        <div class="feature-icon">
+          <img data-oey-object="features.icon-speed" alt="闪电图标" src="assets/asset_2.svg">
+        </div>
+        <h3 data-oey-object="features.card1-title">毫秒级启动</h3>
+        <p data-oey-object="features.card1-text">Rust 原生编译，无运行时依赖。冷启动小于 50ms，增量构建只处理变更模块，大型项目也能秒级完成。</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">
+          <img data-oey-object="features.icon-plugin" alt="拼图图标" src="assets/asset_3.svg">
+        </div>
+        <h3 data-oey-object="features.card2-title">插件化架构</h3>
+        <p data-oey-object="features.card2-text">通过声明式清单扩展任意命令。官方市场已有 300+ 插件，涵盖部署、数据库迁移、代码生成等场景。</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">
+          <img data-oey-object="features.icon-config" alt="齿轮图标" src="assets/asset_4.svg">
+        </div>
+        <h3 data-oey-object="features.card3-title">零配置上手</h3>
+        <p data-oey-object="features.card3-text">智能识别项目类型，自动推断合理默认值。需要定制时，一份 forge.toml 即可覆盖所有行为。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="install" id="install" data-oey-section="install">
+  <div class="install-grid">
+    <div>
+      <h2 data-oey-object="install.heading">三分钟完成安装</h2>
+      <p class="sub" data-oey-object="install.subheading">支持 macOS、Linux 与 Windows，也可从源码自行编译。</p>
+      <ul class="steps">
+        <li>
+          <span class="step-num">1</span>
+          <div>
+            <strong data-oey-object="install.step1-title">运行安装脚本</strong>
+            <span data-oey-object="install.step1-text">使用系统自带的包管理器或一键脚本，自动检测平台并下载对应二进制。</span>
+          </div>
+        </li>
+        <li>
+          <span class="step-num">2</span>
+          <div>
+            <strong data-oey-object="install.step2-title">初始化第一个项目</strong>
+            <span data-oey-object="install.step2-text">forge init 会引导你选择模板与工具链，生成可直接运行的工程结构。</span>
+          </div>
+        </li>
+        <li>
+          <span class="step-num">3</span>
+          <div>
+            <strong data-oey-object="install.step3-title">探索命令帮助</strong>
+            <span data-oey-object="install.step3-text">每个子命令都内置 --help 与示例，配合 forge docs 可在浏览器中打开本地文档。</span>
+          </div>
+        </li>
+      </ul>
+    </div>
+    <div class="code-block" data-oey-object="install.code-sample"><span class="c"># 使用一键脚本安装</span>
+<span class="p">$</span> curl -fsSL forge.dev/install.sh | sh
+
+<span class="c"># 或者通过包管理器</span>
+<span class="p">$</span> brew install forgecli
+<span class="p">$</span> cargo install forgecli
+
+<span class="c"># 验证安装</span>
+<span class="p">$</span> forge --version
+<span class="s">forgecli 3.2.1 (stable, 2024-05)</span>
+
+<span class="c"># 创建并构建项目</span>
+<span class="p">$</span> forge init my-app <span class="k">--template</span> web
+<span class="p">$</span> forge build <span class="k">--release</span></div>
+  </div>
+</section>
+
+<section class="stats" id="stats" data-oey-section="stats">
+  <div class="stats-inner">
+    <div>
+      <div class="stat-value" data-oey-object="stats.stars-value">28.4k</div>
+      <div class="stat-label" data-oey-object="stats.stars-label">GitHub Stars</div>
+    </div>
+    <div>
+      <div class="stat-value" data-oey-object="stats.contributors-value">412</div>
+      <div class="stat-label" data-oey-object="stats.contributors-label">贡献者</div>
+    </div>
+    <div>
+      <div class="stat-value" data-oey-object="stats.plugins-value">300+</div>
+      <div class="stat-label" data-oey-object="stats.plugins-label">社区插件</div>
+    </div>
+    <div>
+      <div class="stat-value" data-oey-object="stats.downloads-value">1.9M</div>
+      <div class="stat-label" data-oey-object="stats.downloads-label">月下载量</div>
+    </div>
+  </div>
+</section>
+
+<footer class="site-footer" data-oey-section="site-footer">
+  <div class="footer-inner">
+    <p data-oey-object="site-footer.copyright">© 2024 ForgeCLI 社区 · 基于 MIT 协议开源发布</p>
+    <div class="footer-links">
+      <a href="#" data-oey-object="site-footer.link-github">GitHub 仓库</a>
+      <a href="#" data-oey-object="site-footer.link-changelog">更新日志</a>
+      <a href="#" data-oey-object="site-footer.link-contributing">参与贡献</a>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>

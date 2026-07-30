@@ -1,0 +1,207 @@
+Let me design a layout that isn't three-column dashboard. Choose a "时间轴驱动的纵深展开" (timeline-driven) single-column narrative flow with a sticky top rail for project switching, and a central "revision stage". Actually the axis is 版式结构. Let me pick: 单列纵向叙事流 + 命令面板 (focus interaction). Or a "vertical timeline as the spine" — the page is a single vertical column narrative: each project is a "chapter", the screen is organized as a scrollable story of the current run, with project switching via a horizontal "shelf" at top, preview as an inline "stage" that expands, feedback anchored inline at the moment in the flow.
+
+Let me design concretely:
+
+Name: "LENS" or "校样室"? product-client is "PROOF DESK". I'll create "THE DESK"? Different name: "Draftline 草稿线" or "ATELIER"? Let me pick 「回路 LOOP」? I like 「序曲 / OVERTURE」? Let's go with "画稿间 / THE LOOP"? Simpler: **「INGRESS 入口」**? Hmm. Choose **「Loop 反馈回路」** — narrative: everything is one loop: brief → candidates → feedback → revision → quality → delivery. The page is a vertical ring narrative.
+
+Design: A single-column vertical narrative ("the loop as a scroll"): top is a slim project rail (horizontal strip of project "chips" with status), then the main column is a sequence of "moments" (sections) arranged as a vertical spine with a thread line on the left:
+
+1. 方向 (Candidates) — preview stage showing current revision candidate, with revision number.
+2. 回路记录 (Activity timeline) — interleaved events.
+3. 反馈 (two feedback entries, different granularity).
+4. 质量与约束 (constraint profile + hard errors vs aesthetic findings as two separate tracks).
+5. 交付 (delivery record).
+
+Actually the structure choice should affect task paths. Idea: **"纵深时间轴"**: the central spine is a timeline of the project's life; preview and quality are "attached" to the timeline node rather than separate columns — clicking a timeline node expands the artifact inline. Feedback is also written "onto" the timeline as new events. Project switching = switching which timeline you're reading (horizontal project strip at top).
+
+That's genuinely different from three-column: single spine, everything hangs off it.
+
+I'll implement:
+- Top: brand + project strip (horizontal scroll chips) + loop status.
+- Main: single centered column (~880px) with a left thread line; sections as "stations" on the thread:
+  - station: 当前候选 (preview stage) — with direction-level feedback button "这个方向不对" 
+  - station: 回路记录 (event stream, expandable)
+  - station: 局部反馈 — click on preview hotspots? Simpler: a form for local correction with a "位置" selector listing preview regions (hero/headline/palette...).
+  - station: 约束档案 (constraint profile chips)
+  - station: 质量双轨 — two parallel lanes: 硬错误 (blocking, red) vs 审美发现 (non-blocking, amber), explicitly not merged.
+  - station: 交付记录.
+- New project creation via a command-palette-like modal? The spec requires settings/create project? Product scope listed doesn't require project creation explicitly (covers 项目列表/切换, 过程记录, 预览, 反馈, 质量/约束). But Settings view exists in product-client; scope list doesn't include create project. I can include a small "+ 新案子" button opening a modal with constraint preset + template role fields for completeness. Nice but optional — include it, cheap.
+
+Mock: window.__mockApi__ object with methods returning Promises with setTimeout latency: listProjects, getProject(id) (detail incl. events, preview, constraints, quality, feedback, delivery), submitDirectionFeedback(projectId, payload), submitLocalFeedback(...), createProject(...). Data: inline JS data for 3 projects, each with distinct preview (rendered as DOM mock previews, e.g., a landing page mock for one, a PPT deck mock for another, a doc mock for third — matches PRD: 网页/PPT/文档 artifacts).
+
+Previews: build mini in-DOM previews:
+- Project A "黎明咖啡 品牌落地页": web landing mock (hero, headline, CTA) with revision 3, status awaiting feedback.
+- Project B "Q3 产品发布 PPT": deck mock (slide thumbnails), revision 1, hard error present (e.g., 缺数据来源标注).
+- Project C "设计系统规范文档": doc mock, delivered/exported.
+
+Feedback responses: after submit, append event to timeline + show toast + maybe change status stamp (e.g., "方向重审中"). Local feedback similarly.
+
+Quality: hard errors list (blocks delivery badge) and aesthetic findings list (advisory). Keep separate lanes.
+
+data-oey-section anchors: `project-rail`, `stage` (preview), `loop` (activity), `feedback` (two sub-forms maybe sections `feedback-direction`, `feedback-local` — spec says 反馈入口 needs its own section; I can have one section "feedback" with two objects, or two sections; safer: two sections). `constraints`, `quality`, `delivery`. Objects: e.g., stage.revision, stage.preview, stage.status; loop.event; quality.hard, quality.aesthetic; etc.
+
+Files: index.html, styles.css, data.js (mock data), api.js (mock client), app.js (rendering), MOCK.md, INTENT.md. Or combine data+api. Keep separate for clarity.
+
+Colors: newsprint/atelier vibe is taken; choose a different mood — "暗色工作台 + 荧光青/橙"? Or paper-like warm? Choose something distinct: deep ink (#101418) with paper panels, accent "signal orange" #ff5c33 and "loop blue" #4f7cff? Let's do dark "夜航" theme: near-black background, warm paper text, orange accent for action, teal for advisory, red for hard errors. Serif display font fallback (Georgia) + system sans.
+
+Let me write the code.
+
+Data model per project:
+```js
+{
+  id, name, kind: '网页'|'PPT'|'文档', status, statusTone, edition,
+  brief, preset, templateRole,
+  revision: { no, note, updatedAt },
+  preview: { type: 'web'|'deck'|'doc', ... },
+  regions: [...], // for local feedback position select
+  events: [{t, actor, text, tone}],
+  constraints: {preset, tone[], palette[], rules[]},
+  quality: { hard: [{code, text}], aesthetic: [{text, severity}] },
+  feedbackLog: [...], delivery: {...}
+}
+```
+
+Render pipeline: on project select, set state, re-render stations with fade. Loop events rendered newest first or chronological? Vertical timeline—chronological top→bottom feels like a story. I'll do chronological.
+
+Preview rendering: three functions renderWebPreview, renderDeckPreview, renderDocPreview producing stylized DOM with hotspot regions having data-region attributes; local feedback form includes a select populated from regions, plus optional "点选画面中的位置" — clicking a region in preview sets the select value. Nice touch for local granularity.
+
+Direction feedback: a prominent bar under preview: "整体方向不对" opens inline composer (textarea + quick chips: 换叙事/换语气/换视觉). Local: "只改这一处" composer with region select + textarea.
+
+After submit: api returns updated project (adds event, feedbackLog entry, status change for direction: status → '方向重审中'; local: stays, adds event). Toast confirm.
+
+Create project modal: fields name, preset (3), template role (4). On submit, api.createProject returns new project with generated stub data (rule-derived: empty events seeded, revision 0, no preview yet → preview station shows empty state "尚无候选"). Must document rule in MOCK.md.
+
+Empty preview state text must differ from product-client's wording ("选择或新建一个项目以开始校样") — write my own.
+
+INTENT.md 200-400字.
+
+Let me write files now. Keep code reasonably compact but complete.
+
+app.js structure:
+- state {projects, currentId, detail}
+- init: api.listProjects → render rail → select first → load detail.
+- renderAll(detail): rail active, status stamp, stage, loop, constraints, quality, feedback composers (regions), delivery.
+- event handlers: rail click, feedback submit, region click, modal.
+
+Time formatting: strings already.
+
+Let me write the HTML skeleton with sections and placeholder containers that JS fills. Anchors:
+
+- header: data-oey-section="project-rail": brand, objects: rail.brand, rail.tabs (container), rail.status, rail.new
+- main column sections:
+  - data-oey-section="stage": objects stage.heading (project name+kind), stage.revision, stage.note, stage.preview, stage.empty
+  - data-oey-section="feedback-direction": objects direction.title, direction.chips, direction.input, direction.submit
+  - data-oey-section="feedback-local": local.region, local.input, local.submit
+  - data-oey-section="loop": loop.list, loop.count
+  - data-oey-section="constraints": constraints.preset, constraints.tone, constraints.palette, constraints.rules
+  - data-oey-section="quality": quality.hard, quality.aesthetic, quality.verdict
+  - data-oey-section="delivery": delivery.status, delivery.list
+- modal section: data-oey-section="new-project"
+- toast: data-oey-section="toast"
+
+Quality verdict: "可交付/被硬错误拦截" derived, not a merged score — show as gate status separate from two lanes. Fine.
+
+Write CSS: spine layout: main column with ::before vertical line; stations with node dots. Dark theme.
+
+Let me write everything.
+
+For the mock api latency 180-350ms random.
+
+Deck preview: 3 slide thumbnails with titles; doc preview: document page with heading + paragraphs.
+
+Events per project ~6-8 entries, Chinese, referencing phases: 生成候选方向、反馈、产出 Artifact、质量复核、导出.
+
+Hard errors examples: 「第 3 页引用数据缺少来源标注」「正文出现占位文本 TBD」. Aesthetic: 「主色饱和度过高，建议降 10%」「标题层级对比不足」.
+
+Write the code now. Watch length but be complete.
+
+INTENT.md (~300字):
+
+名「环线 THE LOOP」... structure: 单轴纵深时间线... etc.
+
+MOCK.md: list endpoints in window.__mockApi__, data sources, techniques.
+
+Now write final output. No code fences, only file blocks.
+
+Careful: output format forbids markdown fences; file contents raw.
+
+Let me draft app.js carefully.
+
+data.js:
+
+```js
+window.__OEP_DATA__ = { projects: [...] };
+```
+
+api.js:
+
+```js
+(function(){
+  const db = window.__OEP_DATA__;
+  const delay = () => new Promise(r=>setTimeout(r, 160+Math.random()*220));
+  function clone(o){return JSON.parse(JSON.stringify(o));}
+  window.__mockApi__ = {
+    async listProjects(){ await delay(); return db.projects.map(p=>({id,name,kind,status,statusTone,edition})); },
+    async getProject(id){ await delay(); const p=db.projects.find(...); return clone(p); },
+    async submitDirectionFeedback(id, payload){...mutate db, return clone(p) and toast msg},
+    async submitLocalFeedback(...),
+    async createProject(payload){...rule-derived stub},
+  };
+})();
+```
+
+Direction feedback mutation: status='方向重审中', statusTone='busy', push event {actor:'你', text:'要求更换整体方向：...'}, push feedbackLog entry, revision unchanged. Local: push event '针对「region」的局部批注', feedbackLog type '局部微调', status unchanged (or '微调排队中'?). Keep status same, add event; maybe increment nothing.
+
+app.js renders. Also clicking preview region: elements with [data-region] get click → sets select value + flashes.
+
+Write it.
+
+Timestamp helper: use fixed-ish strings; for new events generate current time "刚刚".
+
+Now writing all files.
+
+CSS size: moderate. Let me write.
+
+Also ensure status stamp in header updates (rail.status).
+
+New project: modal with fields; after create, add to rail, select it; detail shows empty preview state and seeded events: [{actor:'系统', text:'项目已创建，等待首轮需求澄清…'},{actor:'design_agent', text:'已就需求提出 2 个澄清问题，等待回复'}]? PRD says agent asks clarifying questions when uncertain — good.
+
+Constraint preset mapping: 开放探索/设计引导/规范生产; template roles: 参考样例/起始脚手架/设计系统/交付合同.
+
+OK write.
+
+Preview builders:
+
+web: 
+```
+<div class="pv-web">
+  <div class="pv-hero" data-region="首屏主视觉">
+    <div class="pv-kicker">DAWN BREW · 城市晨光</div>
+    <h3>把清晨的第一杯，做成一天的开场白。</h3>
+    <div class="pv-cta">探索菜单</div>
+  </div>
+  <div class="pv-cols">
+    <div data-region="产品列表">…</div>
+    <div data-region="品牌故事">…</div>
+  </div>
+</div>
+```
+deck: slides array. doc: sections.
+
+Keep region names consistent with project.regions array.
+
+Write final. Estimate lengths fine.
+
+For loop events chronological with thread dots; tone classes: agent/system/user/quality.
+
+Delivery: status text + records list; for delivered project show exported file names (mock). For blocked: show gate message "交付被硬错误拦截".
+
+Quality verdict logic in render: if hard.length>0 → "交付闸门：关闭（N 个硬错误待处理）" red; else "交付闸门：开放" green. Aesthetic lane header notes "不挡交付，自行判断".
+
+Toast: fixed bottom, shows message 2.6s.
+
+Header rail: horizontal chips with status dot; active state; "+ 新案子" button.
+
+Edition marker: product-client has EDITION marker; I can include per-project "EDITION 04" in chip or stage heading. Put in stage: revision + edition.
+
+Write files now, final.

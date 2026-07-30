@@ -1,0 +1,39 @@
+body {
+  margin: 0;
+  font-family: Georgia, "Times New Roman", serif;
+  background-color: #fdf6ec;
+  color: #2e2a24;
+  line-height: 1.6;
+}
+
+main {
+  max-width: 640px;
+  margin: 4rem auto;
+  padding: 0 1.5rem;
+}
+
+h1 {
+  color: #b45f06;
+  border-bottom: 3px solid #e8c88a;
+  padding-bottom: 0.4rem;
+  font-size: 2.2rem;
+}
+
+p {
+  font-size: 1.1rem;
+  margin-bottom: 1.5rem;
+}
+
+button {
+  background-color: #b45f06;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 0.6rem 1.2rem;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+button:hover {
+  background-color: #8f4a05;
+}

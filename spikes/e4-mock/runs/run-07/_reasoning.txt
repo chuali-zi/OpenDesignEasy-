@@ -1,0 +1,100 @@
+User wants a static prototype: index.html, styles.css, app.js, MOCK.md. Must include data-oey-section and data-oey-object anchors, mock layer, project switching, chat with simulated agent replies, preview area that changes.
+
+Let me build a clean "Agent Workbench" with three files plus MOCK.md.
+
+Design: left sidebar project list, center chat, right preview panel. Mock layer: a `MockAPI` object exposing promise-based methods with setTimeout delay, plus expose window.__mockApi__. Agent replies generated from template rules based on keywords. Preview: renders generated code snippet / card based on project + conversation state (e.g., agent reply triggers "build" and preview updates with generated artifact).
+
+I'll write it concisely but complete. No external resources. Use inline SVG icons or none, system fonts.
+
+Let me write files.
+
+index.html: structure with sections data-oey-section="sidebar", "chat", "preview". Objects: project items data-oey-object="sidebar.project", chat messages data-oey-object="chat.message", preview card data-oey-object="preview.artifact", etc.
+
+app.js: MockAPI with projects data (4 projects, each with seed messages and artifact templates). sendMessage: fake delay, generates reply from rules: detect keywords （按钮/button, 颜色/color, 表格/table...) and generate code artifact appended to preview. Preview shows generated HTML in iframe via srcdoc (sandboxed, no network) — that's fine, no external resources. Also typing indicator.
+
+MOCK.md: document all mock points.
+
+Write code carefully. Keep it self-contained.
+
+Key logic:
+- state: currentProjectId, messages per project, artifacts per project.
+- MockAPI.listProjects(), getConversation(projectId), sendMessage(projectId, text) -> returns {reply, artifact?} after delay.
+- Reply generation rules: pick from templates; if user text contains keywords produce artifact code.
+- Preview: tabs "预览" showing iframe srcdoc of artifact HTML; artifact evolves: each agent reply may produce new version of artifact appended to list, preview shows latest.
+
+Simplify: each project has an artifact document (HTML string) that gets "patched" by agent responses — actually simpler: artifact is generated per reply rule; keep artifact history list, preview shows latest with version badge.
+
+Agent reply generation rules:
+- If contains "按钮" -> add button component, reply mentions it.
+- "颜色"/"蓝色"/"主题" -> change accent color.
+- "表格" -> add table.
+- "表单"/"输入" -> add form.
+- default: generic reply, maybe add a text block.
+Artifact HTML assembled from component list per project (base template + components array). Store per project: {accent, components:[{type,html}]}. Render full HTML doc.
+
+Persist in memory only (mention in MOCK.md; could also localStorage — keep memory to keep mock claims simple, or use localStorage and mention it. I'll skip localStorage... actually a little persistence is nice but adds mock surface. Keep memory.)
+
+Typing simulation: show "agent 正在输入…" indicator with delay 600-1400ms.
+
+Write it.
+
+HTML skeleton:
+
+header with logo + connection status "Mock 模式" badge.
+main grid: aside sidebar (section sidebar), section chat, section preview.
+
+Sidebar: header "项目" + new project button? Keep list only + maybe "新建项目" that adds a project via mock (rule-derived name). That's an extra mock point — fine, include and document. Actually to keep scope manageable, include it; it's easy.
+
+Chat: header with project name (data-oey-object="chat.projectName"), messages container (data-oey-section? messages inside chat section; each bubble data-oey-object="chat.message" with role attr), composer form with textarea + send button.
+
+Preview: header with artifact title + version badge, iframe (data-oey-object="preview.frame"), empty state.
+
+Escaping: user text inserted via textContent — safe. Artifact built from fixed templates + sanitized user input? If user text injected into artifact HTML, escape it. I'll escape user text when embedding into artifact.
+
+Write CSS: dark theme, system font stack.
+
+Now write app.js fully.
+
+Mock latency: helper delay(ms) returns promise.
+
+Projects seed data: 4 projects: "官网落地页", "数据看板", "活动报名页", "个人博客". Each with initial conversation (1 user + 1 agent msg) and initial artifact (components list).
+
+Reply engine:
+
+function generateReply(project, userText):
+  rules array: [{test:/按钮|button/i, comp: buttonHTML, text:...}, ...]
+  accent color rule: /（蓝|红|绿|紫|橙）色/ maps to hex; changes project.accent.
+  Build reply text listing what changed; return {text, changed:true}.
+
+renderArtifact(project): full HTML doc string with accent CSS var and components joined.
+
+Component templates: hero (base, always first), card, button, table, form, footer text.
+
+Initial artifact per project: hero with project title + one card.
+
+Version: project.version++ on each change. Preview header shows "v{version}".
+
+New project: MockAPI.createProject() -> name from template "未命名项目 N", empty convo, base artifact.
+
+Send flow: disable input while pending, push user msg, show typing, await api, push agent msg, update preview if artifact updated (api returns artifact html + version).
+
+Expose window.__mockApi__ = MockAPI.
+
+Also document fetch not intercepted — we use direct mock client. Fine.
+
+Message rendering: role class user/agent; agent messages may include small "已更新预览 → v3" tag.
+
+Write files now.
+
+MOCK.md content: list mock points:
+1. 项目列表 — 内联数组虚构数据， getProjects.
+2. 会话消息 — 内联数组虚构 + 发送后规则推导回复（列出关键词规则表）。
+3. 预览产物 — 规则推导：基础模板 + 组件数组拼装的 HTML 字符串，关键词触发组件追加/主题色修改；iframe srcdoc 渲染。
+4. 新建项目 — 规则推导命名（计数器）。
+5. 延迟 — setTimeout 随机 500–1400ms 模拟网络。
+6. window.__mockApi__ 暴露。
+技术手段：内联数据 + setTimeout + 模板规则推导；无 fetch 拦截、无 SW、无网络请求。
+
+Also note no persistence (refresh resets).
+
+Now produce output exactly in required format, no code fences.

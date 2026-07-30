@@ -1,0 +1,85 @@
+[
+  {
+    "id": "control_copy_edit",
+    "file": "control_copy_edit.html",
+    "expected": []
+  },
+  {
+    "id": "control_reorder",
+    "file": "control_reorder.html",
+    "expected": []
+  },
+  {
+    "id": "control_add_existing_card",
+    "file": "control_add_existing_card.html",
+    "expected": []
+  },
+  {
+    "id": "control_wrapper",
+    "file": "control_wrapper.html",
+    "expected": []
+  },
+  {
+    "id": "control_equivalent_css",
+    "file": "control_equivalent_css.html",
+    "expected": []
+  },
+  {
+    "id": "control_attribute_edit",
+    "file": "control_attribute_edit.html",
+    "expected": []
+  },
+  {
+    "id": "control_copy_and_reorder",
+    "file": "control_copy_and_reorder.html",
+    "expected": []
+  },
+  {
+    "id": "control_runtime_same_dom",
+    "file": "control_runtime_same_dom.html",
+    "expected": []
+  },
+  {
+    "id": "drift_new_color",
+    "file": "drift_new_color.html",
+    "expected": [
+      "color"
+    ]
+  },
+  {
+    "id": "drift_new_font_size",
+    "file": "drift_new_font_size.html",
+    "expected": [
+      "font_size"
+    ]
+  },
+  {
+    "id": "drift_new_space",
+    "file": "drift_new_space.html",
+    "expected": [
+      "space"
+    ]
+  },
+  {
+    "id": "drift_missing_static_anchor",
+    "file": "drift_missing_static_anchor.html",
+    "expected": [
+      "anchor"
+    ]
+  },
+  {
+    "id": "drift_missing_runtime_anchor",
+    "file": "drift_missing_runtime_anchor.html",
+    "expected": [
+      "anchor"
+    ]
+  },
+  {
+    "id": "drift_combined",
+    "file": "drift_combined.html",
+    "expected": [
+      "color",
+      "anchor"
+    ]
+  }
+]

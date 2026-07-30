@@ -1,9 +1,30 @@
 # OEYdesign 架构实施计划
 
-> 状态：v0.1，已于 2026-07-24 审核通过并冻结。
+> 状态：v0.2 草案，待审核。v0.1 于 2026-07-24 审核通过并冻结。
 > 依据：`docs/architecture.md`、`docs/spec/system-spec.md`。
-> 目标：确定总体架构如何分阶段落地，不在本计划中提前选择三个核心模块的内部技术栈。
+> 目标：确定总体架构如何分阶段落地，不在本计划中提前选择核心模块的内部技术栈。
 > 冻结规则：阶段范围和退出条件的变更必须通过版本化 Spec 或 ADR；实施进度只更新状态，不改写已冻结要求。
+
+## v0.2 变更说明
+
+按上述冻结规则，Phase 5 的范围变更通过本次版本化处理。两项变更：
+
+1. **Phase 5 交付物从 3 份 Spec 增加到 4 份**，新增 `agent-engine-spec.md`。
+   理由：第一轮三份 Spec 把创作写成了单次模型调用，丢失了 `architecture.md` §11（Agent 职责
+   模型）、§12（「更开放的创作空间和更直接的工作区工具」）、§14.1（「从既有仓库修改开始，
+   项目源码是主要生产载体」）已要求的能力。同时本计划 §6 列出的 `isolated-execution/` 与
+   `capability-boundary/` 两层始终没有对应 Spec。引擎必须单独成篇，因为 Design、Artifact 与
+   Quality 修复三条路径都要驱动它。
+
+2. **首个真实场景从「空白自然语言 → 产品官网」改为「本仓库 → agent 前端页」**。
+   理由：前者不含仓库输入也基本用不上自造后端，恰好避开了产品最核心的两项能力，Phase 6 无法
+   验证它们。后者使用本仓库作为输入，且 `product-client/` 中已有人手写的 Phase 4 工作台前端
+   可作为对照基准。
+
+配套的既有规范版本化：`system-spec.md` v0.2（§5 增加 Agent Workspace 与 Agent Session 概念身份）、
+`context-evidence-baseline.md` v0.2（仓库只读接入与授权根路径规则）。
+
+Phase 0–4 的范围、退出条件与验收记录不变。
 
 ## 1. 计划目标
 
@@ -191,6 +212,8 @@ Product Shell 可以与 Project Core 并行开始，但在 Project lifecycle 确
 
 ## Phase 4：Stub 驱动的产品闭环
 
+状态：已完成（2026-07-24；代码与自动化门通过，实机浏览器复核受当前 loopback 策略限制）。
+
 目标：在真实设计模块完成前验证整个产品交互和控制流。
 
 交付物：
@@ -213,15 +236,22 @@ Product Shell 可以与 Project Core 并行开始，但在 Project lifecycle 确
 
 Phase 4 的目的不是评估设计美观，而是证明总体架构和产品心智模型成立。
 
-## Phase 5：三个核心模块内部 Spec
+## Phase 5：核心模块内部 Spec 与 Agent 引擎
 
-目标：在系统接缝已验证后，分别完成内部架构和技术选型。
+状态：进行中。四份 Spec 已产出草案，待审核；spike 与 ADR 未执行。
 
-并行产生：
+目标：在系统接缝已验证后，完成内部架构和技术选型。
 
-1. `design-intelligence-spec.md`；
-2. `artifact-production-spec.md`；
-3. `quality-governance-spec.md`。
+产生（v0.2 由 3 份扩为 4 份）：
+
+1. `agent-engine-spec.md`（v0.2 新增，是另外三份的基础）；
+2. `design-intelligence-spec.md`；
+3. `artifact-production-spec.md`；
+4. `quality-governance-spec.md`。
+
+`agent-engine-spec.md` 承接本计划 §6 中 `isolated-execution/` 与 `capability-boundary/` 两层，
+定义工作区、工具目录、agent 循环、自验证闭环、session 续跑、沙箱分级与预算。前三份模块 Spec
+共用它，不各自重复定义。
 
 每份 Spec 至少需要：
 
@@ -236,11 +266,29 @@ Phase 4 的目的不是评估设计美观，而是证明总体架构和产品心
 
 退出条件：
 
-- 三份 Spec 分别审核通过；
+- 四份 Spec 分别审核通过；
 - 首个垂直媒介和真实用户场景已经选择；
 - 关键技术通过 spike，而不是只根据文档决定；
 - 相关 ADR 已接受；
 - 总体端口无需为某项内部技术破坏性改动。
+
+进展记录（2026-07-26）：
+
+| 退出条件 | 当前状态 |
+|---|---|
+| 四份 Spec 分别审核通过 | 草案已产出，**未审核**（engine v0.1；另三份 v0.2） |
+| 首个垂直媒介与真实场景已选择 | 已选：Web + 「本仓库 → agent 前端页（含自造 mock 后端）」 |
+| 关键技术通过 spike | **未执行**，假设清单见各 Spec 末尾（E1–E7 / D1–D7 / A1–A7 / Q1–Q8） |
+| 相关 ADR 已接受 | **未撰写**：ADR-0002 Web 渲染验证、ADR-0003 能力平面与 provider 绑定、ADR-0004 Agent 工作区与沙箱边界 |
+| 总体端口无需破坏性改动 | 已确认：`ports.py` 三个 Protocol 签名不变，domain 只新增可选字段 |
+
+其他已作出的内部选择：
+
+- 候选表示为「agent 直出可运行 Web 项目 + 批准时机械抽取 design contract」；
+- 创作与局部修改由 agent 会话完成，作用域约束采用**事后验证**而非事前限制；
+- 模型编排为自建 vendor-neutral capability harness，首批绑定 Kimi（设计推理与代码理解）与
+  Seedream（生图）；`design.critique` 需要图像输入能力，为本场景阻塞项；
+- 仓库**只读**接入；写用户仓库与启动用户真实后端本轮不实现，门控在用户显式批准 + 沙箱 spike 之后。
 
 在用户再次确认前，本阶段不提前展开详细布局。
 
@@ -332,8 +380,8 @@ conformance-tests/       跨实现契约测试
 | G1 系统 Spec | 组件、状态、接口、控制流 | 已完成 |
 | G2 Contract Skeleton | 接口可被 stub 验证 | 已完成 |
 | G3 Runtime Foundation | 工作流、状态、存储与隔离方向 | 已完成（ADR-0001） |
-| G4 Module Specs | 三个模块内部架构 | 明确暂缓 |
-| G5 Vertical Slice | 首个媒介、场景和质量门 | 待 G4 |
+| G4 Module Specs | 三个模块内部架构 + Agent 引擎 | 进行中：四份草案待审核，spike 与 ADR 未完成 |
+| G5 Vertical Slice | 首个媒介、场景和质量门 | 媒介与场景已选（Web / 本仓库 → agent 前端页），质量门待 G4 |
 | G6 Expansion | 第二媒介和产品化范围 | 待真实数据 |
 
 任何决策门未通过时，可以继续做不依赖该决策的实验，但不能把实验选择固化为跨模块契约。
@@ -354,7 +402,17 @@ conformance-tests/       跨实现契约测试
 
 ## 10. 当前下一步
 
-Phase 3 已通过受控原件、CSV/PNG adapter、三层证据、typed locator、权利隔离、
-Brief/Constraint 确认、Context Package、SQLite 重开和跨 Project 读取拒绝验收。
-下一步按 Phase 4 先形成适量 Product Shell 与 stub 闭环规范，再实现可从 Project
-恢复的工作台；此时仍不决定智能设计、Artifact 生产和质量治理的内部技术栈。
+Phase 4 已通过可恢复 Project 投影、三栏 Product Shell、三类反馈、三种 preset、
+四种模板角色、Quality hard gate、实际 export 复验、幂等 Delivery、HTTP 安全边界
+和静态工作台契约验收。P1–P4 范围至此完成。
+
+Phase 5 已产出四份内部 Spec 草案并选定首个媒介与场景。下一步按顺序为：
+
+1. 四份 Spec 与三份升版规范（system-spec v0.2、context-evidence-baseline v0.2、本计划 v0.2）
+   的人工审核与修订；
+2. 执行各 Spec 末尾列出的 spike（E1–E7、D1–D7、A1–A7、Q1–Q8），以实测结果而非文档结论修订
+   Spec。其中 **E1 沙箱可行性**与 **D6 图像输入能力**是最重的两项：前者决定 agent 能否安全地
+   跑命令，后者决定自验证闭环能否成立；
+3. 依据 spike 结果撰写并接受 ADR-0002（Web 渲染与验证技术）、ADR-0003（能力平面与首批 provider
+   绑定）、ADR-0004（Agent 工作区与沙箱边界）；
+4. 上述三项完成前，内部技术栈不视为已冻结，Phase 6 不启动。

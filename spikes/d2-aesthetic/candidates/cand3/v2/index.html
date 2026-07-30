@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DARKROOM · OEYdesign agent 暗房工作台</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Ccircle cx='8' cy='8' r='6' fill='%23e8a33d'/%3E%3C/svg%3E">
+<style>
+  :root{
+    --bg:#16110d;
+    --bg-raise:#1e1812;
+    --bg-card:#221b14;
+    --bg-inset:#191410;
+    --line:#3a2f23;
+    --line-soft:#2c241b;
+    --text:#f0e7d8;
+    --text-dim:#a89a83;
+    --text-faint:#7a6e5c;
+    --amber:#e8a33d;
+    --amber-deep:#c9821e;
+    --amber-glow:rgba(232,163,61,.14);
+    --red:#d4604a;
+    --gold:#b8892f;
+    --moss:#7d8f5a;
+    --serif:Georgia,"Songti SC","SimSun",serif;
+    --sans:"PingFang SC","Microsoft YaHei",system-ui,sans-serif;
+    --mono:"SF Mono",Menlo,Consolas,monospace;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:var(--sans);
+    font-size:13px;
+    line-height:1.6;
+    overflow:hidden;
+  }
+  ::selection{background:var(--amber);color:#16110d}
+  ::-webkit-scrollbar{width:8px;height:8px}
+  ::-webkit-scrollbar-thumb{background:#3a2f23;border-radius:4px}
+  ::-webkit-scrollbar-track{background:transparent}
+
+  /* ---------- 顶栏 ---------- */
+  .topbar{
+    height:54px;
+    display:flex;align-items:center;gap:14px;
+    padding:0 20px;
+    border-bottom:1px solid var(--line-soft);
+    background:linear-gradient(180deg,#1c1610,#16110d);
+  }
+  .brand{display:flex;align-items:center;gap:10px}
+  .brand .lamp{
+    width:11px;height:11px;border-radius:50%;
+    background:var(--amber);
+    box-shadow:0 0 10px 2px rgba(232,163,61,.55),0 0 26px 6px rgba(232,163,61,.22);
+    animation:lampPulse 4s ease-in-out infinite;
+  }
+  @keyframes lampPulse{
+    0%,100%{box-shadow:0 0 10px 2px rgba(232,163,61,.55),0 0 26px 6px rgba(232,163,61,.22)}
+    50%{box-shadow:0 0 8px 1px rgba(232,163,61,.4),0 0 18px 4px rgba(232,163,61,.15)}
+  }
+  .brand .name{
+    font-family:var(--serif);
+    font-size:19px;font-weight:700;letter-spacing:3px;
+    color:var(--text);
+  }
+  .brand .sub{color:var(--text-dim);font-size:12px;letter-spacing:1px}
+  .topbar .spacer{flex:1}
+  .topbar .meta{
+    font-family:var(--mono);font-size:11px;letter-spacing:2px;
+    color:var(--text-faint);
+  }
+  .stamp{
+    display:inline-block;
+    padding:4px 14px;
+    border:1.5px solid var(--amber);
+    border-radius:3px;
+    color:var(--amber);
+    font-size:12px;font-weight:600;letter-spacing:2px;
+    transform:rotate(-2.5deg);
+    background:rgba(232,163,61,.06);
+    box-shadow:inset 0 0 0 1px rgba(232,163,61,.15);
+  }
+
+  /* ---------- 三栏布局 ---------- */
+  .layout{
+    display:grid;
+    grid-template-columns:236px minmax(0,1fr) 396px;
+    height:calc(100vh - 54px);
+  }
+  .col{overflow-y:auto;overflow-x:hidden}
+  .col.left{border-right:1px solid var(--line-soft);display:flex;flex-direction:column}
+  .col.right{border-left:1px solid var(--line-soft)}
+  .col.center{background:radial-gradient(1200px 300px at 50% -80px,rgba(232,163,61,.07),transparent 70%)}
+
+  .sec-head{
+    padding:18px 16px 10px;
+  }
+  .sec-head h2{
+    font-family:var(--serif);
+    font-size:17px;font-weight:700;letter-spacing:1px;
+  }
+  .sec-head p{color:var(--text-faint);font-size:11px;margin-top:2px}
+
+  /* ---------- 底片夹（项目列表） ---------- */
+  .proj-list{padding:4px 12px;display:flex;flex-direction:column;gap:10px;flex:1}
+  .proj{
+    border:1px solid var(--line-soft);
+    border-radius:8px;
+    background:var(--bg-card);
+    padding:12px 14px;
+    cursor:pointer;
+    transition:border-color .15s,background .15s;
+  }
+  .proj:hover{border-color:var(--line)}
+  .proj.active{
+    border-color:var(--amber);
+    background:linear-gradient(180deg,#2a2115,#241c12);
+    box-shadow:0 0 0 1px rgba(232,163,61,.25),0 4px 14px rgba(0,0,0,.35);
+  }
+  .proj .pname{
+    font-family:var(--serif);
+    font-size:14px;font-weight:700;
+    color:var(--text);
+    margin-bottom:6px;
+  }
+  .proj.active .pname{color:var(--amber)}
+  .proj .prow{display:flex;justify-content:space-between;align-items:center;font-size:11px}
+  .proj .pstatus{color:var(--text-dim)}
+  .proj .ptype{font-family:var(--mono);color:var(--text-faint);letter-spacing:1px}
+  .pstatus.s-approved{color:var(--moss)}
+  .pstatus.s-progress{color:var(--gold)}
+  .new-proj{
+    margin:12px;
+    padding:10px;
+    border:1px dashed var(--line);
+    border-radius:8px;
+    background:transparent;
+    color:var(--text-dim);
+    font-family:var(--sans);font-size:12px;letter-spacing:1px;
+    cursor:pointer;
+    transition:color .15s,border-color .15s;
+  }
+  .new-proj:hover{color:var(--amber);border-color:var(--amber)}
+
+  /* ---------- 中间：预览 ---------- */
+  .stage{padding:20px 26px 30px}
+  .stage-title{
+    display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+    margin-bottom:14px;
+  }
+  .stage-title h1{
+    font-family:var(--serif);
+    font-size:21px;font-weight:700;letter-spacing:1px;
+  }
+  .rev-badge{
+    font-family:var(--mono);font-size:10px;letter-spacing:1px;
+    color:var(--amber);
+    border:1px solid var(--amber-deep);
+    border-radius:3px;
+    padding:2px 7px;
+    background:rgba(232,163,61,.08);
+  }
+  .cand-toggle{margin-left:auto;display:flex;gap:0;border-radius:16px;overflow:visible}
+  .cand{
+    padding:5px 16px;
+    font-size:12px;letter-spacing:1px;
+    border:1px solid var(--line);
+    background:var(--bg-card);
+    color:var(--text-dim);
+    cursor:pointer;
+    font-family:var(--sans);
+  }
+  .cand:first-child{border-radius:16px 0 0 16px}
+  .cand:last-child{border-radius:0 16px 16px 0;margin-left:-1px}
+  .cand.on{
+    background:var(--amber);color:#16110d;font-weight:700;
+    border-color:var(--amber);
+    box-shadow:0 0 12px rgba(232,163,61,.35);
+  }
+
+  .frame{
+    border:1px solid var(--line);
+    border-radius:10px;
+    overflow:hidden;
+    background:var(--bg-inset);
+    box-shadow:0 8px 30px rgba(0,0,0,.45);
+  }
+  .frame-bar{
+    display:flex;align-items:center;gap:8px;
+    padding:9px 14px;
+    border-bottom:1px solid var(--line-soft);
+    background:#14100b;
+  }
+  .frame-bar .dot{width:9px;height:9px;border-radius:50%;background:#3a2f23}
+  .frame-bar .url{
+    font-family:var(--mono);font-size:11px;color:var(--text-faint);
+    margin-left:8px;letter-spacing:.5px;
+  }
+  .proof{
+    padding:20px 26px 24px;
+    background:
+      radial-gradient(700px 200px at 50% -60px,rgba(232,163,61,.10),transparent 70%),
+      #1a1410;
+  }
+  .proof-nav{
+    display:flex;align-items:center;
+    padding-bottom:14px;border-bottom:1px solid var(--line-soft);
+    margin-bottom:22px;
+  }
+  .proof-nav .logo{font-family:var(--serif);font-size:15px;font-weight:700;color:var(--amber);letter-spacing:2px}
+  .proof-nav .links{margin-left:auto;display:flex;gap:22px}
+  .proof-nav .links span{font-size:12px;color:var(--text-dim)}
+  .hero-img{
+    height:130px;border-radius:8px;
+    background:linear-gradient(120deg,#5a3d16,#a06a1f 45%,#e8a33d 80%,#f0c070);
+    position:relative;
+    margin-bottom:26px;
+    box-shadow:inset 0 0 60px rgba(0,0,0,.25);
+  }
+  .hero-img .tag{
+    position:absolute;right:12px;bottom:10px;
+    font-size:10px;color:rgba(240,231,216,.75);letter-spacing:1px;
+    font-family:var(--mono);
+  }
+  .proof h3{
+    font-family:var(--serif);
+    font-size:29px;font-weight:700;letter-spacing:2px;
+    color:var(--text);
+    margin-bottom:10px;
+  }
+  .proof .lead{color:var(--text-dim);font-size:13px;margin-bottom:18px}
+  .proof .cta{
+    display:inline-block;
+    background:var(--amber);color:#16110d;
+    font-weight:700;font-size:13px;letter-spacing:1px;
+    padding:9px 22px;border-radius:18px;
+    margin-bottom:26px;
+    box-shadow:0 4px 14px rgba(232,163,61,.3);
+  }
+  .proof-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:22px}
+  .proof-cards .pc{
+    border:1px solid var(--line-soft);
+    border-radius:8px;
+    background:#201912;
+    padding:14px;
+  }
+  .proof-cards .pc h4{font-family:var(--serif);font-size:14px;color:var(--text);margin-bottom:5px}
+  .proof-cards .pc p{font-size:11px;color:var(--text-dim);line-height:1.6}
+  .proof .foot-note{
+    font-size:12px;color:var(--text-dim);
+    border-top:1px dashed var(--line-soft);
+    padding-top:14px;line-height:1.8;
+  }
+  .proof .foot-note em{font-style:normal;color:var(--gold)}
+
+  .concept-strip{
+    margin-top:16px;
+    border:1px solid var(--line-soft);
+    border-radius:8px;
+    background:var(--bg-card);
+    padding:14px 16px;
+    display:flex;gap:34px;flex-wrap:wrap;
+  }
+  .concept-strip .cell .k{font-size:11px;color:var(--text-faint);margin-bottom:4px;letter-spacing:1px}
+  .concept-strip .cell .v{font-size:12px;color:var(--text)}
+  .swatches{display:flex;gap:8px;align-items:center}
+  .sw{width:20px;height:20px;border-radius:5px;border:1px solid rgba(240,231,216,.15)}
+
+  /* ---------- 右栏 ---------- */
+  .timeline{padding:6px 18px 14px}
+  .t-event{display:flex;gap:12px;padding:9px 0;border-bottom:1px dashed var(--line-soft)}
+  .t-event:last-child{border-bottom:none}
+  .t-time{font-family:var(--mono);font-size:11px;color:var(--text-faint);flex-shrink:0;padding-top:2px;width:34px}
+  .t-dot{
+    width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:6px;
+  }
+  .t-dot.d-sys{background:#5c5142}
+  .t-dot.d-agent{background:var(--amber)}
+  .t-dot.d-user{background:var(--moss)}
+  .t-body{font-size:12px;color:var(--text-dim);line-height:1.65;word-break:break-all}
+  .t-body b{color:var(--text);font-weight:600}
+  .next-step{
+    margin:12px 18px 4px;
+    border:1px solid var(--amber-deep);
+    border-radius:8px;
+    background:rgba(232,163,61,.07);
+    padding:11px 14px;
+  }
+  .next-step .k{font-size:11px;color:var(--amber);letter-spacing:2px;margin-bottom:3px}
+  .next-step .v{font-size:12px;color:var(--text)}
+
+  .quality{padding:6px 18px 16px;border-top:1px solid var(--line-soft);margin-top:10px}
+  .quality .sec-head{padding-left:0;padding-right:0}
+  .kv-card{
+    border:1px solid var(--line-soft);border-radius:8px;
+    background:var(--bg-card);padding:10px 14px;margin-bottom:12px;
+  }
+  .kv{display:flex;justify-content:space-between;padding:4px 0;font-size:12px}
+  .kv .k{color:var(--text-faint);font-family:var(--mono);font-size:11px}
+  .kv .v{color:var(--text)}
+  .gate{
+    border:1px solid var(--gold);
+    border-radius:6px;
+    color:var(--gold);
+    text-align:center;
+    font-size:12px;letter-spacing:.5px;
+    padding:9px 10px;
+    margin-bottom:14px;
+    background:rgba(184,137,47,.08);
+  }
+  .gate.passed{border-color:var(--moss);color:var(--moss);background:rgba(125,143,90,.08)}
+  .track{margin-bottom:12px}
+  .track .t-head{
+    font-size:12px;font-weight:700;letter-spacing:1px;margin-bottom:6px;
+    display:flex;align-items:center;gap:8px;
+  }
+  .track .t-note{font-size:10px;font-weight:400;color:var(--text-faint);letter-spacing:0}
+  .track.hard .t-head{color:var(--red)}
+  .track.aes .t-head{color:var(--gold)}
+  .track .t-body{
+    border-left:2px solid var(--line);
+    padding:4px 0 4px 12px;
+    font-size:12px;color:var(--text-faint);
+  }
+  .track.hard .t-body{border-left-color:var(--red)}
+  .track.aes .t-body{border-left-color:var(--gold)}
+  .track .finding{color:var(--text-dim);padding:2px 0}
+
+  .feedback{padding:6px 18px 26px;border-top:1px solid var(--line-soft)}
+  .feedback .sec-head{padding-left:0;padding-right:0}
+  .fb-form{
+    border:1px solid var(--line-soft);border-radius:8px;
+    background:var(--bg-card);padding:12px 14px;margin-bottom:14px;
+  }
+  .fb-form .f-head{font-size:12px;font-weight:700;letter-spacing:1px;margin-bottom:3px}
+  .fb-form .f-head.dir{color:var(--amber)}
+  .fb-form .f-head.pin{color:var(--gold)}
+  .fb-form .f-desc{font-size:11px;color:var(--text-faint);margin-bottom:9px}
+  .fb-form textarea{
+    width:100%;min-height:58px;resize:vertical;
+    background:var(--bg-inset);
+    border:1px solid var(--line-soft);
+    border-radius:6px;
+    color:var(--text);
+    font-family:var(--sans);font-size:12px;line-height:1.6;
+    padding:8px 10px;
+    outline:none;
+  }
+  .fb-form textarea:focus{border-color:var(--amber)}
+  .fb-form textarea::placeholder{color:var(--text-faint)}
+  .fb-form .f-row{display:flex;justify-content:space-between;align-items:center;margin-top:8px}
+  .fb-form .f-hint{font-size:10px;color:var(--text-faint)}
+  .fb-submit{
+    border:none;border-radius:5px;
+    padding:6px 18px;
+    font-family:var(--sans);font-size:12px;font-weight:700;letter-spacing:1px;
+    cursor:pointer;
+    transition:filter .15s;
+  }
+  .fb-submit:hover{filter:brightness(1.1)}
+  .fb-submit.amber{background:var(--amber);color:#16110d}
+  .fb-submit.gold{background:transparent;color:var(--gold);border:1px solid var(--gold)}
+  .fb-sent{font-size:11px;color:var(--moss);margin-top:6px;display:none}
+</style>
+</head>
+<body>
+
+<header class="topbar" data-oey="topbar">
+  <div class="brand">
+    <span class="lamp"></span>
+    <span class="name">DARKROOM</span>
+    <span class="sub">OEYdesign agent 暗房工作台</span>
+  </div>
+  <div class="spacer"></div>
+  <span class="meta">EDITION · 内部样机 R0</span>
+  <span class="stamp" data-oey="status-stamp" id="statusStamp">方向待确认</span>
+</header>
+
+<div class="layout">
+
+  <!-- 左栏：底片夹 -->
+  <aside class="col left" data-oey="project-list">
+    <div class="sec-head">
+      <h2>底片夹</h2>
+      <p>项目列表 · 点击切换</p>
+    </div>
+    <div class="proj-list" id="projList">
+      <div class="proj active" data-proj="tea">
+        <div class="pname">霓虹茶室 · 品牌官网</div>
+        <div class="prow"><span class="pstatus">方向待确认</span><span class="ptype">网页 · R3</span></div>
+      </div>
+      <div class="proj" data-proj="ppt">
+        <div class="pname">季度财报 · 管理层 PPT</div>
+        <div class="prow"><span class="pstatus s-progress">质量复核中</span><span class="ptype">PPT · R5</span></div>
+      </div>
+      <div class="proj" data-proj="zine">
+        <div class="pname">独立刊物《慢递》· 创刊号网页</div>
+        <div class="prow"><span class="pstatus s-approved">已批准 · 可交付</span><span class="ptype">网页 · R7</span></div>
+      </div>
+      <div class="proj" data-proj="fest">
+        <div class="pname">山地音乐节 · 海报落地页</div>
+        <div class="prow"><span class="pstatus">方向生成中</span><span class="ptype">网页 · R0</span></div>
+      </div>
+    </div>
+    <button class="new-proj" id="newProjBtn">＋ 新建项目</button>
+  </aside>
+
+  <!-- 中栏：放大机（预览） -->
+  <main class="col center" data-oey="preview">
+    <div class="stage">
+      <div class="stage-title">
+        <h1 id="stageName">霓虹茶室 · 品牌官网</h1>
+        <span class="rev-badge" id="stageRev">REVISION R3</span>
+        <div class="cand-toggle" id="candToggle">
+          <button class="cand on" data-cand="A">候选 A</button>
+          <button class="cand" data-cand="B">候选 B</button>
+        </div>
+      </div>
+
+      <div class="frame" id="frameA">
+        <div class="frame-bar">
+          <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+          <span class="url">darkroom://proof/p-tea</span>
+        </div>
+        <div class="proof">
+          <div class="proof-nav">
+            <span class="logo">霓虹茶室</span>
+            <div class="links"><span>茶单</span><span>空间</span><span>预约</span></div>
+          </div>
+          <div class="hero-img"><span class="tag">AI 配图占位</span></div>
+          <h3>把夜晚泡进一盏茶里</h3>
+          <p class="lead">营业至凌晨两点的城市茶室。今晚供应：焙火乌龙、冷萃白牡丹。</p>
+          <span class="cta">查看今晚茶单</span>
+          <div class="proof-cards">
+            <div class="pc"><h4>深夜茶单</h4><p>22:00 后限定三支茶，配一份手写笺。</p></div>
+            <div class="pc"><h4>吧台预约</h4><p>仅八个位置，建议提前一天留位。</p></div>
+            <div class="pc"><h4>茶寄服务</h4><p>当月茶样可邮寄，附冲泡卡。</p></div>
+          </div>
+          <p class="foot-note">我们相信茶不只属于白天。霓虹茶室想把「夜里也有一个安静去处」这件事，做得<em>认真一点</em>。</p>
+        </div>
+      </div>
+
+      <div class="frame" id="frameB" style="display:none">
+        <div class="frame-bar">
+          <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+          <span class="url">darkroom://proof/p-tea?cand=B</span>
+        </div>
+        <div class="proof">
+          <div class="proof-nav">
+            <span class="logo">霓虹茶室</span>
+            <div class="links"><span>茶单</span><span>空间</span><span>预约</span></div>
+          </div>
+          <div class="hero-img" style="background:linear-gradient(120deg,#2c2118,#6b4f2a 50%,#a8874f)"><span class="tag">AI 配图占位</span></div>
+          <h3>晨雾茶事</h3>
+          <p class="lead">从清晨六点开始的第一泡。白瓷、浅焙、慢节奏。</p>
+          <span class="cta" style="background:#c9a25e">查看晨间茶单</span>
+          <div class="proof-cards">
+            <div class="pc"><h4>晨间茶单</h4><p>06:00 起供应浅焙乌龙与白茶。</p></div>
+            <div class="pc"><h4>窗边座</h4><p>六个朝东位置，看日出最好的角度。</p></div>
+            <div class="pc"><h4>茶寄服务</h4><p>当月茶样可邮寄，附冲泡卡。</p></div>
+          </div>
+          <p class="foot-note">白天也值得被认真泡一杯茶。晨雾茶事想把「开始」这件事，做得<em>轻一点</em>。</p>
+        </div>
+      </div>
+
+      <div class="concept-strip">
+        <div class="cell">
+          <div class="k">方向概念</div>
+          <div class="v" id="conceptText">夜色茶单 · 深沉暖调，强调营业至凌晨的城市感</div>
+        </div>
+        <div class="cell">
+          <div class="k">用色</div>
+          <div class="swatches" id="swatches">
+            <span class="sw" style="background:#1a1410"></span>
+            <span class="sw" style="background:#e8a33d"></span>
+            <span class="sw" style="background:#f0e7d8"></span>
+            <span class="sw" style="background:#8a5a28"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- 右栏 -->
+  <aside class="col right">
+
+    <!-- 冲洗记录 -->
+    <section data-oey="timeline">
+      <div class="sec-head">
+        <h2>冲洗记录</h2>
+        <p>agent 与系统的过程事件</p>
+      </div>
+      <div class="timeline" id="timeline">
+        <div class="t-event">
+          <span class="t-time">09:02</span><span class="t-dot d-sys"></span>
+          <div class="t-body">项目创建于「设计引导」preset，模板角色：<b>起始脚手架</b>。</div>
+        </div>
+        <div class="t-event">
+          <span class="t-time">09:03</span><span class="t-dot d-agent"></span>
+          <div class="t-body">理解需求：为一家夜间营业的茶室做品牌官网，风格描述模糊（“有氛围感”）。</div>
+        </div>
+        <div class="t-event">
+          <span class="t-time">09:05</span><span class="t-dot d-agent"></span>
+          <div class="t-body">需求存在不确定处，已向用户提问：目标客群是夜归上班族还是茶爱好者？</div>
+        </div>
+        <div class="t-event">
+          <span class="t-time">09:11</span><span class="t-dot d-user"></span>
+          <div class="t-body">回答提问：两类都要兼顾，但优先夜归人群。</div>
+        </div>
+        <div class="t-event">
+          <span class="t-time">09:18</span><span class="t-dot d-agent"></span>
+          <div class="t-body">产出 R3 两个候选方向：<b>「夜色茶单」</b>与<b>「晨雾茶事」</b>，等待方向确认。</div>
+        </div>
+      </div>
+      <div class="next-step">
+        <div class="k">下一步</div>
+        <div class="v">在两个候选方向中选定一个，或投递整体方向反馈要求换一批。</div>
+      </div>
+    </section>
+
+    <!-- 显影检查 -->
+    <section class="quality" data-oey="quality">
+      <div class="sec-head">
+        <h2>显影检查</h2>
+        <p>约束档案 · 质量双轨结论</p>
+      </div>
+      <div class="kv-card">
+        <div class="kv"><span class="k">Preset</span><span class="v">设计引导</span></div>
+        <div class="kv"><span class="k">Template role</span><span class="v">起始脚手架</span></div>
+        <div class="kv"><span class="k">媒介</span><span class="v">网页</span></div>
+      </div>
+      <div class="gate" id="gateBar">质量复核尚未运行（产出正式 Artifact 后自动启动）</div>
+      <div class="track hard">
+        <div class="t-head">硬错误 <span class="t-note">客观 · 阻挡交付</span></div>
+        <div class="t-body" id="hardTrack">尚未运行。</div>
+      </div>
+      <div class="track aes">
+        <div class="t-head">审美发现 <span class="t-note">主观建议 · 不阻挡交付</span></div>
+        <div class="t-body" id="aesTrack">尚未运行。</div>
+      </div>
+    </section>
+
+    <!-- 标注台 -->
+    <section class="feedback" data-oey="feedback">
+      <div class="sec-head">
+        <h2>标注台</h2>
+        <p>两种粒度的反馈，分开投递</p>
+      </div>
+
+      <form class="fb-form" id="dirForm">
+        <div class="f-head dir">整体方向反馈</div>
+        <div class="f-desc">针对当前这一批候选方向整体：换一批、调方向、或确认选定。</div>
+        <textarea id="dirText" placeholder="例如：夜色茶单方向对，但整体再暗一点，琥珀色减少 20%…"></textarea>
+        <div class="f-row">
+          <span class="f-hint">投递后 agent 将产出下一批候选</span>
+          <button type="submit" class="fb-submit amber">投递方向反馈</button>
+        </div>
+        <div class="fb-sent" id="dirSent">✓ 已投递，记入冲洗记录</div>
+      </form>
+
+      <form class="fb-form" id="pinForm">
+        <div class="f-head pin">单点审美标注</div>
+        <div class="f-desc">针对当前预览里某个具体元素的主观意见，归入「审美发现」轨。</div>
+        <textarea id="pinText" placeholder="例如：主标题字距太宽，凌晨氛围被拉散了…"></textarea>
+        <div class="f-row">
+          <span class="f-hint">不阻挡交付，仅作为修改建议</span>
+          <button type="submit" class="fb-submit gold">投递审美标注</button>
+        </div>
+        <div class="fb-sent" id="pinSent">✓ 已投递，记入审美发现轨</div>
+      </form>
+    </section>
+
+  </aside>
+</div>
+
+<script>
+(function(){
+  var projData = {
+    tea:  {name:"霓虹茶室 · 品牌官网", rev:"REVISION R3", stamp:"方向待确认"},
+    ppt:  {name:"季度财报 · 管理层 PPT", rev:"REVISION R5", stamp:"复核中"},
+    zine: {name:"独立刊物《慢递》· 创刊号网页", rev:"REVISION R7", stamp:"可交付"},
+    fest: {name:"山地音乐节 · 海报落地页", rev:"REVISION R0", stamp:"生成中"}
+  };
+
+  // 项目切换
+  var projList = document.getElementById("projList");
+  projList.addEventListener("click", function(e){
+    var card = e.target.closest(".proj");
+    if(!card) return;
+    projList.querySelectorAll(".proj").forEach(function(p){ p.classList.remove("active"); });
+    card.classList.add("active");
+    var d = projData[card.getAttribute("data-proj")];
+    if(d){
+      document.getElementById("stageName").textContent = d.name;
+      document.getElementById("stageRev").textContent = d.rev;
+      document.getElementById("statusStamp").textContent = d.stamp;
+    }
+  });
+
+  // 候选 A/B 切换
+  var toggle = document.getElementById("candToggle");
+  toggle.addEventListener("click", function(e){
+    var btn = e.target.closest(".cand");
+    if(!btn) return;
+    toggle.querySelectorAll(".cand").forEach(function(b){ b.classList.remove("on"); });
+    btn.classList.add("on");
+    var isA = btn.getAttribute("data-cand") === "A";
+    document.getElementById("frameA").style.display = isA ? "" : "none";
+    document.getElementById("frameB").style.display = isA ? "none" : "";
+    document.getElementById("conceptText").textContent = isA
+      ? "夜色茶单 · 深沉暖调，强调营业至凌晨的城市感"
+      : "晨雾茶事 · 浅焙暖调，强调清晨第一泡的轻盈感";
+  });
+
+  function now(){
+    var d = new Date();
+    return String(d.getHours()).padStart(2,"0") + ":" + String(d.getMinutes()).padStart(2,"0");
+  }
+  function addEvent(text, dotClass){
+    var tl = document.getElementById("timeline");
+    var row = document.createElement("div");
+    row.className = "t-event";
+    var t = document.createElement("span"); t.className = "t-time"; t.textContent = now();
+    var dot = document.createElement("span"); dot.className = "t-dot " + dotClass;
+    var body = document.createElement("div"); body.className = "t-body"; body.textContent = text;
+    row.appendChild(t); row.appendChild(dot); row.appendChild(body);
+    tl.appendChild(row);
+  }
+
+  // 整体方向反馈表单
+  document.getElementById("dirForm").addEventListener("submit", function(e){
+    e.preventDefault();
+    var v = document.getElementById("dirText").value.trim();
+    if(!v) return;
+    addEvent("收到整体方向反馈：" + v, "d-user");
+    document.getElementById("dirSent").style.display = "block";
+    document.getElementById("dirText").value = "";
+  });
+
+  // 单点审美标注表单
+  document.getElementById("pinForm").addEventListener("submit", function(e){
+    e.preventDefault();
+    var v = document.getElementById("pinText").value.trim();
+    if(!v) return;
+    addEvent("收到单点审美标注：" + v, "d-user");
+    var aes = document.getElementById("aesTrack");
+    if(aes.textContent.indexOf("尚未运行") === 0) aes.textContent = "";
+    var f = document.createElement("div");
+    f.className = "finding";
+    f.textContent = "· " + v;
+    aes.appendChild(f);
+    document.getElementById("pinSent").style.display = "block";
+    document.getElementById("pinText").value = "";
+  });
+
+  // 新建项目（占位交互）
+  document.getElementById("newProjBtn").addEventListener("click", function(){
+    addEvent("用户请求新建项目：等待填写需求简报。", "d-sys");
+  });
+})();
+</script>
+</body>
+</html>

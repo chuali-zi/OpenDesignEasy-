@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>Interaction Demo</title>
+<style>
+  body { font-family: sans-serif; padding: 24px; }
+  .counter-area { margin-bottom: 24px; }
+  .tab-btn { padding: 6px 14px; cursor: pointer; border: 1px solid #ccc; background: #f5f5f5; }
+  .tab-btn.active { background: #2563eb; color: #fff; border-color: #2563eb; }
+  .panel { border: 1px solid #ddd; padding: 16px; margin-top: 8px; }
+  .panel.hidden { display: none; }
+</style>
+</head>
+<body>
+
+<div class="counter-area">
+  <button data-oey-object="counter.button">+1</button>
+  <span data-oey-object="counter.display">0</span>
+</div>
+
+<div class="tabs-area">
+  <button class="tab-btn active" data-oey-object="tabs.tab-a">标签 A</button>
+  <button class="tab-btn" data-oey-object="tabs.tab-b">标签 B</button>
+  <div class="panel" data-oey-object="tabs.panel-a">面板 A 内容</div>
+  <div class="panel hidden" data-oey-object="tabs.panel-b">面板 B 内容</div>
+</div>
+
+<script>
+(function () {
+  var btn = document.querySelector('[data-oey-object="counter.button"]');
+  var display = document.querySelector('[data-oey-object="counter.display"]');
+  var count = 0;
+  btn.addEventListener('click', function () {
+    count += 1;
+    display.textContent = String(count);
+  });
+
+  var tabA = document.querySelector('[data-oey-object="tabs.tab-a"]');
+  var tabB = document.querySelector('[data-oey-object="tabs.tab-b"]');
+  var panelA = document.querySelector('[data-oey-object="tabs.panel-a"]');
+  var panelB = document.querySelector('[data-oey-object="tabs.panel-b"]');
+
+  function showA() {
+    panelA.classList.remove('hidden');
+    panelB.classList.add('hidden');
+    tabA.classList.add('active');
+    tabB.classList.remove('active');
+  }
+
+  function showB() {
+    panelB.classList.remove('hidden');
+    panelA.classList.add('hidden');
+    tabB.classList.add('active');
+    tabA.classList.remove('active');
+  }
+
+  tabA.addEventListener('click', showA);
+  tabB.addEventListener('click', showB);
+})();
+</script>
+
+</body>
+</html>

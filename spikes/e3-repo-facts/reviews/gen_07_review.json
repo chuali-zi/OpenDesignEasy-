@@ -1,0 +1,250 @@
+{
+  "statements": [
+    {
+      "sentence": "OEYdesign 是一个「契约优先」的参考实现项目，其包自述为 \"OEYdesign contract-first reference implementation\"，项目描述为 \"Contract-first reference implementation for OEYdesign\"[F0064][F0541]",
+      "clean_text": "OEYdesign 是一个「契约优先」的参考实现项目，其包自述为 \"OEYdesign contract-first reference implementation\"，项目描述为 \"Contract-first reference implementation for OEYdesign\"",
+      "cited_ids": [
+        "F0064",
+        "F0541"
+      ],
+      "tokens": {
+        "numbers": [],
+        "identifiers": [
+          "OEYdesign"
+        ],
+        "frameworks": []
+      },
+      "token_levels": {
+        "identifier:OEYdesign": "cited"
+      },
+      "primary": "traceable_correct",
+      "detail": "",
+      "closed_world": "traceable_correct",
+      "closed_world_detail": ""
+    },
+    {
+      "sentence": "它面向需要可替换、厂商中立架构的设计生产流程：核心领域语言集中在 `domain.py`（689 行），其中定义了 `Project`、`Candidate`、`ArtifactRevision`、`DeliveryBundle`、`Approval` 等冻结数据类以及 `ProjectState`、`WorkflowStatus` 等枚举，供所有适配器共享[F0144][F0213][F0200][F0203][F0210][F0149]",
+      "clean_text": "它面向需要可替换、厂商中立架构的设计生产流程：核心领域语言集中在 `domain.py`（689 行），其中定义了 `Project`、`Candidate`、`ArtifactRevision`、`DeliveryBundle`、`Approval` 等冻结数据类以及 `ProjectState`、`WorkflowStatus` 等枚举，供所有适配器共享",
+      "cited_ids": [
+        "F0144",
+        "F0213",
+        "F0200",
+        "F0203",
+        "F0210",
+        "F0149"
+      ],
+      "tokens": {
+        "numbers": [
+          "689"
+        ],
+        "identifiers": [
+          "Approval",
+          "ArtifactRevision",
+          "Candidate",
+          "DeliveryBundle",
+          "Project",
+          "ProjectState",
+          "WorkflowStatus",
+          "domain.py"
+        ],
+        "frameworks": []
+      },
+      "token_levels": {
+        "number:689": "cited",
+        "identifier:Approval": "cited",
+        "identifier:ArtifactRevision": "cited",
+        "identifier:Candidate": "cited",
+        "identifier:DeliveryBundle": "cited",
+        "identifier:Project": "cited",
+        "identifier:ProjectState": "cited",
+        "identifier:WorkflowStatus": "package",
+        "identifier:domain.py": "cited"
+      },
+      "primary": "traceable_correct",
+      "detail": "undercited but real/offered content: ['identifier:WorkflowStatus']",
+      "closed_world": "traceable_correct",
+      "closed_world_detail": ""
+    },
+    {
+      "sentence": "所有外部能力通过 `ports.py` 中以 Protocol 定义的端口抽象，如 `ProjectRepository`、`DesignIntelligencePort`、`QualityGovernancePort`、`WorkflowRuntimePort` 等[F0294][F0299][F0354][F0364][F0349]",
+      "clean_text": "所有外部能力通过 `ports.py` 中以 Protocol 定义的端口抽象，如 `ProjectRepository`、`DesignIntelligencePort`、`QualityGovernancePort`、`WorkflowRuntimePort` 等",
+      "cited_ids": [
+        "F0294",
+        "F0299",
+        "F0354",
+        "F0364",
+        "F0349"
+      ],
+      "tokens": {
+        "numbers": [],
+        "identifiers": [
+          "DesignIntelligencePort",
+          "ProjectRepository",
+          "QualityGovernancePort",
+          "WorkflowRuntimePort",
+          "ports.py"
+        ],
+        "frameworks": []
+      },
+      "token_levels": {
+        "identifier:DesignIntelligencePort": "cited",
+        "identifier:ProjectRepository": "cited",
+        "identifier:QualityGovernancePort": "cited",
+        "identifier:WorkflowRuntimePort": "cited",
+        "identifier:ports.py": "cited"
+      },
+      "primary": "traceable_correct",
+      "detail": "",
+      "closed_world": "traceable_correct",
+      "closed_world_detail": ""
+    },
+    {
+      "sentence": "业务状态的唯一写入者是 `control.py` 中的 `ControlPlane`（35 个方法），负责从创建项目、生成候选到审批导出的全流程命令分发[F0107][F0143]",
+      "clean_text": "业务状态的唯一写入者是 `control.py` 中的 `ControlPlane`（35 个方法），负责从创建项目、生成候选到审批导出的全流程命令分发",
+      "cited_ids": [
+        "F0107",
+        "F0143"
+      ],
+      "tokens": {
+        "numbers": [
+          "35"
+        ],
+        "identifiers": [
+          "ControlPlane",
+          "control.py"
+        ],
+        "frameworks": []
+      },
+      "token_levels": {
+        "number:35": "cited",
+        "identifier:ControlPlane": "cited",
+        "identifier:control.py": "cited"
+      },
+      "primary": "traceable_correct",
+      "detail": "",
+      "closed_world": "traceable_correct",
+      "closed_world_detail": ""
+    },
+    {
+      "sentence": "持久化方面提供 SQLite 参考适配器（项目仓库、命令账本、事件存储、审计日志、副作用账本）以及由 `SQLiteApplication` 组装而成的 Phase 2 组合根[F0256][F0271][F0275][F0278][F0282][F0288][F0065][F0070]",
+      "clean_text": "持久化方面提供 SQLite 参考适配器（项目仓库、命令账本、事件存储、审计日志、副作用账本）以及由 `SQLiteApplication` 组装而成的 Phase 2 组合根",
+      "cited_ids": [
+        "F0256",
+        "F0271",
+        "F0275",
+        "F0278",
+        "F0282",
+        "F0288",
+        "F0065",
+        "F0070"
+      ],
+      "tokens": {
+        "numbers": [
+          "2"
+        ],
+        "identifiers": [
+          "SQLite",
+          "SQLiteApplication"
+        ],
+        "frameworks": []
+      },
+      "token_levels": {
+        "number:2": "cited",
+        "identifier:SQLite": "cited",
+        "identifier:SQLiteApplication": "cited"
+      },
+      "primary": "traceable_correct",
+      "detail": "",
+      "closed_world": "traceable_correct",
+      "closed_world_detail": ""
+    },
+    {
+      "sentence": "工作流运行时基于 SQLite 并内置确定性故障注入机制，支持暂停、恢复与检查点[F0397][F0418][F0426]",
+      "clean_text": "工作流运行时基于 SQLite 并内置确定性故障注入机制，支持暂停、恢复与检查点",
+      "cited_ids": [
+        "F0397",
+        "F0418",
+        "F0426"
+      ],
+      "tokens": {
+        "numbers": [],
+        "identifiers": [
+          "SQLite"
+        ],
+        "frameworks": []
+      },
+      "token_levels": {
+        "identifier:SQLite": "cited"
+      },
+      "primary": "traceable_correct",
+      "detail": "",
+      "closed_world": "traceable_correct",
+      "closed_world_detail": ""
+    },
+    {
+      "sentence": "此外还包含证据与上下文适配层（CSV/PNG 解析器、人工确认器等）以及一个零依赖的 HTTP 产品外壳[F0071][F0082][F0084][F0089][F0368]",
+      "clean_text": "此外还包含证据与上下文适配层（CSV/PNG 解析器、人工确认器等）以及一个零依赖的 HTTP 产品外壳",
+      "cited_ids": [
+        "F0071",
+        "F0082",
+        "F0084",
+        "F0089",
+        "F0368"
+      ],
+      "tokens": {
+        "numbers": [],
+        "identifiers": [
+          "CSV",
+          "HTTP",
+          "PNG"
+        ],
+        "frameworks": []
+      },
+      "token_levels": {
+        "identifier:CSV": "package",
+        "identifier:HTTP": "cited",
+        "identifier:PNG": "package"
+      },
+      "primary": "traceable_correct",
+      "detail": "undercited but real/offered content: ['identifier:CSV', 'identifier:PNG']",
+      "closed_world": "traceable_correct",
+      "closed_world_detail": ""
+    },
+    {
+      "sentence": "项目声明零运行时依赖、要求 Python ≥3.11，并在 tests/ 下配有 8 个测试文件共 42 个测试函数，另有 lab30min 目录提供渐进式实验教程[F0536][F0538][F0535][F0463]",
+      "clean_text": "项目声明零运行时依赖、要求 Python ≥3.11，并在 tests/ 下配有 8 个测试文件共 42 个测试函数，另有 lab30min 目录提供渐进式实验教程",
+      "cited_ids": [
+        "F0536",
+        "F0538",
+        "F0535",
+        "F0463"
+      ],
+      "tokens": {
+        "numbers": [
+          "3.11",
+          "8",
+          "42",
+          "30"
+        ],
+        "identifiers": [],
+        "frameworks": []
+      },
+      "token_levels": {
+        "number:3.11": "cited",
+        "number:8": "cited",
+        "number:42": "cited",
+        "number:30": "cited"
+      },
+      "primary": "traceable_correct",
+      "detail": "",
+      "closed_world": "traceable_correct",
+      "closed_world_detail": ""
+    }
+  ],
+  "tally_primary": {
+    "traceable_correct": 8
+  },
+  "tally_closed_world": {
+    "traceable_correct": 8
+  }
+}

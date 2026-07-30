@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OEYdesign · 校样台</title>
+<link rel="stylesheet" href="assets/fonts/fonts.css">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<!-- ============ 顶栏：48px，文字级控件 ============ -->
+<header class="topbar" data-oey-section="topbar">
+  <div class="topbar-left">
+    <span class="wordmark">OEYdesign</span>
+    <span class="vline"></span>
+    <span class="project-name">PULSE S1 落地页</span>
+  </div>
+  <div class="topbar-right">
+    <span class="status"><span class="status-dot"></span><span id="statusText">校对中</span></span>
+    <span class="vline"></span>
+    <span class="version" id="versionLabel" title="当前版本">v3.2</span>
+    <div class="export-wrap">
+      <button class="export-btn" id="exportBtn" type="button">导出</button>
+      <div class="export-menu" id="exportMenu" hidden>
+        <button type="button" data-export="html">Web（.html）</button>
+        <button type="button" data-export="pdf">PDF 校样</button>
+        <button type="button" data-export="png">PNG 长图</button>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main class="main">
+
+  <!-- ============ 左栏：对话 / 修改记录（340px） ============ -->
+  <aside class="rail" data-oey-section="conversation">
+    <div class="rail-head">
+      <h1>修改记录</h1>
+      <p class="rail-sub" id="roundCount">6 轮 · 仍在校</p>
+    </div>
+
+    <details class="index" id="indexPanel">
+      <summary>对象索引 · <span id="indexCount">6</span> 处批注</summary>
+      <div class="index-list" id="indexList">
+        <button type="button" class="index-row" data-round="1" data-object="hero-title"><span class="idx-num">1</span><span class="idx-id">#hero-title</span><span class="idx-name">首屏主标题</span></button>
+        <button type="button" class="index-row" data-round="2" data-object="hero-cta"><span class="idx-num">2</span><span class="idx-id">#hero-cta</span><span class="idx-name">预约试驾按钮</span></button>
+        <button type="button" class="index-row" data-round="3" data-object="spec-range"><span class="idx-num">3</span><span class="idx-id">#spec-range</span><span class="idx-name">续航数字</span></button>
+        <button type="button" class="index-row" data-round="4" data-object="hero-theme"><span class="idx-num">4</span><span class="idx-id">#hero-theme</span><span class="idx-name">整页暗色与用色</span></button>
+        <button type="button" class="index-row" data-round="5" data-object="quote"><span class="idx-num">5</span><span class="idx-id">#quote</span><span class="idx-name">用户评价</span></button>
+        <button type="button" class="index-row" data-round="6" data-object="footer-sub"><span class="idx-num">6</span><span class="idx-id">#footer-sub</span><span class="idx-name">页脚邮箱订阅</span></button>
+      </div>
+    </details>
+
+    <div class="turns" id="turns">
+
+      <article class="turn" data-round="1" data-object="hero-title">
+        <button class="turn-meta" type="button" title="在稿纸上定位这一处">
+          <span class="rnum">R1</span><span class="rtime">14:02</span><span class="robj">#hero-title</span>
+        </button>
+        <div class="msg"><span class="who">你</span>
+          <p>首屏主标题「让每一次城市通勤都成为一种享受」太长，两行都塞不下。压进两行以内，语气再狠一点。</p>
+        </div>
+        <div class="msg"><span class="who">OEY</span>
+          <p><span class="tick">✓</span><b>已改</b> — 标题换成「城市，向前。」，两行、每行不超过 4 个字；字号 44 → 64px，行高收到 1.05。原句降级为副文案保留。</p>
+        </div>
+      </article>
+
+      <article class="turn" data-round="2" data-object="hero-cta">
+        <button class="turn-meta" type="button" title="在稿纸上定位这一处">
+          <span class="rnum">R2</span><span class="rtime">14:07</span><span class="robj">#hero-cta</span>
+        </button>
+        <div class="msg"><span class="who">你</span>
+          <p>「预约试驾」太像普通文字链接了，扫一眼根本看不到。让它成为首屏唯一的动作焦点。</p>
+        </div>
+        <div class="msg"><span class="who">OEY</span>
+          <p><span class="tick">✓</span><b>已加重</b> — 改为荧光绿实心胶囊，宽 176px、高 52px，16px 加粗；同屏不再出现第二个荧光绿按钮。</p>
+        </div>
+      </article>
+
+      <article class="turn" data-round="3" data-object="spec-range">
+        <button class="turn-meta" type="button" title="在稿纸上定位这一处">
+          <span class="rnum">R3</span><span class="rtime">14:15</span><span class="robj">#spec-range</span>
+        </button>
+        <div class="msg"><span class="who">你</span>
+          <p>这台车最大的卖点就是续航。120km 这个数字必须是全页最大的字，放到参数区第一位。</p>
+        </div>
+        <div class="msg"><span class="who">OEY</span>
+          <p><span class="tick">✓</span><b>已放大</b> — 续航数值 48 → 96px 并移到首位；重量、快充降一级，48 → 36px，视觉锚点只剩一个。</p>
+        </div>
+      </article>
+
+      <article class="turn" data-round="4" data-object="hero-theme">
+        <button class="turn-meta" type="button" title="在稿纸上定位这一处">
+          <span class="rnum">R4</span><span class="rtime">14:21</span><span class="robj">#hero-theme</span>
+        </button>
+        <div class="msg"><span class="who">你</span>
+          <p>整体灰扑扑的。背景再压深一点；荧光绿别到处用，只留在按钮和关键数字上。</p>
+        </div>
+        <div class="msg"><span class="who">OEY</span>
+          <p><span class="tick">✓</span><b>已调</b> — 背景 #16181A → #0D0F10；荧光绿从 6 处收敛到 3 处：主按钮、续航数字、订阅按钮。</p>
+        </div>
+      </article>
+
+      <article class="turn" data-round="5" data-object="quote">
+        <button class="turn-meta" type="button" title="在稿纸上定位这一处">
+          <span class="rnum">R5</span><span class="rtime">14:28</span><span class="robj">#quote</span>
+        </button>
+        <div class="msg"><span class="who">你</span>
+          <p>参数区下面加一条真实用户评价，要有名字和城市，别用占位文案糊弄。</p>
+        </div>
+        <div class="msg"><span class="who">OEY</span>
+          <p><span class="tick">✓</span><b>已加</b> — 新增评价区：三行引文 + 署名「林蔚 · 上海」，左侧竖线引用样式，不用绿色，保持克制。</p>
+        </div>
+      </article>
+
+      <article class="turn" data-round="6" data-object="footer-sub">
+        <button class="turn-meta" type="button" title="在稿纸上定位这一处">
+          <span class="rnum">R6</span><span class="rtime">14:34</span><span class="robj">#footer-sub</span>
+        </button>
+        <div class="msg"><span class="who">你</span>
+          <p>页脚太空了。加一个邮箱订阅，文案就说订阅新品发布和试驾活动消息。</p>
+        </div>
+        <div class="msg"><span class="who">OEY</span>
+          <p><span class="tick">✓</span><b>已加</b> — 页脚左侧订阅框：输入框 + 「订阅」按钮，下方一行隐私说明；右侧补了四个站内链接。</p>
+        </div>
+      </article>
+
+    </div>
+
+    <form class="composer" id="composer">
+      <textarea id="composerInput" rows="2" placeholder="继续提修改意见…（例如：副文案再收紧一点）"></textarea>
+      <button class="send-btn" type="submit" title="发送">↑</button>
+    </form>
+  </aside>
+
+  <!-- ============ 右栏：校样桌 + 稿纸 ============ -->
+  <section class="desk" id="desk" data-oey-section="preview">
+    <div class="sheet-bar">
+      <div class="sheet-id">
+        <span class="sheet-title">PULSE S1 落地页</span>
+        <span class="sheet-meta" id="sheetMeta">1440 × 900 · Web</span>
+      </div>
+      <div class="device-toggle">
+        <button type="button" class="dev-btn is-on" data-mode="desktop">桌面</button>
+        <button type="button" class="dev-btn" data-mode="mobile">移动</button>
+      </div>
+    </div>
+
+    <div class="sheet" id="sheet">
+      <!-- ==================== 内层产物：自有视觉语言，外壳不得蔓延 ==================== -->
+      <div class="product" id="product">
+
+        <nav class="p-nav" data-oey-section="product-nav">
+          <span class="p-logo">PULSE<i></i></span>
+          <div class="p-nav-links">
+            <a href="#">车型</a><a href="#">续航</a><a href="#">智能</a><a href="#">购买</a>
+          </div>
+        </nav>
+
+        <section class="p-hero" data-oey-section="hero" data-oey-object="hero-theme">
+          <span class="anno-dot" data-round="4" style="top:-14px;left:-14px;" title="第 4 轮：整页暗色与用色">4</span>
+          <svg class="anno-bracket" viewBox="0 0 34 34" aria-hidden="true"><path d="M32 4 L6 4 L6 32" fill="none" pathLength="100"/></svg>
+          <span class="p-ghost" aria-hidden="true">S1</span>
+          <div class="p-hero-copy">
+            <p class="p-eyebrow">PULSE S1 · 城市电助力自行车</p>
+            <h2 class="p-title" data-oey-object="hero-title">城市，<br>向前。
+              <svg class="anno-ring" viewBox="0 0 100 60" preserveAspectRatio="none" aria-hidden="true">
+                <path d="M50 4 C74 2 95 9 96 28 C97 47 76 57 51 56 C25 55 4 47 4 29 C4 12 27 6 50 4 Z" fill="none" pathLength="100"/>
+                <path d="M50 4 C74 2 95 9 96 28 C97 47 76 57 51 56 C25 55 4 47 4 29 C4 12 27 6 50 4 Z" fill="none" pathLength="100" class="ring-pass2"/>
+              </svg>
+              <span class="anno-dot" data-round="1" style="top:-16px;right:-18px;" title="第 1 轮：主标题压进两行">1</span>
+            </h2>
+            <p class="p-sub" id="heroSub" data-oey-object="hero-sub">让每一次城市通勤都成为一种享受。中置电机平顺输出，起步不窜、上坡不喘，像有一双看不见的手在推你。</p>
+            <div class="p-cta-row">
+              <a href="#" class="p-cta" data-oey-object="hero-cta">预约试驾
+                <svg class="anno-ring" viewBox="0 0 100 60" preserveAspectRatio="none" aria-hidden="true">
+                  <path d="M7 9 C30 4 68 3 93 8 C97 23 97 38 92 52 C64 57 33 57 8 53 C3 39 4 24 7 9 Z" fill="none" pathLength="100"/>
+                </svg>
+                <span class="anno-dot" data-round="2" style="top:-16px;right:-18px;" title="第 2 轮：主按钮加重">2</span>
+              </a>
+              <a href="#" class="p-cta-ghost">查看配置</a>
+            </div>
+          </div>
+          <div class="p-bike" aria-hidden="true">
+            <svg viewBox="0 0 480 300">
+              <g fill="none" stroke="#3A3F44" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="120" cy="220" r="68"/>
+                <circle cx="380" cy="220" r="68"/>
+                <path d="M120 220 L216 126 L332 130 L380 220"/>
+                <path d="M216 126 L252 220 L380 220"/>
+                <path d="M252 220 L120 220"/>
+                <path d="M332 130 L356 92"/>
+                <path d="M356 92 L334 88"/>
+                <path d="M204 116 L238 116"/>
+                <path d="M216 126 L221 116"/>
+              </g>
+              <circle cx="252" cy="220" r="17" fill="none" stroke="#C8F04A" stroke-width="4"/>
+              <circle cx="252" cy="220" r="4" fill="#C8F04A"/>
+              <circle cx="120" cy="220" r="5" fill="#3A3F44"/>
+              <circle cx="380" cy="220" r="5" fill="#3A3F44"/>
+            </svg>
+          </div>
+        </section>
+
+        <section class="p-specs" data-oey-section="specs">
+          <div class="p-spec p-spec-lead" data-oey-object="spec-range">
+            <span class="p-spec-num p-spec-big">120<em>km</em>
+              <svg class="anno-ring" viewBox="0 0 100 60" preserveAspectRatio="none" aria-hidden="true">
+                <path d="M50 4 C74 2 95 9 96 28 C97 47 76 57 51 56 C25 55 4 47 4 29 C4 12 27 6 50 4 Z" fill="none" pathLength="100"/>
+                <path d="M50 4 C74 2 95 9 96 28 C97 47 76 57 51 56 C25 55 4 47 4 29 C4 12 27 6 50 4 Z" fill="none" pathLength="100" class="ring-pass2"/>
+              </svg>
+              <span class="anno-dot" data-round="3" style="top:-18px;right:-26px;" title="第 3 轮：续航数字放大">3</span>
+            </span>
+            <span class="p-spec-label">满电续航 · 助力模式</span>
+          </div>
+          <div class="p-spec">
+            <span class="p-spec-num">21<em>kg</em></span>
+            <span class="p-spec-label">整车重量 · 含电池</span>
+          </div>
+          <div class="p-spec">
+            <span class="p-spec-num">2.5<em>h</em></span>
+            <span class="p-spec-label">快充 · 0 到 80%</span>
+          </div>
+        </section>
+
+        <section class="p-quote" data-oey-section="testimonial" data-oey-object="quote">
+          <svg class="anno-ring" viewBox="0 0 100 60" preserveAspectRatio="none" aria-hidden="true">
+            <path d="M50 4 C74 2 95 9 96 28 C97 47 76 57 51 56 C25 55 4 47 4 29 C4 12 27 6 50 4 Z" fill="none" pathLength="100"/>
+          </svg>
+          <span class="anno-dot" data-round="5" style="top:-16px;right:-14px;" title="第 5 轮：新增用户评价">5</span>
+          <blockquote>每天往返二十六公里，到公司的第一件事不再是找咖啡。它把通勤从消耗变成了一天里我最喜欢的一段路。</blockquote>
+          <p class="p-quote-by">林蔚 · 上海 — S1 车主，骑行 8 个月</p>
+        </section>
+
+        <footer class="p-foot" data-oey-section="footer">
+          <div class="p-sub-box" data-oey-object="footer-sub">
+            <svg class="anno-ring" viewBox="0 0 100 60" preserveAspectRatio="none" aria-hidden="true">
+              <path d="M7 9 C30 4 68 3 93 8 C97 23 97 38 92 52 C64 57 33 57 8 53 C3 39 4 24 7 9 Z" fill="none" pathLength="100"/>
+            </svg>
+            <span class="anno-dot" data-round="6" style="top:-18px;left:-16px;" title="第 6 轮：页脚邮箱订阅">6</span>
+            <p class="p-sub-title">订阅新品与试驾活动消息</p>
+            <form class="p-sub-row" id="productSubForm">
+              <input type="email" placeholder="you@example.com" aria-label="邮箱地址">
+              <button type="submit">订阅</button>
+            </form>
+            <p class="p-sub-note" id="subNote">我们每月最多发两封邮件，随时可以退订。</p>
+          </div>
+          <div class="p-foot-links">
+            <a href="#">售后</a><a href="#">门店</a><a href="#">媒体资料</a><a href="#">加入我们</a>
+          </div>
+        </footer>
+
+      </div>
+      <!-- ==================== /内层产物 ==================== -->
+    </div>
+
+    <p class="desk-note">稿纸上的 ①–⑥ 与左侧修改记录一一对应：点序号滚动到那一轮，点 R 编号在稿纸上闪烁定位。</p>
+  </section>
+</main>
+
+<div class="toast" id="toast" hidden></div>
+
+<script src="app.js"></script>
+</body>
+</html>

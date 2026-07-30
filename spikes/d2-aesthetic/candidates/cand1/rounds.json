@@ -1,0 +1,76 @@
+{
+  "cand_id": 1,
+  "rounds": [
+    {
+      "round": 1,
+      "source_version_dir": "spikes\\d2-aesthetic\\candidates\\cand1\\v1",
+      "screenshot": "spikes\\d2-aesthetic\\shots\\cand1_round1.png",
+      "console_error_count": 1,
+      "console_warning_count": 0,
+      "failed_request_count": 0,
+      "page_error_count": 0,
+      "overflow_count": 0,
+      "load_ok": true,
+      "console_errors": [
+        "Failed to load resource: the server responded with a status of 404 (File not found)"
+      ],
+      "failed_requests": [],
+      "page_errors": [],
+      "overflow_elements": [],
+      "model_review": {
+        "issue_count": 3,
+        "issues": [
+          "空航次/未选定航线状态下，发出改航线令与发出修补令仍是金色可点击样式，与航海日志中唯一可执行的 DOCK 舵令矛盾，应禁用并降权。",
+          "出港检查空态用绿色对勾配“无航次，未检”，容易被误读为质量已通过，应改为中性未检状态。",
+          "存在 1 个资源 404 console error（疑似 favicon 或外链资源），应内联图标或补齐资源以清零。"
+        ],
+        "files_changed": [
+          "index.html"
+        ],
+        "files_changed_count": 1,
+        "usage": {
+          "prompt_tokens": 2700,
+          "completion_tokens": 5610,
+          "total_tokens": 8310,
+          "completion_tokens_details": {
+            "reasoning_tokens": 1678
+          }
+        },
+        "elapsed_s": 194.4
+      }
+    },
+    {
+      "round": 2,
+      "source_version_dir": "spikes\\d2-aesthetic\\candidates\\cand1\\v2",
+      "screenshot": "spikes\\d2-aesthetic\\shots\\cand1_round2.png",
+      "console_error_count": 0,
+      "console_warning_count": 0,
+      "failed_request_count": 0,
+      "page_error_count": 0,
+      "overflow_count": 0,
+      "load_ok": true,
+      "console_errors": [],
+      "failed_requests": [],
+      "page_errors": [],
+      "overflow_elements": [],
+      "model_review": {
+        "issue_count": 0,
+        "issues": [],
+        "files_changed": [],
+        "files_changed_count": 0,
+        "usage": {
+          "prompt_tokens": 2784,
+          "completion_tokens": 282,
+          "total_tokens": 3066,
+          "completion_tokens_details": {
+            "reasoning_tokens": 256
+          }
+        },
+        "elapsed_s": 12.5
+      }
+    }
+  ],
+  "rounds_used": 2,
+  "final_version_dir": "spikes\\d2-aesthetic\\candidates\\cand1\\final",
+  "final_screenshot": "spikes\\d2-aesthetic\\shots\\cand1_round2.png"
+}

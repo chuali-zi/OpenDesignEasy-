@@ -1,0 +1,154 @@
+The user wants a complete prototype. I need to output only file blocks. Let me design: dark immersive mode? Or warm paper/print feel? The existing product-client is "编辑部校样台/PROOF DESK" newspaper proofing metaphor. I should make my own direction. Color temperature axis: I'll pick warm paper/print... but that would mimic the proof desk. Better to choose something distinct: deep warm amber/ink dark mode? Or cool high-contrast technical. Let me pick "克制的近似单色 + 一个强调色" or "深色沉浸模式". I'll choose dark immersive mode with warm amber accent — "深色暖调": near-black warm charcoal background, warm amber accent, warm-tinted neutrals. Name it something like "暗房 / DARKROOM" — photographic darkroom metaphor fits warm amber safelight. That's a nice distinctive narrative: agent workbench as photographic darkroom where candidates are "exposures/样片", revisions are "冲洗批次", quality checks as "显影检查". Feedback granularity: "换一卷胶卷/重新取景" (direction-level) vs "局部修整" (local). Actually darkroom: direction feedback = "重新布光/换场景" ; local = "局部遮挡 (dodge & burn)". 
+
+Keep it functional: project list, switching changes everything, activity log, candidate preview, feedback with visible responses, quality info with hard errors vs aesthetic findings separated.
+
+Mock layer: window.__oeyMock__ API with setTimeout latency, in-memory data per project. Feedback submission adds events to activity log, changes status stamps.
+
+Files: index.html, styles.css, app.js, data.js maybe, MOCK.md, INTENT.md. I'll do index.html + styles.css + app.js (data inline in app.js) + MOCK.md + INTENT.md.
+
+Data anchors: sections: projects (project list), activity (process log), preview (candidate preview), feedback (feedback entries), quality (constraints & quality), header maybe. data-oey-object like projects.item, activity.item, preview.canvas, preview.revision, feedback.directionForm, quality.hardErrors, quality.aestheticFindings, quality.constraints.
+
+Design details for dark warm theme:
+- Background: #14100c (warm near-black)
+- Surface: #1d1813
+- Border: #2e2620
+- Text: #ece4d8 warm off-white
+- Muted: #9a8d7d
+- Accent: amber #e8a33d / safelight orange
+- Hard error: warm red #e0654f
+- Aesthetic finding: soft gold/blue? Use amber for aesthetic, red for hard.
+- Success: #7fae6e muted green.
+
+Fonts: system fonts only. Use serif for headings maybe (Georgia, "Songti SC") to give warm editorial feel? Darkroom + serif could be nice. Use system font stack with serif for display.
+
+Layout: left sidebar (projects), center (preview + activity below?), right (quality/constraints + feedback). Or: left projects, center preview, right column with activity, quality, feedback tabs. I'll do three columns: left projects (with status), center preview (candidate cards / current proof mock), right: activity log, quality, feedback forms stacked with scroll.
+
+Preview: for each project, mock a "webpage candidate" preview — render a fake mini webpage inside a framed canvas using divs (hero block, nav, image placeholder with gradient, text lines). Different projects have different candidate variants. Candidates: maybe 1-2 candidates per project; selecting candidate switches preview. Include REVISION/曝光批次 number.
+
+Feedback: two forms: "整体方向" (textarea + select of what to change: 叙事/语气/视觉) and "局部微调" (textarea + target element selector text). On submit: simulate delay, add event to activity log, add record to a feedback/delivery log maybe, show toast/confirmation, status stamp updates.
+
+Quality: constraint profile display, hard errors list (blocking) and aesthetic findings list (non-blocking) clearly separated, with a gate status: "不可交付" if hard errors exist.
+
+Header: brand "DARKROOM — OEYdesign agent 工作台", edition mark, project status stamp, view toggle? Product-client has Workspace/Settings. I can include a simple settings view: create project form. Requirement doesn't demand it but covers 项目列表. I'll include a simple "新建项目" form modal or settings toggle — adds scope; keep it: a small form in left sidebar bottom or a settings overlay. Requirement says功能范围 covers listed items; settings not required. I'll add a lightweight new-project form in an overlay to show constraint presets — actually constraint preset display is in quality section. Skip settings to reduce size? It's fine to skip; but "constraint preset" selection could be part of new project. I'll include a compact "新建项目" panel toggled from sidebar — good for mock completeness. Keep it modest.
+
+Let me write the code.
+
+Data model (data embedded in app.js):
+
+projects = [
+ { id:'p-neon', name:'霓虹茶室 官网', status:'等待方向确认', preset:'设计引导', templateRole:'起始脚手架', revision: 3, candidates:[{id, label:'候选 A · 夜色茶单', ...},{...}], activity:[...], quality:{hard:[...], aesthetic:[...]}, feedbackLog:[...] },
+ ...
+]
+
+Candidate preview spec: title, tagline, palette swatches, sections (array of block types: hero/nav/gallery/text). I'll define a render function that builds a fake webpage.
+
+Let me define 4 projects:
+
+1. 霓虹茶室 · 品牌官网 — status: 方向待确认, 2 candidates, revision R3, hard error 1 (对比度不足? that's aesthetic... hard errors objective: 导出缺 alt 文本 / 链接 404 / 文案超出容器). hard: ["首页主按钮链接为空", "导出清单缺 2 张配图的生成结果"] aesthetic: ["标题字距偏紧，建议放宽", "强调色出现频率过高"].
+
+2. 季度财报 · PPT — status: 质量复核中, 1 candidate, hard: ["第 6 页数据表格溢出页面边界"], aesthetic: ["图表配色与封面不一致","页脚页码字号偏小"].
+
+3. 独立刊物《慢递》· 创刊号网页 — status: 已批准 · 可交付, hard: [], aesthetic: ["首屏留白可再增加"].
+
+4. 新茶馆小程序落地页? maybe 3 projects enough; add 4th: 山地音乐节 · 海报落地页 — status: 草稿/生成中.
+
+Activity events: {time, actor:'agent'|'user'|'system', text}.
+
+Status stamp mapping to colors.
+
+Preview render: fake webpage: top nav bar (logo dot + links), hero with gradient block (representing AI-generated image placeholder — no external images, use CSS gradients), headline, subline, CTA button, then content blocks depending on candidate spec.
+
+Feedback forms:
+- 方向反馈: fields: 不满意的方面 (checkbox chips: 叙事 / 语气 / 视觉), textarea. Submit → latency → status becomes "已提交方向反馈 · 等待新方向", activity event added, feedbackLog entry, toast.
+- 局部反馈: fields: 定位描述 (text input, e.g., "首屏标题"), 问题类型 select (错字 / 事实 / 措辞 / 排版), textarea. Submit → activity event "已记录局部反馈 · 不阻塞当前校样", toast.
+
+New project form: name, preset (3 options), template role (4 options). Submit → creates project with generated stub data (empty quality, one placeholder candidate "生成中" status). Keep simple: create project with empty preview "方向生成中…" and activity entry.
+
+Toast component.
+
+Mock API: window.__oeyMock__ = { listProjects, getProject(id), submitDirectionFeedback(pid, payload), submitLocalFeedback(pid, payload), createProject(data), selectCandidate(pid, cid) } each returning Promise with setTimeout 250-600ms. App calls these async functions.
+
+Let me write files now. Keep styles.css comprehensive. Write carefully but efficiently.
+
+HTML structure:
+
+header (data-oey-section="topbar"): brand (topbar.brand), edition (topbar.edition), status stamp (topbar.status), clock? no.
+
+main grid:
+- aside left: data-oey-section="projects": list (projects.list), each item (projects.item) with name (projects.item.name), status (projects.item.status); button new project (projects.newButton); new project form section maybe data-oey-section="newproject" hidden panel.
+- center: data-oey-section="preview": header row with project name (preview.projectName), revision badge (preview.revision), candidate tabs (preview.candidates), canvas (preview.canvas), empty state (preview.empty).
+- right column: 
+  - data-oey-section="activity": log list (activity.list), items (activity.item)
+  - data-oey-section="quality": constraint profile (quality.constraints), hard errors (quality.hardErrors), aesthetic (quality.aesthetic), gate (quality.gate)
+  - data-oey-section="feedback": direction form (feedback.direction), local form (feedback.local), feedback log (feedback.log)
+
+Also a "下一步" hint maybe within activity. Fine.
+
+Darkroom naming: sections labeled in Chinese with darkroom metaphor: 项目 = "底片夹 / NEGATIVES", activity = "冲洗记录", preview = "放大机 / ENLARGER", quality = "显影检查", feedback = "标注". But keep understandable: primary Chinese labels with small metaphor subtitle.
+
+Let me write.
+
+CSS: variables, layout grid: header 56px; main grid columns 260px 1fr 380px; right column internal scroll sections.
+
+Preview fake webpage: width 100%, aspect frame, styled like browser chrome with dots.
+
+Candidate data spec example:
+
+candidates: [{
+ id:'a', label:'候选 A', concept:'夜色茶单 · 深沉暖调', 
+ page:{ title:'霓虹茶室', nav:['茶单','空间','预约'], headline:'把夜晚泡进一盏茶里', sub:'营业至凌晨两点的城市茶室', cta:'查看今晚茶单', heroTone: gradient pair, blocks:[{type:'cards',items:3},{type:'text'}], swatches:[..] }
+}]
+
+Render swatches as palette row under canvas maybe.
+
+Status values & stamp colors: 
+- '方向待确认' amber
+- '质量复核中' blue-ish? in warm theme use gold
+- '可交付' green
+- '生成中' muted
+- '已提交反馈' 
+
+OK write code. Aim reasonably complete but not bloated. app.js maybe ~400 lines.
+
+Write INTENT.md 200-400字 Chinese.
+
+MOCK.md: declare mocked endpoints, data sources (hand-authored fictional, some rule-derived e.g. timestamps generated relative to now, activity events appended on feedback), techniques (setTimeout promise, in-memory store, window.__oeyMock__).
+
+Let me produce final output with file blocks only.
+
+Now write app.js carefully.
+
+Key functions:
+- store: state { projects:[...], activeProjectId, activeCandidateId per project, view }
+- api with delay()
+- render functions: renderProjects, renderPreview, renderActivity, renderQuality, renderFeedbackLog
+- event handlers: project click, candidate tab, form submits, new project toggle/submit
+- toast(msg)
+
+Time generation: for seed activity, use fixed times strings like '09:12'. Rule-derived: new events use current time via toLocaleTimeString. Declare in MOCK.md.
+
+Candidate page render: function pageHTML(c) builds HTML string.
+
+Empty state when no project selected? Default select first project. Empty state exists in markup for the new project without candidates: show "方向生成中…" placeholder.
+
+Quality gate logic: hard.length>0 → gate "交付被硬错误阻挡" red; else "硬检查通过 · 可交付" green; aesthetic listed separately with note "不阻塞交付".
+
+Write it.
+
+For new project creation: generate candidate as placeholder null → preview shows generating state; quality: hard:[], aesthetic:[], note "尚未运行质量复核"; activity: one system event; status '方向生成中'.
+
+Let me now compose everything.
+
+styles.css — I'll write a thorough dark warm theme. Use font stack: -apple-system, "PingFang SC", "Microsoft YaHei", serif headings Georgia,"Songti SC",serif.
+
+Contrast check: bg #161210, text #efe6d8 (good), muted #a3927f on #161210 — ratio okay-ish (~5). accent #e8a33d on dark good.
+
+Now write index.html.
+
+Right column sections stacked with max-height scroll each.
+
+Include data-oey-object anchors thoroughly.
+
+Also selection for local feedback target: provide datalist of current candidate's anchorable zones? Keep simple: text input + hint that定位依赖 data-oey-object 锚点. Cute: hint text "提示：定位描述可引用界面锚点，如 preview.canvas". Fine.
+
+Write files.

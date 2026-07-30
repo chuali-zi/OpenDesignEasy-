@@ -1,0 +1,30 @@
+{
+  "cand_id": 3,
+  "axis_key": "color_temperature",
+  "axis_label": "色彩温度与基调 / color temperature & mood",
+  "elapsed_s": 567.5,
+  "usage": {
+    "prompt_tokens": 1822,
+    "completion_tokens": 19091,
+    "total_tokens": 20913,
+    "cached_tokens": 1792,
+    "completion_tokens_details": {
+      "reasoning_tokens": 2764
+    },
+    "prompt_tokens_details": {
+      "cached_tokens": 1792
+    }
+  },
+  "file_count": 5,
+  "files": [
+    "index.html",
+    "styles.css",
+    "app.js",
+    "MOCK.md",
+    "INTENT.md"
+  ],
+  "has_index_html": true,
+  "has_mock_md": true,
+  "has_intent_md": true,
+  "raw_response_chars": 51777
+}

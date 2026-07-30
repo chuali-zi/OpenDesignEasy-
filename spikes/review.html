@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="zh"><meta charset="utf-8">
+<title>OEYdesign Phase 5 — 候选人工审核页</title>
+<style>
+body{font:15px/1.65 system-ui,"Microsoft YaHei",sans-serif;margin:0;background:#12100e;color:#f0ece6}
+header{padding:26px 32px;background:#1c1815;border-bottom:2px solid #d9762b}
+h1{margin:0 0 6px;font-size:23px;letter-spacing:.02em}
+.sub{color:#a49585;font-size:14px}
+.note{background:#2a1f14;border-left:4px solid #d9762b;padding:14px 18px;margin:18px 32px;border-radius:4px}
+.note b{color:#f7b267}
+.cand{margin:26px 32px;padding:20px;background:#1a1714;border:1px solid #332c25;border-radius:8px}
+h2{margin:0 0 12px;font-size:17px}
+.b{font-size:11px;padding:3px 9px;border-radius:10px;vertical-align:middle;margin-left:6px;font-weight:600}
+.ok{background:#1d4b2a;color:#7ee29b}.warn{background:#4b3d1d;color:#e2c87e}.bad{background:#4b2020;color:#e28787}
+.m{border-collapse:collapse;margin-bottom:14px;font-size:13px}
+.m td{border:1px solid #332c25;padding:5px 12px}
+.m td:nth-child(odd){color:#a49585;white-space:nowrap}
+.shots{display:flex;gap:14px;overflow-x:auto;padding-bottom:8px}
+figure{margin:0;flex:0 0 auto}
+img{width:460px;border:1px solid #332c25;border-radius:5px;display:block;background:#000}
+figcaption{font-size:11px;color:#a49585;margin-top:5px}
+.q{margin:18px 32px 40px;padding:16px 20px;background:#161e1a;border-left:4px solid #4a8f6b;border-radius:4px}
+.q h3{margin:0 0 8px;font-size:15px;color:#7ee29b}
+.q li{margin:4px 0}
+</style>
+<header>
+<h1>OEYdesign Phase 5 — 候选人工审核页</h1>
+<div class="sub">场景：本仓库 → agent 前端页（含自造 mock 后端） · 8 次独立生成 · Kimi k3 · 真实 Chrome 渲染</div>
+</header>
+
+<div class="note">
+<b>以下内容待人工审核，agent 未做任何审美判断。</b><br>
+表格里全是客观指标：交互是否真的点得动、console error 数、mock 声明是否完整、生成成本。
+<b>「好不好看」「哪个方向对」由你判断。</b><br><br>
+两点需要你知道的前提：<br>
+① 这 8 次用的是<b>同一个 prompt、没有分配差异轴</b>，所以风格趋同是预期的。候选多样性（D2）要按
+spec §4.2 分配差异轴后单独重测，本页<b>不能</b>用来判断多样性。<br>
+② run-03 / run-05 的 completion token 都<b>正好撞满 16,000 上限</b>，输出被截断，这也正是它们
+缺 <code>MOCK.md</code> 的原因——不是模型故意不声明。
+</div>
+
+<section class="cand">
+<h2>run-01 <span class="b ok">FULLY_INTERACTIVE</span> <span class="b ok">mock 声明 OK</span></h2>
+<table class="m">
+<tr><td>项目切换</td><td>✓ 生效</td><td>聊天发送</td><td>✓ 生效</td></tr>
+<tr><td>console error</td><td>1（favicon 404，测试环境噪音）</td><td>mock 声明完整率</td><td>1.0</td></tr>
+<tr><td>生成成本</td><td>未记录</td><td>文件</td><td>index.html, styles.css, app.js, MOCK.md</td></tr>
+</table>
+<div class="shots">
+<figure><img src="e4-mock/shots/run-01/01-initial.png" alt="run-01 初始"><figcaption>01 初始</figcaption></figure>
+<figure><img src="e4-mock/shots/run-01/02-after-project-click.png" alt="run-01 切换项目后"><figcaption>02 点击项目后</figcaption></figure>
+<figure><img src="e4-mock/shots/run-01/03-after-chat-send.png" alt="run-01 发送消息后"><figcaption>03 发送消息后</figcaption></figure>
+</div>
+</section>
+
+<section class="cand">
+<h2>run-02 <span class="b warn">PARTIALLY_INTERACTIVE</span> <span class="b ok">mock 声明 OK</span></h2>
+<table class="m">
+<tr><td>项目切换</td><td>✗ 未检出可点击行</td><td>聊天发送</td><td>✓ 生效</td></tr>
+<tr><td>console error</td><td>1</td><td>mock 声明完整率</td><td>1.0</td></tr>
+<tr><td>生成成本</td><td>367.6s · 11,976 completion token</td><td>文件</td><td>index.html, styles.css, app.js, MOCK.md</td></tr>
+</table>
+<div class="shots">
+<figure><img src="e4-mock/shots/run-02/01-initial.png" alt="run-02 初始"><figcaption>01 初始</figcaption></figure>
+<figure><img src="e4-mock/shots/run-02/03-after-chat-send.png" alt="run-02 发送后"><figcaption>03 发送消息后</figcaption></figure>
+</div>
+</section>
+
+<section class="cand">
+<h2>run-03 <span class="b bad">COMPLETELY_UNUSABLE</span> <span class="b bad">mock 未声明</span></h2>
+<table class="m">
+<tr><td>项目切换</td><td>✗</td><td>聊天发送</td><td>✗</td></tr>
+<tr><td>console error</td><td>1</td><td>mock 声明完整率</td><td>0.0（检出 3 类 mock，无 MOCK.md）</td></tr>
+<tr><td>生成成本</td><td>543.2s · <b>16,000 completion token（撞顶截断）</b></td><td>文件</td><td>index.html, styles.css, mock.js, app.js</td></tr>
+</table>
+<div class="shots">
+<figure><img src="e4-mock/shots/run-03/01-initial.png" alt="run-03 初始"><figcaption>01 初始（交互全部失效）</figcaption></figure>
+</div>
+</section>
+
+<section class="cand">
+<h2>run-04 <span class="b ok">FULLY_INTERACTIVE</span> <span class="b ok">mock 声明 OK</span></h2>
+<table class="m">
+<tr><td>项目切换</td><td>✓ 生效</td><td>聊天发送</td><td>✓ 生效</td></tr>
+<tr><td>console error</td><td>1</td><td>mock 声明完整率</td><td>1.0</td></tr>
+<tr><td>生成成本</td><td>321.9s · 9,761 completion token</td><td>文件</td><td>index.html, styles.css, app.js, MOCK.md</td></tr>
+</table>
+<div class="shots">
+<figure><img src="e4-mock/shots/run-04/01-initial.png" alt="run-04 初始"><figcaption>01 初始</figcaption></figure>
+<figure><img src="e4-mock/shots/run-04/02-after-project-click.png" alt="run-04 切换项目后"><figcaption>02 点击项目后</figcaption></figure>
+<figure><img src="e4-mock/shots/run-04/03-after-chat-send.png" alt="run-04 发送后"><figcaption>03 发送消息后</figcaption></figure>
+</div>
+</section>
+
+<section class="cand">
+<h2>run-05 <span class="b warn">PARTIALLY_INTERACTIVE</span> <span class="b bad">mock 未声明</span></h2>
+<table class="m">
+<tr><td>项目切换</td><td>✗</td><td>聊天发送</td><td>✓ 生效</td></tr>
+<tr><td>console error</td><td>3</td><td>mock 声明完整率</td><td>0.0（检出 2 类 mock，无 MOCK.md）</td></tr>
+<tr><td>生成成本</td><td>511.6s · <b>16,000 completion token（撞顶截断）</b></td><td>文件</td><td>index.html, styles.css, mock.js</td></tr>
+</table>
+<div class="shots">
+<figure><img src="e4-mock/shots/run-05/01-initial.png" alt="run-05 初始"><figcaption>01 初始</figcaption></figure>
+<figure><img src="e4-mock/shots/run-05/03-after-chat-send.png" alt="run-05 发送后"><figcaption>03 发送消息后</figcaption></figure>
+</div>
+</section>
+
+<section class="cand">
+<h2>run-06 <span class="b warn">PARTIALLY_INTERACTIVE</span> <span class="b ok">mock 声明 OK</span></h2>
+<table class="m">
+<tr><td>项目切换</td><td>✗</td><td>聊天发送</td><td>✓ 生效</td></tr>
+<tr><td>console error</td><td>2</td><td>mock 声明完整率</td><td>1.0</td></tr>
+<tr><td>生成成本</td><td>384.4s · 12,449 completion token</td><td>文件</td><td>index.html, styles.css, mock-api.js, app.js, MOCK.md</td></tr>
+</table>
+<div class="shots">
+<figure><img src="e4-mock/shots/run-06/01-initial.png" alt="run-06 初始"><figcaption>01 初始</figcaption></figure>
+<figure><img src="e4-mock/shots/run-06/03-after-chat-send.png" alt="run-06 发送后"><figcaption>03 发送消息后</figcaption></figure>
+</div>
+</section>
+
+<section class="cand">
+<h2>run-07 <span class="b warn">PARTIALLY_INTERACTIVE</span> <span class="b ok">mock 声明 OK</span></h2>
+<table class="m">
+<tr><td>项目切换</td><td>✗</td><td>聊天发送</td><td>✓ 生效</td></tr>
+<tr><td>console error</td><td>1</td><td>mock 声明完整率</td><td>1.0</td></tr>
+<tr><td>生成成本</td><td>337.0s · 10,066 completion token</td><td>文件</td><td>index.html, styles.css, app.js, MOCK.md</td></tr>
+</table>
+<div class="shots">
+<figure><img src="e4-mock/shots/run-07/01-initial.png" alt="run-07 初始"><figcaption>01 初始</figcaption></figure>
+<figure><img src="e4-mock/shots/run-07/03-after-chat-send.png" alt="run-07 发送后"><figcaption>03 发送消息后</figcaption></figure>
+</div>
+</section>
+
+<section class="cand">
+<h2>run-08 <span class="b ok">FULLY_INTERACTIVE</span> <span class="b ok">mock 声明 OK</span></h2>
+<table class="m">
+<tr><td>项目切换</td><td>✓ 生效</td><td>聊天发送</td><td>✓ 生效</td></tr>
+<tr><td>console error</td><td>1</td><td>mock 声明完整率</td><td>1.0</td></tr>
+<tr><td>生成成本</td><td>328.9s · 10,702 completion token</td><td>文件</td><td>index.html, styles.css, app.js, MOCK.md</td></tr>
+</table>
+<div class="shots">
+<figure><img src="e4-mock/shots/run-08/01-initial.png" alt="run-08 初始"><figcaption>01 初始</figcaption></figure>
+<figure><img src="e4-mock/shots/run-08/02-after-project-click.png" alt="run-08 切换项目后"><figcaption>02 点击项目后</figcaption></figure>
+<figure><img src="e4-mock/shots/run-08/03-after-chat-send.png" alt="run-08 发送后"><figcaption>03 发送消息后</figcaption></figure>
+</div>
+</section>
+
+<div class="q">
+<h3>需要你判断的问题</h3>
+<ol>
+<li><b>这个水平的产出，你认可吗？</b> 这是零人工干预、一次生成的结果，没有跑自修复循环。</li>
+<li><b>run-01 / run-04 / run-08 三个完全可交互的，哪个方向更接近你要的工作台？</b>
+    还是都不对，需要换差异轴重做？</li>
+<li><b>「必须好看」这条，当前离你的标准差多远？</b> 差距是靠更好的 prompt、
+    自修复循环（看截图改）、还是要引入设计系统约束来补？</li>
+<li><b>4 个「部分可交互」的，请你实际点一下</b>（直接开
+    <code>spikes/e4-mock/runs/run-0X/index.html</code>）——
+    我们的验证器分不清「产物没做项目切换」还是「验证器找不到可点元素」，需要你眼睛确认。</li>
+</ol>
+</div>
+</html>

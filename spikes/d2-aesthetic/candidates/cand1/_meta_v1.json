@@ -1,0 +1,26 @@
+{
+  "cand_id": 1,
+  "axis_key": "narrative",
+  "axis_label": "叙事框架 / narrative metaphor",
+  "elapsed_s": 512.9,
+  "usage": {
+    "prompt_tokens": 1836,
+    "completion_tokens": 18636,
+    "total_tokens": 20472,
+    "completion_tokens_details": {
+      "reasoning_tokens": 1214
+    }
+  },
+  "file_count": 5,
+  "files": [
+    "index.html",
+    "styles.css",
+    "app.js",
+    "MOCK.md",
+    "INTENT.md"
+  ],
+  "has_index_html": true,
+  "has_mock_md": true,
+  "has_intent_md": true,
+  "raw_response_chars": 52586
+}

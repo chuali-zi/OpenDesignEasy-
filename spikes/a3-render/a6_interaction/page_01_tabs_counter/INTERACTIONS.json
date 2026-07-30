@@ -1,0 +1,20 @@
+[
+  {
+    "name": "counter_increment",
+    "trigger_selector": "[data-oey-object='counter.button']",
+    "action": "click",
+    "expect_selector": "[data-oey-object='counter.display']",
+    "expect_property": "textContent",
+    "expect_mode": "changed",
+    "expect_value": null
+  },
+  {
+    "name": "tabs_switch_to_b",
+    "trigger_selector": "[data-oey-object='tabs.tab-b']",
+    "action": "click",
+    "expect_selector": "[data-oey-object='tabs.panel-b']",
+    "expect_property": "class",
+    "expect_mode": "changed",
+    "expect_value": null
+  }
+]

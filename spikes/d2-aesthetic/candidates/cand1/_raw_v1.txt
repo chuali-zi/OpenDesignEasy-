@@ -1,0 +1,1301 @@
+<<<FILE: index.html>>>
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OEYdesign · 远航台 VOYAGE HELM</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<!-- ══════════════ 舰桥顶栏 ══════════════ -->
+<header class="bridge-head" data-oey-section="bridge-head">
+  <div class="brand" data-oey-object="bridge-head.brand">
+    <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true">
+      <circle cx="16" cy="16" r="13" fill="none" stroke="currentColor" stroke-width="2"/>
+      <path d="M16 5 L19 16 L16 27 L13 16 Z" fill="currentColor"/>
+      <circle cx="16" cy="16" r="2.4" fill="#0b1c26"/>
+    </svg>
+    <div class="brand-text">
+      <span class="brand-name">OEYdesign</span>
+      <span class="brand-sub">远航台 · VOYAGE HELM</span>
+    </div>
+  </div>
+
+  <div class="voyage-plate" data-oey-object="bridge-head.voyage-plate">
+    <span class="plate-label">当前航次</span>
+    <span class="plate-code" id="voyageCode">— 未挂旗 —</span>
+  </div>
+
+  <div class="route-switch" data-oey-section="route-switch">
+    <label class="route-label" for="projectSelect" data-oey-object="route-switch.label">切换航线</label>
+    <select id="projectSelect" data-oey-object="route-switch.selector"></select>
+  </div>
+
+  <div class="status-flag" data-oey-object="bridge-head.status-flag">
+    <span class="flag-dot" id="statusDot"></span>
+    <span id="statusText">锚泊中 · 无航次</span>
+  </div>
+
+  <nav class="view-tabs" data-oey-object="bridge-head.view-tabs">
+    <button class="tab active" id="tabBridge" data-view="bridge">驾驶台</button>
+    <button class="tab" id="tabHarbor" data-view="harbor">船坞 · 新航次</button>
+  </nav>
+</header>
+
+<!-- ══════════════ 驾驶台视图 ══════════════ -->
+<main class="deck" id="bridgeView" data-oey-section="deck">
+
+  <!-- 左舷：航海日志 + 喊话口 -->
+  <aside class="port-side">
+
+    <section class="panel logbook" data-oey-section="logbook">
+      <h2 class="panel-title">
+        <svg viewBox="0 0 16 16" class="ico"><path d="M3 2h10v12H3z" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M5.5 5h5M5.5 8h5M5.5 11h3" stroke="currentColor" stroke-width="1.2"/></svg>
+        航海日志
+      </h2>
+      <div class="log-state" data-oey-object="logbook.state" id="logState">NO VOYAGE · 无在航项目</div>
+      <ol class="log-list" data-oey-object="logbook.entries" id="logList"></ol>
+
+      <div class="next-moves" data-oey-object="logbook.next-moves">
+        <div class="next-title">下一舵令 · 可执行</div>
+        <div id="nextMoves"></div>
+      </div>
+    </section>
+
+    <section class="panel hail" data-oey-section="hail-direction">
+      <h2 class="panel-title">
+        <svg viewBox="0 0 16 16" class="ico"><path d="M8 1l2 5 5 .6-3.7 3.4 1 5L8 12.4 3.7 15l1-5L1 6.6 6 6z" fill="none" stroke="currentColor" stroke-width="1.2"/></svg>
+        喊话 · 要求改航线
+      </h2>
+      <p class="hail-hint" data-oey-object="hail-direction.hint">对整个候选方向不满意——换叙事、换语气、换视觉，让 agent 重新出一条航线。</p>
+      <form id="formDirection">
+        <div class="seg" data-oey-object="hail-direction.aspect" id="directionAspect">
+          <button type="button" class="seg-btn active" data-aspect="叙事">换叙事</button>
+          <button type="button" class="seg-btn" data-aspect="语气">换语气</button>
+          <button type="button" class="seg-btn" data-aspect="视觉">换视觉</button>
+        </div>
+        <textarea data-oey-object="hail-direction.message" id="directionText" rows="3" placeholder="例：现在这版像企业年报，我想要更像独立杂志的开卷……"></textarea>
+        <button type="submit" class="btn btn-brass" data-oey-object="hail-direction.submit">发出改航线令</button>
+        <div class="form-ack" id="directionAck"></div>
+      </form>
+    </section>
+
+    <section class="panel hail" data-oey-section="hail-patch">
+      <h2 class="panel-title">
+        <svg viewBox="0 0 16 16" class="ico"><circle cx="8" cy="8" r="6" fill="none" stroke="currentColor" stroke-width="1.3"/><path d="M8 4.5v3.5l2.4 2" stroke="currentColor" stroke-width="1.3" fill="none"/></svg>
+        喊话 · 局部修补
+      </h2>
+      <p class="hail-hint" data-oey-object="hail-patch.hint">只对某一处内容不满意——指出具体位置的事实、权利或策略问题，agent 做定点微调，不动整体航线。</p>
+      <form id="formPatch">
+        <select data-oey-object="hail-patch.target" id="patchTarget"></select>
+        <textarea data-oey-object="hail-patch.message" id="patchText" rows="3" placeholder="例：第三屏引用的数据是去年的，请换成最新口径……"></textarea>
+        <button type="submit" class="btn btn-brass" data-oey-object="hail-patch.submit">发出修补令</button>
+        <div class="form-ack" id="patchAck"></div>
+      </form>
+    </section>
+
+  </aside>
+
+  <!-- 中央：海图桌 -->
+  <section class="chart-table" data-oey-section="chart-table">
+    <div class="chart-head">
+      <h2 class="panel-title">
+        <svg viewBox="0 0 16 16" class="ico"><path d="M2 12l4-8 3 5 2-3 3 6z" fill="none" stroke="currentColor" stroke-width="1.3"/></svg>
+        海图桌 · 候选与校样
+      </h2>
+      <span class="rev-stamp" data-oey-object="chart-table.revision" id="revStamp">REV —</span>
+    </div>
+
+    <div class="candidate-rail" data-oey-object="chart-table.candidates" id="candidateRail"></div>
+
+    <div class="proof-stage" data-oey-object="chart-table.preview" id="proofStage">
+      <div class="empty-sea" id="emptySea">
+        <svg viewBox="0 0 64 64" class="empty-ico">
+          <path d="M8 44c6-4 10-4 16 0s10 4 16 0 10-4 16 0" fill="none" stroke="currentColor" stroke-width="2"/>
+          <path d="M8 52c6-4 10-4 16 0s10 4 16 0 10-4 16 0" fill="none" stroke="currentColor" stroke-width="2" opacity=".5"/>
+          <path d="M32 10v22M32 12l14 16H32" fill="none" stroke="currentColor" stroke-width="2"/>
+        </svg>
+        <p data-oey-object="chart-table.empty">海图桌空着。在左上方选定一条航线，或在「船坞」开辟新航次，候选设计会铺在这里。</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 右舷：船况仪 -->
+  <aside class="starboard-side">
+    <section class="panel" data-oey-section="ship-instruments">
+
+      <div class="inst-block" data-oey-object="ship-instruments.manifest">
+        <h3 class="inst-title">载货清单 · 项目文件</h3>
+        <ul class="file-tree" id="fileTree"></ul>
+      </div>
+
+      <div class="inst-block" data-oey-object="ship-instruments.sailing-orders">
+        <h3 class="inst-title">航行令 · 约束档案</h3>
+        <dl class="orders" id="sailingOrders"></dl>
+      </div>
+
+      <div class="inst-block" data-oey-object="ship-instruments.inspection">
+        <h3 class="inst-title">出港检查 · 质量复核</h3>
+        <div class="insp-lane insp-hard">
+          <div class="lane-head"><span class="lane-light red"></span>暗礁警报 · 硬错误（挡住出港）</div>
+          <ul id="hardList" class="insp-list"></ul>
+        </div>
+        <div class="insp-lane insp-soft">
+          <div class="lane-head"><span class="lane-light amber"></span>瞭望员笔记 · 审美发现（不挡出港，自行判断）</div>
+          <ul id="softList" class="insp-list"></ul>
+        </div>
+      </div>
+
+      <div class="inst-block" data-oey-object="ship-instruments.voyage-records">
+        <h3 class="inst-title">航次档案 · 反馈与交付</h3>
+        <ul class="record-list" id="recordList"></ul>
+      </div>
+
+    </section>
+  </aside>
+</main>
+
+<!-- ══════════════ 船坞视图（新航次） ══════════════ -->
+<main class="harbor hidden" id="harborView" data-oey-section="harbor">
+  <div class="harbor-card">
+    <h2 class="harbor-title" data-oey-object="harbor.title">船坞 · 登记新航次</h2>
+    <p class="harbor-sub" data-oey-object="harbor.subtitle">造一个 demo 项目：起名、定下航行令（约束档）、挂上样板旗（模板角色），即可启航。</p>
+    <form id="formNewVoyage" class="harbor-form">
+      <label class="field">
+        <span data-oey-object="harbor.name-label">航次名称</span>
+        <input type="text" data-oey-object="harbor.name-input" id="newName" placeholder="例：极光咖啡 · 秋季新品页" required>
+      </label>
+
+      <div class="field">
+        <span data-oey-object="harbor.preset-label">航行令 · Constraint preset</span>
+        <div class="pick-row" id="presetPick">
+          <button type="button" class="pick active" data-value="开放探索" data-oey-object="harbor.preset-open">
+            <b>开放探索</b><i>自由海域，先看风向再定线</i>
+          </button>
+          <button type="button" class="pick" data-value="设计引导" data-oey-object="harbor.preset-guided">
+            <b>设计引导</b><i>领航员随行，关键峡口给建议</i>
+          </button>
+          <button type="button" class="pick" data-value="规范生产" data-oey-object="harbor.preset-strict">
+            <b>规范生产</b><i>班轮时刻表，按章航行</i>
+          </button>
+        </div>
+      </div>
+
+      <div class="field">
+        <span data-oey-object="harbor.role-label">样板旗 · Template role</span>
+        <div class="pick-row" id="rolePick">
+          <button type="button" class="pick active" data-value="参考样例" data-oey-object="harbor.role-sample"><b>参考样例</b><i>只作瞭望参照</i></button>
+          <button type="button" class="pick" data-value="起始脚手架" data-oey-object="harbor.role-scaffold"><b>起始脚手架</b><i>从龙骨开始搭</i></button>
+          <button type="button" class="pick" data-value="设计系统" data-oey-object="harbor.role-system"><b>设计系统</b><i>整套船规随航</i></button>
+          <button type="button" class="pick" data-value="交付合同" data-oey-object="harbor.role-contract"><b>交付合同</b><i>抵港即验收</i></button>
+        </div>
+      </div>
+
+      <button type="submit" class="btn btn-brass btn-big" data-oey-object="harbor.submit">登记并启航</button>
+      <div class="form-ack" id="harborAck"></div>
+    </form>
+  </div>
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script src="app.js"></script>
+</body>
+</html>
+<<<END>>>
+
+<<<FILE: styles.css>>>
+/* ═══════ OEYdesign · 远航台 VOYAGE HELM ═══════ */
+:root{
+  --abyss:#0b1c26;        /* 深海底色 */
+  --hull:#10262f;         /* 船壳面板 */
+  --hull-2:#163040;
+  --rail:#1e3d4e;         /* 舷缘线 */
+  --foam:#e8f1ef;         /* 浪花白 */
+  --foam-dim:#9fb8bd;
+  --brass:#d8a24a;        /* 黄铜 */
+  --brass-hot:#f0bd63;
+  --teal:#4fb3a9;
+  --red:#e26d5a;
+  --amber:#e0b25c;
+  --ink-soft:rgba(232,241,239,.08);
+  --mono:"SFMono-Regular",Consolas,"Liberation Mono",monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  background:var(--abyss);
+  color:var(--foam);
+  font-family:"PingFang SC","Hiragino Sans GB","Microsoft YaHei",-apple-system,sans-serif;
+  font-size:14px;line-height:1.6;
+  display:flex;flex-direction:column;overflow:hidden;
+}
+.hidden{display:none!important}
+.ico{width:15px;height:15px;vertical-align:-2px;margin-right:6px;color:var(--brass)}
+
+/* ── 顶栏 ── */
+.bridge-head{
+  display:flex;align-items:center;gap:22px;
+  padding:10px 20px;background:var(--hull);
+  border-bottom:2px solid var(--brass);
+  flex:0 0 auto;
+}
+.brand{display:flex;align-items:center;gap:10px;color:var(--brass)}
+.brand-mark{width:34px;height:34px}
+.brand-text{display:flex;flex-direction:column;line-height:1.2}
+.brand-name{font-weight:700;letter-spacing:.06em;color:var(--foam)}
+.brand-sub{font-size:11px;color:var(--brass);letter-spacing:.28em}
+.voyage-plate{
+  display:flex;flex-direction:column;padding:4px 14px;
+  border:1px dashed var(--rail);border-radius:4px;line-height:1.3;
+}
+.plate-label{font-size:10px;color:var(--foam-dim);letter-spacing:.2em}
+.plate-code{font-family:var(--mono);color:var(--brass-hot);font-size:13px}
+.route-switch{display:flex;align-items:center;gap:8px}
+.route-label{font-size:12px;color:var(--foam-dim);letter-spacing:.15em}
+.route-switch select{
+  background:var(--hull-2);color:var(--foam);
+  border:1px solid var(--rail);border-radius:4px;
+  padding:6px 10px;font-size:13px;min-width:220px;cursor:pointer;
+}
+.status-flag{display:flex;align-items:center;gap:8px;margin-left:auto;font-size:13px;color:var(--foam-dim)}
+.flag-dot{width:9px;height:9px;border-radius:50%;background:#5a707a;box-shadow:0 0 8px currentColor}
+.flag-dot.sailing{background:var(--teal);color:var(--teal)}
+.flag-dot.review{background:var(--amber);color:var(--amber)}
+.flag-dot.blocked{background:var(--red);color:var(--red)}
+.flag-dot.ready{background:var(--brass-hot);color:var(--brass-hot)}
+.view-tabs{display:flex;gap:4px}
+.tab{
+  background:transparent;border:1px solid var(--rail);color:var(--foam-dim);
+  padding:7px 16px;border-radius:4px;cursor:pointer;font-size:13px;letter-spacing:.1em;
+}
+.tab.active{background:var(--brass);border-color:var(--brass);color:var(--abyss);font-weight:700}
+.tab:hover:not(.active){border-color:var(--brass);color:var(--foam)}
+
+/* ── 主甲板三栏 ── */
+.deck{
+  flex:1;display:grid;grid-template-columns:308px 1fr 330px;
+  gap:14px;padding:14px 20px;min-height:0;overflow:hidden;
+}
+.port-side,.starboard-side{display:flex;flex-direction:column;gap:14px;overflow-y:auto;min-height:0;padding-right:2px}
+.panel{background:var(--hull);border:1px solid var(--rail);border-radius:6px;padding:14px}
+.panel-title{
+  font-size:13px;letter-spacing:.18em;color:var(--brass);
+  border-bottom:1px solid var(--rail);padding-bottom:8px;margin-bottom:10px;font-weight:700;
+}
+
+/* 航海日志 */
+.log-state{
+  font-family:var(--mono);font-size:11px;color:var(--teal);
+  background:var(--ink-soft);border-left:3px solid var(--teal);
+  padding:5px 9px;margin-bottom:10px;border-radius:0 3px 3px 0;
+}
+.log-list{list-style:none;display:flex;flex-direction:column;gap:0;max-height:260px;overflow-y:auto}
+.log-list li{
+  display:flex;gap:9px;padding:6px 4px;border-bottom:1px dashed rgba(30,61,78,.6);font-size:12.5px;
+  animation:logIn .35s ease;
+}
+@keyframes logIn{from{opacity:0;transform:translateX(-6px)}to{opacity:1;transform:none}}
+.log-time{font-family:var(--mono);color:var(--foam-dim);font-size:11px;flex:0 0 44px;padding-top:1px}
+.log-kind{
+  flex:0 0 auto;font-size:10px;padding:1px 6px;border-radius:3px;height:fit-content;
+  letter-spacing:.08em;margin-top:2px;
+}
+.k-agent{background:rgba(79,179,169,.15);color:var(--teal);border:1px solid rgba(79,179,169,.4)}
+.k-user{background:rgba(216,162,74,.15);color:var(--brass-hot);border:1px solid rgba(216,162,74,.4)}
+.k-sys{background:var(--ink-soft);color:var(--foam-dim);border:1px solid var(--rail)}
+.k-quality{background:rgba(224,178,92,.12);color:var(--amber);border:1px solid rgba(224,178,92,.35)}
+.log-text{color:var(--foam)}
+.next-moves{margin-top:12px;border-top:1px solid var(--rail);padding-top:10px}
+.next-title{font-size:11px;letter-spacing:.2em;color:var(--foam-dim);margin-bottom:8px}
+.move-btn{
+  display:block;width:100%;text-align:left;margin-bottom:6px;
+  background:var(--hull-2);border:1px solid var(--rail);color:var(--foam);
+  padding:8px 10px;border-radius:4px;cursor:pointer;font-size:12.5px;
+  transition:border-color .15s;
+}
+.move-btn:hover:not(:disabled){border-color:var(--brass);color:var(--brass-hot)}
+.move-btn:disabled{opacity:.4;cursor:not-allowed}
+.move-btn .mv-tag{font-family:var(--mono);font-size:10px;color:var(--teal);margin-right:6px}
+
+/* 喊话表单 */
+.hail-hint{font-size:12px;color:var(--foam-dim);margin-bottom:10px}
+.hail form{display:flex;flex-direction:column;gap:8px}
+.hail textarea,.hail select,.harbor-form input{
+  background:var(--abyss);border:1px solid var(--rail);border-radius:4px;
+  color:var(--foam);padding:8px 10px;font-size:12.5px;font-family:inherit;resize:vertical;
+}
+.hail textarea:focus,.hail select:focus,.harbor-form input:focus{outline:none;border-color:var(--brass)}
+.seg{display:flex;gap:4px}
+.seg-btn{
+  flex:1;background:var(--hull-2);border:1px solid var(--rail);color:var(--foam-dim);
+  padding:6px 0;border-radius:4px;cursor:pointer;font-size:12px;
+}
+.seg-btn.active{background:rgba(216,162,74,.18);border-color:var(--brass);color:var(--brass-hot)}
+.btn{
+  border:none;border-radius:4px;padding:9px 14px;cursor:pointer;
+  font-size:13px;letter-spacing:.12em;font-weight:700;
+}
+.btn-brass{background:var(--brass);color:var(--abyss)}
+.btn-brass:hover{background:var(--brass-hot)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.form-ack{font-size:12px;color:var(--teal);min-height:18px}
+
+/* 海图桌 */
+.chart-table{
+  background:
+    radial-gradient(ellipse at 50% 0%,rgba(79,179,169,.05),transparent 60%),
+    var(--hull);
+  border:1px solid var(--rail);border-radius:6px;
+  padding:16px;display:flex;flex-direction:column;min-height:0;overflow-y:auto;
+}
+.chart-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.chart-head .panel-title{border:none;margin:0;padding:0}
+.rev-stamp{
+  font-family:var(--mono);font-size:12px;color:var(--brass-hot);
+  border:2px solid var(--brass);border-radius:4px;padding:3px 10px;
+  transform:rotate(2deg);letter-spacing:.15em;
+}
+.candidate-rail{display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap}
+.cand-card{
+  flex:1;min-width:170px;background:var(--hull-2);border:1px solid var(--rail);
+  border-radius:5px;padding:10px 12px;cursor:pointer;transition:border-color .15s,transform .15s;
+}
+.cand-card:hover{border-color:var(--teal)}
+.cand-card.selected{border-color:var(--brass);box-shadow:0 0 0 1px var(--brass)}
+.cand-card.approved{border-color:var(--teal)}
+.cand-code{font-family:var(--mono);font-size:10px;color:var(--foam-dim);letter-spacing:.15em}
+.cand-title{font-weight:700;font-size:13.5px;margin:2px 0}
+.cand-desc{font-size:11.5px;color:var(--foam-dim);line-height:1.5}
+.cand-badge{
+  display:inline-block;margin-top:6px;font-size:10px;padding:1px 7px;border-radius:3px;
+  letter-spacing:.1em;
+}
+.cand-badge.b-pending{background:var(--ink-soft);color:var(--foam-dim);border:1px solid var(--rail)}
+.cand-badge.b-approved{background:rgba(79,179,169,.15);color:var(--teal);border:1px solid rgba(79,179,169,.4)}
+.cand-actions{margin-top:8px;display:flex;gap:6px}
+.mini-btn{
+  background:transparent;border:1px solid var(--rail);color:var(--foam-dim);
+  font-size:11px;padding:3px 9px;border-radius:3px;cursor:pointer;
+}
+.mini-btn:hover:not(:disabled){border-color:var(--brass);color:var(--brass-hot)}
+.mini-btn:disabled{opacity:.4;cursor:not-allowed}
+
+/* 预览台 */
+.proof-stage{flex:1;min-height:280px;position:relative}
+.empty-sea{
+  height:100%;min-height:260px;display:flex;flex-direction:column;gap:14px;
+  align-items:center;justify-content:center;color:var(--foam-dim);
+  border:1px dashed var(--rail);border-radius:6px;text-align:center;padding:20px;
+}
+.empty-ico{width:72px;height:72px;color:var(--rail)}
+.proof-frame{
+  background:var(--abyss);border:1px solid var(--rail);border-radius:6px;overflow:hidden;
+  animation:logIn .4s ease;
+}
+.proof-urlbar{
+  display:flex;align-items:center;gap:8px;background:var(--hull-2);
+  padding:7px 12px;font-family:var(--mono);font-size:11px;color:var(--foam-dim);
+  border-bottom:1px solid var(--rail);
+}
+.proof-urlbar .dot{width:8px;height:8px;border-radius:50%;background:var(--rail)}
+.proof-body{padding:22px;min-height:240px}
+.mock-hero{border-radius:5px;padding:26px 22px;margin-bottom:14px}
+.mock-hero h4{font-size:20px;margin-bottom:6px;letter-spacing:.04em}
+.mock-hero p{font-size:12px;opacity:.85;max-width:420px}
+.mock-cols{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.mock-col{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:4px;padding:12px;font-size:11px}
+.mock-col b{display:block;font-size:12px;margin-bottom:4px}
+.mock-bar{height:5px;border-radius:3px;margin-top:8px;opacity:.6}
+.proof-caption{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:8px 12px;font-size:11.5px;color:var(--foam-dim);border-top:1px solid var(--rail);
+}
+.proof-caption .cap-flag{font-family:var(--mono);color:var(--teal)}
+
+/* 右舷仪器 */
+.inst-block{margin-bottom:16px}
+.inst-block:last-child{margin-bottom:0}
+.inst-title{font-size:11.5px;letter-spacing:.18em;color:var(--brass);margin-bottom:8px;font-weight:700}
+.file-tree{list-style:none;font-family:var(--mono);font-size:11.5px;color:var(--foam-dim)}
+.file-tree li{padding:3px 0 3px 14px;position:relative}
+.file-tree li::before{content:"├";position:absolute;left:0;color:var(--rail)}
+.file-tree li.dir{color:var(--teal)}
+.orders{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;font-size:12px}
+.orders dt{color:var(--foam-dim);letter-spacing:.05em}
+.orders dd{color:var(--foam)}
+.orders dd.mono{font-family:var(--mono);font-size:11.5px;color:var(--brass-hot)}
+
+.insp-lane{border:1px solid var(--rail);border-radius:5px;padding:8px 10px;margin-bottom:8px}
+.insp-hard{border-left:3px solid var(--red)}
+.insp-soft{border-left:3px solid var(--amber)}
+.lane-head{display:flex;align-items:center;gap:7px;font-size:11.5px;letter-spacing:.05em;margin-bottom:6px}
+.insp-hard .lane-head{color:var(--red)}
+.insp-soft .lane-head{color:var(--amber)}
+.lane-light{width:8px;height:8px;border-radius:50%}
+.lane-light.red{background:var(--red);box-shadow:0 0 6px var(--red)}
+.lane-light.amber{background:var(--amber);box-shadow:0 0 6px var(--amber)}
+.insp-list{list-style:none;font-size:12px}
+.insp-list li{padding:3px 0 3px 16px;position:relative;color:var(--foam)}
+.insp-list li::before{content:"◈";position:absolute;left:0;font-size:10px;top:5px}
+.insp-hard .insp-list li::before{color:var(--red)}
+.insp-soft .insp-list li::before{color:var(--amber)}
+.insp-list li.ok{color:var(--foam-dim)}
+.insp-list li.ok::before{content:"✓";color:var(--teal)}
+
+.record-list{list-style:none;font-size:12px}
+.record-list li{
+  padding:5px 0;border-bottom:1px dashed rgba(30,61,78,.6);color:var(--foam-dim);
+}
+.record-list li b{color:var(--foam);font-weight:600}
+.record-list .rec-tag{
+  font-family:var(--mono);font-size:10px;color:var(--brass-hot);margin-right:6px;
+}
+
+/* 船坞 */
+.harbor{flex:1;display:flex;align-items:flex-start;justify-content:center;padding:40px 20px;overflow-y:auto}
+.harbor-card{
+  width:640px;max-width:100%;background:var(--hull);border:1px solid var(--rail);
+  border-top:3px solid var(--brass);border-radius:8px;padding:30px 34px;
+}
+.harbor-title{font-size:20px;letter-spacing:.12em;color:var(--brass);margin-bottom:6px}
+.harbor-sub{font-size:13px;color:var(--foam-dim);margin-bottom:22px}
+.harbor-form{display:flex;flex-direction:column;gap:20px}
+.field{display:flex;flex-direction:column;gap:8px}
+.field>span{font-size:12px;letter-spacing:.15em;color:var(--foam-dim)}
+.pick-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px}
+.pick{
+  background:var(--hull-2);border:1px solid var(--rail);border-radius:5px;
+  padding:10px 12px;cursor:pointer;text-align:left;color:var(--foam);
+}
+.pick b{display:block;font-size:13px;margin-bottom:2px}
+.pick i{font-style:normal;font-size:11px;color:var(--foam-dim)}
+.pick:hover{border-color:var(--teal)}
+.pick.active{border-color:var(--brass);background:rgba(216,162,74,.1);box-shadow:0 0 0 1px var(--brass)}
+.btn-big{padding:13px;font-size:14px}
+
+/* Toast */
+.toast{
+  position:fixed;bottom:24px;left:50%;transform:translate(-50%,80px);
+  background:var(--hull-2);border:1px solid var(--brass);color:var(--foam);
+  padding:10px 22px;border-radius:5px;font-size:13px;letter-spacing:.05em;
+  transition:transform .3s ease;z-index:99;pointer-events:none;
+}
+.toast.show{transform:translate(-50%,0)}
+
+::-webkit-scrollbar{width:8px;height:8px}
+::-webkit-scrollbar-thumb{background:var(--rail);border-radius:4px}
+::-webkit-scrollbar-track{background:transparent}
+<<<END>>>
+
+<<<FILE: app.js>>>
+/* ═══════════════════════════════════════════════════════════════
+   OEYdesign · 远航台 VOYAGE HELM — 前端 mock 层 + 交互
+   无真实后端：window.__mockApi__ 为模拟客户端，
+   所有数据内联，所有"请求"经 setTimeout 模拟网络延迟。
+   ═══════════════════════════════════════════════════════════════ */
+
+(function () {
+  "use strict";
+
+  /* ─────────── 1. 内联假数据（虚构 demo 项目） ─────────── */
+
+  var DB = {
+    projects: [
+      {
+        id: "voy-aurora",
+        code: "VOY-03",
+        name: "极光咖啡 · 秋季新品着陆页",
+        status: "candidates",            // candidates | approved | inspecting | ready | delivered
+        constraintPreset: "设计引导",
+        templateRole: "起始脚手架",
+        revision: 2,
+        selectedCandidate: "c1",
+        approvedCandidate: null,
+        candidates: [
+          {
+            id: "c1", code: "HEADING-A",
+            title: "「晨雾森林」叙事线",
+            desc: "以产地雾林为开篇，慢节奏长滚动，冷绿灰配色，强调手冲仪式感。",
+            palette: ["#2e4a3f", "#7fa08c", "#e6e2d6"],
+            heroTitle: "雾散之前，咖啡已醒",
+            heroText: "海拔 1,800 米的晨雾庄园，本季只烘 300 公斤。",
+            cols: ["产地日志", "冲煮参数", "预约试饮"]
+          },
+          {
+            id: "c2", code: "HEADING-B",
+            title: "「都市补给站」叙事线",
+            desc: "快节奏模块化排版，黑金对比，主打通勤场景的即取即走。",
+            palette: ["#17130c", "#d8a24a", "#f2ede2"],
+            heroTitle: "八分钟，从街角到工位",
+            heroText: "秋季限定桂花冷萃，全城 42 个补给点同步上架。",
+            cols: ["最近补给点", "本周豆单", "会员快线"]
+          }
+        ],
+        quality: { hard: [], soft: [] },
+        patchTargets: ["首屏主标题", "产地数据段", "价格与预约区", "页脚版权信息"],
+        files: [
+          { t: "dir", n: "aurora-landing/" },
+          { t: "f", n: "brief.notes.md" },
+          { t: "f", n: "constraints.profile.json" },
+          { t: "dir", n: "candidates/" },
+          { t: "f", n: "heading-a.preview.html" },
+          { t: "f", n: "heading-b.preview.html" },
+          { t: "dir", n: "evidence/" },
+          { t: "f", n: "origin-facts.sheet" }
+        ],
+        log: [
+          { time: "09:12", kind: "sys", text: "航次 VOY-03 建档，挂「起始脚手架」样板旗。" },
+          { time: "09:14", kind: "agent", text: "解析模糊需求：「想要一个秋天感觉的咖啡页」→ 拆解出 2 条候选航向。" },
+          { time: "09:31", kind: "agent", text: "HEADING-A / HEADING-B 候选校样已铺上海图桌，等待批示。" }
+        ],
+        records: [
+          { tag: "FB", text: "<b>整体反馈 ×1</b>：首版被批「太像连锁品牌」，已废弃。" },
+          { tag: "REV", text: "<b>R1 → R2</b>：按反馈重新生成两条候选航向。" }
+        ]
+      },
+      {
+        id: "voy-atlas",
+        code: "VOY-07",
+        name: "Atlas 咨询 · 年度行业报告 PPT",
+        status: "inspecting",
+        constraintPreset: "规范生产",
+        templateRole: "交付合同",
+        revision: 4,
+        selectedCandidate: "c1",
+        approvedCandidate: "c1",
+        candidates: [
+          {
+            id: "c1", code: "HEADING-A",
+            title: "「年鉴编辑部」叙事线",
+            desc: "严肃栅格、衬线大标题、图表优先，符合交付合同中的版式条款。",
+            palette: ["#1a2332", "#b03a2e", "#f4f1ea"],
+            heroTitle: "2025 出海行业年鉴",
+            heroText: "47 组数据 · 12 个深访 · 3 条趋势主线。",
+            cols: ["趋势总览", "数据图集", "方法论附录"]
+          }
+        ],
+        quality: {
+          hard: [
+            { ok: false, text: "第 9 页图表缺数据来源注记（合同条款 C-4）" },
+            { ok: false, text: "附录页字体未嵌入，导出 PDF 会替换字形" }
+          ],
+          soft: [
+            { text: "第 3 页大标题字距略紧，可放宽 2%" },
+            { text: "章节页红色使用频次偏高，后半程可降温" }
+          ]
+        },
+        patchTargets: ["第 3 页标题", "第 9 页图表", "附录页字体", "封底联系方式"],
+        files: [
+          { t: "dir", n: "atlas-report/" },
+          { t: "f", n: "contract.terms.md" },
+          { t: "f", n: "constraints.profile.json" },
+          { t: "dir", n: "artifacts/" },
+          { t: "f", n: "annual-report.r4.pptx" },
+          { t: "dir", n: "quality/" },
+          { t: "f", n: "inspection.r4.report" }
+        ],
+        log: [
+          { time: "08:02", kind: "sys", text: "航次 VOY-07 建档，按「交付合同」样板旗锁定版式条款。" },
+          { time: "10:40", kind: "user", text: "批准 HEADING-A 航向，进入正式产出。" },
+          { time: "11:05", kind: "agent", text: "Artifact R4 产出完毕，转入出港检查。" },
+          { time: "11:06", kind: "quality", text: "硬检查：2 处暗礁警报；审美轨道：2 条瞭望员笔记。" }
+        ],
+        records: [
+          { tag: "APV", text: "<b>HEADING-A 获批准</b>，R4 为当前正式 Artifact。" },
+          { tag: "QA", text: "<b>出港检查未过</b>：2 项硬错误待清礁。" },
+          { tag: "FB", text: "<b>局部修补 ×2</b>：已处理图表配色、附录页码。" }
+        ]
+      },
+      {
+        id: "voy-tide",
+        code: "VOY-11",
+        name: "潮汐乐队 · 巡演纪录片网页",
+        status: "ready",
+        constraintPreset: "开放探索",
+        templateRole: "参考样例",
+        revision: 3,
+        selectedCandidate: "c1",
+        approvedCandidate: "c1",
+        candidates: [
+          {
+            id: "c1", code: "HEADING-A",
+            title: "「深夜电台」叙事线",
+            desc: "暗底+噪点纹理，采访逐字稿与现场照片穿插，像一档深夜广播。",
+            palette: ["#101418", "#4fb3a9", "#e8f1ef"],
+            heroTitle: "浪把声音推上岸",
+            heroText: "十四座城市，二十六场演出，一部跟拍了 218 天的纪录片。",
+            cols: ["巡演地图", "逐字稿选段", "上线日期"]
+          }
+        ],
+        quality: {
+          hard: [],
+          soft: [
+            { text: "移动端下首屏视频海报帧可再压暗一档，突出标题" }
+          ]
+        },
+        patchTargets: ["首屏视频区", "巡演地图", "逐字稿引文", "购票按钮"],
+        files: [
+          { t: "dir", n: "tide-doc/" },
+          { t: "f", n: "references.moodboard.md" },
+          { t: "f", n: "constraints.profile.json" },
+          { t: "dir", n: "artifacts/" },
+          { t: "f", n: "tide-doc-site.r3.html" },
+          { t: "f", n: "assets.manifest" }
+        ],
+        log: [
+          { time: "14:20", kind: "sys", text: "航次 VOY-11 建档，「开放探索」航行令，仅挂参考样例旗。" },
+          { time: "15:47", kind: "user", text: "批准 HEADING-A：「就是这个深夜电台的感觉」。" },
+          { time: "16:10", kind: "quality", text: "出港检查通过：0 硬错误，1 条审美笔记留存。" },
+          { time: "16:10", kind: "sys", text: "R3 已具备出港资格，可交付导出。" }
+        ],
+        records: [
+          { tag: "APV", text: "<b>HEADING-A 获批准</b>。" },
+          { tag: "QA", text: "<b>出港检查通过</b>，无硬错误。" },
+          { tag: "DLV", text: "<b>待交付</b>：等待船长下达离港令。" }
+        ]
+      }
+    ]
+  };
+
+  /* ─────────── 2. mock 客户端：window.__mockApi__ ─────────── */
+
+  var LATENCY = 260;
+
+  function delay(fn, ms) {
+    return new Promise(function (resolve) {
+      setTimeout(function () { resolve(fn()); }, ms == null ? LATENCY : ms);
+    });
+  }
+
+  function findProject(id) {
+    for (var i = 0; i < DB.projects.length; i++) {
+      if (DB.projects[i].id === id) return DB.projects[i];
+    }
+    return null;
+  }
+
+  function nowTime() {
+    var d = new Date();
+    return ("0" + d.getHours()).slice(-2) + ":" + ("0" + d.getMinutes()).slice(-2);
+  }
+
+  function appendLog(p, kind, text) {
+    p.log.push({ time: nowTime(), kind: kind, text: text });
+  }
+
+  window.__mockApi__ = {
+    listProjects: function () {
+      return delay(function () {
+        return DB.projects.map(function (p) {
+          return { id: p.id, code: p.code, name: p.name, status: p.status };
+        });
+      });
+    },
+    getProject: function (id) {
+      return delay(function () { return findProject(id); });
+    },
+    /* 整体方向反馈：换叙事/语气/视觉 → 生成一条新候选航向 */
+    submitDirectionFeedback: function (id, aspect, message) {
+      return delay(function () {
+        var p = findProject(id); if (!p) return null;
+        appendLog(p, "user", "改航线令（换" + aspect + "）：" + message);
+        p.records.unshift({ tag: "FB", text: "<b>整体反馈 · 换" + aspect + "</b>：" + escapeHtml(message) });
+        p.status = "candidates";
+        p.approvedCandidate = null;
+        p.revision += 1;
+        var n = p.candidates.length + 1;
+        var neo = synthesizeCandidate(p, aspect, n);
+        p.candidates.push(neo);
+        p.selectedCandidate = neo.id;
+        appendLog(p, "agent", "收到改航线令，废弃当前航向，新候选 " + neo.code + " 已生成（R" + p.revision + "）。");
+        return p;
+      }, 700);
+    },
+    /* 局部修补反馈：不动整体，只登记定点修正 */
+    submitPatchFeedback: function (id, target, message) {
+      return delay(function () {
+        var p = findProject(id); if (!p) return null;
+        appendLog(p, "user", "局部修补令（" + target + "）：" + message);
+        p.records.unshift({ tag: "FB", text: "<b>局部修补 · " + escapeHtml(target) + "</b>：" + escapeHtml(message) });
+        appendLog(p, "agent", "修补令已登记，将在当前航向上定点微调「" + target + "」，整体航线不变。");
+        return p;
+      }, 500);
+    },
+    approveCandidate: function (id, candId) {
+      return delay(function () {
+        var p = findProject(id); if (!p) return null;
+        p.approvedCandidate = candId;
+        p.selectedCandidate = candId;
+        p.status = "inspecting";
+        var c = p.candidates.filter(function (x) { return x.id === candId; })[0];
+        appendLog(p, "user", "批准航向 " + c.code + "「" + c.title + "」，转入正式产出。");
+        appendLog(p, "agent", "Artifact R" + p.revision + " 产出完毕，转入出港检查（硬检查 + 审美双轨）。");
+        p.records.unshift({ tag: "APV", text: "<b>" + c.code + " 获批准</b>，R" + p.revision + " 为当前正式 Artifact。" });
+        /* 模拟质量引擎跑一遭 */
+        var qr = synthesizeQuality(p);
+        p.quality = qr;
+        appendLog(p, "quality", "出港检查结论：" + qr.hard.filter(function(h){return !h.ok;}).length + " 项暗礁警报，" + qr.soft.length + " 条瞭望员笔记。");
+        if (qr.hard.every(function (h) { return h.ok; })) {
+          p.status = "ready";
+          appendLog(p, "sys", "无硬错误，R" + p.revision + " 具备出港资格。");
+        }
+        return p;
+      }, 900);
+    },
+    deliver: function (id) {
+      return delay(function () {
+        var p = findProject(id); if (!p) return null;
+        if (p.status !== "ready") return { error: "blocked" };
+        p.status = "delivered";
+        appendLog(p, "sys", "离港令下达：R" + p.revision + " 已导出交付，航次归档。");
+        p.records.unshift({ tag: "DLV", text: "<b>已交付</b>：R" + p.revision + " 导出完成。" });
+        return p;
+      }, 600);
+    },
+    createProject: function (spec) {
+      return delay(function () {
+        var seq = DB.projects.length + 3;
+        var code = "VOY-" + ("0" + (seq * 1 + 9)).slice(-2);
+        var p = {
+          id: "voy-" + Date.now(),
+          code: code,
+          name: spec.name,
+          status: "candidates",
+          constraintPreset: spec.preset,
+          templateRole: spec.role,
+          revision: 1,
+          selectedCandidate: "c1",
+          approvedCandidate: null,
+          candidates: [synthesizeCandidate({ name: spec.name }, "初始", 1)],
+          quality: { hard: [], soft: [] },
+          patchTargets: ["首屏主标题", "核心数据段", "行动按钮区", "页脚信息"],
+          files: [
+            { t: "dir", n: spec.name.replace(/[·\s]/g, "-").toLowerCase() + "/" },
+            { t: "f", n: "constraints.profile.json" },
+            { t: "dir", n: "candidates/" },
+            { t: "f", n: "heading-a.preview.html" }
+          ],
+          log: [
+            { time: nowTime(), kind: "sys", text: "航次 " + code + " 在船坞登记，挂「" + spec.role + "」样板旗，航行令：" + spec.preset + "。" },
+            { time: nowTime(), kind: "agent", text: "已生成首条候选航向 HEADING-A，铺上海图桌等待批示。" }
+          ],
+          records: [{ tag: "NEW", text: "<b>新航次登记</b>：" + escapeHtml(spec.name) }]
+        };
+        DB.projects.push(p);
+        return p;
+      }, 650);
+    }
+  };
+
+  /* 由规则推导生成新候选（规则见 MOCK.md） */
+  function synthesizeCandidate(p, aspect, n) {
+    var MOODS = {
+      "叙事": { title: "「逆行编年史」叙事线", desc: "倒叙结构：先抛结论，再逐层回溯证据，制造悬念感。", hero: "结局已定，故事才刚开始" },
+      "语气": { title: "「老友耳语」叙事线", desc: "第二人称、短句、口语化，像朋友在吧台边讲给你听。", hero: "跟你讲个事，别外传" },
+      "视觉": { title: "「纸上拼贴」叙事线", desc: "手撕纸边、胶带贴纸、留白呼吸感，拒绝栅格洁癖。", hero: "把灵感先贴在墙上" },
+      "初始": { title: "「开阔海平线」叙事线", desc: "默认首航方案：大图开篇、三段式结构、稳妥节奏。", hero: p.name ? p.name.split("·")[0].trim() : "新航次", }
+    };
+    var PALETTES = [
+      ["#223843", "#d8a24a", "#eff1f3"],
+      ["#3b2f4a", "#e26d5a", "#f4efe6"],
+      ["#1e3a34", "#4fb3a9", "#e8f1ef"]
+    ];
+    var m = MOODS[aspect] || MOODS["初始"];
+    var pal = PALETTES[n % PALETTES.length];
+    return {
+      id: "c" + n + "-" + Date.now(),
+      code: "HEADING-" + String.fromCharCode(64 + n),
+      title: m.title,
+      desc: m.desc + "（响应「换" + aspect + "」改航线令）",
+      palette: pal,
+      heroTitle: m.hero,
+      heroText: "由 agent 依据最新反馈重新规划的第 " + n + " 条候选航向。",
+      cols: ["栏目一", "栏目二", "栏目三"]
+    };
+  }
+
+  /* 由规则推导生成质量结论（规则见 MOCK.md） */
+  function synthesizeQuality(p) {
+    var HARD_POOL = [
+      "导出包缺少交付合同要求的来源注记",
+      "有一处外链资源未本地化，离线环境会断图",
+      "对比度抽测：一处正文/底色比值 3.1，低于 4.5 门槛"
+    ];
+    var SOFT_POOL = [
+      "首屏视觉重心略偏左，可向右回 4%",
+      "标题字号阶梯跨度过大，中间可补一档",
+      "配图色温不统一，建议整体偏暖半档"
+    ];
+    var hard = [];
+    var hardCount = p.revision % 3 === 0 ? 0 : 1; /* 规则：逢 3 倍数 revision 无硬错误 */
+    for (var i = 0; i < hardCount; i++) hard.push({ ok: false, text: HARD_POOL[(p.revision + i) % HARD_POOL.length] });
+    var soft = [{ text: SOFT_POOL[p.revision % SOFT_POOL.length] }];
+    return { hard: hard, soft: soft };
+  }
+
+  function escapeHtml(s) {
+    return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  }
+
+  /* ─────────── 3. 视图状态 + 渲染 ─────────── */
+
+  var state = { currentId: null, current: null, view: "bridge", directionAspect: "叙事" };
+  var $ = function (id) { return document.getElementById(id); };
+
+  var STATUS_MAP = {
+    candidates: { cls: "sailing", text: "在航 · 候选待批示" },
+    inspecting: { cls: "review", text: "出港检查中" },
+    ready: { cls: "ready", text: "具备出港资格" },
+    delivered: { cls: "sailing", text: "已交付 · 归档" }
+  };
+
+  function toast(msg) {
+    var t = $("toast");
+    t.textContent = msg;
+    t.classList.add("show");
+    setTimeout(function () { t.classList.remove("show"); }, 2400);
+  }
+
+  function renderAll() {
+    var p = state.current;
+    renderHead(p);
+    renderLog(p);
+    renderNextMoves(p);
+    renderChart(p);
+    renderInstruments(p);
+    renderPatchTargets(p);
+  }
+
+  function renderHead(p) {
+    $("voyageCode").textContent = p ? p.code + " · " + p.name : "— 未挂旗 —";
+    var dot = $("statusDot"), txt = $("statusText");
+    if (!p) {
+      dot.className = "flag-dot";
+      txt.textContent = "锚泊中 · 无航次";
+    } else {
+      var s = STATUS_MAP[p.status] || STATUS_MAP.candidates;
+      var blocked = p.status === "inspecting" && p.quality.hard.some(function (h) { return !h.ok; });
+      dot.className = "flag-dot " + (blocked ? "blocked" : s.cls);
+      txt.textContent = blocked ? "检查未过 · 硬错误挡港" : s.text;
+    }
+  }
+
+  function renderLog(p) {
+    $("logState").textContent = p
+      ? p.code + " · " + p.constraintPreset + " · R" + p.revision
+      : "NO VOYAGE · 无在航项目";
+    var ol = $("logList");
+    ol.innerHTML = "";
+    if (!p) return;
+    p.log.slice().reverse().forEach(function (e) {
+      var li = document.createElement("li");
+      li.innerHTML =
+        '<span class="log-time">' + e.time + '</span>' +
+        '<span class="log-kind k-' + e.kind + '">' + kindName(e.kind) + '</span>' +
+        '<span class="log-text">' + escapeHtml(e.text) + "</span>";
+      ol.appendChild(li);
+    });
+  }
+
+  function kindName(k) {
+    return { agent: "AGENT", user: "船长", sys: "系统", quality: "质检" }[k] || k;
+  }
+
+  function renderNextMoves(p) {
+    var box = $("nextMoves");
+    box.innerHTML = "";
+    var moves = [];
+    if (!p) {
+      moves.push({ label: "去「船坞」登记新航次", tag: "DOCK", fn: function () { switchView("harbor"); } });
+    } else if (p.status === "candidates") {
+      moves.push({ label: "在海图桌挑选并批准一条航向", tag: "APV", fn: focusChart });
+      moves.push({ label: "都不满意？发「改航线令」换方向", tag: "HAIL", fn: function () { $("directionText").focus(); } });
+    } else if (p.status === "inspecting") {
+      if (p.quality.hard.some(function (h) { return !h.ok; })) {
+        moves.push({ label: "用「局部修补令」清除硬错误所指位置", tag: "FIX", fn: function () { $("patchText").focus(); } });
+      }
+    } else if (p.status === "ready") {
+      moves.push({ label: "下达离港令 · 导出交付", tag: "DLV", fn: doDeliver });
+    } else if (p.status === "delivered") {
+      moves.push({ label: "航次已归档，可切换其它航线", tag: "LOG", fn: null, disabled: true });
+    }
+    moves.forEach(function (m) {
+      var b = document.createElement("button");
+      b.className = "move-btn";
+      b.innerHTML = '<span class="mv-tag">[' + m.tag + "]</span>" + m.label;
+      b.disabled = !!m.disabled;
+      if (m.fn) b.addEventListener("click", m.fn);
+      box.appendChild(b);
+    });
+  }
+
+  function focusChart() {
+    var el = document.querySelector(".cand-card.selected");
+    if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
+  }
+
+  function renderChart(p) {
+    var rail = $("candidateRail");
+    var stage = $("proofStage");
+    rail.innerHTML = "";
+    if (!p) {
+      $("revStamp").textContent = "REV —";
+      stage.innerHTML = "";
+      stage.appendChild(buildEmptySea());
+      return;
+    }
+    $("revStamp").textContent = "REV R" + p.revision;
+    p.candidates.forEach(function (c) {
+      var card = document.createElement("div");
+      card.className = "cand-card" +
+        (p.selectedCandidate === c.id ? " selected" : "") +
+        (p.approvedCandidate === c.id ? " approved" : "");
+      var badge = p.approvedCandidate === c.id
+        ? '<span class="cand-badge b-approved">已批准的航向</span>'
+        : '<span class="cand-badge b-pending">候选 · 待批示</span>';
+      var canApprove = p.status === "candidates" && p.approvedCandidate !== c.id;
+      card.innerHTML =
+        '<div class="cand-code">' + c.code + " · R" + p.revision + "</div>" +
+        '<div class="cand-title">' + escapeHtml(c.title) + "</div>" +
+        '<div class="cand-desc">' + escapeHtml(c.desc) + "</div>" +
+        badge +
+        '<div class="cand-actions">' +
+          '<button class="mini-btn act-view">铺上海图桌</button>' +
+          '<button class="mini-btn act-approve"' + (canApprove ? "" : " disabled") + ">批准此航向</button>" +
+        "</div>";
+      card.querySelector(".act-view").addEventListener("click", function (ev) {
+        ev.stopPropagation();
+        p.selectedCandidate = c.id;
+        renderChart(p);
+      });
+      card.querySelector(".act-approve").addEventListener("click", function (ev) {
+        ev.stopPropagation();
+        doApprove(c.id);
+      });
+      rail.appendChild(card);
+    });
+    var sel = p.candidates.filter(function (c) { return c.id === p.selectedCandidate; })[0] || p.candidates[0];
+    stage.innerHTML = "";
+    stage.appendChild(buildProof(p, sel));
+  }
+
+  function buildEmptySea() {
+    var d = document.createElement("div");
+    d.className = "empty-sea";
+    d.innerHTML =
+      '<svg viewBox="0 0 64 64" class="empty-ico"><path d="M8 44c6-4 10-4 16 0s10 4 16 0 10-4 16 0" fill="none" stroke="currentColor" stroke-width="2"/><path d="M8 52c6-4 10-4 16 0s10 4 16 0 10-4 16 0" fill="none" stroke="currentColor" stroke-width="2" opacity=".5"/><path d="M32 10v22M32 12l14 16H32" fill="none" stroke="currentColor" stroke-width="2"/></svg>' +
+      "<p>海图桌空着。在左上方选定一条航线，或在「船坞」开辟新航次，候选设计会铺在这里。</p>";
+    return d;
+  }
+
+  function buildProof(p, c) {
+    var wrap = document.createElement("div");
+    wrap.className = "proof-frame";
+    var pal = c.palette;
+    var cols = c.cols.map(function (t, i) {
+      return '<div class="mock-col"><b>' + escapeHtml(t) + '</b>内容由 agent 依据证据基线填充。<div class="mock-bar" style="width:' + (60 + i * 15) + "%;background:" + pal[1] + '"></div></div>';
+    }).join("");
+    wrap.innerHTML =
+      '<div class="proof-urlbar"><span class="dot"></span><span class="dot"></span><span class="dot"></span>' +
+      "<span>proof://" + p.code.toLowerCase() + "/" + c.code.toLowerCase() + " · rev " + p.revision + "</span></div>" +
+      '<div class="proof-body">' +
+        '<div class="mock-hero" style="background:linear-gradient(120deg,' + pal[0] + "," + pal[0] + 'cc);color:' + pal[2] + '">' +
+          "<h4>" + escapeHtml(c.heroTitle) + "</h4><p>" + escapeHtml(c.heroText) + "</p>" +
+        "</div>" +
+        '<div class="mock-cols">' + cols + "</div>" +
+      "</div>" +
+      '<div class="proof-caption"><span>' + escapeHtml(p.name) + " · " + escapeHtml(c.title) + '</span>' +
+      '<span class="cap-flag">' + (p.approvedCandidate === c.id ? "★ 正式 Artifact" : "候选校样 · 未批准") + "</span></div>";
+    return wrap;
+  }
+
+  function renderInstruments(p) {
+    var ft = $("fileTree"), so = $("sailingOrders"),
+        hl = $("hardList"), sl = $("softList"), rl = $("recordList");
+    ft.innerHTML = ""; so.innerHTML = ""; hl.innerHTML = ""; sl.innerHTML = ""; rl.innerHTML = "";
+    if (!p) {
+      ft.innerHTML = '<li class="dir">（空仓）</li>';
+      so.innerHTML = "<dt>航行令</dt><dd>—</dd>";
+      hl.innerHTML = '<li class="ok">无航次，未检</li>';
+      sl.innerHTML = '<li class="ok">无航次，未检</li>';
+      return;
+    }
+    p.files.forEach(function (f) {
+      var li = document.createElement("li");
+      li.textContent = f.n;
+      if (f.t === "dir") li.className = "dir";
+      ft.appendChild(li);
+    });
+    so.innerHTML =
+      "<dt>航行令</dt><dd>" + escapeHtml(p.constraintPreset) + "</dd>" +
+      "<dt>样板旗</dt><dd>" + escapeHtml(p.templateRole) + "</dd>" +
+      "<dt>航次编号</dt><dd class=\"mono\">" + p.code + "</dd>" +
+      "<dt>当前修订</dt><dd class=\"mono\">R" + p.revision + "</dd>";
+    /* 硬错误轨道 */
+    if (p.status === "candidates") {
+      hl.innerHTML = '<li class="ok">尚未批准航向，未启动检查</li>';
+      sl.innerHTML = '<li class="ok">尚未批准航向，未启动检查</li>';
+    } else {
+      if (p.quality.hard.length === 0) {
+        hl.innerHTML = '<li class="ok">0 项暗礁警报 · 硬检查通过</li>';
+      } else {
+        p.quality.hard.forEach(function (h) {
+          var li = document.createElement("li");
+          li.textContent = h.text;
+          hl.appendChild(li);
+        });
+      }
+      if (p.quality.soft.length === 0) {
+        sl.innerHTML = '<li class="ok">暂无瞭望员笔记</li>';
+      } else {
+        p.quality.soft.forEach(function (s) {
+          var li = document.createElement("li");
+          li.textContent = s.text;
+          sl.appendChild(li);
+        });
+      }
+    }
+    p.records.forEach(function (r) {
+      var li = document.createElement("li");
+      li.innerHTML = '<span class="rec-tag">[' + r.tag + "]</span>" + r.text;
+      rl.appendChild(li);
+    });
+  }
+
+  function renderPatchTargets(p) {
+    var sel = $("patchTarget");
+    sel.innerHTML = "";
+    var targets = p ? p.patchTargets : ["（先选定航线）"];
+    targets.forEach(function (t) {
+      var o = document.createElement("option");
+      o.textContent = t;
+      sel.appendChild(o);
+    });
+  }
+
+  /* ─────────── 4. 动作 ─────────── */
+
+  function loadProject(id) {
+    if (!id) {
+      state.currentId = null; state.current = null;
+      renderAll();
+      return;
+    }
+    window.__mockApi__.getProject(id).then(function (p) {
+      state.currentId = id; state.current = p;
+      renderAll();
+      toast("已切换航线：" + p.code + " · " + p.name);
+    });
+  }
+
+  function doApprove(candId) {
+    if (!state.current) return;
+    toast("批示传送中……");
+    window.__mockApi__.approveCandidate(state.current.id, candId).then(function (p) {
+      state.current = p;
+      renderAll();
+      var blocked = p.quality.hard.some(function (h) { return !h.ok; });
+      toast(blocked ? "出港检查发现硬错误，已挡港" : "出港检查通过，具备出港资格");
+    });
+  }
+
+  function doDeliver() {
+    if (!state.current) return;
+    window.__mockApi__.deliver(state.current.id).then(function (res) {
+      if (res && res.error) { toast("存在硬错误，离港令被驳回"); return; }
+      state.current = res;
+      renderAll();
+      toast("已离港 · 交付完成");
+    });
+  }
+
+  /* ─────────── 5. 事件绑定 ─────────── */
+
+  function switchView(v) {
+    state.view = v;
+    $("bridgeView").classList.toggle("hidden", v !== "bridge");
+    $("harborView").classList.toggle("hidden", v !== "harbor");
+    $("tabBridge").classList.toggle("active", v === "bridge");
+    $("tabHarbor").classList.toggle("active", v === "harbor");
+  }
+
+  $("tabBridge").addEventListener("click", function () { switchView("bridge"); });
+  $("tabHarbor").addEventListener("click", function () { switchView("harbor"); });
+
+  $("projectSelect").addEventListener("change", function (e) {
+    loadProject(e.target.value);
+  });
+
+  /* 改航线令：aspect 切换 */
+  $("directionAspect").addEventListener("click", function (e) {
+    var btn = e.target.closest(".seg-btn");
+    if (!btn) return;
+    this.querySelectorAll(".seg-btn").forEach(function (b) { b.classList.remove("active"); });
+    btn.classList.add("active");
+    state.directionAspect = btn.getAttribute("data-aspect");
+  });
+
+  $("formDirection").addEventListener("submit", function (e) {
+    e.preventDefault();
+    var ack = $("directionAck");
+    if (!state.current) { ack.textContent = "⚠ 先在上方选定一条航线，才能发令。"; return; }
+    var msg = $("directionText").value.trim();
+    if (!msg) { ack.textContent = "⚠ 写一句你想换成的方向，再发令。"; return; }
+    ack.textContent = "发令中……";
+    window.__mockApi__.submitDirectionFeedback(state.current.id, state.directionAspect, msg).then(function (p) {
+      state.current = p;
+      renderAll();
+      $("directionText").value = "";
+      ack.textContent = "✓ 改航线令已送达，新候选已铺上海图桌。";
+      toast("agent 已重新规划航向（R" + p.revision + "）");
+    });
+  });
+
+  $("formPatch").addEventListener("submit", function (e) {
+    e.preventDefault();
+    var ack = $("patchAck");
+    if (!state.current) { ack.textContent = "⚠ 先在上方选定一条航线，才能发令。"; return; }
+    var msg = $("patchText").value.trim();
+    if (!msg) { ack.textContent = "⚠ 写清楚要修什么，再发令。"; return; }
+    ack.textContent = "发令中……";
+    window.__mockApi__.submitPatchFeedback(state.current.id, $("patchTarget").value, msg).then(function (p) {
+      state.current = p;
+      renderAll();
+      $("patchText").value = "";
+      ack.textContent = "✓ 修补令已登记，将定点微调，不动整体航线。";
+    });
+  });
+
+  /* 船坞表单 */
+  function bindPick(rowId) {
+    $(rowId).addEventListener("click", function (e) {
+      var btn = e.target.closest(".pick");
+      if (!btn) return;
+      this.querySelectorAll(".pick").forEach(function (b) { b.classList.remove("active"); });
+      btn.classList.add("active");
+    });
+  }
+  bindPick("presetPick");
+  bindPick("rolePick");
+
+  $("formNewVoyage").addEventListener("submit", function (e) {
+    e.preventDefault();
+    var ack = $("harborAck");
+    var name = $("newName").value.trim();
+    if (!name) { ack.textContent = "⚠ 给航次起个名字。"; return; }
+    var preset = document.querySelector("#presetPick .pick.active").getAttribute("data-value");
+    var role = document.querySelector("#rolePick .pick.active").getAttribute("data-value");
+    ack.textContent = "登记中……";
+    window.__mockApi__.createProject({ name: name, preset: preset, role: role }).then(function (p) {
+      return window.__mockApi__.listProjects().then(function (list) {
+        rebuildSelect(list);
+        $("projectSelect").value = p.id;
+        $("newName").value = "";
+        ack.textContent = "✓ 航次 " + p.code + " 登记完成，正在驶向驾驶台……";
+        switchView("bridge");
+        loadProject(p.id);
+      });
+    });
+  });
+
+  /* ─────────── 6. 启动 ─────────── */
+
+  function rebuildSelect(list) {
+    var sel = $("projectSelect");
+    sel.innerHTML = "";
+    var none = document.createElement("option");
+    none.value = "";
+    none.textContent = "— 未选定航线 —";
+    sel.appendChild(none);
+    list.forEach(function (p) {
+      var o = document.createElement("option");
+      o.value = p.id;
+      o.textContent = p.code + " · " + p.name;
+      sel.appendChild(o);
+    });
+  }
+
+  window.__mockApi__.listProjects().then(function (list) {
+    rebuildSelect(list);
+    renderAll();
+  });
+
+})();
+<<<END>>>
+
+<<<FILE: MOCK.md>>>
+# MOCK.md — OEYdesign · 远航台 VOYAGE HELM mock 声明
+
+本原型**没有任何真实后端**。所有数据与交互均由 `app.js` 内的前端 mock 层驱动，
+技术方式为：**内联假数据 + `window.__mockApi__` 模拟客户端 + `setTimeout` 模拟网络延迟**。
+未拦截/覆盖 `fetch`（页面本身不发起任何真实网络请求），未引用任何外部资源。
+
+## 1. mock 的接口/交互点（window.__mockApi__）
+
+| 方法 | 模拟的真实能力 | 延迟 |
+|---|---|---|
+| `listProjects()` | 项目列表加载（顶部航线切换下拉） | 260ms |
+| `getProject(id)` | 项目切换后拉取该项目全量状态（日志/候选/约束/质量/档案） | 260ms |
+| `submitDirectionFeedback(id, aspect, message)` | 整体方向反馈（「改航线令」）：换叙事/语气/视觉 | 700ms |
+| `submitPatchFeedback(id, target, message)` | 局部内容反馈（「修补令」）：定点微调 | 500ms |
+| `approveCandidate(id, candId)` | 批准某候选方向 → 产出 Artifact → 触发质量复核 | 900ms |
+| `deliver(id)` | 质量通过后导出交付；有硬错误时返回 `{error:"blocked"}` | 600ms |
+| `createProject(spec)` | 船坞视图创建新 demo 项目并加入切换列表 | 650ms |
+
+## 2. 数据来源声明
+
+### 纯虚构编造（手写内联在 `app.js` 的 `DB.projects` 中）
+- 三个 demo 项目（极光咖啡着陆页 / Atlas 报告 PPT / 潮汐乐队纪录片网页）的：名称、
+  编号、状态、约束 preset、模板角色、revision 号、候选方向文案、调色板、文件树、
+  活动日志条目、反馈与交付记录、patchTargets 列表。
+- 其中 Atlas 项目的质量结论（2 条硬错误 + 2 条审美发现）和潮汐项目的（0 硬错误 + 1 条
+  审美发现）也是手写假数据，仅用于展示「硬错误 / 审美发现双轨分离」的呈现方式。
+- 三个 preset（开放探索/设计引导/规范生产）与四个 template role（参考样例/起始脚手架/
+  设计系统/交付合同）的名称取自 product-client/ 的真实信息架构，非虚构。
+
+### 由规则/模板推导生成（非手写）
+- `synthesizeCandidate(p, aspect, n)`：用户提交整体方向反馈或新建项目时，按反馈维度
+  （叙事/语气/视觉/初始）从 `MOODS` 模板表选取标题句式、描述句式、首屏文案模板，再从
+  `PALETTES` 三色调色板数组按候选序号取模选色，拼合成一条新候选。生成描述中会显式
+  标注「响应『换X』改航线令」。
+- `synthesizeQuality(p)`：批准候选后模拟质量引擎。**规则：revision 号为 3 的倍数时
+  硬错误数为 0（可直接交付），否则产生 1 条硬错误**，硬错误/审美建议文案分别从
+  `HARD_POOL` / `SOFT_POOL` 文案池中按 revision 取模选取。两条轨道始终分开存放、分开渲染，
+  从不合成分数。
+- 新建项目的编号：`"VOY-" + 序号推导`；文件名由项目名去空格小写化推导。
+- 所有新产生的日志条目时间戳取浏览器当前时间（`HH:MM`）。
+
+## 3. mock 技术手段
+- **内联对象字面量**：`DB` 为单一内存数据库，页面刷新即重置，无 localStorage。
+- **Promise + setTimeout**：每个 `__mockApi__` 方法返回 Promise，用 `setTimeout`
+  模拟 260–900ms 的异步延迟，交互上有"发令中……"等过渡态。
+- **真实可见的响应**：反馈提交后向活动日志追加条目、向航次档案追加记录、整体反馈会
+  递增 revision 并真的新增一张候选卡片；批准会真的切换状态戳并填充双轨质量结论；
+  交付在有硬错误时会被驳回（toast 提示）。
+<<<END>>>
+
+<<<FILE: INTENT.md>>>
+# INTENT.md — 远航台 VOYAGE HELM
+
+**差异轴：叙事框架。** 我为这一版选择的隐喻是「远洋航行的舰桥/驾驶台」：用户是船长，
+design_agent 是船组。选择它的原因是 OEYdesign 的真实流程（生成多条候选方向 → 反馈/批准
+→ 产出 → 双轨质量复核 → 交付）天然就是一段航程：候选方向即「候选航向」，整体反馈即
+「改航线令」，局部反馈即「定点修补令」，硬错误即「暗礁警报」（挡住出港），审美发现即
+「瞭望员笔记」（不挡港，船长自行判断），交付即「离港」。这套映射让两种反馈粒度、两类
+质量结论这些领域规则不靠说明书就能被讲清楚，而不是给通用 dashboard 贴一层皮肤。
+
+**产品命名**：远航台 · VOYAGE HELM——与 product-client 的「编辑部校样台」同一工作台、
+另一套世界观。文案语气全程是航海号令式（发令、批示、挡港、离港），视觉用深海蓝 +
+黄铜 + 印章式 REV 角标强化场景感。
+
+**最能体现差异轴的三个位置**：
+1. `hail-direction` 与 `hail-patch`：两种反馈粒度被写成「改航线令」与「局部修补令」，
+   舱位分开、措辞分开，直观传达「换做法」与「微调」处理路径不同。
+2. `ship-instruments` 的出港检查：硬错误 = 红色「暗礁警报」（lane 标注"挡住出港"），
+   审美 = 琥珀「瞭望员笔记」（"不挡出港，自行判断"），双轨物理分栏，绝不合成一个分数。
+3. `logbook` 的「下一舵令」：可执行操作被写成舵令（APV/HAIL/FIX/DLV），随项目状态机
+   实时变化，把航海叙事从视觉层推进到交互措辞层。
+<<<END>>>

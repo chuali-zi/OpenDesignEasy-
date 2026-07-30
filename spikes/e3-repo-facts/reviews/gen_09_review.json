@@ -1,0 +1,224 @@
+{
+  "statements": [
+    {
+      "sentence": "OEYdesign 是一个「契约优先」（contract-first）的参考实现项目，当前版本 0.1.0，其官方定位即是\"Contract-first reference implementation for OEYdesign\"[F0539][F0540][F0541]",
+      "clean_text": "OEYdesign 是一个「契约优先」（contract-first）的参考实现项目，当前版本 0.1.0，其官方定位即是\"Contract-first reference implementation for OEYdesign\"",
+      "cited_ids": [
+        "F0539",
+        "F0540",
+        "F0541"
+      ],
+      "tokens": {
+        "numbers": [
+          "0.1.0"
+        ],
+        "identifiers": [
+          "OEYdesign"
+        ],
+        "frameworks": []
+      },
+      "token_levels": {
+        "number:0.1.0": "cited",
+        "identifier:OEYdesign": "cited"
+      },
+      "primary": "traceable_correct",
+      "detail": "",
+      "closed_world": "traceable_correct",
+      "closed_world_detail": ""
+    },
+    {
+      "sentence": "整个项目在 pyproject.toml 中声明了 0 个运行时依赖，仅要求 Python 3.11 及以上版本即可运行[F0536][F0538]",
+      "clean_text": "整个项目在 pyproject.toml 中声明了 0 个运行时依赖，仅要求 Python 3.11 及以上版本即可运行",
+      "cited_ids": [
+        "F0536",
+        "F0538"
+      ],
+      "tokens": {
+        "numbers": [
+          "0",
+          "3.11"
+        ],
+        "identifiers": [],
+        "frameworks": []
+      },
+      "token_levels": {
+        "number:0": "cited",
+        "number:3.11": "cited"
+      },
+      "primary": "traceable_correct",
+      "detail": "",
+      "closed_world": "traceable_correct",
+      "closed_world_detail": ""
+    },
+    {
+      "sentence": "它的核心是一套供应商中立（vendor-neutral）的领域语言，集中定义在 `src/oeydesign/domain.py`（689 行）中，涵盖项目状态、约束配置、设计简报、候选方案、审批、交付与反馈等全部业务对象[F0144]",
+      "clean_text": "它的核心是一套供应商中立（vendor-neutral）的领域语言，集中定义在 `src/oeydesign/domain.py`（689 行）中，涵盖项目状态、约束配置、设计简报、候选方案、审批、交付与反馈等全部业务对象",
+      "cited_ids": [
+        "F0144"
+      ],
+      "tokens": {
+        "numbers": [
+          "689"
+        ],
+        "identifiers": [
+          "src/oeydesign/domain.py"
+        ],
+        "frameworks": []
+      },
+      "token_levels": {
+        "number:689": "cited",
+        "identifier:src/oeydesign/domain.py": "cited"
+      },
+      "primary": "traceable_correct",
+      "detail": "",
+      "closed_world": "traceable_correct",
+      "closed_world_detail": ""
+    },
+    {
+      "sentence": "系统的「项目控制平面」由 `control.py` 中的 `ControlPlane` 类承担，它是项目业务状态的唯一写入者，提供 35 个方法来驱动从创建项目、生成候选到审批导出的完整流程[F0107][F0143]",
+      "clean_text": "系统的「项目控制平面」由 `control.py` 中的 `ControlPlane` 类承担，它是项目业务状态的唯一写入者，提供 35 个方法来驱动从创建项目、生成候选到审批导出的完整流程",
+      "cited_ids": [
+        "F0107",
+        "F0143"
+      ],
+      "tokens": {
+        "numbers": [
+          "35"
+        ],
+        "identifiers": [
+          "ControlPlane",
+          "control.py"
+        ],
+        "frameworks": []
+      },
+      "token_levels": {
+        "number:35": "cited",
+        "identifier:ControlPlane": "cited",
+        "identifier:control.py": "cited"
+      },
+      "primary": "traceable_correct",
+      "detail": "",
+      "closed_world": "traceable_correct",
+      "closed_world_detail": ""
+    },
+    {
+      "sentence": "所有外部能力都通过 `ports.py` 中可替换的协议接口（如设计智能、工件生产、质量治理、交付等端口）进行抽象[F0294][F0354][F0359][F0364][F0367]，并配有 `stubs.py` 中确定性、无副作用的桩实现便于测试与演示[F0439]",
+      "clean_text": "所有外部能力都通过 `ports.py` 中可替换的协议接口（如设计智能、工件生产、质量治理、交付等端口）进行抽象，并配有 `stubs.py` 中确定性、无副作用的桩实现便于测试与演示",
+      "cited_ids": [
+        "F0294",
+        "F0354",
+        "F0359",
+        "F0364",
+        "F0367",
+        "F0439"
+      ],
+      "tokens": {
+        "numbers": [],
+        "identifiers": [
+          "ports.py",
+          "stubs.py"
+        ],
+        "frameworks": []
+      },
+      "token_levels": {
+        "identifier:ports.py": "cited",
+        "identifier:stubs.py": "cited"
+      },
+      "primary": "traceable_correct",
+      "detail": "",
+      "closed_world": "traceable_correct",
+      "closed_world_detail": ""
+    },
+    {
+      "sentence": "在持久化与可恢复性方面，项目提供了基于 SQLite 的参考持久化适配器与工作流运行时，支持阶段检查点与确定性故障注入[F0256][F0397][F0418]，并通过 `composition.py` 中的 `SQLiteApplication` 组合根一键装配[F0065][F0070]",
+      "clean_text": "在持久化与可恢复性方面，项目提供了基于 SQLite 的参考持久化适配器与工作流运行时，支持阶段检查点与确定性故障注入，并通过 `composition.py` 中的 `SQLiteApplication` 组合根一键装配",
+      "cited_ids": [
+        "F0256",
+        "F0397",
+        "F0418",
+        "F0065",
+        "F0070"
+      ],
+      "tokens": {
+        "numbers": [],
+        "identifiers": [
+          "SQLite",
+          "SQLiteApplication",
+          "composition.py"
+        ],
+        "frameworks": []
+      },
+      "token_levels": {
+        "identifier:SQLite": "cited",
+        "identifier:SQLiteApplication": "cited",
+        "identifier:composition.py": "cited"
+      },
+      "primary": "traceable_correct",
+      "detail": "",
+      "closed_world": "traceable_correct",
+      "closed_world_detail": ""
+    },
+    {
+      "sentence": "面向最终用户，它还内置了一个零依赖的 HTTP 产品外壳，由 `ProductShellService` 提供项目与命令接口[F0368][F0384]",
+      "clean_text": "面向最终用户，它还内置了一个零依赖的 HTTP 产品外壳，由 `ProductShellService` 提供项目与命令接口",
+      "cited_ids": [
+        "F0368",
+        "F0384"
+      ],
+      "tokens": {
+        "numbers": [],
+        "identifiers": [
+          "HTTP",
+          "ProductShellService"
+        ],
+        "frameworks": []
+      },
+      "token_levels": {
+        "identifier:HTTP": "cited",
+        "identifier:ProductShellService": "cited"
+      },
+      "primary": "traceable_correct",
+      "detail": "",
+      "closed_world": "traceable_correct",
+      "closed_world_detail": ""
+    },
+    {
+      "sentence": "质量保障方面，仓库在 `tests/` 目录下包含 8 个测试文件、共 42 个测试函数，覆盖四个阶段的契约与集成行为[F0535]；此外还附有 `lab30min/` 实验目录，提供循序渐进的动手实验脚本帮助学习者理解各阶段设计[F0463][F0471]",
+      "clean_text": "质量保障方面，仓库在 `tests/` 目录下包含 8 个测试文件、共 42 个测试函数，覆盖四个阶段的契约与集成行为；此外还附有 `lab30min/` 实验目录，提供循序渐进的动手实验脚本帮助学习者理解各阶段设计",
+      "cited_ids": [
+        "F0535",
+        "F0463",
+        "F0471"
+      ],
+      "tokens": {
+        "numbers": [
+          "8",
+          "42",
+          "30"
+        ],
+        "identifiers": [
+          "lab30min/",
+          "tests/"
+        ],
+        "frameworks": []
+      },
+      "token_levels": {
+        "number:8": "cited",
+        "number:42": "cited",
+        "number:30": "cited",
+        "identifier:lab30min/": "cited",
+        "identifier:tests/": "cited"
+      },
+      "primary": "traceable_correct",
+      "detail": "",
+      "closed_world": "traceable_correct",
+      "closed_world_detail": ""
+    }
+  ],
+  "tally_primary": {
+    "traceable_correct": 8
+  },
+  "tally_closed_world": {
+    "traceable_correct": 8
+  }
+}

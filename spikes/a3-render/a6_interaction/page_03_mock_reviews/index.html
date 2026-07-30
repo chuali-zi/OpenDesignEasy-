@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>评论加载示例</title>
+<style>
+  body { font-family: system-ui, sans-serif; max-width: 640px; margin: 40px auto; padding: 0 16px; }
+  button { padding: 8px 16px; cursor: pointer; }
+  ul { margin-top: 16px; padding-left: 20px; }
+  li { margin-bottom: 8px; }
+  .error { color: #c00; }
+</style>
+</head>
+<body>
+  <h1>产品评论</h1>
+  <button data-oey-object="reviews.load-button">加载评论</button>
+  <ul data-oey-object="reviews.list"></ul>
+
+  <script>
+    const button = document.querySelector('[data-oey-object="reviews.load-button"]');
+    const list = document.querySelector('[data-oey-object="reviews.list"]');
+
+    button.addEventListener('click', async () => {
+      button.disabled = true;
+      button.textContent = '加载中…';
+      try {
+        const res = await fetch('mock/reviews.json');
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const reviews = await res.json();
+        list.innerHTML = '';
+        for (const r of reviews) {
+          const li = document.createElement('li');
+          li.textContent = r.author + '：' + r.text;
+          list.appendChild(li);
+        }
+      } catch (err) {
+        list.innerHTML = '';
+        const li = document.createElement('li');
+        li.className = 'error';
+        li.textContent = '加载失败：' + err.message;
+        list.appendChild(li);
+      } finally {
+        button.disabled = false;
+        button.textContent = '加载评论';
+      }
+    });
+  </script>
+</body>
+</html>

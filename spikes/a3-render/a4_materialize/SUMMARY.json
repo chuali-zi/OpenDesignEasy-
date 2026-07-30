@@ -1,0 +1,727 @@
+[
+  {
+    "idx": 1,
+    "topic": "一家精品咖啡店的落地页",
+    "usage": {
+      "prompt_tokens": 421,
+      "completion_tokens": 11384,
+      "total_tokens": 11805,
+      "completion_tokens_details": {
+        "reasoning_tokens": 7515
+      }
+    },
+    "gen_elapsed_s": 320.42,
+    "html_bytes": 11813,
+    "validation": {
+      "valid": true,
+      "errors": [],
+      "section_count": 5,
+      "object_counts": [
+        8,
+        14,
+        9,
+        4,
+        2
+      ],
+      "decodable_data_uri_count": 6
+    },
+    "materialize_manifest": {
+      "style_extracted": true,
+      "assets": [
+        {
+          "file": "assets/asset_1.svg",
+          "mime": "image/svg+xml",
+          "bytes": 88
+        },
+        {
+          "file": "assets/asset_2.svg",
+          "mime": "image/svg+xml",
+          "bytes": 88
+        },
+        {
+          "file": "assets/asset_3.svg",
+          "mime": "image/svg+xml",
+          "bytes": 88
+        },
+        {
+          "file": "assets/asset_4.svg",
+          "mime": "image/svg+xml",
+          "bytes": 88
+        },
+        {
+          "file": "assets/asset_5.svg",
+          "mime": "image/svg+xml",
+          "bytes": 88
+        },
+        {
+          "file": "assets/asset_6.svg",
+          "mime": "image/svg+xml",
+          "bytes": 88
+        }
+      ]
+    },
+    "single_console_errors": [],
+    "single_failed_requests": [],
+    "single_page_errors": [],
+    "materialized_console_errors": [],
+    "materialized_failed_requests": [],
+    "materialized_page_errors": [],
+    "diff": {
+      "size_mismatch": false,
+      "size_a": [
+        1440,
+        2618
+      ],
+      "size_b": [
+        1440,
+        2618
+      ],
+      "considered_pixels": 3769920,
+      "diff_pixels": 0,
+      "diff_ratio": 0.0,
+      "diff_bbox": null,
+      "excluded_pixels": 0
+    }
+  },
+  {
+    "idx": 2,
+    "topic": "一款个人理财App的介绍页",
+    "usage": {
+      "prompt_tokens": 421,
+      "completion_tokens": 6583,
+      "total_tokens": 7004,
+      "completion_tokens_details": {
+        "reasoning_tokens": 1852
+      }
+    },
+    "gen_elapsed_s": 219.25,
+    "html_bytes": 14869,
+    "validation": {
+      "valid": true,
+      "errors": [],
+      "section_count": 5,
+      "object_counts": [
+        13,
+        15,
+        8,
+        4,
+        4
+      ],
+      "decodable_data_uri_count": 2
+    },
+    "materialize_manifest": {
+      "style_extracted": true,
+      "assets": [
+        {
+          "file": "assets/asset_1.png",
+          "mime": "image/png",
+          "bytes": 70
+        },
+        {
+          "file": "assets/asset_2.png",
+          "mime": "image/png",
+          "bytes": 70
+        }
+      ]
+    },
+    "single_console_errors": [],
+    "single_failed_requests": [],
+    "single_page_errors": [],
+    "materialized_console_errors": [],
+    "materialized_failed_requests": [],
+    "materialized_page_errors": [],
+    "diff": {
+      "size_mismatch": false,
+      "size_a": [
+        1440,
+        2176
+      ],
+      "size_b": [
+        1440,
+        2176
+      ],
+      "considered_pixels": 3133440,
+      "diff_pixels": 0,
+      "diff_ratio": 0.0,
+      "diff_bbox": null,
+      "excluded_pixels": 0
+    }
+  },
+  {
+    "idx": 3,
+    "topic": "一个自由职业设计师的作品集主页",
+    "usage": {
+      "prompt_tokens": 422,
+      "completion_tokens": 13539,
+      "total_tokens": 13961,
+      "completion_tokens_details": {
+        "reasoning_tokens": 8391
+      }
+    },
+    "gen_elapsed_s": 387.05,
+    "html_bytes": 16646,
+    "validation": {
+      "valid": true,
+      "errors": [],
+      "section_count": 7,
+      "object_counts": [
+        6,
+        11,
+        15,
+        12,
+        13,
+        8,
+        4
+      ],
+      "decodable_data_uri_count": 2
+    },
+    "materialize_manifest": {
+      "style_extracted": true,
+      "assets": [
+        {
+          "file": "assets/asset_1.svg",
+          "mime": "image/svg+xml",
+          "bytes": 166
+        },
+        {
+          "file": "assets/asset_2.svg",
+          "mime": "image/svg+xml",
+          "bytes": 166
+        }
+      ]
+    },
+    "single_console_errors": [],
+    "single_failed_requests": [],
+    "single_page_errors": [],
+    "materialized_console_errors": [],
+    "materialized_failed_requests": [],
+    "materialized_page_errors": [],
+    "diff": {
+      "size_mismatch": false,
+      "size_a": [
+        1440,
+        2848
+      ],
+      "size_b": [
+        1440,
+        2848
+      ],
+      "considered_pixels": 4101120,
+      "diff_pixels": 0,
+      "diff_ratio": 0.0,
+      "diff_bbox": null,
+      "excluded_pixels": 0
+    }
+  },
+  {
+    "idx": 4,
+    "topic": "一家瑜伽工作室的课程报名页",
+    "usage": {
+      "prompt_tokens": 421,
+      "completion_tokens": 2929,
+      "total_tokens": 3350,
+      "completion_tokens_details": {
+        "reasoning_tokens": 40
+      }
+    },
+    "gen_elapsed_s": 98.51,
+    "html_bytes": 9107,
+    "validation": {
+      "valid": true,
+      "errors": [],
+      "section_count": 4,
+      "object_counts": [
+        5,
+        8,
+        8,
+        4
+      ],
+      "decodable_data_uri_count": 1
+    },
+    "materialize_manifest": {
+      "style_extracted": true,
+      "assets": [
+        {
+          "file": "assets/asset_1.svg",
+          "mime": "image/svg+xml",
+          "bytes": 258
+        }
+      ]
+    },
+    "single_console_errors": [],
+    "single_failed_requests": [],
+    "single_page_errors": [],
+    "materialized_console_errors": [],
+    "materialized_failed_requests": [],
+    "materialized_page_errors": [],
+    "diff": {
+      "size_mismatch": false,
+      "size_a": [
+        1440,
+        2235
+      ],
+      "size_b": [
+        1440,
+        2235
+      ],
+      "considered_pixels": 3218400,
+      "diff_pixels": 0,
+      "diff_ratio": 0.0,
+      "diff_bbox": null,
+      "excluded_pixels": 0
+    }
+  },
+  {
+    "idx": 5,
+    "topic": "一款开源命令行工具的文档首页",
+    "usage": {
+      "prompt_tokens": 422,
+      "completion_tokens": 6064,
+      "total_tokens": 6486,
+      "completion_tokens_details": {
+        "reasoning_tokens": 49
+      }
+    },
+    "gen_elapsed_s": 188.86,
+    "html_bytes": 17650,
+    "validation": {
+      "valid": true,
+      "errors": [],
+      "section_count": 6,
+      "object_counts": [
+        6,
+        6,
+        11,
+        9,
+        8,
+        4
+      ],
+      "decodable_data_uri_count": 4
+    },
+    "materialize_manifest": {
+      "style_extracted": true,
+      "assets": [
+        {
+          "file": "assets/asset_1.svg",
+          "mime": "image/svg+xml",
+          "bytes": 338
+        },
+        {
+          "file": "assets/asset_2.svg",
+          "mime": "image/svg+xml",
+          "bytes": 124
+        },
+        {
+          "file": "assets/asset_3.svg",
+          "mime": "image/svg+xml",
+          "bytes": 385
+        },
+        {
+          "file": "assets/asset_4.svg",
+          "mime": "image/svg+xml",
+          "bytes": 787
+        }
+      ]
+    },
+    "single_console_errors": [],
+    "single_failed_requests": [],
+    "single_page_errors": [],
+    "materialized_console_errors": [
+      "Failed to load resource: net::ERR_CONNECTION_TIMED_OUT"
+    ],
+    "materialized_failed_requests": [
+      "http://127.0.0.1:52227/assets/asset_4.svg :: net::ERR_CONNECTION_TIMED_OUT"
+    ],
+    "materialized_page_errors": [],
+    "diff": {
+      "size_mismatch": false,
+      "size_a": [
+        1440,
+        1848
+      ],
+      "size_b": [
+        1440,
+        1848
+      ],
+      "considered_pixels": 2661120,
+      "diff_pixels": 305,
+      "diff_ratio": 0.00011461339586339586,
+      "diff_bbox": [
+        947,
+        796,
+        967,
+        818
+      ],
+      "excluded_pixels": 0
+    }
+  },
+  {
+    "idx": 6,
+    "topic": "一家本地面包店的菜单展示页",
+    "usage": {
+      "prompt_tokens": 423,
+      "completion_tokens": 10406,
+      "total_tokens": 10829,
+      "cached_tokens": 256,
+      "completion_tokens_details": {
+        "reasoning_tokens": 6720
+      },
+      "prompt_tokens_details": {
+        "cached_tokens": 256
+      }
+    },
+    "gen_elapsed_s": 275.22,
+    "html_bytes": 10964,
+    "validation": {
+      "valid": true,
+      "errors": [],
+      "section_count": 4,
+      "object_counts": [
+        4,
+        38,
+        5,
+        3
+      ],
+      "decodable_data_uri_count": 8
+    },
+    "materialize_manifest": {
+      "style_extracted": true,
+      "assets": [
+        {
+          "file": "assets/asset_1.svg",
+          "mime": "image/svg+xml",
+          "bytes": 90
+        },
+        {
+          "file": "assets/asset_2.svg",
+          "mime": "image/svg+xml",
+          "bytes": 90
+        },
+        {
+          "file": "assets/asset_3.svg",
+          "mime": "image/svg+xml",
+          "bytes": 90
+        },
+        {
+          "file": "assets/asset_4.svg",
+          "mime": "image/svg+xml",
+          "bytes": 90
+        },
+        {
+          "file": "assets/asset_5.svg",
+          "mime": "image/svg+xml",
+          "bytes": 90
+        },
+        {
+          "file": "assets/asset_6.svg",
+          "mime": "image/svg+xml",
+          "bytes": 90
+        },
+        {
+          "file": "assets/asset_7.svg",
+          "mime": "image/svg+xml",
+          "bytes": 90
+        },
+        {
+          "file": "assets/asset_8.svg",
+          "mime": "image/svg+xml",
+          "bytes": 90
+        }
+      ]
+    },
+    "single_console_errors": [],
+    "single_failed_requests": [],
+    "single_page_errors": [],
+    "materialized_console_errors": [],
+    "materialized_failed_requests": [],
+    "materialized_page_errors": [],
+    "diff": {
+      "size_mismatch": false,
+      "size_a": [
+        1440,
+        1503
+      ],
+      "size_b": [
+        1440,
+        1503
+      ],
+      "considered_pixels": 2164320,
+      "diff_pixels": 0,
+      "diff_ratio": 0.0,
+      "diff_bbox": null,
+      "excluded_pixels": 0
+    }
+  },
+  {
+    "idx": 7,
+    "topic": "一个线上读书会的活动页",
+    "usage": {
+      "prompt_tokens": 452,
+      "completion_tokens": 1747,
+      "total_tokens": 2199,
+      "completion_tokens_details": {
+        "reasoning_tokens": 34
+      }
+    },
+    "gen_elapsed_s": 62.8,
+    "html_bytes": 5001,
+    "validation": {
+      "valid": true,
+      "errors": [],
+      "section_count": 4,
+      "object_counts": [
+        4,
+        6,
+        6,
+        2
+      ],
+      "decodable_data_uri_count": 1
+    },
+    "run_mode": "recovered_after_external_interrupt",
+    "materialize_manifest": {
+      "style_extracted": true,
+      "assets": [
+        {
+          "file": "assets/asset_1.svg",
+          "mime": "image/svg+xml",
+          "bytes": 365
+        }
+      ]
+    },
+    "single_console_errors": [],
+    "single_failed_requests": [],
+    "single_page_errors": [],
+    "materialized_console_errors": [],
+    "materialized_failed_requests": [],
+    "materialized_page_errors": [],
+    "diff": {
+      "size_mismatch": false,
+      "size_a": [
+        1440,
+        1210
+      ],
+      "size_b": [
+        1440,
+        1210
+      ],
+      "considered_pixels": 1742400,
+      "diff_pixels": 0,
+      "diff_ratio": 0.0,
+      "diff_bbox": null,
+      "excluded_pixels": 0
+    }
+  },
+  {
+    "idx": 8,
+    "topic": "一款智能家居设备的产品页",
+    "usage": {
+      "prompt_tokens": 451,
+      "completion_tokens": 3026,
+      "total_tokens": 3477,
+      "completion_tokens_details": {
+        "reasoning_tokens": 46
+      }
+    },
+    "gen_elapsed_s": 110.82,
+    "html_bytes": 7849,
+    "validation": {
+      "valid": true,
+      "errors": [],
+      "section_count": 4,
+      "object_counts": [
+        6,
+        8,
+        12,
+        2
+      ],
+      "decodable_data_uri_count": 4
+    },
+    "run_mode": "recovered_after_external_interrupt",
+    "materialize_manifest": {
+      "style_extracted": true,
+      "assets": [
+        {
+          "file": "assets/asset_1.svg",
+          "mime": "image/svg+xml",
+          "bytes": 578
+        },
+        {
+          "file": "assets/asset_2.svg",
+          "mime": "image/svg+xml",
+          "bytes": 252
+        },
+        {
+          "file": "assets/asset_3.svg",
+          "mime": "image/svg+xml",
+          "bytes": 184
+        },
+        {
+          "file": "assets/asset_4.svg",
+          "mime": "image/svg+xml",
+          "bytes": 236
+        }
+      ]
+    },
+    "single_console_errors": [],
+    "single_failed_requests": [],
+    "single_page_errors": [],
+    "materialized_console_errors": [],
+    "materialized_failed_requests": [],
+    "materialized_page_errors": [],
+    "diff": {
+      "size_mismatch": false,
+      "size_a": [
+        1440,
+        1454
+      ],
+      "size_b": [
+        1440,
+        1454
+      ],
+      "considered_pixels": 2093760,
+      "diff_pixels": 0,
+      "diff_ratio": 0.0,
+      "diff_bbox": null,
+      "excluded_pixels": 0
+    }
+  },
+  {
+    "idx": 9,
+    "topic": "一家宠物寄养服务的落地页",
+    "usage": {
+      "prompt_tokens": 453,
+      "completion_tokens": 3369,
+      "total_tokens": 3822,
+      "completion_tokens_details": {
+        "reasoning_tokens": 34
+      }
+    },
+    "gen_elapsed_s": 108.4,
+    "html_bytes": 8762,
+    "validation": {
+      "valid": true,
+      "errors": [],
+      "section_count": 5,
+      "object_counts": [
+        2,
+        6,
+        5,
+        8,
+        2
+      ],
+      "decodable_data_uri_count": 5
+    },
+    "run_mode": "recovered_after_external_interrupt",
+    "materialize_manifest": {
+      "style_extracted": true,
+      "assets": [
+        {
+          "file": "assets/asset_1.svg",
+          "mime": "image/svg+xml",
+          "bytes": 288
+        },
+        {
+          "file": "assets/asset_2.svg",
+          "mime": "image/svg+xml",
+          "bytes": 358
+        },
+        {
+          "file": "assets/asset_3.svg",
+          "mime": "image/svg+xml",
+          "bytes": 232
+        },
+        {
+          "file": "assets/asset_4.svg",
+          "mime": "image/svg+xml",
+          "bytes": 234
+        },
+        {
+          "file": "assets/asset_5.svg",
+          "mime": "image/svg+xml",
+          "bytes": 187
+        }
+      ]
+    },
+    "single_console_errors": [],
+    "single_failed_requests": [],
+    "single_page_errors": [],
+    "materialized_console_errors": [],
+    "materialized_failed_requests": [],
+    "materialized_page_errors": [],
+    "diff": {
+      "size_mismatch": false,
+      "size_a": [
+        1440,
+        1534
+      ],
+      "size_b": [
+        1440,
+        1534
+      ],
+      "considered_pixels": 2208960,
+      "diff_pixels": 0,
+      "diff_ratio": 0.0,
+      "diff_bbox": null,
+      "excluded_pixels": 0
+    }
+  },
+  {
+    "idx": 10,
+    "topic": "一个城市马拉松赛事的报名页",
+    "usage": {
+      "prompt_tokens": 452,
+      "completion_tokens": 1758,
+      "total_tokens": 2210,
+      "completion_tokens_details": {
+        "reasoning_tokens": 35
+      }
+    },
+    "gen_elapsed_s": 42.69,
+    "html_bytes": 5399,
+    "validation": {
+      "valid": true,
+      "errors": [],
+      "section_count": 4,
+      "object_counts": [
+        4,
+        10,
+        9,
+        2
+      ],
+      "decodable_data_uri_count": 1
+    },
+    "materialize_manifest": {
+      "style_extracted": true,
+      "assets": [
+        {
+          "file": "assets/asset_1.svg",
+          "mime": "image/svg+xml",
+          "bytes": 283
+        }
+      ]
+    },
+    "single_console_errors": [],
+    "single_failed_requests": [],
+    "single_page_errors": [],
+    "materialized_console_errors": [],
+    "materialized_failed_requests": [],
+    "materialized_page_errors": [],
+    "diff": {
+      "size_mismatch": false,
+      "size_a": [
+        1440,
+        1272
+      ],
+      "size_b": [
+        1440,
+        1272
+      ],
+      "considered_pixels": 1831680,
+      "diff_pixels": 0,
+      "diff_ratio": 0.0,
+      "diff_bbox": null,
+      "excluded_pixels": 0
+    },
+    "run_mode": "resumed"
+  }
+]

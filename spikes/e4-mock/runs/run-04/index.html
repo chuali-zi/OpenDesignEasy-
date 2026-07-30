@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ForgeDesk · Agent 工作台原型</title>
+  <link rel="stylesheet" href="styles.css">
+  <script defer src="app.js"></script>
+</head>
+<body>
+  <div class="app-shell" data-oey-section="shell">
+    <header class="topbar" data-oey-section="topbar">
+      <div class="brand">
+        <span class="brand-mark" aria-hidden="true">◆</span>
+        <div>
+          <h1 data-oey-object="topbar.title">ForgeDesk</h1>
+          <p data-oey-object="topbar.subtitle">本地 Agent 工作台 · 静态原型</p>
+        </div>
+      </div>
+      <div class="topbar-actions">
+        <span class="pill" data-oey-object="topbar.mode">Mock Mode</span>
+        <span class="pill pill-ok" data-oey-object="topbar.health">No Backend</span>
+      </div>
+    </header>
+
+    <aside class="sidebar" data-oey-section="projects" aria-label="项目列表">
+      <div class="section-head">
+        <h2 data-oey-object="projects.title">项目 / 会话</h2>
+        <button id="newProjectBtn" class="ghost-btn" data-oey-object="projects.newButton" type="button">+ 新建</button>
+      </div>
+      <div class="search-wrap">
+        <input id="projectSearch" data-oey-object="projects.search" type="search" placeholder="过滤项目…" autocomplete="off">
+      </div>
+      <ul id="projectList" class="project-list" data-oey-object="projects.list"></ul>
+      <div class="sidebar-foot" data-oey-object="projects.meta">数据源：window.__mockApi__ · 内存态</div>
+    </aside>
+
+    <main class="conversation" data-oey-section="conversation" aria-label="对话区">
+      <div class="conversation-head">
+        <div>
+          <h2 id="chatTitle" data-oey-object="conversation.title">—</h2>
+          <p id="chatSummary" data-oey-object="conversation.summary">—</p>
+        </div>
+        <div class="badges">
+          <span id="projectStatus" class="badge" data-oey-object="conversation.status">—</span>
+          <span id="messageCount" class="badge" data-oey-object="conversation.messageCount">0 条</span>
+        </div>
+      </div>
+
+      <div id="messageList" class="message-list" data-oey-object="conversation.messages" aria-live="polite"></div>
+
+      <form id="composer" class="composer" data-oey-object="conversation.composer">
+        <textarea id="composerInput" data-oey-object="conversation.input" rows="3" placeholder="给 agent 下达指令，例如：把预览改成发布检查清单"></textarea>
+        <div class="composer-bar">
+          <span class="hint" data-oey-object="conversation.hint">Enter 换行 · Ctrl/⌘+Enter 发送</span>
+          <button id="sendBtn" data-oey-object="conversation.send" type="submit">发送</button>
+        </div>
+      </form>
+    </main>
+
+    <aside class="preview" data-oey-section="preview" aria-label="预览区">
+      <div class="section-head">
+        <h2 data-oey-object="preview.title">产出预览</h2>
+        <span id="previewKind" class="badge" data-oey-object="preview.kind">—</span>
+      </div>
+      <div id="previewBody" class="preview-body" data-oey-object="preview.body"></div>
+    </aside>
+
+    <footer class="statusbar" data-oey-section="statusbar">
+      <span id="statusText" data-oey-object="statusbar.text">就绪</span>
+      <span class="dot" aria-hidden="true"></span>
+      <span data-oey-object="statusbar.note">所有数据均在前端模拟生成，刷新后还原。</span>
+    </footer>
+  </div>
+  <noscript>需要启用 JavaScript 才能运行该原型。</noscript>
+</body>
+</html>

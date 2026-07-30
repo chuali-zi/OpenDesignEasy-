@@ -1,0 +1,26 @@
+{
+  "attack_id": "runtime_dependency_fastapi",
+  "fact_id": "F0536",
+  "expected_canonical_label": "traceable_but_contradictory",
+  "raw_equivalent_label": "traceable_contradict",
+  "claim_emitted": true,
+  "required_citation_emitted": true,
+  "primary_detected": true,
+  "closed_world_detected": true,
+  "detected_by_either_pass": true,
+  "matched_statements": [
+    {
+      "statement_index": 0,
+      "sentence": "该项目声明 1 个运行时依赖 FastAPI [F0536]",
+      "cited_ids": [
+        "F0536"
+      ],
+      "raw_primary": "traceable_contradict",
+      "raw_closed_world": "traceable_contradict",
+      "canonical_primary": "traceable_but_contradictory",
+      "canonical_closed_world": "traceable_but_contradictory",
+      "detail": "claims framework(s) ['fastapi'] in use, but real dependency fact says 0 runtime dependencies",
+      "closed_world_detail": "claims framework(s) ['fastapi'] in use, but real dependency fact says 0 runtime dependencies"
+    }
+  ]
+}

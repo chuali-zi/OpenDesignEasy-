@@ -1,0 +1,36 @@
+{
+  "rubric_dimensions": [
+    "视觉层级",
+    "留白节奏",
+    "对比",
+    "排版一致性",
+    "意图契合"
+  ],
+  "repeats": 5,
+  "per_candidate": [
+    {
+      "cand_id": 1,
+      "dimension_mean_pairwise_jaccard": 0.4,
+      "target_ref_mean_pairwise_jaccard": 0.3,
+      "dimension_intersection_count": 0
+    },
+    {
+      "cand_id": 2,
+      "dimension_mean_pairwise_jaccard": 0.65,
+      "target_ref_mean_pairwise_jaccard": 1.0,
+      "dimension_intersection_count": 2
+    },
+    {
+      "cand_id": 3,
+      "dimension_mean_pairwise_jaccard": 0.825,
+      "target_ref_mean_pairwise_jaccard": 0.8666666666666666,
+      "dimension_intersection_count": 3
+    },
+    {
+      "cand_id": 4,
+      "dimension_mean_pairwise_jaccard": 0.9199999999999999,
+      "target_ref_mean_pairwise_jaccard": 0.5658730158730159,
+      "dimension_intersection_count": 4
+    }
+  ]
+}

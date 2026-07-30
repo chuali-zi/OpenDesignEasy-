@@ -1,0 +1,227 @@
+<<<ISSUES>>>
+["空航次/未选定航线状态下，发出改航线令与发出修补令仍是金色可点击样式，与航海日志中唯一可执行的 DOCK 舵令矛盾，应禁用并降权。", "出港检查空态用绿色对勾配“无航次，未检”，容易被误读为质量已通过，应改为中性未检状态。", "存在 1 个资源 404 console error（疑似 favicon 或外链资源），应内联图标或补齐资源以清零。"]
+<<<END_ISSUES>>>
+<<<FILE: index.html>>>
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>远航台 · VOYAGE HELM | OEYdesign</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23081620'/%3E%3Cpath d='M32 8v48M32 16c10 4 16 12 18 22-6-4-12-6-18-6s-12 2-18 6c2-10 8-18 18-22z' fill='%23d8a94f'/%3E%3C/svg%3E" />
+<style>
+:root{
+  --bg:#041019; --panel:#071b26; --panel2:#0a2230; --line:#17384a; --line2:#24536b;
+  --ink:#d8e7ee; --muted:#7fa0b0; --faint:#4e6b7a; --brass:#d8a94f; --brass2:#f0c976;
+  --red:#ff6b6b; --amber:#f2b75c; --green:#58c78a; --blue:#6db8d9;
+  --shadow:0 18px 50px rgba(0,0,0,.35);
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0; color:var(--ink); background:
+    radial-gradient(circle at 20% 0%, rgba(35,93,118,.28), transparent 34%),
+    linear-gradient(180deg,#03101a 0%, #051623 48%, #030d15 100%);
+  font:14px/1.55 "Inter","PingFang SC","Microsoft YaHei",system-ui,sans-serif;
+  overflow-x:hidden;
+}
+button,select,textarea{font:inherit}
+.topbar{
+  min-height:64px; display:flex; align-items:center; gap:16px; padding:10px 18px;
+  border-bottom:1px solid rgba(216,169,79,.45); background:linear-gradient(180deg,rgba(8,28,39,.96),rgba(5,19,28,.9));
+  position:sticky; top:0; z-index:5;
+}
+.brand{display:flex; align-items:center; gap:10px; min-width:220px}
+.mark{width:34px;height:34px;border:1px solid var(--brass);border-radius:50%;display:grid;place-items:center;color:var(--brass);box-shadow:inset 0 0 0 4px rgba(216,169,79,.08)}
+.brand b{display:block;font-size:16px;letter-spacing:.4px}.brand span{display:block;color:var(--brass);font-size:11px;letter-spacing:1.8px}
+.flag{border:1px solid var(--line);background:rgba(255,255,255,.02);padding:6px 10px;border-radius:8px;color:var(--muted);min-width:92px;text-align:center}
+.flag b{display:block;color:var(--ink);font-size:12px}.route{display:flex;align-items:center;gap:10px;margin-left:auto}
+.route label{color:var(--muted);white-space:nowrap}
+select,textarea{
+  color:var(--ink); background:#081923; border:1px solid var(--line2); border-radius:8px; outline:none;
+}
+select{min-width:250px;padding:9px 12px}
+select:focus,textarea:focus{border-color:var(--brass);box-shadow:0 0 0 3px rgba(216,169,79,.14)}
+.status{display:flex;align-items:center;gap:8px;color:var(--muted);white-space:nowrap}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--blue);box-shadow:0 0 12px rgba(109,184,217,.8)}
+.btn{
+  border:1px solid var(--line2); color:var(--ink); background:#0b2431; border-radius:8px; padding:9px 14px; cursor:pointer;
+  transition:transform .15s ease,border-color .15s ease,background .15s ease;
+}
+.btn:hover{border-color:var(--brass);transform:translateY(-1px)}
+.btn.primary{background:linear-gradient(180deg,var(--brass2),var(--brass));color:#231605;border-color:#8a6424;font-weight:700}
+.btn.ghost{background:transparent}
+.btn.is-disabled,.btn:disabled{
+  cursor:not-allowed; opacity:.46; transform:none; border-color:var(--line); background:#0a1c27; color:var(--muted); box-shadow:none;
+}
+.btn.is-disabled:hover,.btn:disabled:hover{transform:none;border-color:var(--line)}
+main{
+  width:min(100%,1440px); margin:0 auto; padding:18px; display:grid; gap:14px;
+  grid-template-columns:310px minmax(0,1fr) 330px; align-items:start;
+}
+.panel{
+  background:linear-gradient(180deg,rgba(10,34,48,.94),rgba(6,24,34,.94));
+  border:1px solid var(--line); border-radius:14px; box-shadow:var(--shadow); overflow:hidden;
+}
+.panel + .panel{margin-top:14px}
+.panel h2{
+  margin:0; padding:13px 14px; font-size:14px; color:var(--brass2); letter-spacing:.8px; font-weight:700;
+  border-bottom:1px solid rgba(23,56,74,.9); display:flex; align-items:center; gap:8px;
+}
+.panel .body{padding:14px}
+.kicker{display:inline-block;color:var(--blue);background:rgba(109,184,217,.12);border:1px solid rgba(109,184,217,.24);border-radius:7px;padding:6px 9px;font-size:12px}
+.next{margin-top:14px;padding-top:12px;border-top:1px dashed var(--line);color:var(--muted);font-size:12px}
+.cmd{margin-top:8px;width:100%;text-align:left;border:1px solid var(--line2);background:#0a2230;color:var(--ink);border-radius:8px;padding:10px}
+.cmd b{color:var(--brass2)}
+.note{color:var(--muted);margin:0 0 12px}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+.chips .btn{padding:7px 12px;color:var(--brass2)}
+textarea{width:100%;min-height:70px;resize:vertical;padding:10px;border-radius:8px;display:block}
+textarea::placeholder{color:#58788a}
+.wide{width:100%;margin-top:10px;font-weight:800;letter-spacing:.5px}
+.sea{
+  min-height:742px; position:relative; padding:14px;
+}
+.sea h2{justify-content:space-between}
+.rev{
+  border:2px solid var(--brass); color:var(--brass2); border-radius:8px; padding:4px 10px; font-weight:900; letter-spacing:2px;
+  box-shadow:2px 2px 0 rgba(216,169,79,.18); transform:rotate(1.5deg); background:rgba(216,169,79,.06);
+}
+.chart{
+  margin:14px; min-height:610px; border:1px dashed rgba(79,109,124,.55); border-radius:12px; position:relative;
+  display:grid; place-items:center; text-align:center; color:var(--muted);
+  background:
+    linear-gradient(rgba(109,184,217,.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(109,184,217,.035) 1px, transparent 1px);
+  background-size:44px 44px;
+}
+.empty{max-width:560px;padding:30px;color:#87a8b8}
+.empty svg{opacity:.65;margin-bottom:18px}
+.side .body{padding-top:12px}
+.group{padding:12px 14px;border-top:1px solid rgba(23,56,74,.75)}
+.group:first-child{border-top:0}
+.group h3{margin:0 0 9px;color:var(--brass2);font-size:13px;letter-spacing:.7px}
+.emptyline{color:var(--faint);border-left:3px solid var(--line2);padding-left:10px}
+.lane{border:1px solid var(--line);border-left-width:4px;border-radius:10px;padding:10px;margin:9px 0;background:rgba(255,255,255,.02)}
+.lane.hard{border-left-color:var(--red)} .lane.soft{border-left-color:var(--amber)}
+.lane b{display:block;margin-bottom:5px}.lane.hard b{color:var(--red)}.lane.soft b{color:var(--amber)}
+.check{color:var(--muted);display:flex;gap:7px;align-items:center}.check .none{color:var(--faint);font-weight:900}
+.hint{color:var(--faint);font-size:12px;margin-top:8px}
+@media (max-width:1180px){main{grid-template-columns:280px minmax(0,1fr);} .right{grid-column:1/-1}}
+@media (max-width:860px){main{grid-template-columns:1fr}.route{margin-left:0}.topbar{flex-wrap:wrap}}
+</style>
+</head>
+<body>
+<header class="topbar" data-oey="topbar">
+  <div class="brand" data-oey="brand">
+    <div class="mark">⚓</div>
+    <div><b>OEYdesign</b><span>远航台 · VOYAGE HELM</span></div>
+  </div>
+  <div class="flag" data-oey="current-voyage">当前航次<br><b>— 未挂旗 —</b></div>
+  <div class="route" data-oey="route-switcher">
+    <label for="route">切换航线</label>
+    <select id="route" data-oey="route-select" aria-label="切换航线">
+      <option selected>— 未选定航线 —</option>
+    </select>
+  </div>
+  <div class="status" data-oey="helm-status"><span class="dot"></span>锚泊中 · 无航次</div>
+  <button class="btn primary" data-oey="nav-helm">驾驶台</button>
+  <button class="btn" data-oey="nav-dock">船坞 · 新航次</button>
+</header>
+
+<main>
+  <aside class="left">
+    <section class="panel" data-oey="logbook">
+      <h2>▣ 航海日志</h2>
+      <div class="body">
+        <span class="kicker">NO VOYAGE · 无在航项目</span>
+        <div class="next">下一舵令 · 可执行</div>
+        <button class="cmd" data-oey="next-command"><b>[DOCK]</b> 去「船坞」登记新航次</button>
+      </div>
+    </section>
+
+    <section class="panel" data-oey="hail-direction">
+      <h2>✦ 喊话 · 要求改航线</h2>
+      <div class="body">
+        <p class="note">对整个候选方向不满意——换叙事、换语气、换视觉，让 agent 重新出一条航线。</p>
+        <div class="chips" aria-label="改航线维度">
+          <button class="btn ghost is-disabled" disabled>换叙事</button>
+          <button class="btn ghost is-disabled" disabled>换语气</button>
+          <button class="btn ghost is-disabled" disabled>换视觉</button>
+        </div>
+        <textarea data-oey="hail-direction-input" disabled placeholder="先挂旗并选定航线后，才能发出改航线令……"></textarea>
+        <button class="btn primary wide is-disabled" data-oey="hail-direction-submit" disabled aria-disabled="true">发出改航线令</button>
+      </div>
+    </section>
+
+    <section class="panel" data-oey="hail-patch">
+      <h2>◔ 喊话 · 局部修补</h2>
+      <div class="body">
+        <p class="note">只对某一处内容不满意——指出具体位置的事实、权利或策略问题，agent 做定点微调，不动整体航线。</p>
+        <select data-oey="hail-patch-target" disabled aria-label="选择修补位置">
+          <option selected>（先选定航线）</option>
+        </select>
+        <div style="height:10px"></div>
+        <textarea data-oey="hail-patch-input" disabled placeholder="先挂旗并选定航线后，才能发出局部修补令……"></textarea>
+        <button class="btn primary wide is-disabled" data-oey="hail-patch-submit" disabled aria-disabled="true">发出修补令</button>
+      </div>
+    </section>
+  </aside>
+
+  <section class="panel sea" data-oey="chart-table">
+    <h2><span>△ 海图桌 · 候选与校样</span><span class="rev" data-oey="rev-stamp">REV —</span></h2>
+    <div class="chart" data-oey="candidate-stage">
+      <div class="empty">
+        <svg width="86" height="86" viewBox="0 0 86 86" fill="none" aria-hidden="true">
+          <path d="M43 10v56" stroke="#6fa7bd" stroke-width="3"/>
+          <path d="M43 22c14 5 22 15 25 29-8-5-16-8-25-8s-17 3-25 8c3-14 11-24 25-29z" stroke="#6fa7bd" stroke-width="3" fill="rgba(109,184,217,.08)"/>
+          <path d="M22 66c7-6 14-6 21 0s14 6 21 0" stroke="#d8a94f" stroke-width="3" stroke-linecap="round"/>
+        </svg>
+        <div>海图桌空着。在左上方选定一条航线，或在「船坞」开辟新航次，候选设计会铺在这里。</div>
+      </div>
+    </div>
+  </section>
+
+  <aside class="right">
+    <section class="panel side" data-oey="manifest">
+      <div class="group" data-oey="cargo-list">
+        <h3>载货清单 · 项目文件</h3>
+        <div class="emptyline">（空仓）</div>
+      </div>
+      <div class="group" data-oey="constraint-archive">
+        <h3>航行令 · 约束档案</h3>
+        <div class="emptyline">航行令　—</div>
+      </div>
+      <div class="group" data-oey="ship-instruments">
+        <h3>出港检查 · 质量复核</h3>
+        <div class="lane hard" data-oey="hard-errors">
+          <b>暗礁警报 · 硬错误（挡住出港）</b>
+          <div class="check"><span class="none">—</span><span>无航次，未检</span></div>
+        </div>
+        <div class="lane soft" data-oey="aesthetic-notes">
+          <b>瞭望员笔记 · 审美发现（不挡出港，自行判断）</b>
+          <div class="check"><span class="none">—</span><span>无航次，未检</span></div>
+        </div>
+        <div class="hint">硬错误与审美发现物理分栏，不合成单个分数；空态不显示通过记号。</div>
+      </div>
+      <div class="group" data-oey="delivery-log">
+        <h3>航次档案 · 反馈与交付</h3>
+        <div class="emptyline">尚无交付</div>
+      </div>
+    </section>
+  </aside>
+</main>
+
+<script>
+(function(){
+  const hasVoyage=false, hasRoute=false;
+  const gate=(enabled)=>{
+    document.querySelectorAll('[data-oey^="hail-"] select, [data-oey^="hail-"] textarea, [data-oey^="hail-"] button, [data-oey="hail-direction"] .chips .btn')
+      .forEach(el=>{ el.disabled=!enabled; el.classList.toggle('is-disabled',!enabled); el.setAttribute('aria-disabled', String(!enabled)); });
+  };
+  gate(hasVoyage && hasRoute);
+})();
+</script>
+</body>
+</html>
+<<<END>>>

@@ -1,0 +1,61 @@
+{
+  "cand_id": 1,
+  "axis_label": "叙事框架 / narrative metaphor",
+  "screenshot": "spikes\\d2-aesthetic\\shots\\cand1_round2.png",
+  "anchor_count": 0,
+  "anchors": {
+    "sections": [],
+    "objects": [],
+    "all_refs": []
+  },
+  "finding_count": 4,
+  "valid_target_ref_count": 0,
+  "valid_target_ref_rate": 0.0,
+  "dimensions_covered": [
+    "对比",
+    "排版一致性",
+    "留白节奏",
+    "视觉层级"
+  ],
+  "dimension_coverage_count": 4,
+  "findings": [
+    {
+      "dimension": "视觉层级",
+      "target_ref": "logbook",
+      "issue": "空态下页面最大的视觉区域是中央空白的海图桌（仅有小号置灰提示文字），而此刻真正需要用户执行的唯一动作「[DOCK] 去船坞登记新航次」只是左栏里一个中等对比度的按钮，首眼焦点落在无内容区域而非主行动上。",
+      "suggestion": "可以考虑在海图桌空态中央直接放置主行动入口（如「登记新航次」舵令按钮），或提升 logbook 中 DOCK 按钮的填充对比度，让首屏焦点与状态机要求的下一步对齐。",
+      "target_ref_valid": false
+    },
+    {
+      "dimension": "对比",
+      "target_ref": "ship-instruments",
+      "issue": "空态下「暗礁警报·硬错误」卡片仍以红色描边加红色标题呈现，但卡内实际内容是中性信息「无航次，未检」——当前并没有任何警报，红色却是全屏最抢眼的颜色信号，颜色语义与实际状态冲突，也容易与琥珀色的瞭望员笔记形成虚假的双轨对比。",
+      "suggestion": "可以考虑空态（未检）时将该卡降为中性灰蓝描边，仅在检出硬错误时启用红色，让颜色对比真正承载「有/无警报」的状态信息。",
+      "target_ref_valid": false
+    },
+    {
+      "dimension": "留白节奏",
+      "target_ref": "ship-instruments",
+      "issue": "右栏在「航次档案·反馈与交付」之后留有大段无内容空白，而左栏三个舱位几乎铺到屏幕底部，两栏的纵向密度明显不平衡，右侧下方的大面积暗色空区看起来像未完成的布局而非有意留白。",
+      "suggestion": "可以考虑让右栏四个区块纵向弹性均分填满栏高，或将「航次档案」区块向下延展，使左右两栏的收边位置接近，让疏密差异显得有意图。",
+      "target_ref_valid": false
+    },
+    {
+      "dimension": "排版一致性",
+      "target_ref": "hail-patch",
+      "issue": "局部修补舱的说明文字「先挂旗并选定航线后，才能发出局部修补令」与下拉框空态文案「（先选定航线）」信息重复，且两个喊话舱的输入控件形态不一致（改航线舱用 chips 加文本框，修补舱用下拉加文本框），空态下两种禁用/提示的表达方式也不统一。",
+      "suggestion": "可以考虑统一两舱空态的提示策略（例如都只在输入框 placeholder 中提示一次），或让下拉的空态选项文案与说明文字互补而非复述，使两个同级舱位的排版节奏更一致。",
+      "target_ref_valid": false
+    }
+  ],
+  "parse_error": null,
+  "usage": {
+    "prompt_tokens": 2754,
+    "completion_tokens": 1756,
+    "total_tokens": 4510,
+    "completion_tokens_details": {
+      "reasoning_tokens": 1192
+    }
+  },
+  "elapsed_s": 76.4
+}

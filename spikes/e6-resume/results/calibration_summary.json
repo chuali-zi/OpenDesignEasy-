@@ -1,0 +1,56 @@
+{
+  "termination_reason": "self_terminated",
+  "budget": {
+    "steps": 8,
+    "prompt_tokens": 14712,
+    "completion_tokens": 1386,
+    "reasoning_tokens": 104,
+    "total_tokens": 16098,
+    "api_elapsed_s": 53.297,
+    "wall_clock_s": 53.34
+  },
+  "tool_log": [
+    {
+      "step": 1,
+      "tool": "write_file",
+      "path": "index.html",
+      "ok": true
+    },
+    {
+      "step": 2,
+      "tool": "read_file",
+      "path": "index.html",
+      "ok": true
+    },
+    {
+      "step": 3,
+      "tool": "write_file",
+      "path": "styles.css",
+      "ok": true
+    },
+    {
+      "step": 4,
+      "tool": "read_file",
+      "path": "styles.css",
+      "ok": true
+    },
+    {
+      "step": 5,
+      "tool": "write_file",
+      "path": "script.js",
+      "ok": true
+    },
+    {
+      "step": 6,
+      "tool": "read_file",
+      "path": "script.js",
+      "ok": true
+    },
+    {
+      "step": 7,
+      "tool": "list_files",
+      "path": ".",
+      "ok": true
+    }
+  ]
+}

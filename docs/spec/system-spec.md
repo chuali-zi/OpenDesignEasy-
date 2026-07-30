@@ -1,9 +1,21 @@
 # OEYdesign 系统总体规范
 
-> 状态：v0.1，已于 2026-07-24 审核通过并冻结。
+> 状态：v0.2 草案，待审核。v0.1 于 2026-07-24 审核通过并冻结。
 > 上位文档：`docs/prd.md`、`docs/architecture.md`。
 > 范围：系统级组件、职责、状态、接口、控制流与非功能边界。
 > 暂缓：智能设计层、Artifact 生产层、质量与治理层的内部架构、算法、具体技术栈和字段 schema。
+
+## v0.2 变更说明
+
+v0.1 的 §5 核心项目域表缺少 **Agent Workspace** 与 **Agent Session** 两个概念身份。
+
+`architecture.md` §12 要求「能力强的模型可以获得更开放的创作空间和更直接的工作区工具」，
+本规范 §6.3 也已允许「模型探索可以发生在阶段内部」。但阶段内部的 agent 会话若要跨进程重启恢复，
+就必须拥有独立、可版本化、可被引用的身份——否则它只能是一次性的不可恢复过程，与 §15.1 的可恢复性
+要求冲突。
+
+v0.2 只在 §5 增加两行概念定义，不改变任何组件职责、接口、状态机或不变量。详细内部机制由
+`docs/spec/agent-engine-spec.md` 承接。
 
 ## 1. 规范目的
 
@@ -129,8 +141,15 @@ Cross-cutting: Project Store | Artifact Store | Audit & Observability | Isolated
 | Quality Decision | 审美发现、硬检查、风险和门禁结论 | Quality & Governance |
 | Delivery Bundle | 源文件、导出物、清单和交付说明 | Preview & Delivery |
 | Workflow Run | 一次可恢复任务的执行状态 | Workflow Runtime |
+| Agent Workspace | 一次创作或生产任务的持久工作目录 | Agent Engine |
+| Agent Session | 一次 agent 循环的执行状态与 turn history | Agent Engine |
 
 这些概念可以在后续 schema 中拆分，但不得合并到无法独立追踪的聊天消息或供应商响应中。
+
+Agent Workspace 与 Agent Session 与 Workflow Run 同类：**拥有执行状态，不拥有业务真源**。
+工作区可以被丢弃重建而不损失任何已提交的项目状态；进入项目真源的只有经模块端口返回并由
+Control Plane 验证的产出。一个 Project 可以同时拥有多个互不共享的工作区（例如多个候选并行创作），
+这是不变量 4「候选责任统一」在执行层的形式。内部机制见 `agent-engine-spec.md`。
 
 ## 6. 组件职责
 

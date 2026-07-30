@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>环线 THE LOOP · OEYdesign Agent 工作台</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<header class="rail" data-oey-section="project-rail">
+  <div class="rail-brand">
+    <span class="rail-logo" aria-hidden="true">◍</span>
+    <div>
+      <div class="rail-name" data-oey-object="rail.brand">环线 THE LOOP</div>
+      <div class="rail-sub" data-oey-object="rail.tagline">OEYdesign · design_agent 工作台</div>
+    </div>
+  </div>
+  <nav class="rail-tabs" id="railTabs" data-oey-object="rail.tabs" aria-label="项目切换"></nav>
+  <div class="rail-right">
+    <span class="rail-status" id="railStatus" data-oey-object="rail.status">载入中…</span>
+    <button class="btn btn-ghost" id="btnNewProject" data-oey-object="rail.new" type="button">+ 新案子</button>
+  </div>
+</header>
+
+<main class="spine" id="spine">
+
+  <section class="station" data-oey-section="stage">
+    <div class="station-node" aria-hidden="true"></div>
+    <div class="station-head">
+      <div>
+        <h1 class="stage-title" id="stageTitle" data-oey-object="stage.heading">—</h1>
+        <p class="stage-brief" id="stageBrief" data-oey-object="stage.brief"></p>
+      </div>
+      <div class="stage-meta">
+        <span class="rev-badge" id="stageRevision" data-oey-object="stage.revision">REVISION —</span>
+        <span class="rev-note" id="stageNote" data-oey-object="stage.note"></span>
+      </div>
+    </div>
+    <div class="stage-canvas" id="stagePreview" data-oey-object="stage.preview"></div>
+    <div class="stage-empty" id="stageEmpty" data-oey-object="stage.empty" hidden>
+      这个项目还没有任何候选方向。design_agent 会先把模糊需求问清楚，再动手产出第一稿。
+    </div>
+  </section>
+
+  <section class="station" data-oey-section="feedback-direction">
+    <div class="station-node node-warn" aria-hidden="true"></div>
+    <h2 class="station-label" data-oey-object="direction.title">整条路走偏了？</h2>
+    <p class="station-hint">对<b>整体方向</b>不满意：换一个叙事、换一种语气、或换一套视觉。这会推翻当前候选，agent 重新出方向。</p>
+    <div class="chip-row" id="directionChips" data-oey-object="direction.chips">
+      <button class="chip" type="button" data-preset="换一种叙事结构，现在的故事线不成立。">换叙事</button>
+      <button class="chip" type="button" data-preset="整体语气不对，请换一种说话方式。">换语气</button>
+      <button class="chip" type="button" data-preset="视觉方向推倒重来，当前配色与版式都不合适。">换视觉</button>
+    </div>
+    <textarea class="fb-input" id="directionInput" data-oey-object="direction.input" rows="3" placeholder="说清楚哪里不对、想要什么感觉，越具体 agent 越不容易再走偏…"></textarea>
+    <div class="fb-actions">
+      <button class="btn btn-primary" id="directionSubmit" data-oey-object="direction.submit" type="button">推翻这个方向，重做</button>
+    </div>
+  </section>
+
+  <section class="station" data-oey-section="feedback-local">
+    <div class="station-node node-fine" aria-hidden="true"></div>
+    <h2 class="station-label" data-oey-object="local.title">只有一处硌眼？</h2>
+    <p class="station-hint">对<b>局部内容</b>不满意：方向保留，只微调某个具体位置。可以直接点预览里的区块来定位。</p>
+    <div class="fb-local-row">
+      <label class="fb-field">
+        <span>位置</span>
+        <select id="localRegion" data-oey-object="local.region"></select>
+      </label>
+    </div>
+    <textarea class="fb-input" id="localInput" data-oey-object="local.input" rows="2" placeholder="这个区块哪里不对、想改成什么样…"></textarea>
+    <div class="fb-actions">
+      <button class="btn btn-secondary" id="localSubmit" data-oey-object="local.submit" type="button">只改这一处</button>
+    </div>
+  </section>
+
+  <section class="station" data-oey-section="loop">
+    <div class="station-node" aria-hidden="true"></div>
+    <h2 class="station-label" data-oey-object="loop.title">回路记录 <span class="loop-count" id="loopCount" data-oey-object="loop.count"></span></h2>
+    <p class="station-hint">这个项目从提问、出方向、收到反馈到复核交付，每一步都留在这里，按发生顺序排列。</p>
+    <ol class="loop-list" id="loopList" data-oey-object="loop.list"></ol>
+  </section>
+
+  <section class="station" data-oey-section="constraints">
+    <div class="station-node" aria-hidden="true"></div>
+    <h2 class="station-label" data-oey-object="constraints.title">约束档案</h2>
+    <p class="station-hint">创建项目时定下的边界，agent 每次产出都要在这些边界内工作。</p>
+    <div class="constraint-grid">
+      <div class="constraint-cell">
+        <span class="constraint-key">Preset</span>
+        <span class="constraint-val" id="constraintPreset" data-oey-object="constraints.preset">—</span>
+      </div>
+      <div class="constraint-cell">
+        <span class="constraint-key">Template role</span>
+        <span class="constraint-val" id="constraintRole" data-oey-object="constraints.role">—</span>
+      </div>
+      <div class="constraint-cell">
+        <span class="constraint-key">语气</span>
+        <span class="constraint-val" id="constraintTone" data-oey-object="constraints.tone">—</span>
+      </div>
+      <div class="constraint-cell">
+        <span class="constraint-key">色板</span>
+        <span class="constraint-val" id="constraintPalette" data-oey-object="constraints.palette">—</span>
+      </div>
+    </div>
+    <ul class="constraint-rules" id="constraintRules" data-oey-object="constraints.rules"></ul>
+  </section>
+
+  <section class="station" data-oey-section="quality">
+    <div class="station-node node-gate" aria-hidden="true"></div>
+    <h2 class="station-label" data-oey-object="quality.title">质量双轨</h2>
+    <p class="station-hint">两条独立轨道：<b>硬错误</b>是客观问题、会关掉交付闸门；<b>审美发现</b>只是建议，交不交付你自己定。两者不合并、不打总分。</p>
+    <div class="gate" id="qualityVerdict" data-oey-object="quality.verdict">—</div>
+    <div class="quality-lanes">
+      <div class="lane lane-hard">
+        <h3 data-oey-object="quality.hardTitle">硬错误 · 挡住交付</h3>
+        <ul id="qualityHard" data-oey-object="quality.hard"></ul>
+      </div>
+      <div class="lane lane-soft">
+        <h3 data-oey-object="quality.aestheticTitle">审美发现 · 仅供参考</h3>
+        <ul id="qualityAesthetic" data-oey-object="quality.aesthetic"></ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="station" data-oey-section="delivery">
+    <div class="station-node" aria-hidden="true"></div>
+    <h2 class="station-label" data-oey-object="delivery.title">交付记录</h2>
+    <p class="station-hint">只有通过质量闸门的正式 Artifact 才能导出。这里留下每一次导出的痕迹。</p>
+    <div class="delivery-status" id="deliveryStatus" data-oey-object="delivery.status">—</div>
+    <ul class="delivery-list" id="deliveryList" data-oey-object="delivery.list"></ul>
+  </section>
+
+  <footer class="colophon">环线 THE LOOP — OEYdesign 前端方向实验 · 数据全部为本地 mock</footer>
+</main>
+
+<div class="modal-mask" id="modalMask" hidden>
+  <div class="modal" data-oey-section="new-project" role="dialog" aria-modal="true" aria-label="开一个新案子">
+    <h2 data-oey-object="new.title">开一个新案子</h2>
+    <label class="fb-field">
+      <span>项目名称</span>
+      <input id="npName" data-oey-object="new.name" type="text" placeholder="例如：社区书店 招募海报">
+    </label>
+    <div class="fb-field">
+      <span>Constraint preset</span>
+      <div class="chip-row" id="npPreset" data-oey-object="new.preset">
+        <button class="chip" type="button" data-val="开放探索">开放探索</button>
+        <button class="chip" type="button" data-val="设计引导">设计引导</button>
+        <button class="chip" type="button" data-val="规范生产">规范生产</button>
+      </div>
+    </div>
+    <div class="fb-field">
+      <span>Template role</span>
+      <div class="chip-row" id="npRole" data-oey-object="new.role">
+        <button class="chip" type="button" data-val="参考样例">参考样例</button>
+        <button class="chip" type="button" data-val="起始脚手架">起始脚手架</button>
+        <button class="chip" type="button" data-val="设计系统">设计系统</button>
+        <button class="chip" type="button" data-val="交付合同">交付合同</button>
+      </div>
+    </div>
+    <div class="fb-actions">
+      <button class="btn btn-ghost" id="npCancel" type="button">取消</button>
+      <button class="btn btn-primary" id="npSubmit" data-oey-object="new.submit" type="button">创建并进入环线</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast" data-oey-section="toast" hidden></div>
+
+<script src="data.js"></script>
+<script src="api.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

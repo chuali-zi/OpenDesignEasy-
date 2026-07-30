@@ -1,0 +1,104 @@
+{
+  "run_id": "ip6_r1",
+  "interrupt_step_target": 6,
+  "finished_before_interrupt": false,
+  "precrash": {
+    "termination_reason": "simulated_crash",
+    "budget": {
+      "steps": 6,
+      "prompt_tokens": 7991,
+      "completion_tokens": 861,
+      "reasoning_tokens": 50,
+      "total_tokens": 8852,
+      "api_elapsed_s": 35.241,
+      "wall_clock_s": 35.266
+    },
+    "written_paths": [
+      "index.html",
+      "script.js",
+      "styles.css"
+    ]
+  },
+  "path_a_resume": {
+    "termination_reason": "self_terminated",
+    "total_budget": {
+      "steps": 9,
+      "prompt_tokens": 14991,
+      "completion_tokens": 1213,
+      "reasoning_tokens": 68,
+      "total_tokens": 16204,
+      "api_elapsed_s": 54.435,
+      "wall_clock_s": 54.475
+    },
+    "post_resume_tool_calls": 2,
+    "duplicate_writes": [],
+    "duplicate_reads": [],
+    "validate": {
+      "ok": true,
+      "files": {
+        "index.html": {
+          "exists": true,
+          "structurally_ok": true,
+          "bytes": 858
+        },
+        "styles.css": {
+          "exists": true,
+          "structurally_ok": true,
+          "bytes": 313
+        },
+        "script.js": {
+          "exists": true,
+          "structurally_ok": true,
+          "bytes": 270
+        }
+      }
+    },
+    "final_message_preview": "All three files are created and self-checked. Summary of what I built:\n\n**A tiny static website for a fictional product: the \"Moonbeam Mug,\" a self-warming travel cup.**\n\n- **index.html** \u2014 Valid HTML5 page with a `<title>`, an `<h1>` heading, one paragraph of real product copy describing the mug's "
+  },
+  "path_b_rerun": {
+    "termination_reason": "self_terminated",
+    "fresh_only_budget": {
+      "steps": 8,
+      "prompt_tokens": 13641,
+      "completion_tokens": 1363,
+      "reasoning_tokens": 67,
+      "total_tokens": 15004,
+      "api_elapsed_s": 53.948,
+      "wall_clock_s": 53.99
+    },
+    "total_budget": {
+      "steps": 14,
+      "prompt_tokens": 21632,
+      "completion_tokens": 2224,
+      "reasoning_tokens": 117,
+      "total_tokens": 23856,
+      "api_elapsed_s": 89.189,
+      "wall_clock_s": 89.256
+    },
+    "validate": {
+      "ok": true,
+      "files": {
+        "index.html": {
+          "exists": true,
+          "structurally_ok": true,
+          "bytes": 831
+        },
+        "styles.css": {
+          "exists": true,
+          "structurally_ok": true,
+          "bytes": 652
+        },
+        "script.js": {
+          "exists": true,
+          "structurally_ok": true,
+          "bytes": 487
+        }
+      }
+    }
+  },
+  "savings_pct_resume_vs_rerun": {
+    "steps": 35.7,
+    "total_tokens": 32.1,
+    "wall_clock_s": 39.0
+  }
+}

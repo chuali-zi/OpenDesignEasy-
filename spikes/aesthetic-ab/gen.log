@@ -1,0 +1,35 @@
+    ... streamed 8000 chars (206s)
+    ... streamed 16003 chars (263s)
+    ... streamed 24006 chars (321s)
+    ... streamed 32007 chars (387s)
+    ... streamed 40008 chars (462s)
+    ... streamed 48010 chars (517s)
+[A1] files=['app.js', 'index.html', 'styles.css'] chars=54586 truncated=False 568.2s -> D:\projects2\OEYdesign\spikes\aesthetic-ab\runs\A1
+    ... streamed 8009 chars (120s)
+    ... streamed 16009 chars (180s)
+    ... streamed 24009 chars (239s)
+    ... streamed 32012 chars (303s)
+[A2] files=['app.js', 'index.html', 'styles.css'] chars=39145 truncated=False 356.6s -> D:\projects2\OEYdesign\spikes\aesthetic-ab\runs\A2
+    ... streamed 8001 chars (322s)
+    ... streamed 16008 chars (394s)
+[B1] files=['app.js', 'index.html', 'styles.css'] chars=23417 truncated=False 534.3s -> D:\projects2\OEYdesign\spikes\aesthetic-ab\runs\B1
+    ... streamed 8001 chars (175s)
+    ... streamed 16006 chars (247s)
+    ... streamed 24007 chars (312s)
+[B2] files=['app.js', 'index.html', 'styles.css'] chars=24740 truncated=False 390.0s -> D:\projects2\OEYdesign\spikes\aesthetic-ab\runs\B2
+    ... streamed 8005 chars (232s)
+    ... streamed 16005 chars (300s)
+    ... streamed 24005 chars (381s)
+    ... streamed 32005 chars (448s)
+    ... streamed 40005 chars (531s)
+[C1] files=['app.js', 'index.html', 'styles.css'] chars=45673 truncated=False 569.4s -> D:\projects2\OEYdesign\spikes\aesthetic-ab\runs\C1
+    ... streamed 8003 chars (383s)
+    ... streamed 16004 chars (445s)
+    ... streamed 24011 chars (500s)
+    ... streamed 32015 chars (556s)
+    ... streamed 40015 chars (616s)
+    ... streamed 48015 chars (675s)
+    ... streamed 56015 chars (742s)
+[C2] files=['app.js', 'index.html', 'styles.css'] chars=59351 truncated=False 765.3s -> D:\projects2\OEYdesign\spikes\aesthetic-ab\runs\C2
+
+wrote D:\projects2\OEYdesign\spikes\aesthetic-ab\runs\_all.json

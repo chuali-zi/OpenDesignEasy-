@@ -1,0 +1,724 @@
+<<<FILE: index.html>>>
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ForgeDesk · Agent 工作台原型</title>
+  <link rel="stylesheet" href="styles.css">
+  <script defer src="app.js"></script>
+</head>
+<body>
+  <div class="app-shell" data-oey-section="shell">
+    <header class="topbar" data-oey-section="topbar">
+      <div class="brand">
+        <span class="brand-mark" aria-hidden="true">◆</span>
+        <div>
+          <h1 data-oey-object="topbar.title">ForgeDesk</h1>
+          <p data-oey-object="topbar.subtitle">本地 Agent 工作台 · 静态原型</p>
+        </div>
+      </div>
+      <div class="topbar-actions">
+        <span class="pill" data-oey-object="topbar.mode">Mock Mode</span>
+        <span class="pill pill-ok" data-oey-object="topbar.health">No Backend</span>
+      </div>
+    </header>
+
+    <aside class="sidebar" data-oey-section="projects" aria-label="项目列表">
+      <div class="section-head">
+        <h2 data-oey-object="projects.title">项目 / 会话</h2>
+        <button id="newProjectBtn" class="ghost-btn" data-oey-object="projects.newButton" type="button">+ 新建</button>
+      </div>
+      <div class="search-wrap">
+        <input id="projectSearch" data-oey-object="projects.search" type="search" placeholder="过滤项目…" autocomplete="off">
+      </div>
+      <ul id="projectList" class="project-list" data-oey-object="projects.list"></ul>
+      <div class="sidebar-foot" data-oey-object="projects.meta">数据源：window.__mockApi__ · 内存态</div>
+    </aside>
+
+    <main class="conversation" data-oey-section="conversation" aria-label="对话区">
+      <div class="conversation-head">
+        <div>
+          <h2 id="chatTitle" data-oey-object="conversation.title">—</h2>
+          <p id="chatSummary" data-oey-object="conversation.summary">—</p>
+        </div>
+        <div class="badges">
+          <span id="projectStatus" class="badge" data-oey-object="conversation.status">—</span>
+          <span id="messageCount" class="badge" data-oey-object="conversation.messageCount">0 条</span>
+        </div>
+      </div>
+
+      <div id="messageList" class="message-list" data-oey-object="conversation.messages" aria-live="polite"></div>
+
+      <form id="composer" class="composer" data-oey-object="conversation.composer">
+        <textarea id="composerInput" data-oey-object="conversation.input" rows="3" placeholder="给 agent 下达指令，例如：把预览改成发布检查清单"></textarea>
+        <div class="composer-bar">
+          <span class="hint" data-oey-object="conversation.hint">Enter 换行 · Ctrl/⌘+Enter 发送</span>
+          <button id="sendBtn" data-oey-object="conversation.send" type="submit">发送</button>
+        </div>
+      </form>
+    </main>
+
+    <aside class="preview" data-oey-section="preview" aria-label="预览区">
+      <div class="section-head">
+        <h2 data-oey-object="preview.title">产出预览</h2>
+        <span id="previewKind" class="badge" data-oey-object="preview.kind">—</span>
+      </div>
+      <div id="previewBody" class="preview-body" data-oey-object="preview.body"></div>
+    </aside>
+
+    <footer class="statusbar" data-oey-section="statusbar">
+      <span id="statusText" data-oey-object="statusbar.text">就绪</span>
+      <span class="dot" aria-hidden="true"></span>
+      <span data-oey-object="statusbar.note">所有数据均在前端模拟生成，刷新后还原。</span>
+    </footer>
+  </div>
+  <noscript>需要启用 JavaScript 才能运行该原型。</noscript>
+</body>
+</html>
+<<<END>>>
+<<<FILE: styles.css>>>
+:root {
+  --bg: #0d1117;
+  --panel: #131a24;
+  --panel-2: #182231;
+  --line: #273449;
+  --text: #e8eef8;
+  --muted: #91a1b6;
+  --brand: #7c5cff;
+  --brand-2: #00d1a7;
+  --warn: #ffb454;
+  --danger: #ff6b81;
+  --shadow: 0 18px 50px rgba(0, 0, 0, .35);
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+  margin: 0;
+  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+  background:
+    radial-gradient(circle at 15% 10%, rgba(124, 92, 255, .18), transparent 32rem),
+    radial-gradient(circle at 90% 0%, rgba(0, 209, 167, .14), transparent 28rem),
+    var(--bg);
+  color: var(--text);
+}
+
+.app-shell {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 300px minmax(420px, 1fr) 380px;
+  grid-template-rows: auto 1fr auto;
+  grid-template-areas:
+    "top top top"
+    "side chat preview"
+    "status status status";
+  gap: 14px;
+  padding: 14px;
+}
+
+.topbar, .sidebar, .conversation, .preview, .statusbar {
+  background: linear-gradient(180deg, rgba(255,255,255,.035), rgba(255,255,255,.015)), var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  box-shadow: var(--shadow);
+}
+
+.topbar {
+  grid-area: top;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+}
+.brand { display: flex; gap: 12px; align-items: center; }
+.brand-mark {
+  width: 38px; height: 38px; display: grid; place-items: center;
+  border-radius: 12px; color: #081018;
+  background: linear-gradient(135deg, var(--brand), var(--brand-2));
+  font-weight: 900;
+}
+h1, h2, h3, p { margin: 0; }
+h1 { font-size: 20px; letter-spacing: .02em; }
+.topbar p { color: var(--muted); font-size: 12px; margin-top: 3px; }
+.topbar-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.pill, .badge {
+  border: 1px solid var(--line);
+  background: var(--panel-2);
+  color: var(--muted);
+  border-radius: 999px;
+  padding: 6px 10px;
+  font-size: 12px;
+  white-space: nowrap;
+}
+.pill-ok { color: #05231c; background: linear-gradient(135deg, #50f0c8, #a8ffdf); border: 0; font-weight: 700; }
+.badge { color: var(--text); }
+
+.sidebar { grid-area: side; padding: 14px; min-height: 0; display: flex; flex-direction: column; }
+.preview { grid-area: preview; padding: 14px; min-height: 0; display: flex; flex-direction: column; }
+.conversation { grid-area: chat; min-height: 0; display: grid; grid-template-rows: auto 1fr auto; }
+.section-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 12px; }
+.section-head h2 { font-size: 15px; color: #cbd7e8; letter-spacing: .04em; }
+.ghost-btn {
+  border: 1px solid var(--line); color: var(--text); background: transparent;
+  border-radius: 10px; padding: 7px 10px; cursor: pointer;
+}
+.ghost-btn:hover { border-color: var(--brand); color: #fff; }
+.search-wrap { margin-bottom: 12px; }
+input, textarea {
+  width: 100%; border: 1px solid var(--line); background: #0e1520; color: var(--text);
+  border-radius: 12px; outline: none; font: inherit;
+}
+input { padding: 10px 12px; }
+textarea { padding: 12px; resize: vertical; min-height: 74px; }
+input:focus, textarea:focus { border-color: var(--brand); box-shadow: 0 0 0 3px rgba(124,92,255,.18); }
+
+.project-list { list-style: none; margin: 0; padding: 0; overflow: auto; display: grid; gap: 10px; }
+.project-item {
+  border: 1px solid var(--line); background: var(--panel-2); border-radius: 14px; padding: 12px;
+  cursor: pointer; transition: transform .15s ease, border-color .15s ease, background .15s ease;
+}
+.project-item:hover { transform: translateY(-1px); border-color: #3c4d6d; }
+.project-item.active { border-color: var(--brand); background: linear-gradient(135deg, rgba(124,92,255,.22), rgba(0,209,167,.08)), var(--panel-2); }
+.project-name { display: flex; align-items: center; justify-content: space-between; font-weight: 700; }
+.project-desc { color: var(--muted); font-size: 12px; line-height: 1.5; margin-top: 6px; }
+.project-meta { display: flex; justify-content: space-between; color: var(--muted); font-size: 11px; margin-top: 9px; }
+.sidebar-foot { margin-top: auto; padding-top: 12px; color: var(--muted); font-size: 11px; }
+
+.conversation-head { display: flex; justify-content: space-between; gap: 14px; padding: 16px 18px; border-bottom: 1px solid var(--line); }
+.conversation-head h2 { font-size: 18px; }
+.conversation-head p { color: var(--muted); font-size: 13px; margin-top: 5px; line-height: 1.5; }
+.badges { display: flex; align-items: flex-start; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+.message-list { padding: 18px; overflow: auto; display: flex; flex-direction: column; gap: 12px; }
+.message {
+  max-width: 82%; border: 1px solid var(--line); border-radius: 16px; padding: 12px 13px;
+  background: var(--panel-2); line-height: 1.6; font-size: 14px; white-space: pre-wrap;
+}
+.message .who { display: block; color: var(--muted); font-size: 11px; margin-bottom: 6px; letter-spacing: .05em; text-transform: uppercase; }
+.message.user { align-self: flex-end; background: linear-gradient(135deg, rgba(124,92,255,.34), rgba(124,92,255,.12)); border-color: rgba(124,92,255,.55); }
+.message.agent { align-self: flex-start; }
+.message.typing { color: var(--muted); font-style: italic; }
+.composer { border-top: 1px solid var(--line); padding: 14px; }
+.composer-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 10px; }
+.hint { color: var(--muted); font-size: 12px; }
+button {
+  border: 0; border-radius: 12px; color: #07111b; cursor: pointer; font-weight: 800;
+  background: linear-gradient(135deg, var(--brand-2), #8dffe2); padding: 10px 16px;
+}
+button:disabled { opacity: .55; cursor: not-allowed; }
+
+.preview-body { overflow: auto; display: grid; gap: 12px; align-content: start; }
+.preview-card {
+  border: 1px solid var(--line); border-radius: 16px; background: var(--panel-2); overflow: hidden;
+}
+.preview-card header { padding: 12px 14px; border-bottom: 1px solid var(--line); display: flex; justify-content: space-between; gap: 10px; }
+.preview-card h3 { font-size: 14px; }
+.preview-card .card-body { padding: 14px; color: #d9e4f2; font-size: 13px; line-height: 1.65; }
+.metric-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.metric { border: 1px solid var(--line); border-radius: 12px; padding: 10px; background: #101a28; }
+.metric b { display: block; font-size: 20px; margin-bottom: 4px; }
+.metric span { color: var(--muted); font-size: 11px; }
+pre {
+  margin: 0; padding: 14px; overflow: auto; background: #0a1019; color: #c9f7e9;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace; font-size: 12px; line-height: 1.55;
+}
+.checklist { margin: 0; padding-left: 18px; display: grid; gap: 8px; }
+.checklist li::marker { color: var(--brand-2); }
+.statusbar { grid-area: status; display: flex; align-items: center; gap: 10px; padding: 10px 14px; color: var(--muted); font-size: 12px; }
+.dot { width: 8px; height: 8px; border-radius: 50%; background: var(--brand-2); box-shadow: 0 0 0 6px rgba(0,209,167,.12); }
+.empty { color: var(--muted); border: 1px dashed var(--line); border-radius: 14px; padding: 18px; text-align: center; }
+
+@media (max-width: 1100px) {
+  .app-shell { grid-template-columns: 260px 1fr; grid-template-areas: "top top" "side chat" "preview preview" "status status"; }
+  .preview { min-height: 320px; }
+}
+@media (max-width: 760px) {
+  .app-shell { grid-template-columns: 1fr; grid-template-areas: "top" "side" "chat" "preview" "status"; padding: 10px; }
+  .message { max-width: 96%; }
+  .conversation-head, .composer-bar { flex-direction: column; align-items: stretch; }
+}
+<<<END>>>
+<<<FILE: app.js>>>
+(() => {
+  "use strict";
+
+  const $ = (sel, root = document) => root.querySelector(sel);
+  const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+  const jitter = () => 380 + Math.floor(Math.random() * 520);
+  const hash = (input) => {
+    let h = 2166136261;
+    for (const ch of String(input)) {
+      h ^= ch.charCodeAt(0);
+      h = Math.imul(h, 16777619);
+    }
+    return Math.abs(h >>> 0);
+  };
+  const pick = (arr, seed) => arr[hash(seed) % arr.length];
+
+  const nowLabel = () => new Date().toLocaleTimeString("zh-CN", { hour: "2-digit", minute: "2-digit" });
+
+  const seedProjects = [
+    {
+      id: "atlas",
+      name: "Atlas 发布助手",
+      status: "运行中",
+      accent: "#7c5cff",
+      summary: "负责把发布说明、风险检查和回滚步骤整理成可执行清单。",
+      updated: "09:42",
+      messages: [
+        { role: "agent", text: "我已载入 Atlas 的发布上下文。当前聚焦：灰度策略、数据库迁移、告警阈值。", at: "09:40" },
+        { role: "user", text: "先给我一版上线前检查重点。", at: "09:41" },
+        { role: "agent", text: "重点三项：1) 迁移脚本必须可回滚；2) 灰度从 5% 开始，观察 20 分钟；3) 支付错误率超过 0.8% 立即熔断。", at: "09:42" }
+      ],
+      preview: {
+        kind: "checklist",
+        title: "上线前检查清单",
+        items: ["备份生产库并验证恢复点", "确认 feature flag 默认关闭", "灰度批次：5% → 25% → 100%", "错误率 > 0.8% 自动回滚"]
+      }
+    },
+    {
+      id: "nova",
+      name: "Nova 落地页生成",
+      status: "待确认",
+      accent: "#00d1a7",
+      summary: "根据产品一句话描述生成营销页结构、文案片段和内联样式代码。",
+      updated: "昨天",
+      messages: [
+        { role: "agent", text: "Nova 已准备三种页面骨架：价值主张型、对比型、案例驱动型。", at: "昨天" }
+      ],
+      preview: {
+        kind: "code",
+        title: "hero-section.html",
+        language: "html",
+        code: "<section class=\"hero\">\n  <h1>把重复运营交给 Agent</h1>\n  <p>从目标到产出，一条指令完成草稿。</p>\n  <button>查看工作流</button>\n</section>"
+      }
+    },
+    {
+      id: "quill",
+      name: "Quill 文档问答",
+      status: "暂停",
+      accent: "#ffb454",
+      summary: "把会议纪要、需求摘录和待办转成可追溯问答线程。",
+      updated: "周一",
+      messages: [
+        { role: "agent", text: "Quill 当前索引 18 篇文档，最近冲突：权限模型在两个 PRD 中描述不一致。", at: "周一" }
+      ],
+      preview: {
+        kind: "metrics",
+        title: "知识库健康度",
+        metrics: [
+          { label: "已索引文档", value: "18" },
+          { label: "待解决冲突", value: "2" },
+          { label: "平均引用", value: "4.7" }
+        ],
+        note: "建议先统一权限模型，再开放跨项目问答。"
+      }
+    },
+    {
+      id: "orbit",
+      name: "Orbit 数据巡检",
+      status: "运行中",
+      accent: "#ff6b81",
+      summary: "定时巡检指标异常，把异常片段翻译成可排障线索。",
+      updated: "08:15",
+      messages: [
+        { role: "agent", text: "过去 24 小时发现 3 次延迟尖刺，均集中在结算服务批处理窗口。", at: "08:15" }
+      ],
+      preview: {
+        kind: "metrics",
+        title: "巡检快照",
+        metrics: [
+          { label: "异常事件", value: "3" },
+          { label: "P95 延迟", value: "812ms" },
+          { label: "影响任务", value: "7" }
+        ],
+        note: "建议把批处理窗口从 02:00 调整到 03:30，并增加队列深度告警。"
+      }
+    }
+  ];
+
+  const db = {
+    activeId: "atlas",
+    projects: structuredClone(seedProjects)
+  };
+
+  function snippetFrom(text) {
+    const clean = String(text).replace(/\s+/g, " ").trim();
+    return clean.length > 34 ? clean.slice(0, 34) + "…" : clean || "未命名指令";
+  }
+
+  function makeCode(project, userText) {
+    const fn = "task_" + (hash(project.id + userText) % 997);
+    return [
+      "// 由 ForgeDesk mock agent 生成",
+      "export async function " + fn + "(input) {",
+      "  const goal = " + JSON.stringify(snippetFrom(userText)) + ";",
+      "  const policy = { retries: 2, timeoutMs: 1200, audit: true };",
+      "  const steps = [" + JSON.stringify(project.summary.slice(0, 18)) + ", \"verify\", \"report\"];",
+      "  return { goal, policy, steps, project: " + JSON.stringify(project.name) + " };",
+      "}"
+    ].join("\n");
+  }
+
+  function replyFor(project, userText) {
+    const text = userText.toLowerCase();
+    const seed = project.id + "|" + userText + "|" + project.messages.length;
+    const openers = ["收到。", "可以，我按当前项目上下文处理。", "已理解，先给你一个可执行版本。"];
+
+    if (/代码|code|函数|实现|snippet/.test(text)) {
+      return {
+        text: pick(openers, seed) + " 我把「" + snippetFrom(userText) + "」转成了一个可审查的代码片段，并同步到右侧预览。参数、重试和审计点都已标注。",
+        preview: { kind: "code", title: "generated-task.js", language: "javascript", code: makeCode(project, userText) }
+      };
+    }
+    if (/清单|检查|checklist|上线|发布|风险/.test(text)) {
+      return {
+        text: pick(openers, seed) + " 我按风险从高到低重排了检查项：先保证可回滚，再看灰度比例，最后确认告警接收人。",
+        preview: {
+          kind: "checklist",
+          title: project.name + " · 风险清单",
+          items: ["回滚路径已在沙箱演练", "关键指标看板已绑定值班人", "变更窗口避开业务高峰", "失败阈值触发后自动暂停后续批次"]
+        }
+      };
+    }
+    if (/指标|数据|metric|巡检|异常|延迟/.test(text)) {
+      const n = hash(seed) % 5 + 1;
+      return {
+        text: pick(openers, seed) + " 我抽取了最近的指标轮廓：异常不算多，但集中在相同依赖上。建议先看队列深度，再看下游超时。",
+        preview: {
+          kind: "metrics",
+          title: project.name + " · 指标草稿",
+          metrics: [
+            { label: "样本窗口", value: n + "h" },
+            { label: "疑似根因", value: String(hash(seed) % 3 + 1) },
+            { label: "建议动作", value: "2" }
+          ],
+          note: "该面板由规则模板根据消息关键词生成，非真实监控数据。"
+        }
+      };
+    }
+    return {
+      text: pick(openers, seed) + " 针对「" + snippetFrom(userText) + "」，我建议下一步产出一张执行卡：目标、约束、验收信号各一行，避免 agent 在没有验收标准时继续扩散范围。",
+      preview: {
+        kind: "card",
+        title: "执行卡草案",
+        body: "目标：" + snippetFrom(userText) + "\n约束：保持当前项目「" + project.name + "」上下文，不引入外部服务。\n验收：预览区出现可复用产出，且能被下一轮对话继续修改。"
+      }
+    };
+  }
+
+  function snapshot() {
+    const project = db.projects.find((p) => p.id === db.activeId) || db.projects[0];
+    return structuredClone({ activeId: db.activeId, project, projects: db.projects });
+  }
+
+  window.__mockApi__ = {
+    meta: { latency: "setTimeout 380-900ms", persistence: "memory-only", network: false },
+    async listProjects() { await wait(jitter()); return structuredClone(db.projects); },
+    async getActive() { await wait(120); return snapshot(); },
+    async selectProject(id) {
+      await wait(180);
+      if (db.projects.some((p) => p.id === id)) db.activeId = id;
+      return snapshot();
+    },
+    async createProject(name) {
+      await wait(260);
+      const id = "p" + (hash(name + Date.now()) % 100000);
+      const project = {
+        id,
+        name: name || "未命名 Agent 项目",
+        status: "待确认",
+        accent: pick(["#7c5cff", "#00d1a7", "#ffb454", "#ff6b81"], name),
+        summary: "由前端 mock 创建的空项目，等待第一条指令生成上下文。",
+        updated: nowLabel(),
+        messages: [{ role: "agent", text: "新项目已创建。给我一条目标，我会生成首版产出预览。", at: nowLabel() }],
+        preview: { kind: "card", title: "空白画布", body: "还没有产出。发送一条消息，右侧会生成首版执行卡。" }
+      };
+      db.projects.unshift(project);
+      db.activeId = id;
+      return snapshot();
+    },
+    async sendMessage(projectId, text) {
+      await wait(jitter());
+      const project = db.projects.find((p) => p.id === projectId);
+      if (!project) throw new Error("project not found");
+      const userMsg = { role: "user", text, at: nowLabel() };
+      project.messages.push(userMsg);
+      const generated = replyFor(project, text);
+      const agentMsg = { role: "agent", text: generated.text, at: nowLabel() };
+      project.messages.push(agentMsg);
+      project.preview = generated.preview;
+      project.updated = nowLabel();
+      project.status = "运行中";
+      return structuredClone({ project, userMsg, agentMsg });
+    }
+  };
+
+  const els = {
+    list: $("#projectList"),
+    search: $("#projectSearch"),
+    newProjectBtn: $("#newProjectBtn"),
+    chatTitle: $("#chatTitle"),
+    chatSummary: $("#chatSummary"),
+    projectStatus: $("#projectStatus"),
+    messageCount: $("#messageCount"),
+    messageList: $("#messageList"),
+    composer: $("#composer"),
+    input: $("#composerInput"),
+    sendBtn: $("#sendBtn"),
+    previewKind: $("#previewKind"),
+    previewBody: $("#previewBody"),
+    statusText: $("#statusText")
+  };
+
+  let state = { activeId: null, project: null, projects: [] };
+  let sending = false;
+
+  function setStatus(text) { els.statusText.textContent = text; }
+
+  function projectMatches(p, q) {
+    if (!q) return true;
+    return (p.name + " " + p.summary + " " + p.status).toLowerCase().includes(q.toLowerCase());
+  }
+
+  function renderProjects() {
+    const q = els.search.value.trim();
+    const visible = state.projects.filter((p) => projectMatches(p, q));
+    els.list.innerHTML = "";
+    if (!visible.length) {
+      const li = document.createElement("li");
+      li.className = "empty";
+      li.setAttribute("data-oey-object", "projects.empty");
+      li.textContent = "没有匹配的项目";
+      els.list.appendChild(li);
+      return;
+    }
+    for (const p of visible) {
+      const li = document.createElement("li");
+      li.className = "project-item" + (p.id === state.activeId ? " active" : "");
+      li.setAttribute("data-oey-object", "projects.item");
+      li.dataset.projectId = p.id;
+      li.innerHTML = `
+        <div class="project-name"><span data-oey-object="projects.item.name"></span><span style="color:${p.accent}">●</span></div>
+        <div class="project-desc" data-oey-object="projects.item.summary"></div>
+        <div class="project-meta"><span data-oey-object="projects.item.status"></span><span data-oey-object="projects.item.updated"></span></div>`;
+      $("[data-oey-object='projects.item.name']", li).textContent = p.name;
+      $("[data-oey-object='projects.item.summary']", li).textContent = p.summary;
+      $("[data-oey-object='projects.item.status']", li).textContent = p.status;
+      $("[data-oey-object='projects.item.updated']", li).textContent = p.updated;
+      li.addEventListener("click", async () => {
+        if (p.id === state.activeId) return;
+        setStatus("正在切换项目…");
+        state = await window.__mockApi__.selectProject(p.id);
+        renderAll();
+        setStatus("已切换到「" + state.project.name + "」");
+      });
+      els.list.appendChild(li);
+    }
+  }
+
+  function renderConversation() {
+    const p = state.project;
+    if (!p) return;
+    els.chatTitle.textContent = p.name;
+    els.chatSummary.textContent = p.summary;
+    els.projectStatus.textContent = p.status;
+    els.messageCount.textContent = p.messages.length + " 条";
+    els.messageList.innerHTML = "";
+    for (const m of p.messages) {
+      const div = document.createElement("article");
+      div.className = "message " + m.role;
+      div.setAttribute("data-oey-object", "conversation.message");
+      div.dataset.role = m.role;
+      div.innerHTML = `<span class="who" data-oey-object="conversation.message.role"></span><span data-oey-object="conversation.message.text"></span><span class="who" data-oey-object="conversation.message.time"></span>`;
+      $("[data-oey-object='conversation.message.role']", div).textContent = m.role === "user" ? "You" : "Agent";
+      $("[data-oey-object='conversation.message.text']", div).textContent = m.text;
+      $("[data-oey-object='conversation.message.time']", div).textContent = m.at;
+      els.messageList.appendChild(div);
+    }
+    els.messageList.scrollTop = els.messageList.scrollHeight;
+  }
+
+  function metricHtml(metric) {
+    return `<div class="metric" data-oey-object="preview.metric"><b></b><span></span></div>`;
+  }
+
+  function renderPreview() {
+    const p = state.project;
+    if (!p) return;
+    const pv = p.preview;
+    els.previewKind.textContent = pv.kind;
+    els.previewBody.innerHTML = "";
+    const card = document.createElement("section");
+    card.className = "preview-card";
+    card.setAttribute("data-oey-object", "preview.card");
+    card.innerHTML = `<header><h3 data-oey-object="preview.card.title"></h3><span class="badge" data-oey-object="preview.card.project"></span></header><div class="card-body" data-oey-object="preview.card.body"></div>`;
+    $("[data-oey-object='preview.card.title']", card).textContent = pv.title;
+    $("[data-oey-object='preview.card.project']", card).textContent = p.name;
+    const body = $("[data-oey-object='preview.card.body']", card);
+
+    if (pv.kind === "code") {
+      body.innerHTML = `<pre data-oey-object="preview.code"></pre>`;
+      $("[data-oey-object='preview.code']", body).textContent = pv.code;
+    } else if (pv.kind === "checklist") {
+      const ul = document.createElement("ul");
+      ul.className = "checklist";
+      ul.setAttribute("data-oey-object", "preview.checklist");
+      pv.items.forEach((item) => {
+        const li = document.createElement("li");
+        li.setAttribute("data-oey-object", "preview.checklist.item");
+        li.textContent = item;
+        ul.appendChild(li);
+      });
+      body.appendChild(ul);
+    } else if (pv.kind === "metrics") {
+      const grid = document.createElement("div");
+      grid.className = "metric-grid";
+      grid.setAttribute("data-oey-object", "preview.metrics");
+      pv.metrics.forEach((m) => {
+        const holder = document.createElement("div");
+        holder.innerHTML = metricHtml(m);
+        const node = holder.firstElementChild;
+        $("b", node).textContent = m.value;
+        $("span", node).textContent = m.label;
+        grid.appendChild(node);
+      });
+      const note = document.createElement("p");
+      note.setAttribute("data-oey-object", "preview.note");
+      note.style.marginTop = "12px";
+      note.style.color = "var(--muted)";
+      note.textContent = pv.note;
+      body.append(grid, note);
+    } else {
+      const pre = document.createElement("pre");
+      pre.setAttribute("data-oey-object", "preview.text");
+      pre.textContent = pv.body;
+      body.appendChild(pre);
+    }
+    els.previewBody.appendChild(card);
+  }
+
+  function renderAll() {
+    renderProjects();
+    renderConversation();
+    renderPreview();
+  }
+
+  function showTyping() {
+    const div = document.createElement("article");
+    div.className = "message agent typing";
+    div.id = "typingBubble";
+    div.setAttribute("data-oey-object", "conversation.message");
+    div.dataset.role = "agent";
+    div.innerHTML = `<span class="who" data-oey-object="conversation.message.role">Agent</span><span data-oey-object="conversation.message.text">正在组织回复并更新预览…</span>`;
+    els.messageList.appendChild(div);
+    els.messageList.scrollTop = els.messageList.scrollHeight;
+  }
+
+  function hideTyping() { $("#typingBubble")?.remove(); }
+
+  els.composer.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const text = els.input.value.trim();
+    if (!text || sending || !state.project) return;
+    sending = true;
+    els.sendBtn.disabled = true;
+    els.input.disabled = true;
+    setStatus("agent 正在生成回复…");
+    const localUser = { role: "user", text, at: nowLabel() };
+    state.project.messages.push(localUser);
+    renderConversation();
+    showTyping();
+    try {
+      const result = await window.__mockApi__.sendMessage(state.project.id, text);
+      state.project = result.project;
+      const idx = state.projects.findIndex((p) => p.id === state.project.id);
+      if (idx >= 0) state.projects[idx] = result.project;
+      els.input.value = "";
+      hideTyping();
+      renderAll();
+      setStatus("已生成回复，并同步刷新预览");
+    } catch (err) {
+      hideTyping();
+      setStatus("发送失败：" + err.message);
+    } finally {
+      sending = false;
+      els.sendBtn.disabled = false;
+      els.input.disabled = false;
+      els.input.focus();
+    }
+  });
+
+  els.input.addEventListener("keydown", (event) => {
+    if ((event.ctrlKey || event.metaKey) && event.key === "Enter") {
+      event.preventDefault();
+      els.composer.requestSubmit();
+    }
+  });
+
+  els.search.addEventListener("input", renderProjects);
+
+  els.newProjectBtn.addEventListener("click", async () => {
+    const name = window.prompt("新项目名称：", "Untitled Agent " + (state.projects.length + 1));
+    if (name === null) return;
+    setStatus("正在创建 mock 项目…");
+    state = await window.__mockApi__.createProject(name.trim());
+    renderAll();
+    setStatus("已创建并切换到「" + state.project.name + "」");
+  });
+
+  (async function init() {
+    setStatus("正在装载 mock 数据…");
+    state = await window.__mockApi__.getActive();
+    renderAll();
+    setStatus("就绪 · 当前项目：" + state.project.name);
+    els.input.focus();
+  })();
+})();
+<<<END>>>
+<<<FILE: MOCK.md>>>
+# MOCK.md — ForgeDesk 静态原型 mock 声明
+
+本原型没有真实后端，也不发起任何真实网络请求。所有接口行为都在 `app.js` 中以前端 mock 层完成，入口为 `window.__mockApi__`。
+
+## 技术手段
+
+- 使用内联数组 `seedProjects` 作为初始数据源，页面加载后深拷贝到内存对象 `db`。
+- 使用 `setTimeout` 包装的 `wait()` / `jitter()` 模拟 120–900ms 的异步延迟；没有真实 HTTP 请求。
+- 使用 `window.__mockApi__` 暴露假客户端方法：`listProjects`、`getActive`、`selectProject`、`createProject`、`sendMessage`。
+- 状态只保存在浏览器内存中；刷新页面后回到种子数据。没有 localStorage、IndexedDB、Service Worker、fetch/XMLHttpRequest 拦截，也没有外部字体、图标或图片资源。
+
+## 已 mock 的接口 / 交互点
+
+1. **项目列表**：`window.__mockApi__.listProjects()`  
+   - 数据来源：纯虚构编造的 4 个种子项目（Atlas、Nova、Quill、Orbit）。  
+   - 派生部分：新建项目时，项目 id 由 `hash(name + Date.now())` 生成，强调色从固定色板按名称 hash 选取；这是规则推导，不是真实创建。
+
+2. **当前项目切换**：`window.__mockApi__.getActive()` 与 `window.__mockApi__.selectProject(id)`  
+   - 数据来源：内存 `db.activeId` 指向某个虚构项目；点击侧边栏列表项会真实改变该指针，并触发对话区、状态、消息数、预览区整体重渲染。
+
+3. **发送消息后的 agent 回复**：`window.__mockApi__.sendMessage(projectId, text)`  
+   - 用户消息：真实追加到内存项目 `messages` 数组，时间戳取当前本地时间。  
+   - agent 回复：不是真实模型输出，而是由 `replyFor(project, userText)` 按规则模板生成。规则为：  
+     - 若消息包含「代码/code/函数/实现/snippet」，生成代码型回复，并调用 `makeCode()` 用项目 id、消息文本 hash 生成一个虚构但确定性的 JS 函数名与代码片段。  
+     - 若包含「清单/检查/checklist/上线/发布/风险」，生成风险清单型回复与固定模板检查项。  
+     - 若包含「指标/数据/metric/巡检/异常/延迟」，生成指标草稿，部分数值由 `hash(project.id + userText + messages.length)` 推导。  
+     - 其他输入走默认执行卡模板，引用用户消息摘要 `snippetFrom()` 与当前项目名。  
+   - 开场白从固定数组按 seed 选择，属于模板推导；所有业务事实均为虚构。
+
+4. **预览内容**：每个项目携带 `preview` 字段，且 `sendMessage()` 会覆盖该字段。  
+   - 初始预览：随 4 个虚构种子项目纯编造，类型包括 `checklist`、`code`、`metrics`、`card`。  
+   - 对话后预览：由第 3 点的关键词规则生成；`code` 内容来自字符串模板与 hash，`metrics` 数字来自 hash 取模，`checklist/card` 来自固定模板加用户输入摘要。  
+   - 切换项目时预览立即变为该项目的内存 `preview`；发送消息后预览随回复同步更新。
+
+5. **打字中/加载状态**：发送消息后先本地插入用户气泡，再显示一个临时的 `正在组织回复并更新预览…` 气泡，等待 `setTimeout` 延迟结束后删除并渲染正式 agent 气泡。该 typing 气泡是交互状态模拟，不是接口数据。
+
+6. **过滤与新建**：搜索框只在内存数组上做字符串包含匹配；「+ 新建」通过 `prompt()` 取名字并调用 `createProject()`，该项目及其首条 agent 欢迎语、空白预览均为前端虚构/模板生成。
+
+## 明确未实现
+
+- 没有真实 LLM、真实监控、真实发布系统、真实文档索引。  
+- 没有持久化；刷新、关闭标签页后所有新增项目与追加消息丢失。  
+- 没有任何 CDN、外链资源或构建步骤；直接用浏览器打开 `index.html` 即可运行。
+<<<END>>>

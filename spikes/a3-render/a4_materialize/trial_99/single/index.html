@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>山丘咖啡 · Hillcrest Coffee</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    background-color: #f7f2ea;
+    color: #3b2a20;
+    line-height: 1.6;
+  }
+  .container { max-width: 1080px; margin: 0 auto; padding: 0 24px; }
+
+  /* Header */
+  header {
+    background-color: #3b2a20;
+    color: #f7f2ea;
+    padding: 18px 0;
+  }
+  .nav { display: flex; align-items: center; justify-content: space-between; }
+  .brand { display: flex; align-items: center; gap: 10px; }
+  .brand img { width: 28px; height: 28px; display: block; }
+  .brand-name { font-size: 20px; font-weight: 700; letter-spacing: 2px; }
+  .nav-links { display: flex; gap: 28px; list-style: none; }
+  .nav-links a { color: #e8d9c6; text-decoration: none; font-size: 15px; }
+  .nav-cta {
+    background-color: #c08552;
+    color: #fff;
+    border: none;
+    padding: 10px 22px;
+    border-radius: 999px;
+    font-size: 14px;
+    cursor: pointer;
+    font-family: inherit;
+  }
+
+  /* Hero */
+  .hero {
+    background-color: #f7f2ea;
+    padding: 90px 0 80px;
+    text-align: center;
+    position: relative;
+  }
+  .hero-bean { width: 14px; height: 14px; margin-bottom: 18px; }
+  .hero h1 { font-size: 52px; font-weight: 800; letter-spacing: 4px; margin-bottom: 8px; }
+  .hero .subtitle-en { font-size: 15px; letter-spacing: 6px; color: #a05a2c; text-transform: uppercase; margin-bottom: 24px; }
+  .hero p.lead { max-width: 560px; margin: 0 auto 36px; font-size: 17px; color: #6b5648; }
+  .btn-primary {
+    display: inline-block;
+    background-color: #3b2a20;
+    color: #f7f2ea;
+    padding: 15px 42px;
+    border-radius: 999px;
+    text-decoration: none;
+    font-size: 16px;
+    letter-spacing: 2px;
+    border: none;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .btn-outline {
+    display: inline-block;
+    background-color: transparent;
+    color: #3b2a20;
+    padding: 15px 42px;
+    border-radius: 999px;
+    text-decoration: none;
+    font-size: 16px;
+    letter-spacing: 2px;
+    border: 2px solid #3b2a20;
+    margin-left: 16px;
+    cursor: pointer;
+    font-family: inherit;
+  }
+
+  /* Menu */
+  .menu { background-color: #efe6d8; padding: 80px 0; }
+  .section-title { text-align: center; font-size: 34px; font-weight: 800; letter-spacing: 3px; margin-bottom: 10px; }
+  .section-desc { text-align: center; color: #6b5648; max-width: 520px; margin: 0 auto 48px; font-size: 15px; }
+  .menu-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+  .menu-card {
+    background-color: #fdfaf5;
+    border-radius: 16px;
+    padding: 32px 28px;
+    border: 1px solid #e2d5c3;
+  }
+  .menu-card img { width: 20px; height: 20px; margin-bottom: 14px; }
+  .menu-card h3 { font-size: 20px; margin-bottom: 6px; }
+  .menu-card .en { font-size: 12px; color: #a05a2c; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 12px; }
+  .menu-card p { font-size: 14px; color: #6b5648; margin-bottom: 18px; }
+  .price { font-size: 18px; font-weight: 700; color: #3b2a20; }
+
+  /* About */
+  .about { background-color: #f7f2ea; padding: 80px 0; }
+  .about-inner { display: grid; grid-template-columns: 1fr 1fr; gap: 56px; align-items: center; }
+  .about-visual {
+    background-color: #e6d8c4;
+    border-radius: 20px;
+    height: 340px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .about-visual img { width: 72px; height: 72px; }
+  .about h2 { font-size: 32px; font-weight: 800; letter-spacing: 2px; margin-bottom: 16px; }
+  .about p { color: #6b5648; font-size: 15px; margin-bottom: 14px; }
+  .about .btn-primary { margin-top: 12px; padding: 13px 34px; font-size: 15px; }
+
+  /* Footer */
+  footer { background-color: #3b2a20; color: #e8d9c6; padding: 56px 0 32px; }
+  .footer-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 40px; margin-bottom: 40px; }
+  .footer-grid h4 { font-size: 16px; letter-spacing: 2px; margin-bottom: 14px; color: #f7f2ea; }
+  .footer-grid p { font-size: 14px; margin-bottom: 6px; }
+  .footer-brand { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+  .footer-brand img { width: 24px; height: 24px; }
+  .footer-brand span { font-size: 18px; font-weight: 700; color: #f7f2ea; letter-spacing: 2px; }
+  .copyright { text-align: center; font-size: 13px; color: #a89880; border-top: 1px solid #54402f; padding-top: 24px; }
+</style>
+</head>
+<body>
+
+<header data-oey-section="header">
+  <div class="container nav">
+    <div class="brand">
+      <img data-oey-object="header.logo" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxjaXJjbGUgY3g9IjYiIGN5PSI2IiByPSI2IiBmaWxsPSIjNmY0ZTM3Ii8+PC9zdmc+" alt="山丘咖啡标志">
+      <span class="brand-name" data-oey-object="header.brand-name">山丘咖啡</span>
+    </div>
+    <ul class="nav-links">
+      <li><a href="#" data-oey-object="header.nav-menu">菜单</a></li>
+      <li><a href="#" data-oey-object="header.nav-about">关于我们</a></li>
+      <li><a href="#" data-oey-object="header.nav-visit">到店信息</a></li>
+    </ul>
+    <button class="nav-cta" data-oey-object="header.cta-button">在线点单</button>
+  </div>
+</header>
+
+<section class="hero" data-oey-section="hero">
+  <div class="container">
+    <img class="hero-bean" data-oey-object="hero.bean-icon" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxjaXJjbGUgY3g9IjYiIGN5PSI2IiByPSI2IiBmaWxsPSIjNmY0ZTM3Ii8+PC9zdmc+" alt="咖啡豆装饰">
+    <h1 data-oey-object="hero.title">一杯手冲，慢享山丘时光</h1>
+    <div class="subtitle-en" data-oey-object="hero.subtitle-en">Hillcrest Coffee Roasters</div>
+    <p class="lead" data-oey-object="hero.lead">我们精选单一产区精品豆，小批量新鲜烘焙，只为在城市的一隅，为你呈上一杯有产地故事的咖啡。</p>
+    <div>
+      <a href="#" class="btn-primary" data-oey-object="hero.primary-button">查看本季菜单</a>
+      <a href="#" class="btn-outline" data-oey-object="hero.secondary-button">预约品鉴</a>
+    </div>
+  </div>
+</section>
+
+<section class="menu" data-oey-section="menu">
+  <div class="container">
+    <h2 class="section-title" data-oey-object="menu.title">招牌饮品</h2>
+    <p class="section-desc" data-oey-object="menu.description">每一款都由咖啡师手工冲煮，甜度与奶量均可按喜好调整。</p>
+    <div class="menu-grid">
+      <div class="menu-card">
+        <img data-oey-object="menu.item1-icon" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxjaXJjbGUgY3g9IjYiIGN5PSI2IiByPSI2IiBmaWxsPSIjNmY0ZTM3Ii8+PC9zdmc+" alt="">
+        <h3 data-oey-object="menu.item1-name">耶加雪菲手冲</h3>
+        <div class="en" data-oey-object="menu.item1-en">Yirgacheffe Pour Over</div>
+        <p data-oey-object="menu.item1-desc">水洗处理，茉莉花香与柠檬酸的明亮层次，尾韵带蜂蜜甜感。</p>
+        <div class="price" data-oey-object="menu.item1-price">¥ 38</div>
+      </div>
+      <div class="menu-card">
+        <img data-oey-object="menu.item2-icon" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxjaXJjbGUgY3g9IjYiIGN5PSI2IiByPSI2IiBmaWxsPSIjNmY0ZTM3Ii8+PC9zdmc+" alt="">
+        <h3 data-oey-object="menu.item2-name">山丘招牌拿铁</h3>
+        <div

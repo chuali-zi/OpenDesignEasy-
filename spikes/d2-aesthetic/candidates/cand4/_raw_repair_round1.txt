@@ -1,0 +1,488 @@
+<<<ISSUES>>>
+["顶栏右侧的时间/状态串渲染为占位符「— · — : — · —」且被视口右缘截断，没有显示真实运行时间", "预览画布一边显示『暂无可预览的候选』，一边仍渲染一组无意义的灰蓝占位矩形，且下方候选条已有方向 A/B 处于待审，空态与数据自相矛盾", "console 存在 1 个 404 资源加载失败，说明页面引用了不存在的资源", "质量复核『审美发现』轨道渲染为孤立的『◦ —』残缺占位内容，视觉上像渲染错误"]
+<<<END_ISSUES>>>
+<<<FILE: index.html>>>
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AIRROOM · OEY 设计播控台</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html,body { height:100%; }
+  body {
+    background:#0b0f14; color:#c9d4e0; font-family:"PingFang SC","Microsoft YaHei",system-ui,sans-serif;
+    font-size:12px; overflow:hidden;
+  }
+  ::-webkit-scrollbar { width:6px; height:6px; }
+  ::-webkit-scrollbar-thumb { background:#2a3644; border-radius:3px; }
+  ::-webkit-scrollbar-track { background:transparent; }
+
+  /* ---------- 顶栏 ---------- */
+  header {
+    height:46px; display:flex; align-items:center; gap:14px; padding:0 14px;
+    background:#10161e; border-bottom:1px solid #1f2937; flex-shrink:0;
+  }
+  .logo { color:#f0a832; font-weight:700; font-size:14px; letter-spacing:1px; white-space:nowrap; }
+  .logo-sub { color:#5c6b7d; font-size:11px; white-space:nowrap; }
+  .proj-switch { display:flex; align-items:center; gap:8px; margin-left:18px; }
+  .proj-switch label { color:#5c6b7d; font-size:11px; white-space:nowrap; }
+  select, textarea, input {
+    background:#151d27; color:#c9d4e0; border:1px solid #2a3644; border-radius:4px;
+    font-family:inherit; font-size:12px; outline:none;
+  }
+  select { padding:4px 8px; }
+  select:focus, textarea:focus { border-color:#5aa9ff; }
+  .head-right { margin-left:auto; display:flex; align-items:center; gap:12px; white-space:nowrap; }
+  .status-pill {
+    padding:3px 10px; border-radius:3px; font-size:11px; font-weight:600;
+    color:#f0a832; border:1px solid #6b4d1a; background:#241a08;
+  }
+  .head-meta { color:#8fa0b3; font-size:11px; }
+  .clock { color:#5aa9ff; font-family:"SF Mono",Consolas,monospace; font-size:12px; min-width:64px; text-align:right; }
+
+  /* ---------- 三列布局 ---------- */
+  main {
+    display:grid; grid-template-columns:300px minmax(0,1fr) 320px; gap:10px;
+    padding:10px; height:calc(100vh - 46px);
+  }
+  .col { display:flex; flex-direction:column; gap:10px; min-height:0; min-width:0; }
+  section.panel {
+    background:#10161e; border:1px solid #1f2937; border-radius:6px;
+    display:flex; flex-direction:column; min-height:0; overflow:hidden;
+  }
+  .panel-head {
+    display:flex; align-items:baseline; justify-content:space-between;
+    padding:8px 12px; border-bottom:1px solid #1c2530; flex-shrink:0;
+  }
+  .panel-head h2 { font-size:12px; color:#e6edf5; font-weight:600; }
+  .panel-head .meta { font-size:10px; color:#5c6b7d; }
+  .panel-body { padding:8px 12px; overflow-y:auto; min-height:0; }
+
+  /* ---------- 项目队列 ---------- */
+  #panel-projects { flex:0 0 auto; max-height:46%; }
+  .proj-item {
+    padding:7px 10px; border-left:2px solid transparent; cursor:pointer; line-height:1.55;
+    border-bottom:1px solid #161e28;
+  }
+  .proj-item:hover { background:#141c26; }
+  .proj-item.active { border-left-color:#f0a832; background:#161f2a; }
+  .proj-item .pname { color:#e6edf5; font-size:12px; font-weight:600; display:flex; justify-content:space-between; gap:8px; }
+  .proj-item .ptype { color:#5c6b7d; font-size:11px; }
+  .proj-item .prev { color:#5c6b7d; font-size:11px; display:flex; justify-content:space-between; }
+  .proj-item .pid { color:#3d4a59; font-size:10px; font-family:Consolas,monospace; }
+  .tag { padding:1px 7px; border-radius:3px; font-size:10px; font-weight:600; white-space:nowrap; }
+  .tag-review { color:#f0a832; border:1px solid #6b4d1a; background:#241a08; }
+  .tag-qc { color:#5aa9ff; border:1px solid #1d3a5f; background:#0d1a2b; }
+  .tag-done { color:#4cc38a; border:1px solid #1d4d33; background:#0b1f16; }
+  .tag-idle { color:#8fa0b3; border:1px solid #2a3644; background:#151d27; }
+  .proj-note { padding:6px 12px; color:#3d4a59; font-size:10px; flex-shrink:0; }
+
+  /* ---------- 反馈台 ---------- */
+  #panel-feedback { flex:1 1 auto; }
+  .fb-block { margin-bottom:14px; }
+  .fb-title { font-size:12px; font-weight:700; margin-bottom:4px; }
+  .fb-a .fb-title { color:#ff5f56; }
+  .fb-b .fb-title { color:#5aa9ff; }
+  .fb-desc { color:#5c6b7d; font-size:10.5px; line-height:1.6; margin-bottom:8px; }
+  .fb-field { margin-bottom:8px; }
+  .fb-field label { display:block; color:#5c6b7d; font-size:10.5px; margin-bottom:3px; }
+  .fb-field select, .fb-field textarea { width:100%; }
+  .fb-field textarea { padding:6px 8px; resize:vertical; min-height:44px; color:#8fa0b3; }
+  .fb-btn { width:100%; padding:7px 0; border-radius:4px; font-size:12px; font-weight:600; cursor:pointer; background:transparent; }
+  .fb-a .fb-btn { color:#ff5f56; border:1px solid #7a2a24; }
+  .fb-a .fb-btn:hover { background:#2a100e; }
+  .fb-b .fb-btn { color:#5aa9ff; border:1px solid #1d3a5f; }
+  .fb-b .fb-btn:hover { background:#0d1a2b; }
+
+  /* ---------- 中列 ---------- */
+  .col-center { display:grid; grid-template-rows:minmax(0,1fr) auto 178px; }
+  #panel-preview .panel-head .rev { color:#f0a832; font-size:11px; font-weight:600; }
+  .canvas-wrap { flex:1; position:relative; margin:10px 12px; background:#0d1219; border:1px solid #1c2530; border-radius:4px; overflow:hidden; min-height:0; }
+  .canvas-empty {
+    position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px;
+  }
+  .canvas-empty .ce-title { color:#8fa0b3; font-size:13px; }
+  .canvas-empty .ce-sub { color:#3d4a59; font-size:11px; }
+  .canvas-label {
+    position:absolute; top:8px; left:10px; z-index:2; font-size:10.5px; color:#5c6b7d;
+    background:rgba(13,18,25,.85); padding:2px 8px; border-radius:3px; border:1px solid #1c2530;
+  }
+  .wf-block { position:absolute; border-radius:3px; opacity:.9; }
+
+  /* 候选条 */
+  #panel-candidates { flex-shrink:0; }
+  .cand-strip { display:flex; gap:10px; padding:10px 12px; overflow-x:auto; }
+  .cand-card {
+    flex:0 0 190px; border:1px solid #2a3644; border-radius:5px; padding:8px 10px; cursor:pointer;
+    background:#131a23; line-height:1.5;
+  }
+  .cand-card:hover { border-color:#3d4a59; }
+  .cand-card.selected { border-color:#f0a832; background:#181a10; }
+  .cand-card.rejected { opacity:.55; }
+  .cand-card .ct { color:#e6edf5; font-size:11.5px; font-weight:600; }
+  .cand-card .cd { color:#5c6b7d; font-size:10.5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .cand-card .cf { display:flex; justify-content:space-between; align-items:center; margin-top:2px; }
+  .cand-card .st { font-size:10px; font-weight:600; }
+  .st-pending { color:#f0a832; } .st-rejected { color:#ff5f56; }
+  .cand-card .tw { color:#5aa9ff; font-size:10px; }
+
+  /* 过程记录 */
+  #panel-timeline .panel-body { padding:4px 0; }
+  .tl-row {
+    display:grid; grid-template-columns:46px 52px minmax(0,1fr); gap:8px;
+    padding:3px 12px; font-size:11.5px; line-height:1.5; border-bottom:1px solid #141b24;
+  }
+  .tl-row:hover { background:#131a23; }
+  .tl-time { color:#3d4a59; font-family:Consolas,monospace; }
+  .tl-role { font-weight:700; font-size:10px; padding-top:1px; }
+  .tl-role.AGENT { color:#5aa9ff; } .tl-role.USER { color:#f0a832; } .tl-role.SYS { color:#5c6b7d; }
+  .tl-msg { color:#a8b6c6; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .tl-msg em { color:#5aa9ff; font-style:normal; }
+
+  /* ---------- 右列 ---------- */
+  .kv { display:flex; justify-content:space-between; padding:2px 0; font-size:11px; }
+  .kv .k { color:#5c6b7d; } .kv .v { color:#f0a832; font-weight:600; }
+  .rules { margin-top:6px; color:#8fa0b3; font-size:11px; line-height:1.9; }
+  .rules li { list-style:none; } .rules li::before { content:"▸ "; color:#3d4a59; }
+
+  .track { border:1px solid #1c2530; border-radius:5px; padding:7px 10px; margin-bottom:8px; }
+  .track-head { display:flex; justify-content:space-between; align-items:center; margin-bottom:3px; }
+  .track-name { font-size:11.5px; font-weight:700; }
+  .track-hard .track-name { color:#ff5f56; } .track-aes .track-name { color:#5aa9ff; }
+  .track-count {
+    min-width:18px; height:16px; border-radius:8px; font-size:10px; font-weight:700;
+    display:inline-flex; align-items:center; justify-content:center; padding:0 5px;
+  }
+  .track-hard .track-count { background:#2a100e; color:#ff5f56; border:1px solid #7a2a24; }
+  .track-aes .track-count { background:#0d1a2b; color:#5aa9ff; border:1px solid #1d3a5f; }
+  .track-sub { color:#5c6b7d; font-size:10px; margin-bottom:4px; }
+  .track-item { color:#a8b6c6; font-size:10.5px; line-height:1.6; }
+  .track-item::before { content:"✕ "; color:#ff5f56; }
+  .track-aes .track-item::before { content:"◦ "; color:#5aa9ff; }
+  .track-none { color:#3d4a59; font-size:10.5px; }
+  .export-lock { font-size:11px; color:#8fa0b3; margin:2px 0 8px; }
+  .export-lock b { color:#4cc38a; }
+  .export-btn {
+    width:100%; padding:8px 0; border-radius:4px; font-size:12px; font-weight:700; cursor:pointer;
+    border:1px solid #1d4d33; background:#0b1f16; color:#4cc38a;
+  }
+  .export-btn:disabled { opacity:.35; cursor:not-allowed; }
+  .dl-item { font-size:11px; color:#8fa0b3; line-height:1.7; }
+  .dl-item b { color:#4cc38a; }
+  .empty-note { color:#3d4a59; font-size:11px; padding:4px 0; }
+</style>
+</head>
+<body>
+
+<header>
+  <span class="logo">◉ AIRROOM</span>
+  <span class="logo-sub">OEY 设计播控台 · design_agent 前端</span>
+  <div class="proj-switch">
+    <label>当前项目</label>
+    <select id="project-select"></select>
+  </div>
+  <div class="head-right">
+    <span class="status-pill" id="head-status">—</span>
+    <span class="head-meta" id="head-meta">—</span>
+    <span class="clock" id="clock">00:00:00</span>
+  </div>
+</header>
+
+<main>
+  <!-- 左列 -->
+  <div class="col">
+    <section class="panel" id="panel-projects" data-oey-section="projects">
+      <div class="panel-head"><h2>项目队列</h2><span class="meta" id="proj-count"></span></div>
+      <div class="panel-body" id="project-list"></div>
+      <div class="proj-note">切换项目将刷新全部面板（mock 延迟 200–500ms）</div>
+    </section>
+
+    <section class="panel" id="panel-feedback" data-oey-section="feedback">
+      <div class="panel-head"><h2>反馈台</h2><span class="meta">两种粒度分开处理</span></div>
+      <div class="panel-body">
+        <div class="fb-block fb-a">
+          <div class="fb-title">A · 整体方向退回</div>
+          <div class="fb-desc">对当前方向整体不满意：要求换一种叙事 / 语气 / 视觉。提交后当前候选全部作废，agent 重新生成。</div>
+          <div class="fb-field"><label>退回维度</label>
+            <select id="fb-a-dim"><option>叙事结构</option><option>视觉语言</option><option>信息层级</option><option>语气调性</option></select>
+          </div>
+          <div class="fb-field"><label>说明（可选）</label>
+            <textarea id="fb-a-note" placeholder="例：太像年报，想要更大胆的开场"></textarea>
+          </div>
+          <button class="fb-btn" id="fb-a-submit">退回整体方向</button>
+        </div>
+        <div class="fb-block fb-b">
+          <div class="fb-title">B · 局部微调意见</div>
+          <div class="fb-desc">只对某个具体位置不满意：定位到候选与位置，agent 做局部修订，不影响整体方向。</div>
+          <div class="fb-field"><label>目标候选</label><select id="fb-b-target"></select></div>
+          <div class="fb-field"><label>位置</label><textarea id="fb-b-pos" placeholder="例：首屏主标题 / 第 3 屏配图" style="min-height:36px"></textarea></div>
+          <div class="fb-field"><label>意见</label><textarea id="fb-b-note" placeholder="例：标题字号过大，压住了导语"></textarea></div>
+          <button class="fb-btn" id="fb-b-submit">提交微调意见</button>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- 中列 -->
+  <div class="col col-center">
+    <section class="panel" data-oey-section="preview">
+      <div class="panel-head"><h2>候选 / 产出预览</h2><span class="rev" id="preview-rev"></span></div>
+      <div class="canvas-wrap" id="canvas"></div>
+    </section>
+    <section class="panel" data-oey-section="candidates">
+      <div class="cand-strip" id="cand-strip"></div>
+    </section>
+    <section class="panel" data-oey-section="timeline">
+      <div class="panel-head"><h2>过程记录</h2><span class="meta" id="tl-count"></span></div>
+      <div class="panel-body" id="timeline"></div>
+    </section>
+  </div>
+
+  <!-- 右列 -->
+  <div class="col">
+    <section class="panel" data-oey-section="constraints" style="flex:0 0 auto">
+      <div class="panel-head"><h2>约束档案</h2><span class="meta">CONSTRAINT PROFILE</span></div>
+      <div class="panel-body" id="constraints"></div>
+    </section>
+    <section class="panel" data-oey-section="quality" style="flex:0 0 auto">
+      <div class="panel-head"><h2>质量复核</h2><span class="meta">两条独立轨道</span></div>
+      <div class="panel-body" id="quality"></div>
+    </section>
+    <section class="panel" data-oey-section="export" style="flex:0 0 auto">
+      <div class="panel-body">
+        <div class="export-lock" id="export-lock"></div>
+        <button class="export-btn" id="export-btn">导出交付</button>
+      </div>
+    </section>
+    <section class="panel" data-oey-section="delivery" style="flex:1 1 auto">
+      <div class="panel-head"><h2>交付记录</h2><span class="meta" id="dl-count"></span></div>
+      <div class="panel-body" id="deliveries"></div>
+    </section>
+  </div>
+</main>
+
+<script>
+/* ================= mock 数据 ================= */
+const PROJECTS = [
+  {
+    id:'p-lanting', name:'澜庭地产 · 品牌落地页', type:'网页', status:'候选待审', statusCls:'tag-review', rev:3,
+    constraints:{ preset:'设计引导', role:'起始脚手架',
+      rules:['主色限定品牌蓝系','单页长度 ≤ 5 屏','允许生图配图，须标注来源'] },
+    candidates:[
+      { id:'A', title:'方向 A · 极简编辑部', desc:'大留白、衬线标题、单栏叙事', status:'待审', tweaks:0,
+        blocks:[[9,10,54,10,'#5aa9ff'],[9,28,36,36,'#2a3a4d'],[52,28,40,16,'#5aa9ff'],[52,50,26,26,'#3b6ea5'],[9,72,83,7,'#22303f']] },
+      { id:'B', title:'方向 B · 都会霓虹', desc:'深色底、高对比、数据可视化开场', status:'待审', tweaks:0,
+        blocks:[[6,9,88,20,'#111826'],[6,35,27,46,'#5aa9ff'],[37,35,27,46,'#7c5aff'],[68,35,26,46,'#22303f'],[6,85,88,6,'#f0a832']] },
+      { id:'C', title:'方向 C · 私邸画册', desc:'横向翻阅、大图满屏、弱文字', status:'已退回', tweaks:1,
+        blocks:[[10,12,80,52,'#2a3a4d'],[10,70,36,18,'#5aa9ff'],[54,70,36,18,'#3b6ea5']] }
+    ],
+    quality:{ hard:['尚无质量结论：需先批准方向、产出正式 Artifact 后进入复核。'], aes:[], exported:false },
+    deliveries:[],
+    timeline:[
+      ['14:21','AGENT','生成候选方向 A / B（REVISION 3），等待审阅'],
+      ['14:20','SYS','进入 REVISION 3'],
+      ['13:58','USER','局部微调：方向 C 首屏主标题与 logo 距离过近'],
+      ['13:41','USER','退回整体方向（视觉语言）：画册感过强，不像落地页'],
+      ['13:12','AGENT','生成候选方向 C（REVISION 2）'],
+      ['12:50','AGENT','澄清提问：落地页首要转化目标是预约到访还是留资？'],
+      ['12:47','USER','回复澄清：首要目标是预约到访'],
+      ['12:02','SYS','项目创建，载入约束档案「设计引导 / 起始脚手架」']
+    ]
+  },
+  {
+    id:'p-keynote', name:'季度产品发布会 · 演示文稿', type:'PPT', status:'质量复核中', statusCls:'tag-qc', rev:5,
+    constraints:{ preset:'设计引导', role:'品牌延展', rules:['沿用主品牌字体','每页信息点 ≤ 3 个','演讲者备注必填'] },
+    candidates:[
+      { id:'A', title:'方向 A · 数据剧场', desc:'深色舞台、单数据聚焦、逐层揭示', status:'待审', tweaks:2,
+        blocks:[[6,10,88,26,'#111826'],[6,42,56,40,'#5aa9ff'],[66,42,28,40,'#22303f'],[6,86,88,5,'#f0a832']] }
+    ],
+    quality:{ hard:['第 7 页图表缺少数据来源标注。'], aes:['第 3–5 页配色跳变较大，建议统一冷色梯度。'], exported:false },
+    deliveries:[],
+    timeline:[
+      ['15:02','AGENT','进入质量复核：硬错误 1 / 审美发现 1'],
+      ['14:46','USER','批准方向 A，产出正式 Artifact（REVISION 5）'],
+      ['14:10','AGENT','生成候选方向 A（REVISION 5）'],
+      ['11:30','USER','局部微调：封面副标题改为发布会日期']
+    ]
+  },
+  {
+    id:'p-whitepaper', name:'皓石科技 · 行业白皮书', type:'文档', status:'已交付', statusCls:'tag-done', rev:2,
+    constraints:{ preset:'自由发挥', role:'内容优先', rules:['引用须给出处','图表风格统一线性'] },
+    candidates:[],
+    quality:{ hard:[], aes:[], exported:true },
+    deliveries:[['15:20','白皮书 REVISION 2 · PDF + 源文件已导出']],
+    timeline:[
+      ['15:20','SYS','导出交付：REVISION 2 通过双轨复核'],
+      ['15:05','AGENT','质量复核通过：硬错误 0 / 审美发现 0'],
+      ['14:00','USER','批准方向 A，产出正式 Artifact']
+    ]
+  },
+  {
+    id:'p-h5', name:'星河公寓 · 招商 H5', type:'H5', status:'草稿中', statusCls:'tag-idle', rev:1,
+    constraints:{ preset:'设计引导', role:'起始脚手架', rules:['移动端优先','首屏加载 ≤ 2s'] },
+    candidates:[],
+    quality:{ hard:['尚无质量结论：需先批准方向、产出正式 Artifact 后进入复核。'], aes:[], exported:false },
+    deliveries:[],
+    timeline:[['09:40','SYS','项目创建，等待 agent 生成首批候选方向']]
+  }
+];
+
+let currentId = 'p-lanting';
+let selectedCand = 'A';
+
+/* ================= 工具 ================= */
+const $ = id => document.getElementById(id);
+const proj = () => PROJECTS.find(p => p.id === currentId);
+function nowTime(){ const d=new Date(); return [d.getHours(),d.getMinutes(),d.getSeconds()].map(n=>String(n).padStart(2,'0')).join(':'); }
+function tickClock(){ $('clock').textContent = nowTime(); }
+setInterval(tickClock, 1000); tickClock();
+
+/* ================= 渲染 ================= */
+function renderHeader(){
+  const p = proj();
+  $('head-status').textContent = p.status;
+  $('head-status').style.color = { 'tag-review':'#f0a832','tag-qc':'#5aa9ff','tag-done':'#4cc38a','tag-idle':'#8fa0b3' }[p.statusCls];
+  $('head-meta').textContent = p.name + ' · REVISION ' + p.rev;
+  $('preview-rev').textContent = 'REVISION ' + p.rev + ' · ' + p.status;
+}
+
+function renderProjects(){
+  $('proj-count').textContent = PROJECTS.length + ' 个项目';
+  $('project-list').innerHTML = PROJECTS.map(p =>
+    `<div class="proj-item ${p.id===currentId?'active':''}" data-id="${p.id}">
+       <div class="pname"><span>${p.name}</span><span class="tag ${p.statusCls}">${p.status}</span></div>
+       <div class="ptype">${p.type}</div>
+       <div class="prev"><span>REVISION ${p.rev}</span><span class="pid">${p.id}</span></div>
+     </div>`).join('');
+  document.querySelectorAll('.proj-item').forEach(el =>
+    el.addEventListener('click', () => switchProject(el.dataset.id)));
+}
+
+function renderSelect(){
+  $('project-select').innerHTML = PROJECTS.map(p =>
+    `<option value="${p.id}" ${p.id===currentId?'selected':''}>${p.name}</option>`).join('');
+}
+
+function renderCandidates(){
+  const p = proj();
+  const strip = $('cand-strip');
+  if (!p.candidates.length){ strip.innerHTML = '<div class="empty-note" style="padding:10px 12px">尚无候选方向</div>'; return; }
+  strip.innerHTML = p.candidates.map(c =>
+    `<div class="cand-card ${c.id===selectedCand?'selected':''} ${c.status==='已退回'?'rejected':''}" data-id="${c.id}">
+       <div class="ct">${c.title}</div>
+       <div class="cd">${c.desc}</div>
+       <div class="cf">
+         <span class="st ${c.status==='待审'?'st-pending':'st-rejected'}">${c.status}</span>
+         ${c.tweaks ? `<span class="tw">微调 ×${c.tweaks}</span>` : '<span></span>'}
+       </div>
+     </div>`).join('');
+  document.querySelectorAll('.cand-card').forEach(el =>
+    el.addEventListener('click', () => { selectedCand = el.dataset.id; renderCandidates(); renderPreview(); }));
+}
+
+function renderPreview(){
+  const p = proj();
+  const canvas = $('canvas');
+  const c = p.candidates.find(x => x.id === selectedCand) || p.candidates.find(x => x.status === '待审') || p.candidates[0];
+  if (!c){
+    canvas.innerHTML = `<div class="canvas-empty">
+        <div class="ce-title">暂无可预览的候选</div>
+        <div class="ce-sub">该项目还没有生成候选方向，或正在等待你的澄清回复。</div>
+      </div>`;
+    return;
+  }
+  canvas.innerHTML = `<div class="canvas-label">${c.title} · ${c.status}</div>` +
+    c.blocks.map(([x,y,w,h,col]) =>
+      `<div class="wf-block" style="left:${x}%;top:${y}%;width:${w}%;height:${h}%;background:${col}"></div>`).join('');
+}
+
+function renderTimeline(){
+  const p = proj();
+  $('tl-count').textContent = p.timeline.length + ' 条';
+  $('timeline').innerHTML = p.timeline.map(([t,r,m]) =>
+    `<div class="tl-row"><span class="tl-time">${t}</span><span class="tl-role ${r}">${r}</span><span class="tl-msg">${m}</span></div>`).join('');
+}
+
+function renderConstraints(){
+  const c = proj().constraints;
+  $('constraints').innerHTML =
+    `<div class="kv"><span class="k">约束预设</span><span class="v">${c.preset}</span></div>
+     <div class="kv"><span class="k">模板角色</span><span class="v">${c.role}</span></div>
+     <ul class="rules">${c.rules.map(r=>`<li>${r}</li>`).join('')}</ul>`;
+}
+
+function renderQuality(){
+  const q = proj().quality;
+  const track = (cls, name, sub, items) =>
+    `<div class="track ${cls}">
+       <div class="track-head"><span class="track-name">${name}</span><span class="track-count">${items.length}</span></div>
+       <div class="track-sub">${sub}</div>
+       ${items.length ? items.map(i=>`<div class="track-item">${i}</div>`).join('') : '<div class="track-none">无</div>'}
+     </div>`;
+  $('quality').innerHTML =
+    track('track-hard','硬错误','客观问题 · 未清零前锁定导出', q.hard) +
+    track('track-aes','审美发现','主观建议 · 不挡交付，由你判断', q.aes);
+  const ok = q.hard.length === 0;
+  $('export-lock').innerHTML = q.exported ? '导出：<b>已交付</b>' : (ok ? '导出：<b>已解锁</b>' : '导出：未进入复核 / 硬错误未清零');
+  $('export-btn').disabled = !(ok || q.exported);
+}
+
+function renderDeliveries(){
+  const d = proj().deliveries;
+  $('dl-count').textContent = d.length;
+  $('deliveries').innerHTML = d.length
+    ? d.map(([t,m]) => `<div class="dl-item"><b>${t}</b> · ${m}</div>`).join('')
+    : '<div class="empty-note">尚无交付记录</div>';
+}
+
+function renderFeedbackTargets(){
+  const p = proj();
+  $('fb-b-target').innerHTML = p.candidates.length
+    ? p.candidates.map(c=>`<option>${c.title}</option>`).join('')
+    : '<option>（暂无候选）</option>';
+}
+
+function renderAll(){
+  renderHeader(); renderProjects(); renderSelect(); renderCandidates();
+  renderPreview(); renderTimeline(); renderConstraints(); renderQuality();
+  renderDeliveries(); renderFeedbackTargets();
+}
+
+/* ================= 交互 ================= */
+function switchProject(id){
+  if (id === currentId) return;
+  currentId = id;
+  const p = proj();
+  selectedCand = (p.candidates.find(c=>c.status==='待审') || p.candidates[0] || {}).id || null;
+  document.body.style.opacity = '.45';
+  setTimeout(() => { document.body.style.opacity = '1'; renderAll(); }, 200 + Math.random()*300);
+}
+$('project-select').addEventListener('change', e => switchProject(e.target.value));
+
+function pushEvent(role, msg){
+  proj().timeline.unshift([nowTime().slice(0,5), role, msg]);
+  renderTimeline();
+}
+$('fb-a-submit').addEventListener('click', () => {
+  const dim = $('fb-a-dim').value, note = $('fb-a-note').value.trim();
+  pushEvent('USER', `退回整体方向（${dim}）${note ? '：' + note : ''}`);
+  $('fb-a-note').value = '';
+});
+$('fb-b-submit').addEventListener('click', () => {
+  const t = $('fb-b-target').value, pos = $('fb-b-pos').value.trim(), note = $('fb-b-note').value.trim();
+  if (!pos && !note) return;
+  pushEvent('USER', `局部微调：${t}${pos ? ' · ' + pos : ''}${note ? ' — ' + note : ''}`);
+  $('fb-b-pos').value = ''; $('fb-b-note').value = '';
+});
+$('export-btn').addEventListener('click', () => {
+  if ($('export-btn').disabled) return;
+  pushEvent('SYS', '导出交付：Artifact 已打包导出');
+});
+
+renderAll();
+</script>
+</body>
+</html>
+<<<END>>>

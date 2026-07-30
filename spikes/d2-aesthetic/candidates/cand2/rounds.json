@@ -1,0 +1,76 @@
+{
+  "cand_id": 2,
+  "rounds": [
+    {
+      "round": 1,
+      "source_version_dir": "spikes\\d2-aesthetic\\candidates\\cand2\\v1",
+      "screenshot": "spikes\\d2-aesthetic\\shots\\cand2_round1.png",
+      "console_error_count": 1,
+      "console_warning_count": 0,
+      "failed_request_count": 0,
+      "page_error_count": 0,
+      "overflow_count": 0,
+      "load_ok": true,
+      "console_errors": [
+        "Failed to load resource: the server responded with a status of 404 (File not found)"
+      ],
+      "failed_requests": [],
+      "page_errors": [],
+      "overflow_elements": [],
+      "model_review": {
+        "issue_count": 3,
+        "issues": [
+          "「开一个新案子」对话框在页面加载时就默认处于打开状态，遮挡了单轴主线内容，初始应为关闭、由按钮触发",
+          "页面存在 1 条 404 资源加载失败的 console error，引用了不存在的资源文件，应移除或改为内联",
+          "对话框打开时主线第一站（stage 候选预览）被遮罩压住，无法在首屏读到候选，违背「看候选就是读主线第一站」的意图"
+        ],
+        "files_changed": [
+          "index.html"
+        ],
+        "files_changed_count": 1,
+        "usage": {
+          "prompt_tokens": 6841,
+          "completion_tokens": 10307,
+          "total_tokens": 17148,
+          "completion_tokens_details": {
+            "reasoning_tokens": 620
+          }
+        },
+        "elapsed_s": 304.6
+      }
+    },
+    {
+      "round": 2,
+      "source_version_dir": "spikes\\d2-aesthetic\\candidates\\cand2\\v2",
+      "screenshot": "spikes\\d2-aesthetic\\shots\\cand2_round2.png",
+      "console_error_count": 0,
+      "console_warning_count": 0,
+      "failed_request_count": 0,
+      "page_error_count": 0,
+      "overflow_count": 0,
+      "load_ok": true,
+      "console_errors": [],
+      "failed_requests": [],
+      "page_errors": [],
+      "overflow_elements": [],
+      "model_review": {
+        "issue_count": 0,
+        "issues": [],
+        "files_changed": [],
+        "files_changed_count": 0,
+        "usage": {
+          "prompt_tokens": 7497,
+          "completion_tokens": 1952,
+          "total_tokens": 9449,
+          "completion_tokens_details": {
+            "reasoning_tokens": 1926
+          }
+        },
+        "elapsed_s": 73.5
+      }
+    }
+  ],
+  "rounds_used": 2,
+  "final_version_dir": "spikes\\d2-aesthetic\\candidates\\cand2\\final",
+  "final_screenshot": "spikes\\d2-aesthetic\\shots\\cand2_round2.png"
+}

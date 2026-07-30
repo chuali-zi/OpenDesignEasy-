@@ -1,0 +1,246 @@
+{
+  "statements": [
+    {
+      "sentence": "项目当前版本是 9.9.9 [F0540]",
+      "clean_text": "项目当前版本是 9.9.9",
+      "cited_ids": [
+        "F0540"
+      ],
+      "tokens": {
+        "numbers": [
+          "9.9.9"
+        ],
+        "identifiers": [],
+        "frameworks": []
+      },
+      "token_levels": {
+        "number:9.9.9": "none"
+      },
+      "primary": "traceable_contradict",
+      "detail": "cited, but claims content absent from entire repo scan: ['number:9.9.9']",
+      "closed_world": "untraceable",
+      "closed_world_detail": "not found anywhere: ['number:9.9.9']"
+    },
+    {
+      "sentence": "OEYdesign 是契约优先参考实现：pyproject.toml 登记项目名 “oeydesign”，描述为 “Contract-first reference implementation for OEYdesign”，并要求 Python>=3.11、运行时依赖为 0、构建需 setuptools>=68 [F0539][F0541][F0538][F0536][F0537]",
+      "clean_text": "OEYdesign 是契约优先参考实现：pyproject.toml 登记项目名 “oeydesign”，描述为 “Contract-first reference implementation for OEYdesign”，并要求 Python>=3.11、运行时依赖为 0、构建需 setuptools>=68",
+      "cited_ids": [
+        "F0539",
+        "F0541",
+        "F0538",
+        "F0536",
+        "F0537"
+      ],
+      "tokens": {
+        "numbers": [
+          "3.11",
+          "0",
+          "68"
+        ],
+        "identifiers": [
+          "OEYdesign"
+        ],
+        "frameworks": []
+      },
+      "token_levels": {
+        "number:3.11": "cited",
+        "number:0": "cited",
+        "number:68": "cited",
+        "identifier:OEYdesign": "cited"
+      },
+      "primary": "traceable_correct",
+      "detail": "",
+      "closed_world": "traceable_correct",
+      "closed_world_detail": ""
+    },
+    {
+      "sentence": "它的骨架是厂商中立端口与统一领域模型：ports.py 定义仓储、命令台账、事件、审计、副作用、证据、设计、制品、质量与交付协议，domain.py 承载 Project、Command、WorkflowRun、Approval、ArtifactRevision、DeliveryBundle 等类型 [F0294][F0299][F0305][F0310][F0313][F0318][F0323][F0354][F0359][F0364][F0367][F0144][F0213][F0178][F0195][F0201][F0203][F0210]",
+      "clean_text": "它的骨架是厂商中立端口与统一领域模型：ports.py 定义仓储、命令台账、事件、审计、副作用、证据、设计、制品、质量与交付协议，domain.py 承载 Project、Command、WorkflowRun、Approval、ArtifactRevision、DeliveryBundle 等类型",
+      "cited_ids": [
+        "F0294",
+        "F0299",
+        "F0305",
+        "F0310",
+        "F0313",
+        "F0318",
+        "F0323",
+        "F0354",
+        "F0359",
+        "F0364",
+        "F0367",
+        "F0144",
+        "F0213",
+        "F0178",
+        "F0195",
+        "F0201",
+        "F0203",
+        "F0210"
+      ],
+      "tokens": {
+        "numbers": [],
+        "identifiers": [
+          "ArtifactRevision",
+          "DeliveryBundle",
+          "WorkflowRun"
+        ],
+        "frameworks": []
+      },
+      "token_levels": {
+        "identifier:ArtifactRevision": "cited",
+        "identifier:DeliveryBundle": "cited",
+        "identifier:WorkflowRun": "cited"
+      },
+      "primary": "traceable_correct",
+      "detail": "",
+      "closed_world": "traceable_correct",
+      "closed_world_detail": ""
+    },
+    {
+      "sentence": "业务写入集中在 control.py 的 ControlPlane，模块说明称其为项目业务状态唯一写入口，类含 35 个方法 [F0107][F0143]",
+      "clean_text": "业务写入集中在 control.py 的 ControlPlane，模块说明称其为项目业务状态唯一写入口，类含 35 个方法",
+      "cited_ids": [
+        "F0107",
+        "F0143"
+      ],
+      "tokens": {
+        "numbers": [
+          "35"
+        ],
+        "identifiers": [
+          "ControlPlane"
+        ],
+        "frameworks": []
+      },
+      "token_levels": {
+        "number:35": "cited",
+        "identifier:ControlPlane": "cited"
+      },
+      "primary": "traceable_correct",
+      "detail": "",
+      "closed_world": "traceable_correct",
+      "closed_world_detail": ""
+    },
+    {
+      "sentence": "持久化与恢复基于 SQLite：persistence.py 提供项目、命令、事件、审计、副作用适配器，runtime.py 提供工作流运行时、检查点与确定性故障注入 [F0256][F0271][F0275][F0278][F0282][F0288][F0397][F0418][F0426]",
+      "clean_text": "持久化与恢复基于 SQLite：persistence.py 提供项目、命令、事件、审计、副作用适配器，runtime.py 提供工作流运行时、检查点与确定性故障注入",
+      "cited_ids": [
+        "F0256",
+        "F0271",
+        "F0275",
+        "F0278",
+        "F0282",
+        "F0288",
+        "F0397",
+        "F0418",
+        "F0426"
+      ],
+      "tokens": {
+        "numbers": [],
+        "identifiers": [
+          "SQLite"
+        ],
+        "frameworks": []
+      },
+      "token_levels": {
+        "identifier:SQLite": "cited"
+      },
+      "primary": "traceable_correct",
+      "detail": "",
+      "closed_world": "traceable_correct",
+      "closed_world_detail": ""
+    },
+    {
+      "sentence": "证据链路包含 LocalSourceStore、Csv/Png 解析器、DeterministicEvidenceInterpreter、EvidenceService 与 SQLiteEvidenceRepository [F0078][F0082][F0084][F0087][F0103][F0229]",
+      "clean_text": "证据链路包含 LocalSourceStore、Csv/Png 解析器、DeterministicEvidenceInterpreter、EvidenceService 与 SQLiteEvidenceRepository",
+      "cited_ids": [
+        "F0078",
+        "F0082",
+        "F0084",
+        "F0087",
+        "F0103",
+        "F0229"
+      ],
+      "tokens": {
+        "numbers": [],
+        "identifiers": [
+          "DeterministicEvidenceInterpreter",
+          "EvidenceService",
+          "LocalSourceStore",
+          "SQLiteEvidenceRepository"
+        ],
+        "frameworks": []
+      },
+      "token_levels": {
+        "identifier:DeterministicEvidenceInterpreter": "cited",
+        "identifier:EvidenceService": "cited",
+        "identifier:LocalSourceStore": "cited",
+        "identifier:SQLiteEvidenceRepository": "cited"
+      },
+      "primary": "traceable_correct",
+      "detail": "",
+      "closed_world": "traceable_correct",
+      "closed_world_detail": ""
+    },
+    {
+      "sentence": "product_shell.py 是 dependency-free HTTP 适配器，ProductShellService 暴露项目、事件、命令入口并可由 make_server 启动 [F0368][F0384][F0388]",
+      "clean_text": "product_shell.py 是 dependency-free HTTP 适配器，ProductShellService 暴露项目、事件、命令入口并可由 make_server 启动",
+      "cited_ids": [
+        "F0368",
+        "F0384",
+        "F0388"
+      ],
+      "tokens": {
+        "numbers": [],
+        "identifiers": [
+          "HTTP",
+          "ProductShellService",
+          "make_server",
+          "product_shell"
+        ],
+        "frameworks": []
+      },
+      "token_levels": {
+        "identifier:HTTP": "cited",
+        "identifier:ProductShellService": "cited",
+        "identifier:make_server": "cited",
+        "identifier:product_shell": "cited"
+      },
+      "primary": "traceable_correct",
+      "detail": "",
+      "closed_world": "traceable_correct",
+      "closed_world_detail": ""
+    },
+    {
+      "sentence": "测试侧为 tests 下 8 个文件、42 个测试函数，pytest 指定 pythonpath=src、testpaths=tests [F0535][F0542]",
+      "clean_text": "测试侧为 tests 下 8 个文件、42 个测试函数，pytest 指定 pythonpath=src、testpaths=tests",
+      "cited_ids": [
+        "F0535",
+        "F0542"
+      ],
+      "tokens": {
+        "numbers": [
+          "8",
+          "42"
+        ],
+        "identifiers": [],
+        "frameworks": []
+      },
+      "token_levels": {
+        "number:8": "cited",
+        "number:42": "cited"
+      },
+      "primary": "traceable_correct",
+      "detail": "",
+      "closed_world": "traceable_correct",
+      "closed_world_detail": ""
+    }
+  ],
+  "tally_primary": {
+    "traceable_contradict": 1,
+    "traceable_correct": 7
+  },
+  "tally_closed_world": {
+    "untraceable": 1,
+    "traceable_correct": 7
+  }
+}

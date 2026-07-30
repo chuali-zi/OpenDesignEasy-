@@ -1,0 +1,392 @@
+<<<ISSUES>>>
+["存在 1 个 404 console error（页面引用了不存在的资源，最可能是 favicon），需改为内联 data-URI 图标或移除该引用", "左列反馈台在 900px 视口内被截断：B·局部微调意见的“意见”输入框和提交按钮完全在首屏之外，违背了“一屏常驻、不折叠”的密度意图，需压缩左列间距与表单尺寸", "底部“过程记录”面板最后一条事件（澄清提问行）被视口底边裁切显示不全，应让时间线列表在面板内部独立滚动而不是被页面裁掉"]
+<<<END_ISSUES>>>
+<<<FILE: index.html>>>
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" href="data:,">
+<title>AIRROOM · OEY 设计播控台</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#090d12;--panel:#0e141b;--panel2:#121a23;--inset:#0a0f15;
+  --line:#1c2732;--line2:#283646;
+  --txt:#ccd6e1;--dim:#7d8c9b;--faint:#56646f;
+  --blue:#4a9eff;--red:#e5484d;--amber:#d9a13b;--green:#46a758;--cyan:#3db9c9;
+}
+html,body{height:100%}
+body{background:var(--bg);color:var(--txt);font-family:"PingFang SC","Microsoft YaHei",system-ui,-apple-system,sans-serif;font-size:12px;overflow:hidden}
+::-webkit-scrollbar{width:8px;height:8px}
+::-webkit-scrollbar-thumb{background:#223040;border-radius:4px}
+::-webkit-scrollbar-track{background:transparent}
+button,select,input,textarea{font-family:inherit;font-size:12px;color:var(--txt)}
+select,input,textarea{background:var(--inset);border:1px solid var(--line2);border-radius:4px;padding:5px 8px;width:100%;outline:none}
+select:focus,input:focus,textarea:focus{border-color:var(--blue)}
+textarea{resize:none;line-height:1.5}
+/* ===== 顶栏 ===== */
+header{height:46px;display:flex;align-items:center;gap:14px;padding:0 14px;border-bottom:1px solid var(--line);background:var(--panel)}
+.brand{display:flex;align-items:center;gap:7px;font-weight:700;font-size:14px;letter-spacing:1px;color:var(--amber)}
+.brand .dot{width:9px;height:9px;border-radius:50%;background:var(--amber);box-shadow:0 0 6px var(--amber)}
+.crumb{color:var(--dim);font-size:11px;white-space:nowrap}
+.proj{display:flex;align-items:center;gap:8px;color:var(--dim);font-size:11px;white-space:nowrap}
+.proj select{width:210px;background:var(--panel2)}
+.spacer{flex:1}
+.timer{font-family:"SF Mono",Consolas,monospace;font-size:12px;color:var(--blue);letter-spacing:1px}
+.badge{display:inline-block;padding:2px 8px;border-radius:3px;font-size:11px;line-height:1.4;white-space:nowrap;border:1px solid transparent}
+.badge.amber{color:var(--amber);border-color:#4a3a1a;background:#1d1608}
+.badge.blue{color:var(--blue);border-color:#1d3a5c;background:#0b1a2c}
+.badge.green{color:var(--green);border-color:#1e4028;background:#0b1a10}
+.badge.dim{color:var(--dim);border-color:var(--line2);background:var(--panel2)}
+.badge.red{color:var(--red);border-color:#5c1d1d;background:#2c0b0b}
+/* ===== 三列布局 ===== */
+.deck{display:grid;grid-template-columns:288px minmax(0,1fr) 320px;gap:10px;padding:10px;height:calc(100vh - 46px)}
+.col{display:flex;flex-direction:column;gap:10px;min-height:0;min-width:0}
+.col.left,.col.right{overflow-y:auto;overflow-x:hidden}
+.col.mid{overflow:hidden}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:6px;display:flex;flex-direction:column;min-height:0}
+.panel-h{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border-bottom:1px solid var(--line);flex:none}
+.panel-h h2{font-size:12px;font-weight:600;color:var(--txt)}
+.panel-h .meta{font-size:10px;color:var(--faint);letter-spacing:.5px}
+.panel-b{padding:8px 12px;min-height:0}
+/* ===== 项目队列 ===== */
+.plist{display:flex;flex-direction:column}
+.pitem{padding:7px 10px;border-left:2px solid transparent;border-radius:0 4px 4px 0;cursor:pointer;line-height:1.45}
+.pitem:hover{background:var(--panel2)}
+.pitem.active{border-left-color:var(--amber);background:var(--panel2)}
+.pitem .r1{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.pitem .name{font-size:12px;color:var(--txt);font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pitem .type{font-size:11px;color:var(--dim)}
+.pitem .r3{display:flex;justify-content:space-between;font-size:10px;color:var(--faint);font-family:Consolas,monospace}
+.pfoot{padding:6px 12px 8px;font-size:10px;color:var(--faint)}
+/* ===== 反馈台 ===== */
+.fb-sec{padding:8px 12px;border-bottom:1px solid var(--line)}
+.fb-sec:last-child{border-bottom:none}
+.fb-title{font-size:12px;font-weight:700;margin-bottom:3px}
+.fb-title.a{color:var(--red)}
+.fb-title.b{color:var(--blue)}
+.fb-desc{font-size:10.5px;color:var(--dim);line-height:1.5;margin-bottom:7px}
+.fb-row{margin-bottom:6px}
+.fb-row label{display:block;font-size:10.5px;color:var(--faint);margin-bottom:3px}
+.fb-row textarea{height:38px}
+.btn{width:100%;padding:6px 0;border-radius:4px;border:1px solid;cursor:pointer;font-size:12px;background:transparent;transition:background .15s}
+.btn.red{color:var(--red);border-color:#5c1d1d}
+.btn.red:hover{background:#2c0b0b}
+.btn.blue{color:var(--blue);border-color:#1d3a5c}
+.btn.blue:hover{background:#0b1a2c}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+/* ===== 预览画布 ===== */
+.preview{flex:1 1 auto;min-height:0}
+.preview .panel-b{flex:1;display:flex;flex-direction:column;min-height:0;padding:10px 14px}
+.chip{align-self:flex-start;font-size:11px;color:var(--dim);border:1px solid var(--line2);background:var(--panel2);border-radius:3px;padding:2px 8px;margin-bottom:8px;flex:none}
+.canvas{flex:1;min-height:0;background:var(--inset);border:1px solid var(--line);border-radius:4px;padding:5%;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:16% 1fr 1fr 12%;gap:4%}
+.wblock{border-radius:3px}
+.wblock.b{background:#3f8ef0;opacity:.85}
+.wblock.d{background:#18222e;border:1px solid var(--line)}
+.wblock.m{background:#2e6fb8;opacity:.75}
+.w-hero{grid-column:1/2}
+.w-l{grid-row:2/4}
+/* ===== 候选条 ===== */
+.strip{flex:none}
+.strip .panel-b{display:flex;gap:10px;padding:10px 14px;overflow-x:auto}
+.cand{flex:none;width:190px;border:1px solid var(--line2);border-radius:5px;background:var(--panel2);padding:8px 10px;cursor:pointer}
+.cand.active{border-color:var(--amber)}
+.cand h3{font-size:12px;margin-bottom:3px}
+.cand p{font-size:10.5px;color:var(--dim);line-height:1.45;margin-bottom:6px}
+.cand .foot{display:flex;align-items:center;justify-content:space-between}
+.cand .tweak{font-size:10px;color:var(--blue)}
+/* ===== 过程记录 ===== */
+.timeline{flex:none;height:208px}
+.tl-list{flex:1;overflow-y:auto;padding:4px 0;min-height:0}
+.tl-row{display:grid;grid-template-columns:46px 56px 1fr;gap:8px;padding:3px 14px;font-size:11.5px;line-height:1.5;align-items:baseline}
+.tl-row:hover{background:var(--panel2)}
+.tl-t{color:var(--faint);font-family:Consolas,monospace;font-size:10.5px}
+.tl-r{font-weight:700;font-size:10.5px}
+.tl-r.AGENT{color:var(--blue)}.tl-r.USER{color:var(--amber)}.tl-r.SYS{color:var(--faint)}
+.tl-c{color:var(--txt);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* ===== 右列 ===== */
+.kv{display:flex;justify-content:space-between;font-size:11px;padding:2px 0}
+.kv .k{color:var(--faint)}
+.kv .v{color:var(--amber);font-weight:600}
+.clist{list-style:none;margin-top:5px}
+.clist li{font-size:11px;color:var(--dim);padding:2px 0 2px 12px;position:relative;line-height:1.5}
+.clist li::before{content:"›";position:absolute;left:0;color:var(--faint)}
+.tracks{display:flex;gap:8px}
+.track{flex:1;border:1px solid var(--line2);border-radius:5px;padding:7px 9px;background:var(--panel2);min-width:0}
+.track h4{display:flex;align-items:center;justify-content:space-between;font-size:11.5px;margin-bottom:3px}
+.track.hard h4{color:var(--red)}
+.track.soft h4{color:var(--blue)}
+.count{min-width:16px;height:16px;border-radius:50%;font-size:10px;display:inline-flex;align-items:center;justify-content:center;font-weight:700}
+.count.r{background:var(--red);color:#fff}
+.count.b{background:#1d3a5c;color:var(--blue)}
+.track .sub{font-size:10px;color:var(--faint);margin-bottom:4px;line-height:1.4}
+.track .item{font-size:10.5px;color:var(--dim);line-height:1.45}
+.track .item.bad{color:#d98a8d}
+.track .item.bad::before{content:"✕ ";color:var(--red)}
+.lockline{font-size:10.5px;color:var(--dim);border-top:1px solid var(--line);margin-top:8px;padding-top:7px}
+.export{margin-top:8px;width:100%;padding:7px 0;border-radius:4px;border:1px solid #1e4028;background:#0b1a10;color:#3f7a4e;font-size:12px;cursor:not-allowed}
+.empty{padding:14px 12px;font-size:11px;color:var(--faint)}
+</style>
+</head>
+<body>
+<header data-oey-section="topbar">
+  <div class="brand"><span class="dot"></span>AIRROOM</div>
+  <div class="crumb">OEY 设计播控台 · design_agent 前端</div>
+  <div class="proj">当前项目
+    <select id="projSel">
+      <option>澜庭地产 · 品牌落地页</option>
+      <option>季度产品发布会 · 演示文稿</option>
+      <option>皓石科技 · 行业白皮书</option>
+      <option>星河公寓 · 招商 H5</option>
+    </select>
+  </div>
+  <div class="spacer"></div>
+  <span class="badge amber" id="hdrBadge">候选待审</span>
+  <span class="crumb" id="hdrCrumb">澜庭地产 · 品牌落地页 · REVISION 3</span>
+  <span class="timer" id="timer">00:40:57</span>
+</header>
+
+<main class="deck">
+  <!-- 左列 -->
+  <aside class="col left">
+    <section class="panel" data-oey-section="projects" style="flex:none">
+      <div class="panel-h"><h2>项目队列</h2><span class="meta">4 个项目</span></div>
+      <div class="plist" id="plist">
+        <div class="pitem active" data-name="澜庭地产 · 品牌落地页" data-rev="REVISION 3">
+          <div class="r1"><span class="name">澜庭地产 · 品牌落地页</span><span class="badge amber">候选待审</span></div>
+          <div class="type">网页</div>
+          <div class="r3"><span>REVISION 3</span><span>p-lanting</span></div>
+        </div>
+        <div class="pitem" data-name="季度产品发布会 · 演示文稿" data-rev="REVISION 5">
+          <div class="r1"><span class="name">季度产品发布会 · 演示文稿</span><span class="badge blue">质量复核中</span></div>
+          <div class="type">PPT</div>
+          <div class="r3"><span>REVISION 5</span><span>p-keynote</span></div>
+        </div>
+        <div class="pitem" data-name="皓石科技 · 行业白皮书" data-rev="REVISION 2">
+          <div class="r1"><span class="name">皓石科技 · 行业白皮书</span><span class="badge green">已交付</span></div>
+          <div class="type">文档</div>
+          <div class="r3"><span>REVISION 2</span><span>p-whitepaper</span></div>
+        </div>
+        <div class="pitem" data-name="星河公寓 · 招商 H5" data-rev="REVISION 1">
+          <div class="r1"><span class="name">星河公寓 · 招商 H5</span><span class="badge dim">草稿中</span></div>
+          <div class="type">H5</div>
+          <div class="r3"><span>REVISION 1</span><span>p-h5</span></div>
+        </div>
+      </div>
+      <div class="pfoot">切换项目将刷新全部面板（mock 延迟 200-500ms）</div>
+    </section>
+
+    <section class="panel" data-oey-section="feedback" style="flex:1;min-height:0">
+      <div class="panel-h"><h2>反馈台</h2><span class="meta">两种粒度分开处理</span></div>
+      <div style="overflow-y:auto;min-height:0">
+        <div class="fb-sec">
+          <div class="fb-title a">A · 整体方向退回</div>
+          <div class="fb-desc">对当前方向整体不满意：要求换一种叙事 / 语气 / 视觉。提交后当前候选全部作废，agent 重新生成。</div>
+          <div class="fb-row"><label>退回维度</label>
+            <select id="fbDim">
+              <option>叙事结构</option><option>视觉语言</option><option>信息层级</option><option>版式节奏</option>
+            </select>
+          </div>
+          <div class="fb-row"><label>说明（可选）</label>
+            <textarea id="fbNote" placeholder="例：太像年报，想要更大胆的开场"></textarea>
+          </div>
+          <button class="btn red" id="fbReject">退回整体方向</button>
+        </div>
+        <div class="fb-sec">
+          <div class="fb-title b">B · 局部微调意见</div>
+          <div class="fb-desc">只对某个具体位置不满意：定位到候选与位置，agent 做局部修订，不影响整体方向。</div>
+          <div class="fb-row"><label>目标候选</label>
+            <select id="fbTarget">
+              <option>方向 A · 极简编辑部</option><option>方向 B · 都会霓虹</option><option>方向 C · 私邸画册</option>
+            </select>
+          </div>
+          <div class="fb-row"><label>位置</label>
+            <input id="fbPos" placeholder="例：首屏主标题 / 第 3 屏配图">
+          </div>
+          <div class="fb-row"><label>意见</label>
+            <textarea id="fbOp" placeholder="例：主标题与 logo 距离过近，拉开到 64px"></textarea>
+          </div>
+          <button class="btn blue" id="fbTweak">提交微调意见</button>
+        </div>
+      </div>
+    </section>
+  </aside>
+
+  <!-- 中列 -->
+  <section class="col mid">
+    <section class="panel preview" data-oey-section="preview">
+      <div class="panel-h"><h2>候选 / 产出预览</h2><span class="meta" id="pvMeta">REVISION 3 · 候选待审</span></div>
+      <div class="panel-b">
+        <span class="chip">方向 A · 极简编辑部 · 待审</span>
+        <div class="canvas">
+          <div class="wblock b w-hero"></div>
+          <div class="wblock b"></div>
+          <div class="wblock d w-l"></div>
+          <div class="wblock m"></div>
+          <div class="wblock d" style="grid-column:1/3"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel strip" data-oey-section="candidates">
+      <div class="panel-b">
+        <div class="cand active">
+          <h3>方向 A · 极简编辑部</h3>
+          <p>大留白、衬线标题、单栏叙事</p>
+          <div class="foot"><span class="badge amber">待审</span><span class="tweak"></span></div>
+        </div>
+        <div class="cand">
+          <h3>方向 B · 都会霓虹</h3>
+          <p>深色底、高对比、数据可视化开场</p>
+          <div class="foot"><span class="badge amber">待审</span><span class="tweak"></span></div>
+        </div>
+        <div class="cand">
+          <h3>方向 C · 私邸画册</h3>
+          <p>横向翻阅、大图满屏、弱文字</p>
+          <div class="foot"><span class="badge red">已退回</span><span class="tweak" id="tweakC">微调 ×1</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel timeline" data-oey-section="timeline">
+      <div class="panel-h"><h2>过程记录</h2><span class="meta" id="tlCount">8 条</span></div>
+      <div class="tl-list" id="tlList">
+        <div class="tl-row"><span class="tl-t">14:21</span><span class="tl-r AGENT">AGENT</span><span class="tl-c">生成候选方向 A / B（REVISION 3），等待审阅</span></div>
+        <div class="tl-row"><span class="tl-t">14:20</span><span class="tl-r SYS">SYS</span><span class="tl-c">进入 REVISION 3</span></div>
+        <div class="tl-row"><span class="tl-t">13:58</span><span class="tl-r USER">USER</span><span class="tl-c">局部微调：方向 C 首屏主标题与 logo 距离过近</span></div>
+        <div class="tl-row"><span class="tl-t">13:41</span><span class="tl-r USER">USER</span><span class="tl-c">退回整体方向（视觉语言）：画册感过强，不像落地页</span></div>
+        <div class="tl-row"><span class="tl-t">13:12</span><span class="tl-r AGENT">AGENT</span><span class="tl-c">生成候选方向 C（REVISION 2）</span></div>
+        <div class="tl-row"><span class="tl-t">12:50</span><span class="tl-r AGENT">AGENT</span><span class="tl-c">澄清提问：落地页首要转化目标是预约到访还是留资？</span></div>
+        <div class="tl-row"><span class="tl-t">12:31</span><span class="tl-r SYS">SYS</span><span class="tl-c">约束档案已载入：设计引导 / 起始脚手架</span></div>
+        <div class="tl-row"><span class="tl-t">12:02</span><span class="tl-r USER">USER</span><span class="tl-c">创建项目「澜庭地产 · 品牌落地页」</span></div>
+      </div>
+    </section>
+  </section>
+
+  <!-- 右列 -->
+  <aside class="col right">
+    <section class="panel" data-oey-section="constraints" style="flex:none">
+      <div class="panel-h"><h2>约束档案</h2><span class="meta">CONSTRAINT PROFILE</span></div>
+      <div class="panel-b">
+        <div class="kv"><span class="k">约束预设</span><span class="v">设计引导</span></div>
+        <div class="kv"><span class="k">模板角色</span><span class="v">起始脚手架</span></div>
+        <ul class="clist">
+          <li>主色限定品牌蓝系</li>
+          <li>单页长度 ≤ 5 屏</li>
+          <li>允许生图配图，须标注来源</li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="panel" data-oey-section="quality" style="flex:none">
+      <div class="panel-h"><h2>质量复核</h2><span class="meta">两条独立轨道</span></div>
+      <div class="panel-b">
+        <div class="tracks">
+          <div class="track hard">
+            <h4>硬错误<span class="count r" id="hardCount">1</span></h4>
+            <div class="sub">客观问题 · 未清零前锁定导出</div>
+            <div class="item bad">尚无质量结论：需先批准方向、产出正式 Artifact 后进入复核。</div>
+          </div>
+          <div class="track soft">
+            <h4>审美发现<span class="count b">0</span></h4>
+            <div class="sub">主观建议 · 不挡交付，由你判断</div>
+            <div class="item">无</div>
+          </div>
+        </div>
+        <div class="lockline" id="lockLine">导出：未进入复核 / 硬错误未清零</div>
+        <button class="export" disabled>导出交付</button>
+      </div>
+    </section>
+
+    <section class="panel" data-oey-section="delivery" style="flex:1;min-height:0">
+      <div class="panel-h"><h2>交付记录</h2><span class="meta">0</span></div>
+      <div class="empty">尚无交付记录</div>
+    </section>
+  </aside>
+</main>
+
+<script>
+(function(){
+  // 计时器（倒计时）
+  var sec = 40*60 + 57;
+  var timerEl = document.getElementById('timer');
+  setInterval(function(){
+    if(sec>0) sec--;
+    var h=String(Math.floor(sec/3600)).padStart(2,'0'),
+        m=String(Math.floor(sec%3600/60)).padStart(2,'0'),
+        s=String(sec%60).padStart(2,'0');
+    timerEl.textContent = h+':'+m+':'+s;
+  },1000);
+
+  var tlList = document.getElementById('tlList');
+  var tlCount = document.getElementById('tlCount');
+  var n = tlList.children.length;
+  function now(){
+    var d=new Date();
+    return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');
+  }
+  function addEvent(role, text){
+    var row=document.createElement('div');
+    row.className='tl-row';
+    row.innerHTML='<span class="tl-t">'+now()+'</span><span class="tl-r '+role+'">'+role+'</span><span class="tl-c"></span>';
+    row.querySelector('.tl-c').textContent=text;
+    tlList.insertBefore(row, tlList.firstChild);
+    n++; tlCount.textContent=n+' 条';
+  }
+
+  // 项目切换（mock 200-500ms 延迟）
+  var items=document.querySelectorAll('.pitem');
+  var sel=document.getElementById('projSel');
+  var crumb=document.getElementById('hdrCrumb');
+  var pvMeta=document.getElementById('pvMeta');
+  function activate(it){
+    items.forEach(function(x){x.classList.remove('active')});
+    it.classList.add('active');
+    sel.value=it.dataset.name;
+    document.querySelector('.deck').style.opacity='.45';
+    setTimeout(function(){
+      document.querySelector('.deck').style.opacity='1';
+      crumb.textContent=it.dataset.name+' · '+it.dataset.rev;
+      pvMeta.textContent=it.dataset.rev+' · 候选待审';
+      addEvent('SYS','切换项目：'+it.dataset.name+'（'+it.dataset.rev+'）');
+    }, 200+Math.random()*300);
+  }
+  items.forEach(function(it){ it.addEventListener('click',function(){activate(it)}); });
+  sel.addEventListener('change',function(){
+    items.forEach(function(it){ if(it.dataset.name===sel.value) activate(it); });
+  });
+
+  // 反馈台 A：整体退回
+  document.getElementById('fbReject').addEventListener('click',function(){
+    var dim=document.getElementById('fbDim').value;
+    var note=document.getElementById('fbNote').value.trim();
+    addEvent('USER','退回整体方向（'+dim+'）'+(note?('：'+note):''));
+    addEvent('AGENT','收到退回：当前候选作废，开始重新生成（'+dim+'）');
+    document.getElementById('fbNote').value='';
+    document.getElementById('hardCount').textContent='1';
+    document.getElementById('lockLine').textContent='导出：未进入复核 / 硬错误未清零';
+  });
+
+  // 反馈台 B：局部微调
+  document.getElementById('fbTweak').addEventListener('click',function(){
+    var t=document.getElementById('fbTarget').value;
+    var pos=document.getElementById('fbPos').value.trim();
+    var op=document.getElementById('fbOp').value.trim();
+    if(!pos && !op){ return; }
+    addEvent('USER','局部微调：'+t+(pos?(' · '+pos):'')+(op?(' — '+op):''));
+    if(t.indexOf('方向 C')===0){
+      var el=document.getElementById('tweakC');
+      var m=/×(\d+)/.exec(el.textContent);
+      var c=m?parseInt(m[1],10)+1:1;
+      el.textContent='微调 ×'+c;
+    }
+    document.getElementById('fbPos').value='';
+    document.getElementById('fbOp').value='';
+  });
+})();
+</script>
+</body>
+</html>
+<<<END>>>

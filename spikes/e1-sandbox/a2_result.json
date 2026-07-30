@@ -1,0 +1,41 @@
+{
+  "elapsed_s": 1.75,
+  "goto_ok": true,
+  "goto_error": null,
+  "title": "A2 render fixture (js ran)",
+  "console_messages": [
+    {
+      "type": "error",
+      "text": "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector"
+    },
+    {
+      "type": "log",
+      "text": "local.js loaded ok"
+    },
+    {
+      "type": "error",
+      "text": "intentional test error for console capture"
+    }
+  ],
+  "failed_requests": [
+    {
+      "url": "https://example.com/does-not-exist-swatch.png",
+      "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+    },
+    {
+      "url": "https://cdn.example.com/nonexistent-lib.js",
+      "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+    }
+  ],
+  "blocked_by_route": [
+    "https://example.com/does-not-exist-swatch.png",
+    "https://cdn.example.com/nonexistent-lib.js"
+  ],
+  "screenshot": "D:\\projects2\\OEYdesign\\spikes\\e1-sandbox\\a2_screenshot.png",
+  "screenshot_exists": true,
+  "screenshot_bytes": 18719
+}

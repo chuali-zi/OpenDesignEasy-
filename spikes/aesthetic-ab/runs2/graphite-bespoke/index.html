@@ -1,0 +1,267 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>OEYdesign 工作台</title>
+  <link rel="stylesheet" href="assets/fonts/fonts.css">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app" data-oey-section="workbench">
+    <header class="topbar" data-oey-section="topbar">
+      <div class="brand">
+        <svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true">
+          <rect x="3" y="3" width="18" height="18" rx="2" fill="none" stroke="currentColor" stroke-width="1.5"/>
+          <path d="M7 15.5 12 6l5 9.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+        </svg>
+        <span class="brand-name">OEYdesign</span>
+        <span class="mono build">v2.4.0</span>
+      </div>
+      <div class="project">
+        <span class="project-name">北屿咖啡 · 秋季落地页</span>
+        <span class="status-pill" id="topStatus">校样中</span>
+      </div>
+      <div class="top-meta">
+        <span class="save-note">已自动保存</span>
+        <span class="mono timestamp" id="saveTime">14:18:26</span>
+        <span class="avatar" aria-label="当前用户：林乔">林</span>
+      </div>
+    </header>
+
+    <main class="bench">
+      <aside class="chat" data-oey-section="conversation" aria-label="迭代对话">
+        <div class="chat-head">
+          <div>
+            <h1>迭代史</h1>
+            <p>对象级反馈会落到右侧白页的具体锚点上。</p>
+          </div>
+          <span class="round-count"><span id="roundCount">7</span> 轮</span>
+        </div>
+
+        <div class="chat-scroll" id="chatScroll" data-oey-section="message-list">
+          <article class="msg user">
+            <div class="msg-meta"><span class="who">林乔</span><span class="mono time">13:41</span></div>
+            <p class="msg-text">首屏主标题还是太长，「把山谷里的第一杯热咖啡带到城市」压到两行以内，语气更克制一点。</p>
+          </article>
+          <article class="msg agent">
+            <div class="msg-meta"><span class="who">OEY</span><span class="mono time">13:42</span></div>
+            <p class="msg-text">已把 <code>obj-hero-title</code> 改成「城市边缘，热咖啡先到。」并锁定两行；字距从 0.02em 收到 0，避免标题在 1440 宽画板里挤出第三行。</p>
+            <div class="change-list"><span>标题 32 → 28 字</span><span>行高 1.08</span><span>断行已固定</span></div>
+          </article>
+
+          <article class="msg user">
+            <div class="msg-meta"><span class="who">林乔</span><span class="mono time">13:47</span></div>
+            <p class="msg-text">右侧主图太像素材图。换成更扁的横构图，留出下方产品卡的位置，不要让杯子挡住按钮。</p>
+          </article>
+          <article class="msg agent">
+            <div class="msg-meta"><span class="who">OEY</span><span class="mono time">13:49</span></div>
+            <p class="msg-text">重排了 <code>obj-hero-media</code>：画面比例改为 16:9，杯体移到视觉右三分线；<code>obj-hero-cta</code> 上移 24px，和图边界保持 32px 安全距离。</p>
+            <div class="change-list"><span>构图 4:5 → 16:9</span><span>按钮避碰</span><span>留白 +24px</span></div>
+          </article>
+
+          <article class="msg user">
+            <div class="msg-meta"><span class="who">林乔</span><span class="mono time">13:56</span></div>
+            <p class="msg-text">三个产品卡的价格要像菜单，不要像电商促销。去掉划线价，保留产地和处理法。</p>
+          </article>
+          <article class="msg agent">
+            <div class="msg-meta"><span class="who">OEY</span><span class="mono time">13:58</span></div>
+            <p class="msg-text">已更新 <code>obj-card-price-01/02/03</code>：删除划线价与“限时”字样，价格改为右对齐菜单式排布；产地、处理法合并为一行小注，卡片高度统一为 232px。</p>
+            <div class="change-list"><span>去促销化</span><span>价格右对齐</span><span>卡片等高</span></div>
+          </article>
+
+          <article class="msg user">
+            <div class="msg-meta"><span class="who">林乔</span><span class="mono time">14:03</span></div>
+            <p class="msg-text">品牌绿有点跳。只保留在按钮、价格和一个细图标上，其他装饰色全部退成黑灰。</p>
+          </article>
+          <article class="msg agent">
+            <div class="msg-meta"><span class="who">OEY</span><span class="mono time">14:05</span></div>
+            <p class="msg-text">收敛了产物内层品牌色：绿色只作用于 <code>obj-hero-cta</code>、<code>obj-card-price-*</code> 与 <code>obj-roast-icon</code>；分隔线、徽标底纹、卡片角标全部改为黑灰阶。</p>
+            <div class="change-list"><span>绿色触点 11 → 4</span><span>装饰灰阶化</span><span>对比复测通过</span></div>
+          </article>
+
+          <article class="msg user">
+            <div class="msg-meta"><span class="who">林乔</span><span class="mono time">14:09</span></div>
+            <p class="msg-text">页脚太满。门店信息只留两家，订阅框放右边，和导航形成一条底线。</p>
+          </article>
+          <article class="msg agent">
+            <div class="msg-meta"><span class="who">OEY</span><span class="mono time">14:11</span></div>
+            <p class="msg-text">重排 <code>obj-footer</code>：门店从 4 家减为上海愚园路、杭州天目里两家；<code>obj-subscribe</code> 移到右列，输入框底边与导航基线对齐，页脚高度从 220px 收到 168px。</p>
+            <div class="change-list"><span>门店 4 → 2</span><span>订阅右置</span><span>底线对齐</span></div>
+          </article>
+
+          <article class="msg user">
+            <div class="msg-meta"><span class="who">林乔</span><span class="mono time">14:14</span></div>
+            <p class="msg-text">给我一版可以发的。检查移动端标题是否会顶到导航，导出前把画板固定在 1440×900。</p>
+          </article>
+          <article class="msg agent">
+            <div class="msg-meta"><span class="who">OEY</span><span class="mono time">14:17</span></div>
+            <p class="msg-text">已生成可交付校样 <code>v1.3.2</code>：移动断点下 <code>obj-hero-title</code> 与导航保留 40px 间距；桌面画板锁定 <code>1440×900</code>，导出边界与白页裁切线一致。</p>
+            <div class="change-list"><span>移动间距 40px</span><span>画板锁定</span><span>可导出</span></div>
+          </article>
+        </div>
+
+        <form class="composer" id="composer" data-oey-section="composer">
+          <label for="prompt" class="composer-label">继续修改当前校样</label>
+          <textarea id="prompt" rows="3" placeholder="例如：把副标题再短一点，产品卡间距收窄到 16px"></textarea>
+          <div class="composer-foot">
+            <span class="hint">Enter 换行，⌘/Ctrl + Enter 发送</span>
+            <button class="send-btn" id="sendBtn" type="submit">发送生成</button>
+          </div>
+        </form>
+      </aside>
+
+      <section class="preview" data-oey-section="preview" aria-label="设计成果预览">
+        <div class="preview-toolbar" data-oey-section="preview-toolbar">
+          <div class="artifact-id">
+            <span class="artifact-name">北屿咖啡秋季落地页</span>
+            <span class="mono canvas-size">1440×900</span>
+            <span class="status-pill strong" id="artifactStatus">可交付校样</span>
+          </div>
+          <div class="version-strip" role="tablist" aria-label="版本">
+            <button class="version-chip mono" data-version="0" role="tab">v1.0.0</button>
+            <button class="version-chip mono" data-version="1" role="tab">v1.1.0</button>
+            <button class="version-chip mono" data-version="2" role="tab">v1.2.0</button>
+            <button class="version-chip mono is-active" data-version="3" role="tab" aria-selected="true">v1.3.2</button>
+          </div>
+          <div class="toolbar-actions">
+            <button class="tool-btn" data-export="web">导出 Web</button>
+            <button class="tool-btn" data-export="ppt">导出 PPT</button>
+            <button class="tool-btn" data-export="docx">导出 DOCX</button>
+            <button class="tool-btn inspector-toggle" id="inspectorToggle" aria-expanded="false" aria-controls="inspector">检查器</button>
+          </div>
+        </div>
+
+        <div class="lighttable" data-oey-section="lighttable" id="lighttable">
+          <div class="page-stage">
+            <span class="dim dim-tl mono">1440×900</span>
+            <span class="dim dim-tr mono">1440×900</span>
+            <span class="dim dim-bl mono">1440×900</span>
+            <span class="dim dim-br mono">1440×900</span>
+
+            <div class="artifact-page" id="artifactPage" data-oey-section="artifact" data-oey-object="page-root" aria-label="产物：北屿咖啡秋季落地页">
+              <div class="brand-page">
+                <nav class="p-nav" data-oey-object="obj-nav">
+                  <div class="p-logo">NORTH ISLE</div>
+                  <div class="p-links">
+                    <a href="#blend">本季拼配</a>
+                    <a href="#brew">冲煮建议</a>
+                    <a href="#stores">门店</a>
+                  </div>
+                  <button class="p-nav-btn" data-oey-object="obj-nav-btn">订阅豆单</button>
+                </nav>
+
+                <header class="p-hero" data-oey-object="obj-hero">
+                  <div class="p-hero-copy">
+                    <p class="p-kicker" data-oey-object="obj-hero-kicker">AUTUMN RELEASE · 04</p>
+                    <h2 class="p-title" data-oey-object="obj-hero-title" data-bind="title">城市边缘，热咖啡先到。</h2>
+                    <p class="p-subtitle" data-oey-object="obj-hero-subtitle" data-bind="subtitle">北屿把浅烘果香压低半度，留出烤坚果与黑糖的尾声。适合清晨通勤，也适合雨后慢慢喝完。</p>
+                    <div class="p-hero-actions">
+                      <button class="p-cta" data-oey-object="obj-hero-cta" data-bind="cta">查看秋季豆单</button>
+                      <span class="p-note" data-oey-object="obj-hero-note" data-bind="note">9 月 18 日起发货 · 48 小时内烘焙</span>
+                    </div>
+                  </div>
+                  <figure class="p-media" data-oey-object="obj-hero-media" aria-label="咖啡主视觉">
+                    <svg viewBox="0 0 640 360" role="img" aria-label="白色瓷杯与山谷插画">
+                      <rect width="640" height="360" fill="#F4EFE7"/>
+                      <path d="M0 258 C120 210 180 236 280 190 C380 144 470 164 640 108 L640 360 L0 360 Z" fill="#DDD3C4"/>
+                      <path d="M0 292 C150 250 250 278 360 236 C470 194 540 220 640 178 L640 360 L0 360 Z" fill="#C8BBA9"/>
+                      <ellipse cx="468" cy="248" rx="104" ry="22" fill="#B8A992" opacity=".55"/>
+                      <path d="M392 146h132l-18 112H410z" fill="#FFFFFF" stroke="#1E1B16" stroke-width="5"/>
+                      <path d="M524 168c42 4 42 62-10 70" fill="none" stroke="#1E1B16" stroke-width="10" stroke-linecap="round"/>
+                      <path d="M410 176h104" stroke="#1F7A5C" stroke-width="8" stroke-linecap="round"/>
+                      <path d="M438 118c0-34 22-34 22-68M478 124c0-30 18-30 18-56" fill="none" stroke="#6F675D" stroke-width="7" stroke-linecap="round"/>
+                      <circle cx="118" cy="92" r="34" fill="#E8DFD2"/>
+                      <path d="M74 304h118M214 304h66" stroke="#8D8376" stroke-width="5" stroke-linecap="round"/>
+                    </svg>
+                  </figure>
+                </header>
+
+                <section class="p-section" id="blend" data-oey-object="obj-blend">
+                  <div class="p-section-head">
+                    <h3>本季三支豆子</h3>
+                    <p>菜单式标价，不按促销处理。</p>
+                  </div>
+                  <div class="p-cards">
+                    <article class="p-card" data-oey-object="obj-card-01">
+                      <div class="p-card-top"><span class="p-roast" data-oey-object="obj-roast-icon">浅中烘</span><span class="p-no">01</span></div>
+                      <h4>松果与黑糖</h4>
+                      <p class="p-origin">埃塞俄比亚 · 古姬 · 水洗</p>
+                      <div class="p-price-row"><span>半磅 227g</span><strong class="p-price" data-oey-object="obj-card-price-01" data-bind="price1">¥118</strong></div>
+                    </article>
+                    <article class="p-card" data-oey-object="obj-card-02">
+                      <div class="p-card-top"><span class="p-roast">中烘</span><span class="p-no">02</span></div>
+                      <h4>雨后雪松</h4>
+                      <p class="p-origin">哥伦比亚 · 慧兰 · 蜜处理</p>
+                      <div class="p-price-row"><span>半磅 227g</span><strong class="p-price" data-oey-object="obj-card-price-02" data-bind="price2">¥126</strong></div>
+                    </article>
+                    <article class="p-card" data-oey-object="obj-card-03">
+                      <div class="p-card-top"><span class="p-roast">中深烘</span><span class="p-no">03</span></div>
+                      <h4>黑麦面包</h4>
+                      <p class="p-origin">巴西 · 喜拉多 · 日晒</p>
+                      <div class="p-price-row"><span>半磅 227g</span><strong class="p-price" data-oey-object="obj-card-price-03" data-bind="price3">¥98</strong></div>
+                    </article>
+                  </div>
+                </section>
+
+                <section class="p-brew" id="brew" data-oey-object="obj-brew">
+                  <div>
+                    <h3>冲煮建议</h3>
+                    <p>家用 15g 粉，水温 92℃，两段注水；办公室杯测壶可减少 4g 粉，保留甜感。</p>
+                  </div>
+                  <dl class="p-specs">
+                    <div><dt>粉水比</dt><dd>1:15</dd></div>
+                    <div><dt>总时长</dt><dd>2:10</dd></div>
+                    <div><dt>研磨</dt><dd>中细</dd></div>
+                  </dl>
+                </section>
+
+                <footer class="p-footer" id="stores" data-oey-object="obj-footer">
+                  <div class="p-foot-nav">
+                    <span>NORTH ISLE</span>
+                    <a href="#blend">豆单</a>
+                    <a href="#brew">冲煮</a>
+                    <a href="#stores">门店</a>
+                  </div>
+                  <div class="p-stores">
+                    <p>上海 · 愚园路 108 号</p>
+                    <p>杭州 · 天目里 6 号楼</p>
+                  </div>
+                  <form class="p-subscribe" data-oey-object="obj-subscribe">
+                    <label for="brandEmail">每月豆单</label>
+                    <div><input id="brandEmail" type="email" placeholder="name@example.com"><button type="button">加入</button></div>
+                  </form>
+                </footer>
+              </div>
+            </div>
+          </div>
+
+          <aside class="inspector" id="inspector" data-oey-section="inspector" aria-label="检查器抽屉">
+            <div class="inspector-head">
+              <h2>检查器</h2>
+              <p>点击对象可在白页内定位。</p>
+            </div>
+            <div class="inspector-body">
+              <button class="object-row" data-target="obj-hero-title"><span>主标题</span><span class="mono oid">obj-hero-title</span><em>两行锁定</em></button>
+              <button class="object-row" data-target="obj-hero-media"><span>首屏主图</span><span class="mono oid">obj-hero-media</span><em>16:9 横构图</em></button>
+              <button class="object-row" data-target="obj-hero-cta"><span>首屏按钮</span><span class="mono oid">obj-hero-cta</span><em>绿色唯一动作</em></button>
+              <button class="object-row" data-target="obj-card-price-01"><span>价格 01</span><span class="mono oid">obj-card-price-01</span><em>菜单式右对齐</em></button>
+              <button class="object-row" data-target="obj-card-price-02"><span>价格 02</span><span class="mono oid">obj-card-price-02</span><em>菜单式右对齐</em></button>
+              <button class="object-row" data-target="obj-card-price-03"><span>价格 03</span><span class="mono oid">obj-card-price-03</span><em>菜单式右对齐</em></button>
+              <button class="object-row" data-target="obj-footer"><span>页脚</span><span class="mono oid">obj-footer</span><em>底线对齐</em></button>
+              <button class="object-row" data-target="obj-subscribe"><span>订阅框</span><span class="mono oid">obj-subscribe</span><em>右列收尾</em></button>
+            </div>
+            <div class="inspector-foot">
+              <span>导出包</span>
+              <span class="mono filesize">web 1.8 MB · ppt 6.4 MB · docx 812 KB</span>
+            </div>
+          </aside>
+        </div>
+      </section>
+    </main>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  </div>
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,7 @@
+OEYdesign 是一个「契约优先（contract-first）」的参考实现项目，其核心代码位于 `src/oeydesign` 包中，项目自述为 "OEYdesign contract-first reference implementation"[F0064]，当前版本为 0.1.0，要求 Python 3.11 及以上环境[F0540][F0538]。整个项目在运行时完全零依赖，不引入任何第三方库[F0536]，所有模块——从领域模型到 HTTP 适配层——均基于标准库构建。
+
+项目架构围绕分层契约展开：`domain.py` 定义了供应商中立的领域语言[F0144]，涵盖 `Project`、`Candidate`、`ArtifactRevision`、`QualityDecision`、`DeliveryBundle` 等冻结数据类以及 `ProjectState`、`WorkflowStatus` 等枚举[F0213][F0200][F0203][F0207][F0210][F0149][F0155]；`ports.py` 则声明了可替换的厂商中立端口协议[F0294]，包括 `DesignIntelligencePort`、`ArtifactProductionPort`、`QualityGovernancePort` 和 `DeliveryPort` 等[F0354][F0359][F0364][F0367]。`control.py` 中的 `ControlPlane` 是项目业务状态的唯一写入者[F0107][F0143]，所有变更都通过 `CreateProject`、`GenerateCandidates`、`ApproveDirection` 等命令对象驱动[F0179][F0181][F0182]。
+
+在持久化与恢复方面，项目提供基于 SQLite 的参考实现：`SQLiteStore`、`SQLiteProjectRepository`、`SQLiteEventStore` 等适配器负责业务数据与事件存储[F0261][F0271][F0278]，`SQLiteWorkflowRuntime` 支持工作流的启动、暂停、恢复与检查点，并内置确定性的故障注入机制[F0418][F0426]。同时附带有内存版适配器供契约一致性测试使用[F0230]。`product_shell.py` 提供了一个零依赖的 HTTP 产品外壳[F0368]，而 `context.py` 则实现了证据采集、解析与人工确认等参考适配器[F0071]。
+
+仓库包含 8 个测试文件、共 42 个测试函数，覆盖从契约骨架到产品外壳的各个阶段[F0535]，并配有 `lab30min` 目录下的教学实验脚本，帮助学习者循序理解各阶段设计[F0063][F0463]。

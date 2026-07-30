@@ -1,0 +1,35 @@
+body {
+  margin: 0;
+  font-family: Georgia, 'Times New Roman', serif;
+  background-color: #1a1d29;
+  color: #f2ead8;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  line-height: 1.6;
+}
+
+main {
+  max-width: 620px;
+  padding: 2rem;
+}
+
+h1 {
+  font-size: 3rem;
+  letter-spacing: 0.05em;
+  color: #f4b860;
+  margin-bottom: 0.5rem;
+  border-bottom: 2px solid #f4b860;
+  padding-bottom: 0.5rem;
+}
+
+p {
+  font-size: 1.15rem;
+  text-align: justify;
+}
+
+p::first-letter {
+  font-size: 1.8em;
+  color: #f4b860;
+}

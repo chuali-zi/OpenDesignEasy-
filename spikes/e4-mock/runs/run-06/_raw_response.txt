@@ -1,0 +1,1043 @@
+<<<FILE: index.html>>>
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NovaDesk · Agent 工作台</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app-shell">
+
+    <!-- ============ 顶部栏 ============ -->
+    <header class="topbar" data-oey-section="topbar">
+      <div class="topbar-brand">
+        <span class="brand-mark">◈</span>
+        <span class="brand-name" data-oey-object="topbar.brand">NovaDesk</span>
+        <span class="brand-tag" data-oey-object="topbar.tagline">Agent 工作台</span>
+      </div>
+      <div class="topbar-right">
+        <span class="mock-badge" data-oey-object="topbar.env-badge">MOCK 环境 · 无真实后端</span>
+        <span class="avatar" data-oey-object="topbar.user">研</span>
+      </div>
+    </header>
+
+    <div class="app-body">
+
+      <!-- ============ 项目列表区 ============ -->
+      <aside class="sidebar" data-oey-section="project-list">
+        <div class="sidebar-head">
+          <h2 class="sidebar-title" data-oey-object="project-list.title">项目 / 会话</h2>
+          <span class="sidebar-count" data-oey-object="project-list.count" id="project-count">0</span>
+        </div>
+        <div class="sidebar-search">
+          <input type="text" id="project-search" data-oey-object="project-list.search"
+                 placeholder="搜索项目…" autocomplete="off">
+        </div>
+        <ul class="project-list" id="project-list" data-oey-object="project-list.items"></ul>
+        <div class="sidebar-foot">
+          <button class="btn-new-project" id="btn-new-project" data-oey-object="project-list.new-button">＋ 新建项目</button>
+        </div>
+      </aside>
+
+      <!-- ============ 对话区 ============ -->
+      <main class="chat-panel" data-oey-section="chat">
+        <div class="chat-header">
+          <div class="chat-header-main">
+            <h1 class="chat-project-name" id="chat-project-name" data-oey-object="chat.project-name">—</h1>
+            <p class="chat-project-desc" id="chat-project-desc" data-oey-object="chat.project-desc">—</p>
+          </div>
+          <span class="chat-status" id="chat-status" data-oey-object="chat.status">就绪</span>
+        </div>
+
+        <div class="chat-messages" id="chat-messages" data-oey-object="chat.messages"></div>
+
+        <div class="chat-input-bar">
+          <textarea id="chat-input" rows="2" data-oey-object="chat.input"
+                    placeholder="给 Agent 发条消息… (Enter 发送, Shift+Enter 换行)"></textarea>
+          <button id="chat-send" class="btn-send" data-oey-object="chat.send-button">发送 ➤</button>
+        </div>
+      </main>
+
+      <!-- ============ 预览区 ============ -->
+      <section class="preview-panel" data-oey-section="preview">
+        <div class="preview-header">
+          <h2 class="preview-heading" data-oey-object="preview.heading">产出预览</h2>
+          <span class="preview-type-badge" id="preview-type" data-oey-object="preview.type">—</span>
+        </div>
+        <div class="preview-body" id="preview-body" data-oey-object="preview.content">
+          <div class="preview-empty" data-oey-object="preview.empty">选择左侧项目后，这里会展示对应的产出。</div>
+        </div>
+        <div class="preview-footer">
+          <span class="preview-meta" id="preview-meta" data-oey-object="preview.meta">—</span>
+        </div>
+      </section>
+
+    </div>
+  </div>
+
+  <script src="mock-api.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
+<<<END>>>
+<<<FILE: styles.css>>>
+/* ================= 基础 ================= */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --bg: #0f1115;
+  --bg-panel: #161a22;
+  --bg-panel-2: #1c212c;
+  --bg-hover: #232a38;
+  --border: #2a3140;
+  --text: #e6e9ef;
+  --text-dim: #8b93a5;
+  --accent: #5b8cff;
+  --accent-soft: rgba(91, 140, 255, .14);
+  --green: #3ecf8e;
+  --orange: #f5a524;
+  --purple: #b07fff;
+  --radius: 10px;
+  --mono: "SFMono-Regular", Consolas, "Courier New", monospace;
+}
+
+html, body { height: 100%; }
+body {
+  font-family: -apple-system, "PingFang SC", "Microsoft YaHei", "Segoe UI", sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 14px;
+  overflow: hidden;
+}
+
+.app-shell { display: flex; flex-direction: column; height: 100vh; }
+.app-body { display: flex; flex: 1; min-height: 0; }
+
+/* ================= 顶部栏 ================= */
+.topbar {
+  height: 52px; flex: none;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 18px;
+  background: var(--bg-panel);
+  border-bottom: 1px solid var(--border);
+}
+.topbar-brand { display: flex; align-items: center; gap: 8px; }
+.brand-mark { color: var(--accent); font-size: 20px; }
+.brand-name { font-weight: 700; font-size: 16px; letter-spacing: .3px; }
+.brand-tag {
+  font-size: 11px; color: var(--text-dim);
+  border: 1px solid var(--border); border-radius: 20px; padding: 2px 8px;
+}
+.topbar-right { display: flex; align-items: center; gap: 12px; }
+.mock-badge {
+  font-size: 11px; color: var(--orange);
+  background: rgba(245, 165, 36, .12);
+  border: 1px solid rgba(245, 165, 36, .35);
+  border-radius: 20px; padding: 3px 10px;
+}
+.avatar {
+  width: 30px; height: 30px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent), var(--purple));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 600; color: #fff;
+}
+
+/* ================= 项目列表区 ================= */
+.sidebar {
+  width: 264px; flex: none;
+  display: flex; flex-direction: column;
+  background: var(--bg-panel);
+  border-right: 1px solid var(--border);
+}
+.sidebar-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 16px 10px;
+}
+.sidebar-title { font-size: 13px; color: var(--text-dim); font-weight: 600; letter-spacing: .5px; }
+.sidebar-count {
+  font-size: 11px; color: var(--accent);
+  background: var(--accent-soft); border-radius: 10px; padding: 1px 8px;
+}
+.sidebar-search { padding: 0 14px 10px; }
+.sidebar-search input {
+  width: 100%; padding: 7px 10px;
+  background: var(--bg-panel-2); color: var(--text);
+  border: 1px solid var(--border); border-radius: 8px;
+  outline: none; font-size: 13px;
+}
+.sidebar-search input:focus { border-color: var(--accent); }
+
+.project-list { flex: 1; overflow-y: auto; list-style: none; padding: 4px 10px; }
+.project-item {
+  padding: 10px 12px; margin-bottom: 6px;
+  border-radius: var(--radius);
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: background .15s, border-color .15s;
+}
+.project-item:hover { background: var(--bg-hover); }
+.project-item.active {
+  background: var(--accent-soft);
+  border-color: rgba(91, 140, 255, .45);
+}
+.project-item-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.project-item-name { font-weight: 600; font-size: 13.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.project-item-dot { width: 8px; height: 8px; border-radius: 50%; flex: none; }
+.dot-running { background: var(--green); box-shadow: 0 0 6px var(--green); }
+.dot-idle { background: var(--text-dim); }
+.dot-draft { background: var(--orange); }
+.project-item-last {
+  margin-top: 5px; font-size: 12px; color: var(--text-dim);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.project-item-time { margin-top: 4px; font-size: 11px; color: #5a6376; }
+
+.sidebar-foot { padding: 12px 14px; border-top: 1px solid var(--border); }
+.btn-new-project {
+  width: 100%; padding: 8px;
+  background: var(--bg-panel-2); color: var(--text);
+  border: 1px dashed var(--border); border-radius: 8px;
+  cursor: pointer; font-size: 13px;
+}
+.btn-new-project:hover { border-color: var(--accent); color: var(--accent); }
+
+/* ================= 对话区 ================= */
+.chat-panel {
+  flex: 1; min-width: 0;
+  display: flex; flex-direction: column;
+  background: var(--bg);
+}
+.chat-header {
+  flex: none;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 22px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-panel);
+}
+.chat-project-name { font-size: 16px; font-weight: 700; }
+.chat-project-desc { font-size: 12px; color: var(--text-dim); margin-top: 3px; }
+.chat-status {
+  font-size: 12px; color: var(--green);
+  border: 1px solid rgba(62, 207, 142, .4);
+  background: rgba(62, 207, 142, .1);
+  border-radius: 20px; padding: 3px 12px;
+}
+.chat-status.busy { color: var(--orange); border-color: rgba(245,165,36,.4); background: rgba(245,165,36,.1); }
+
+.chat-messages { flex: 1; overflow-y: auto; padding: 20px 24px; }
+
+.msg { display: flex; margin-bottom: 16px; }
+.msg-user { justify-content: flex-end; }
+.msg-inner { max-width: 72%; }
+.msg-meta { font-size: 11px; color: #5a6376; margin-bottom: 4px; }
+.msg-user .msg-meta { text-align: right; }
+.msg-bubble {
+  padding: 10px 14px; border-radius: 14px;
+  line-height: 1.65; font-size: 13.5px;
+  white-space: pre-wrap; word-break: break-word;
+}
+.msg-agent .msg-bubble {
+  background: var(--bg-panel-2);
+  border: 1px solid var(--border);
+  border-top-left-radius: 4px;
+}
+.msg-user .msg-bubble {
+  background: var(--accent);
+  color: #fff;
+  border-top-right-radius: 4px;
+}
+.msg-artifact-hint {
+  margin-top: 6px; font-size: 11.5px; color: var(--purple);
+  cursor: pointer;
+}
+.msg-artifact-hint:hover { text-decoration: underline; }
+
+.typing { display: inline-flex; gap: 4px; padding: 6px 2px; }
+.typing i {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--text-dim);
+  animation: blink 1.2s infinite;
+}
+.typing i:nth-child(2) { animation-delay: .2s; }
+.typing i:nth-child(3) { animation-delay: .4s; }
+@keyframes blink { 0%, 60%, 100% { opacity: .25; } 30% { opacity: 1; } }
+
+.chat-input-bar {
+  flex: none;
+  display: flex; gap: 10px; align-items: flex-end;
+  padding: 14px 20px;
+  border-top: 1px solid var(--border);
+  background: var(--bg-panel);
+}
+.chat-input-bar textarea {
+  flex: 1; resize: none;
+  background: var(--bg-panel-2); color: var(--text);
+  border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 10px 12px; font-size: 13.5px; font-family: inherit;
+  outline: none; line-height: 1.5;
+}
+.chat-input-bar textarea:focus { border-color: var(--accent); }
+.btn-send {
+  padding: 10px 18px;
+  background: var(--accent); color: #fff;
+  border: none; border-radius: var(--radius);
+  font-size: 13.5px; font-weight: 600;
+  cursor: pointer;
+  transition: opacity .15s;
+}
+.btn-send:hover { opacity: .88; }
+.btn-send:disabled { opacity: .45; cursor: not-allowed; }
+
+/* ================= 预览区 ================= */
+.preview-panel {
+  width: 380px; flex: none;
+  display: flex; flex-direction: column;
+  background: var(--bg-panel);
+  border-left: 1px solid var(--border);
+}
+.preview-header {
+  flex: none;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 18px 12px;
+  border-bottom: 1px solid var(--border);
+}
+.preview-heading { font-size: 14px; font-weight: 700; }
+.preview-type-badge {
+  font-size: 11px; padding: 2px 10px; border-radius: 12px;
+  background: var(--accent-soft); color: var(--accent);
+  border: 1px solid rgba(91, 140, 255, .35);
+}
+.preview-body { flex: 1; overflow-y: auto; padding: 16px 18px; }
+.preview-empty { color: var(--text-dim); font-size: 13px; text-align: center; margin-top: 60px; }
+.preview-footer {
+  flex: none; padding: 10px 18px;
+  border-top: 1px solid var(--border);
+}
+.preview-meta { font-size: 11.5px; color: #5a6376; }
+
+.pv-card {
+  background: var(--bg-panel-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  margin-bottom: 12px;
+}
+.pv-title { font-size: 14px; font-weight: 700; margin-bottom: 8px; }
+.pv-desc { font-size: 12.5px; color: var(--text-dim); line-height: 1.7; }
+
+.pv-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+.pv-stat {
+  background: var(--bg); border: 1px solid var(--border);
+  border-radius: 8px; padding: 10px 12px;
+}
+.pv-stat-num { font-size: 20px; font-weight: 700; color: var(--accent); }
+.pv-stat-label { font-size: 11px; color: var(--text-dim); margin-top: 2px; }
+
+.pv-code {
+  background: #0b0d11;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.pv-code-head {
+  display: flex; align-items: center; gap: 6px;
+  padding: 8px 12px;
+  background: var(--bg-panel-2);
+  border-bottom: 1px solid var(--border);
+  font-size: 11.5px; color: var(--text-dim);
+  font-family: var(--mono);
+}
+.pv-code-head .dots { display: inline-flex; gap: 5px; margin-right: 6px; }
+.pv-code-head .dots i { width: 9px; height: 9px; border-radius: 50%; }
+.pv-code-head .dots i:nth-child(1) { background: #ff5f57; }
+.pv-code-head .dots i:nth-child(2) { background: #febc2e; }
+.pv-code-head .dots i:nth-child(3) { background: #28c840; }
+.pv-code pre {
+  padding: 14px; font-family: var(--mono);
+  font-size: 12px; line-height: 1.7;
+  color: #a9d18b; overflow-x: auto;
+}
+
+.pv-steps { counter-reset: step; }
+.pv-step {
+  display: flex; gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px dashed var(--border);
+}
+.pv-step:last-child { border-bottom: none; }
+.pv-step::before {
+  counter-increment: step; content: counter(step);
+  flex: none; width: 22px; height: 22px;
+  border-radius: 50%;
+  background: var(--accent-soft); color: var(--accent);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11.5px; font-weight: 700;
+}
+.pv-step-text { font-size: 13px; line-height: 1.6; padding-top: 1px; }
+
+/* 滚动条 */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-thumb { background: #2e3648; border-radius: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+<<<END>>>
+<<<FILE: mock-api.js>>>
+/* =========================================================================
+ * mock-api.js —— 纯前端 Mock 层
+ *
+ * 本文件在没有真实后端的情况下，模拟出一个"REST 风格"的异步 API：
+ *   MockApi.listProjects()                 -> GET    /api/projects
+ *   MockApi.getProject(id)                 -> GET    /api/projects/:id
+ *   MockApi.sendMessage(projectId, text)   -> POST   /api/projects/:id/messages
+ *   MockApi.createProject(name)            -> POST   /api/projects
+ *
+ * 实现手段：
+ *   1. 全部数据是内联在 DB 常量里的纯虚构数组；
+ *   2. 用 Promise + setTimeout 模拟 300~900ms 的随机网络延迟；
+ *   3. Agent 的回复不是写死的，而是由 generateReply() 按关键词规则
+ *      从模板推导生成（规则见函数注释及 MOCK.md）；
+ *   4. 通过 window.__mockApi__ 暴露给界面层使用。
+ * ========================================================================= */
+(function () {
+  'use strict';
+
+  /* ---------------- 模拟网络延迟 ---------------- */
+  function latency() {
+    return 300 + Math.random() * 600; // 300 ~ 900ms
+  }
+  function respond(producer) {
+    return new Promise(function (resolve) {
+      setTimeout(function () { resolve(producer()); }, latency());
+    });
+  }
+
+  /* ---------------- 内联虚构数据 ---------------- */
+  var DB = {
+    projects: [
+      {
+        id: 'p-landing',
+        name: '官网落地页生成',
+        desc: '根据一句话简介生成营销落地页的文案与结构',
+        status: 'running',
+        updatedAt: '10:24',
+        messages: [
+          { role: 'user', text: '帮我做一版面向独立开发者的落地页，产品是 Markdown 笔记同步工具。', time: '10:18' },
+          {
+            role: 'agent',
+            text: '收到。我按「痛点 → 方案 → 特性 → 行动号召」的经典结构起草了一版落地页大纲，主标语突出"离线优先、秒级同步"。预览区可以看到完整的卡片式结构，需要调整语气或补充价格区块的话直接说。',
+            time: '10:19',
+            artifact: {
+              kind: 'card',
+              title: '落地页大纲 · SyncMD',
+              desc: '主标语：写下即同步，灵感不落地。\n\n目标人群：跨设备写作的独立开发者与文字工作者。核心卖点提炼为三条：离线优先的本地存储、端到端加密同步、纯 Markdown 无锁定。页面结构为 Hero / 痛点对比 / 三特性卡片 / 用户评价 / CTA 五段。',
+              stats: [
+                { num: '5', label: '页面区块' },
+                { num: '3', label: '核心卖点' },
+                { num: '2', label: '备选标语' },
+                { num: 'A/B', label: '建议测试' }
+              ]
+            }
+          }
+        ]
+      },
+      {
+        id: 'p-report',
+        name: '每周数据周报',
+        desc: '自动汇总产品核心指标并生成图文周报',
+        status: 'idle',
+        updatedAt: '昨天 18:02',
+        messages: [
+          { role: 'user', text: '生成本周的数据周报，重点关注留存。', time: '昨天 17:58' },
+          {
+            role: 'agent',
+            text: '本周周报已生成。整体 DAU 环比 +6.2%，但次日留存下滑了 1.8 个百分点，主要集中在新注册用户的 Android 端。我在报告卡里标红了这个风险项，并附了两条排查建议。',
+            time: '昨天 18:02',
+            artifact: {
+              kind: 'card',
+              title: '数据周报 · 第 42 周',
+              desc: 'DAU 12,480（环比 +6.2%），周活 58,310（+3.1%）。⚠ 次日留存 31.4%，环比 -1.8pt，下滑集中在 Android 新客。建议：1) 检查新版启动页加载耗时；2) 对新客首日推送做分组对照。',
+              stats: [
+                { num: '12,480', label: 'DAU' },
+                { num: '+6.2%', label: '环比' },
+                { num: '31.4%', label: '次日留存' },
+                { num: '-1.8pt', label: '留存变化' }
+              ]
+            }
+          }
+        ]
+      },
+      {
+        id: 'p-component',
+        name: 'React 组件工坊',
+        desc: '用自然语言描述生成可复用的 React 组件代码',
+        status: 'running',
+        updatedAt: '09:47',
+        messages: [
+          { role: 'user', text: '写一个带加载态的按钮组件，支持 disabled。', time: '09:45' },
+          {
+            role: 'agent',
+            text: '已生成 AsyncButton 组件：接受 loading / disabled 两个 props，loading 时自动禁用点击并显示旋转指示符。代码在右侧预览区，未引入任何第三方依赖。',
+            time: '09:47',
+            artifact: {
+              kind: 'code',
+              title: 'AsyncButton.jsx',
+              code: 'export function AsyncButton({ loading, disabled, children, onClick }) {\n  return (\n    <button\n      className={loading ? "btn is-loading" : "btn"}\n      disabled={loading || disabled}\n      onClick={onClick}\n    >\n      {loading ? <span className="spinner" /> : children}\n    </button>\n  );\n}'
+            }
+          }
+        ]
+      },
+      {
+        id: 'p-plan',
+        name: '发布计划编排',
+        desc: '把模糊的上线想法拆解成可执行的任务清单',
+        status: 'draft',
+        updatedAt: '周一 14:11',
+        messages: [
+          { role: 'user', text: '我们下周想灰度上线新版搜索，帮我拆一下计划。', time: '周一 14:08' },
+          {
+            role: 'agent',
+            text: '已把「新版搜索灰度上线」拆成 5 步执行清单，按「准备 → 小流量 → 观察 → 扩量 → 全量」编排，并标注了每一步的负责人角色与回滚条件，见右侧预览。',
+            time: '周一 14:11',
+            artifact: {
+              kind: 'steps',
+              title: '新版搜索 · 灰度上线清单',
+              steps: [
+                '准备阶段：补齐搜索核心指标看板（QPS / 无结果率 / 点击率），确认回滚开关可用。',
+                '小流量：内部员工 + 1% 随机用户，持续 24 小时。',
+                '观察：无结果率不高于旧版 105%，崩溃率为 0，否则立即回滚。',
+                '扩量：提升至 20% 流量，观察 48 小时并收集反馈。',
+                '全量：100% 放量，旧版代码保留一个迭代周期后下线。'
+              ]
+            }
+          }
+        ]
+      }
+    ]
+  };
+
+  /* ---------------- 工具 ---------------- */
+  function clone(o) { return JSON.parse(JSON.stringify(o)); }
+  function nowTime() {
+    var d = new Date();
+    function pad(n) { return (n < 10 ? '0' : '') + n; }
+    return pad(d.getHours()) + ':' + pad(d.getMinutes());
+  }
+  function findProject(id) {
+    for (var i = 0; i < DB.projects.length; i++) {
+      if (DB.projects[i].id === id) return DB.projects[i];
+    }
+    return null;
+  }
+  function excerpt(text, n) {
+    text = String(text).replace(/\s+/g, ' ').trim();
+    return text.length > n ? text.slice(0, n) + '…' : text;
+  }
+
+  /* =========================================================================
+   * Agent 回复生成器（规则模板推导，非写死文案）
+   *
+   * 规则：
+   *   1. 消息含「组件/代码/按钮/函数/code」→ 生成 code 类产出 + 代码说明回复；
+   *   2. 含「报告/周报/数据/统计/指标」   → 生成 card 类数据卡片 + 解读回复；
+   *   3. 含「计划/步骤/清单/方案/安排/拆解」→ 生成 steps 类任务清单 + 说明回复；
+   *   4. 其他                               → 生成 card 类"理解摘要"卡片 + 摘要回复。
+   * 所有模板都会把用户原文片段、当前项目名、消息序号注入，因此同样一句话
+   * 在不同项目里、或同一项目里说多次，得到的内容也不完全一样。
+   * ========================================================================= */
+  function generateReply(project, userText) {
+    var turn = project.messages.length + 1;
+    var quote = excerpt(userText, 18);
+
+    if (/组件|代码|按钮|函数|脚本|code/i.test(userText)) {
+      return {
+        text: '明白，我把「' + quote + '」当作一个编码任务来处理。结合「' + project.name + '」的上下文，我生成了一段可直接使用的实现（第 ' + turn + ' 轮产出），代码已同步到右侧预览区；如果你想换语言或调整参数命名，继续说就行。',
+        artifact: {
+          kind: 'code',
+          title: 'snippet-' + project.id.replace(/^p-/, '') + '-r' + turn + '.js',
+          code:
+            '// 需求: ' + excerpt(userText, 40) + '\n' +
+            '// 由 ' + project.name + ' · 第 ' + turn + ' 轮生成\n' +
+            'function buildSolution() {\n' +
+            '  const input = "' + excerpt(userText, 24).replace(/"/g, '\\"') + '";\n' +
+            '  const steps = input.split(/[，,。.;；]/).filter(Boolean);\n' +
+            '  return steps.map((s, i) => ({ order: i + 1, task: s.trim(), done: false }));\n' +
+            '}\n\n' +
+            'module.exports = { buildSolution };'
+        }
+      };
+    }
+
+    if (/报告|周报|日报|数据|统计|指标|分析/.test(userText)) {
+      var seed = (userText.length * 7 + turn * 13) % 90;
+      return {
+        text: '好的，我围绕「' + quote + '」整理了一份数据视角的摘要卡：核心数值基于该会话第 ' + turn + ' 轮的上下文推算（演示环境为规则生成），风险项和建议已一并写入，完整卡片见预览区。',
+        artifact: {
+          kind: 'card',
+          title: '数据摘要 · ' + project.name,
+          desc: '主题：' + excerpt(userText, 40) + '\n\n整体表现平稳，综合得分 ' + (60 + seed % 35) + '/100。发现 1 个需要关注的波动项，建议先核对口径再下结论；下轮可补充对比维度做交叉验证。',
+          stats: [
+            { num: String(60 + seed % 35), label: '综合得分' },
+            { num: '+' + (seed % 9 + 1) + '.' + (seed % 9) + '%', label: '环比变化' },
+            { num: String(seed % 4 + 1), label: '风险项' },
+            { num: 'R' + turn, label: '生成轮次' }
+          ]
+        }
+      };
+    }
+
+    if (/计划|步骤|清单|方案|安排|拆解|流程/.test(userText)) {
+      return {
+        text: '我把「' + quote + '」拆成了一份 4 步执行清单（这是该会话第 ' + turn + ' 次拆解，粒度比上一轮更细）。每一步都带了验收标准，右侧预览区可以逐项查看，觉得节奏太紧或太松都可以让我重排。',
+        artifact: {
+          kind: 'steps',
+          title: '执行清单 · ' + excerpt(userText, 12),
+          steps: [
+            '明确目标：把「' + excerpt(userText, 20) + '」收敛为一句可验收的结果描述。',
+            '盘点依赖：列出涉及的人、数据与工具，标出当前缺口。',
+            '小步验证：先用最小范围跑通一次，记录耗时与阻塞点。',
+            '复盘推广：验证通过后固化流程，并在「' + project.name + '」内沉淀为模板。'
+          ]
+        }
+      };
+    }
+
+    return {
+      text: '收到「' + quote + '」。我按「' + project.name + '」的语境做了理解摘要并同步到预览区：目前我提炼出 1 个核心诉求和 2 个待确认点。你可以直接补充细节，或者说"拆成计划"/"生成代码"，我会切换对应的产出形式。',
+      artifact: {
+        kind: 'card',
+        title: '理解摘要 · 第 ' + turn + ' 轮',
+        desc: '原始输入：' + excerpt(userText, 60) + '\n\n核心诉求：围绕该主题获得可执行的下一步。待确认：① 期望的产出形态（文档 / 代码 / 清单）；② 时间或范围约束。',
+        stats: [
+          { num: '1', label: '核心诉求' },
+          { num: '2', label: '待确认点' },
+          { num: String(turn), label: '会话轮次' },
+          { num: project.name.length + '字', label: '项目名长度' }
+        ]
+      }
+    };
+  }
+
+  /* ---------------- Mock API（模拟 REST 端点） ---------------- */
+  var MockApi = {
+    // GET /api/projects
+    listProjects: function () {
+      return respond(function () {
+        return clone(DB.projects).map(function (p) {
+          return {
+            id: p.id, name: p.name, desc: p.desc,
+            status: p.status, updatedAt: p.updatedAt,
+            lastMessage: p.messages.length ? excerpt(p.messages[p.messages.length - 1].text, 30) : ''
+          };
+        });
+      });
+    },
+
+    // GET /api/projects/:id
+    getProject: function (id) {
+      return respond(function () {
+        var p = findProject(id);
+        if (!p) throw new Error('project not found: ' + id);
+        return clone(p);
+      });
+    },
+
+    // POST /api/projects/:id/messages
+    // 会把用户消息入库存档，并返回 agent 的推导式回复（含产出 artifact）
+    sendMessage: function (projectId, text) {
+      var p = findProject(projectId);
+      if (!p) return Promise.reject(new Error('project not found: ' + projectId));
+      var t = nowTime();
+      p.messages.push({ role: 'user', text: text, time: t });
+      p.updatedAt = t;
+
+      return respond(function () {
+        var reply = generateReply(p, text);
+        var msg = { role: 'agent', text: reply.text, time: nowTime(), artifact: reply.artifact };
+        p.messages.push(msg);
+        p.updatedAt = msg.time;
+        return clone(msg);
+      });
+    },
+
+    // POST /api/projects
+    createProject: function (name) {
+      return respond(function () {
+        var t = nowTime();
+        var p = {
+          id: 'p-' + Math.random().toString(36).slice(2, 8),
+          name: name,
+          desc: '新建项目（Mock 生成），发一条消息试试',
+          status: 'draft',
+          updatedAt: t,
+          messages: [{
+            role: 'agent',
+            text: '你好，我是「' + name + '」的专属 Agent。直接告诉我你的目标，我会给出回复并把产出同步到预览区。',
+            time: t,
+            artifact: {
+              kind: 'card',
+              title: '项目已就绪 · ' + name,
+              desc: '这是一个全新的空白项目。发送任意消息后，我会根据关键词生成代码、数据卡片或任务清单等产出。',
+              stats: [
+                { num: '0', label: '历史轮次' },
+                { num: '3', label: '支持的产出类型' }
+              ]
+            }
+          }]
+        };
+        DB.projects.unshift(p);
+        return clone(p);
+      });
+    }
+  };
+
+  window.__mockApi__ = MockApi;
+})();
+<<<END>>>
+<<<FILE: app.js>>>
+/* =========================================================================
+ * app.js —— 界面层：只依赖 window.__mockApi__，不直接碰数据
+ * ========================================================================= */
+(function () {
+  'use strict';
+
+  var api = window.__mockApi__;
+
+  var state = {
+    projects: [],        // 列表摘要
+    currentId: null,     // 当前项目 id
+    current: null,       // 当前项目完整数据
+    sending: false,
+    keyword: ''          // 列表搜索关键词
+  };
+
+  /* ---------------- DOM ---------------- */
+  var $ = function (id) { return document.getElementById(id); };
+  var els = {
+    list: $('project-list'),
+    count: $('project-count'),
+    search: $('project-search'),
+    btnNew: $('btn-new-project'),
+    chatName: $('chat-project-name'),
+    chatDesc: $('chat-project-desc'),
+    chatStatus: $('chat-status'),
+    messages: $('chat-messages'),
+    input: $('chat-input'),
+    send: $('chat-send'),
+    pvType: $('preview-type'),
+    pvBody: $('preview-body'),
+    pvMeta: $('preview-meta')
+  };
+
+  /* ---------------- 工具 ---------------- */
+  function escapeHtml(s) {
+    return String(s)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  }
+  var KIND_LABEL = { card: '图文卡片', code: '代码片段', steps: '任务清单' };
+
+  /* ================= 项目列表渲染 ================= */
+  function renderList() {
+    var kw = state.keyword.trim().toLowerCase();
+    var visible = state.projects.filter(function (p) {
+      return !kw || p.name.toLowerCase().indexOf(kw) >= 0;
+    });
+
+    els.count.textContent = String(state.projects.length);
+    els.list.innerHTML = visible.map(function (p) {
+      var dotClass = p.status === 'running' ? 'dot-running'
+                   : p.status === 'draft' ? 'dot-draft' : 'dot-idle';
+      return '' +
+        '<li class="project-item' + (p.id === state.currentId ? ' active' : '') + '"' +
+        '    data-id="' + p.id + '" data-oey-object="project-list.item">' +
+        '  <div class="project-item-top">' +
+        '    <span class="project-item-name" data-oey-object="project-list.item-name">' + escapeHtml(p.name) + '</span>' +
+        '    <span class="project-item-dot ' + dotClass + '" data-oey-object="project-list.item-status"></span>' +
+        '  </div>' +
+        '  <div class="project-item-last" data-oey-object="project-list.item-last">' + escapeHtml(p.lastMessage || '（暂无消息）') + '</div>' +
+        '  <div class="project-item-time" data-oey-object="project-list.item-time">更新于 ' + escapeHtml(p.updatedAt) + '</div>' +
+        '</li>';
+    }).join('');
+
+    if (!visible.length) {
+      els.list.innerHTML = '<li class="project-item" data-oey-object="project-list.item">' +
+        '<div class="project-item-last">没有匹配的项目</div></li>';
+    }
+  }
+
+  /* ================= 对话区渲染 ================= */
+  function renderChat() {
+    var p = state.current;
+    if (!p) {
+      els.chatName.textContent = '—';
+      els.chatDesc.textContent = '—';
+      els.messages.innerHTML = '';
+      return;
+    }
+    els.chatName.textContent = p.name;
+    els.chatDesc.textContent = p.desc;
+
+    els.messages.innerHTML = p.messages.map(function (m) {
+      var isUser = m.role === 'user';
+      var hint = (!isUser && m.artifact)
+        ? '<div class="msg-artifact-hint" data-oey-object="chat.message-artifact-hint">▸ 本轮有新产出：' +
+          escapeHtml(m.artifact.title) + '（已在预览区展示）</div>'
+        : '';
+      return '' +
+        '<div class="msg ' + (isUser ? 'msg-user' : 'msg-agent') + '" data-oey-object="chat.message">' +
+        '  <div class="msg-inner">' +
+        '    <div class="msg-meta" data-oey-object="chat.message-meta">' +
+        (isUser ? '我' : 'Agent') + ' · ' + escapeHtml(m.time || '') + '</div>' +
+        '    <div class="msg-bubble" data-oey-object="chat.message-bubble">' + escapeHtml(m.text) + '</div>' +
+        hint +
+        '  </div>' +
+        '</div>';
+    }).join('');
+
+    els.messages.scrollTop = els.messages.scrollHeight;
+  }
+
+  function showTyping() {
+    var div = document.createElement('div');
+    div.className = 'msg msg-agent';
+    div.id = 'typing-row';
+    div.setAttribute('data-oey-object', 'chat.message');
+    div.innerHTML = '<div class="msg-inner"><div class="msg-bubble">' +
+      '<span class="typing"><i></i><i></i><i></i></span></div></div>';
+    els.messages.appendChild(div);
+    els.messages.scrollTop = els.messages.scrollHeight;
+  }
+  function hideTyping() {
+    var t = $('typing-row');
+    if (t) t.remove();
+  }
+
+  function setBusy(busy) {
+    state.sending = busy;
+    els.send.disabled = busy;
+    els.chatStatus.textContent = busy ? 'Agent 思考中…' : '就绪';
+    els.chatStatus.classList.toggle('busy', busy);
+  }
+
+  /* ================= 预览区渲染 ================= */
+  function latestArtifact(project) {
+    if (!project) return null;
+    for (var i = project.messages.length - 1; i >= 0; i--) {
+      if (project.messages[i].artifact) return project.messages[i].artifact;
+    }
+    return null;
+  }
+
+  function renderPreview() {
+    var p = state.current;
+    var art = latestArtifact(p);
+
+    if (!p || !art) {
+      els.pvType.textContent = '—';
+      els.pvBody.innerHTML = '<div class="preview-empty" data-oey-object="preview.empty">' +
+        (p ? '这个项目还没有产出，发一条消息试试。' : '选择左侧项目后，这里会展示对应的产出。') + '</div>';
+      els.pvMeta.textContent = '—';
+      return;
+    }
+
+    els.pvType.textContent = KIND_LABEL[art.kind] || art.kind;
+    els.pvMeta.textContent = '来源：' + p.name + ' · 更新于 ' + p.updatedAt;
+
+    var html = '';
+    if (art.kind === 'code') {
+      html = '<div data-oey-object="preview.card">' +
+        '<div class="pv-title" data-oey-object="preview.card-title">' + escapeHtml(art.title) + '</div>' +
+        '<div class="pv-code"><div class="pv-code-head"><span class="dots"><i></i><i></i><i></i></span>' +
+        escapeHtml(art.title) + '</div>' +
+        '<pre data-oey-object="preview.card-body">' + escapeHtml(art.code) + '</pre></div></div>';
+    } else if (art.kind === 'steps') {
+      html = '<div data-oey-object="preview.card">' +
+        '<div class="pv-title" data-oey-object="preview.card-title">' + escapeHtml(art.title) + '</div>' +
+        '<div class="pv-steps" data-oey-object="preview.card-body">' +
+        art.steps.map(function (s) {
+          return '<div class="pv-step"><div class="pv-step-text">' + escapeHtml(s) + '</div></div>';
+        }).join('') +
+        '</div></div>';
+    } else { // card
+      var stats = (art.stats || []).map(function (s) {
+        return '<div class="pv-stat"><div class="pv-stat-num">' + escapeHtml(s.num) + '</div>' +
+          '<div class="pv-stat-label">' + escapeHtml(s.label) + '</div></div>';
+      }).join('');
+      html = '<div class="pv-card" data-oey-object="preview.card">' +
+        '<div class="pv-title" data-oey-object="preview.card-title">' + escapeHtml(art.title) + '</div>' +
+        '<div class="pv-desc" data-oey-object="preview.card-body">' + escapeHtml(art.desc).replace(/\n/g, '<br>') + '</div>' +
+        (stats ? '<div class="pv-stats">' + stats + '</div>' : '') +
+        '</div>';
+    }
+    els.pvBody.innerHTML = html;
+  }
+
+  /* ================= 交互 ================= */
+  function selectProject(id) {
+    if (state.sending || id === state.currentId) return;
+    state.currentId = id;
+    renderList(); // 先高亮，内容异步到达
+    els.chatName.textContent = '加载中…';
+    api.getProject(id).then(function (p) {
+      if (state.currentId !== id) return; // 防止快速连点的竞态
+      state.current = p;
+      renderChat();
+      renderPreview();
+    });
+  }
+
+  function sendCurrentMessage() {
+    var text = els.input.value.trim();
+    if (!text || state.sending || !state.currentId) return;
+
+    els.input.value = '';
+    setBusy(true);
+
+    // 乐观渲染用户消息
+    state.current.messages.push({ role: 'user', text: text, time: '刚刚' });
+    renderChat();
+    showTyping();
+
+    api.sendMessage(state.currentId, text).then(function (reply) {
+      hideTyping();
+      // 用服务端（mock）回包修正本地时间并追加 agent 回复
+      var msgs = state.current.messages;
+      msgs[msgs.length - 1].time = reply.time;
+      msgs.push(reply);
+      state.current.updatedAt = reply.time;
+
+      // 同步列表摘要
+      var summary = state.projects.filter(function (p) { return p.id === state.currentId; })[0];
+      if (summary) {
+        summary.lastMessage = reply.text.length > 30 ? reply.text.slice(0, 30) + '…' : reply.text;
+        summary.updatedAt = reply.time;
+      }
+
+      setBusy(false);
+      renderList();
+      renderChat();
+      renderPreview();
+      els.input.focus();
+    });
+  }
+
+  function createProject() {
+    if (state.sending) return;
+    var name = window.prompt('新项目名称：', '未命名项目');
+    if (!name || !name.trim()) return;
+    api.createProject(name.trim()).then(function (p) {
+      state.projects.unshift({
+        id: p.id, name: p.name, desc: p.desc, status: p.status,
+        updatedAt: p.updatedAt,
+        lastMessage: p.messages[p.messages.length - 1].text.slice(0, 30)
+      });
+      state.currentId = null; // 强制 selectProject 走完整加载
+      selectProject(p.id);
+      renderList();
+    });
+  }
+
+  /* ================= 事件绑定 ================= */
+  els.list.addEventListener('click', function (e) {
+    var item = e.target.closest('.project-item[data-id]');
+    if (item) selectProject(item.getAttribute('data-id'));
+  });
+  els.send.addEventListener('click', sendCurrentMessage);
+  els.input.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendCurrentMessage();
+    }
+  });
+  els.search.addEventListener('input', function () {
+    state.keyword = els.search.value;
+    renderList();
+  });
+  els.btnNew.addEventListener('click', createProject);
+
+  /* ================= 启动 ================= */
+  api.listProjects().then(function (list) {
+    state.projects = list;
+    renderList();
+    if (list.length) selectProject(list[0].id);
+  });
+})();
+<<<END>>>
+<<<FILE: MOCK.md>>>
+# MOCK.md —— Mock 行为声明
+
+本原型（NovaDesk · Agent 工作台）**没有任何真实后端**。所有数据与"网络请求"均由前端
+`mock-api.js` 文件内伪造的 Mock 层提供。本文件如实、完整声明代码中实际存在的全部
+Mock 行为。
+
+---
+
+## 1. 被 Mock 的接口 / 交互点
+
+Mock 层以 `window.__mockApi__` 暴露，模拟了 4 个 REST 风格端点，覆盖界面上全部三块交互：
+
+| 暴露方法 | 模拟的端点 | 用途 | 界面上的表现 |
+|---|---|---|---|
+| `listProjects()` | `GET /api/projects` | 获取项目列表摘要 | 左侧项目列表的首次加载 |
+| `getProject(id)` | `GET /api/projects/:id` | 获取单个项目完整数据（含消息历史） | 点击列表项切换「当前项目」，对话区与预览区随之刷新 |
+| `sendMessage(projectId, text)` | `POST /api/projects/:id/messages` | 发送一条用户消息并返回 agent 回复 | 对话区追加用户气泡 + agent 回复气泡；预览区更新产出 |
+| `createProject(name)` | `POST /api/projects` | 新建项目 | 「＋ 新建项目」按钮，新项目插入列表顶部并自动选中 |
+
+界面层（`app.js`）只调用 `window.__mockApi__`，不直接读写数据，模拟了前后端分离的调用方式。
+
+## 2. 数据来源声明
+
+### 2.1 纯虚构编造的数据
+
+- **4 个预置项目**（官网落地页生成 / 每周数据周报 / React 组件工坊 / 发布计划编排）的
+  名称、描述、状态、更新时间：全部为手写虚构，不对应任何真实产品或数据。
+- **每个项目的预置历史消息**（用户提问 + agent 回答文案）：全部为手写虚构文案。
+- **每条预置 agent 消息附带的产出 artifact**（落地页大纲卡、数据周报卡、
+  AsyncButton.jsx 代码、灰度上线 5 步清单）：全部为手写虚构内容，其中周报里的
+  DAU / 留存等数字是随意编造的演示数字，不来自任何真实统计。
+
+这些数据以**内联数组**（`mock-api.js` 中的 `DB` 常量）形式硬编码在代码里。
+
+### 2.2 按规则/模板推导生成的数据
+
+`sendMessage()` 返回的 agent 回复**不是写死的**，由 `generateReply()` 按以下规则从模板推导：
+
+1. 用户消息含关键词 `组件/代码/按钮/函数/脚本/code` → 生成 **code 类产出**：
+   代码内容是把用户原文按标点切分后映射为任务数组的 JS 片段，文件名由
+   项目 id + 会话轮次拼接。
+2. 含 `报告/周报/日报/数据/统计/指标/分析` → 生成 **card 类数据卡片**：
+   卡片中的数值由 `用户输入长度 × 7 + 轮次 × 13` 对 90 取模得到的伪随机种子推导，
+   因此每次结果不同但确定性可复现。
+3. 含 `计划/步骤/清单/方案/安排/拆解/流程` → 生成 **steps 类任务清单**：
+   固定 4 步模板，其中第 1、4 步会把用户原文片段和项目名注入。
+4. 其他消息 → 生成 **card 类"理解摘要"卡片**。
+
+所有模板都会注入：用户原文摘要片段、当前项目名、当前会话轮次序号，
+所以同一句话在不同项目或不同轮次下得到的回复内容不同。
+`createProject()` 生成的欢迎消息与初始卡片也由项目名参数化模板生成。
+
+### 2.3 界面派生数据（非 mock 接口，属正常前端逻辑）
+
+- 列表项的"最近一条消息"摘要：从 `listProjects()` 返回数据的截断，属正常展示逻辑。
+- 预览区内容：取当前项目消息历史中**最近一条带 artifact 的 agent 消息**渲染，
+  因此切换项目、或发送消息产生新回复后，预览都会真实变化。
+
+## 3. 技术手段声明
+
+代码中实际使用的 mock 技术手段，共 3 种，无遗漏：
+
+1. **内联假数据数组**：`mock-api.js` 顶部的 `DB` 常量，作为"数据库"。
+2. **`Promise` + `setTimeout` 模拟异步网络延迟**：`respond()` 包装器给每次调用加
+   300~900ms 的随机延迟（`latency()`），配合界面上的"Agent 思考中…"状态与打字动画，
+   模拟真实请求耗时。**没有**使用 fetch 拦截、XMLHttpRequest 重写或 Service Worker。
+3. **`window.__mockApi__` 假客户端**：以全局对象形式暴露上述 4 个方法，
+   界面层像调用真实 SDK 一样调用它，后续若接真实后端只需替换该对象的实现。
+
+## 4. 已知边界（如实声明）
+
+- 数据仅存在于页面内存中，**刷新页面后**发送的消息和新建的项目会丢失（没有使用
+  localStorage 等持久化手段）。
+- "乐观渲染"的用户消息时间先显示为"刚刚"，待 mock 回包后修正为真实时分。
+- 列表搜索仅为前端过滤，不走 mock 接口。
+<<<END>>>

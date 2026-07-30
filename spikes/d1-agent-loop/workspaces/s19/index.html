@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Emberlight — The Lantern That Learns Your Evenings</title>
+  <style>
+    :root {
+      --bg: #fdf8f2;
+      --ink: #2b2118;
+      --accent: #d97b29;
+      --muted: #6b5f52;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: Georgia, 'Times New Roman', serif;
+      background: var(--bg);
+      color: var(--ink);
+      line-height: 1.6;
+    }
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1.25rem 2rem;
+      border-bottom: 1px solid #e8ddd0;
+    }
+    .logo { font-size: 1.25rem; font-weight: bold; color: var(--accent); }
+    nav a {
+      color: var(--muted);
+      text-decoration: none;
+      margin-left: 1.5rem;
+      font-size: 0.95rem;
+    }
+    nav a:hover { color: var(--accent); }
+    main {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 4rem 1.5rem;
+    }
+    h1 {
+      font-size: 2.5rem;
+      line-height: 1.2;
+      margin-bottom: 1.25rem;
+    }
+    h2 { font-size: 1.5rem; margin: 2.5rem 0 0.75rem; }
+    p { margin-bottom: 1rem; color: var(--muted); }
+    .cta {
+      display: inline-block;
+      margin-top: 1.5rem;
+      padding: 0.85rem 2rem;
+      background: var(--accent);
+      color: #fff;
+      text-decoration: none;
+      border-radius: 6px;
+      font-family: inherit;
+    }
+    .cta:hover { background: #b96418; }
+    footer {
+      text-align: center;
+      padding: 2rem 1.5rem;
+      border-top: 1px solid #e8ddd0;
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <span class="logo">Emberlight</span>
+    <nav>
+      <a href="#features">Features</a>
+      <a href="#story">Our Story</a>
+      <a href="#buy">Buy</a>
+    </nav>
+  </header>
+
+  <main>
+    <h1>The lantern that learns your evenings.</h1>
+    <p>
+      Emberlight is a hand-finished ceramic lantern with a quiet brain inside.
+      Over its first week in your home, it notices when you settle in to read,
+      when you cook dinner, and when you wind down for the night — then it
+      begins matching its glow to your rhythm, warming to candlelight as the
+      evening deepens and dimming itself when the house goes still.
+    </p>
+
+    <h2 id="features">Why you'll love it</h2>
+    <p>
+      There are no apps to install and no schedules to program. A single brass
+      dial on the base is the entire interface: turn it to brighten, press it
+      to pause the learning. The warm-white LED core is tuned to 1800K, the
+      color of an actual flame, and the battery lasts three weeks between
+      charges on its woven USB cord.
+    </p>
+
+    <h2 id="story">Our story</h2>
+    <p>
+      Emberlight began in a drafty workshop in Portland, Maine, where our
+      founders kept blowing out candles while tinkering late into the night.
+      They wanted the calm of firelight without the fuss — and built a lantern
+      that pays attention so you don't have to.
+    </p>
+
+    <p id="buy">
+      Each lantern is glazed, assembled, and tested by hand. Pre-orders open
+      this fall at $129, with free shipping anywhere in the continental US.
+    </p>
+    <a class="cta" href="#buy">Reserve yours</a>
+  </main>
+
+  <footer>
+    &copy; 2025 Emberlight Lantern Co. &middot; Made slowly in Portland, Maine.
+  </footer>
+</body>
+</html>

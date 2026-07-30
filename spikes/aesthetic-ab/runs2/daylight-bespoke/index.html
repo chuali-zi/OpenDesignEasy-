@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OEYdesign — 焙野咖啡 · 秋季落地页</title>
+<link rel="stylesheet" href="assets/fonts/fonts.css">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<!-- ============ 顶栏 48px ============ -->
+<header class="topbar" data-oey-section="topbar">
+  <div class="brand">
+    <span class="brand-mark">O</span>
+    <span class="brand-name">OEYdesign</span>
+  </div>
+  <div class="project">
+    <span class="project-name">焙野咖啡 · 秋季落地页</span>
+    <span class="project-type">Web</span>
+  </div>
+  <div class="top-actions">
+    <span class="save-state"><span class="save-check">✓</span> 已自动保存 <span class="mono">14:32</span></span>
+    <button class="btn-primary" id="exportTop" type="button">导出</button>
+  </div>
+</header>
+
+<main class="layout">
+
+  <!-- ============ 左：对话轨 352px ============ -->
+  <aside class="rail" data-oey-section="chat-rail">
+    <div class="rail-head">
+      <h1>对话</h1>
+      <span class="rail-count">7 轮迭代 · 3 个版本</span>
+    </div>
+
+    <!-- 版本面板：默认收起 -->
+    <div class="versions" data-oey-section="versions">
+      <button class="versions-toggle" id="versionsToggle" type="button" aria-expanded="false">
+        <span>版本历史</span>
+        <span class="versions-right">
+          <span class="mono v-now" id="vNow">v4 当前</span>
+          <svg class="chev" width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 4.5 6 7.5 9 4.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        </span>
+      </button>
+      <ul class="version-list" id="versionList" hidden>
+        <li class="version-row is-current" data-v="v4">
+          <span class="mono v-tag">v4</span>
+          <span class="v-desc">订阅区块 · 主标题字重</span>
+          <span class="mono v-time">14:32</span>
+          <span class="v-badge">当前</span>
+        </li>
+        <li class="version-row" data-v="v3">
+          <span class="mono v-tag">v3</span>
+          <span class="v-desc">豆单三卡 · 副标题文案</span>
+          <span class="mono v-time">14:16</span>
+        </li>
+        <li class="version-row" data-v="v2">
+          <span class="mono v-tag">v2</span>
+          <span class="v-desc">主标题两行 · CTA 强化</span>
+          <span class="mono v-time">13:54</span>
+        </li>
+        <li class="version-row" data-v="v1">
+          <span class="mono v-tag">v1</span>
+          <span class="v-desc">初始生成</span>
+          <span class="mono v-time">13:22</span>
+        </li>
+      </ul>
+    </div>
+
+    <!-- 对话流 -->
+    <div class="chat" id="chat">
+
+      <div class="turn user">
+        <div class="turn-meta"><span class="who">你</span><span class="mono time">13:20</span></div>
+        <div class="bubble">帮我做一个手冲咖啡品牌的秋季落地页，暖色调，要有当季豆单和订阅入口。</div>
+      </div>
+
+      <div class="turn agent">
+        <div class="spine"><span class="mono vchip">v1</span><span class="spine-line"></span></div>
+        <div class="turn-body">
+          <div class="turn-meta"><span class="who">OEY</span><span class="mono time">13:22</span></div>
+          <p>已生成初版：导航、首屏、豆单、页脚四个区块。产物用暖橙 + 深墨的独立配色，首屏主标题先放了占位文案，你看看方向对不对。</p>
+        </div>
+      </div>
+
+      <div class="turn user">
+        <div class="turn-meta"><span class="who">你</span><span class="mono time">13:41</span></div>
+        <div class="bubble">方向对。但主标题「清晨第一杯，值得被认真对待」太长，压到两行以内。</div>
+      </div>
+
+      <div class="turn agent">
+        <div class="spine"><span class="mono vchip">v2</span><span class="spine-line"></span></div>
+        <div class="turn-body">
+          <div class="turn-meta"><span class="who">OEY</span><span class="mono time">13:43</span></div>
+          <p>已把 <button class="obj-chip" type="button" data-target="hero-title">hero-title</button> 字号从 34px 调到 26px、行宽收窄，现在稳定两行。悬停这里可以在画布上确认我改的是它。</p>
+        </div>
+      </div>
+
+      <div class="turn user">
+        <div class="turn-meta"><span class="who">你</span><span class="mono time">13:52</span></div>
+        <div class="bubble">首屏主按钮不够醒目，和背景糊在一起了。</div>
+      </div>
+
+      <div class="turn agent">
+        <div class="spine"><span class="mono vchip">v2</span><span class="spine-line"></span></div>
+        <div class="turn-body">
+          <div class="turn-meta"><span class="who">OEY</span><span class="mono time">13:54</span></div>
+          <p><button class="obj-chip" type="button" data-target="hero-cta">hero-cta</button> 底色换成产物体系里的暖橙、文字反白，并加了 2px 深墨描边，对比度过 7:1。</p>
+        </div>
+      </div>
+
+      <div class="turn user">
+        <div class="turn-meta"><span class="who">你</span><span class="mono time">14:02</span></div>
+        <div class="bubble">豆单只有两张卡，加一张凑三张一排；间距也拉开点，现在太挤。</div>
+      </div>
+
+      <div class="turn agent">
+        <div class="spine"><span class="mono vchip">v3</span><span class="spine-line"></span></div>
+        <div class="turn-body">
+          <div class="turn-meta"><span class="who">OEY</span><span class="mono time">14:05</span></div>
+          <p>新增 <button class="obj-chip" type="button" data-target="bean-card-3">bean-card-3</button>（肯尼亚 · 涅里），三卡等宽一排，间距从 16px 拉到 24px：<button class="obj-chip" type="button" data-target="bean-card-1">bean-card-1</button> <button class="obj-chip" type="button" data-target="bean-card-2">bean-card-2</button> <button class="obj-chip" type="button" data-target="bean-card-3">bean-card-3</button></p>
+        </div>
+      </div>
+
+      <div class="turn user">
+        <div class="turn-meta"><span class="who">你</span><span class="mono time">14:15</span></div>
+        <div class="bubble">副标题改成强调产地直烘、每周固定发货。</div>
+      </div>
+
+      <div class="turn agent">
+        <div class="spine"><span class="mono vchip">v3</span><span class="spine-line"></span></div>
+        <div class="turn-body">
+          <div class="turn-meta"><span class="who">OEY</span><span class="mono time">14:16</span></div>
+          <p><button class="obj-chip" type="button" data-target="hero-subtitle">hero-subtitle</button> 文案已改为「产地直烘，每周三烘焙当天发出」，字号层级不动。</p>
+        </div>
+      </div>
+
+      <div class="turn user">
+        <div class="turn-meta"><span class="who">你</span><span class="mono time">14:24</span></div>
+        <div class="bubble">底部加一个订阅区块，能填邮箱的那种。</div>
+      </div>
+
+      <div class="turn agent">
+        <div class="spine"><span class="mono vchip">v4</span><span class="spine-line"></span></div>
+        <div class="turn-body">
+          <div class="turn-meta"><span class="who">OEY</span><span class="mono time">14:26</span></div>
+          <p>新增 <button class="obj-chip" type="button" data-target="subscribe-block">subscribe-block</button>：标题、邮箱输入框和提交按钮，配色延续产物自身的暖橙体系。</p>
+        </div>
+      </div>
+
+      <div class="turn user">
+        <div class="turn-meta"><span class="who">你</span><span class="mono time">14:30</span></div>
+        <div class="bubble">主标题字重再重一点，现在的衬线有点飘。</div>
+      </div>
+
+      <div class="turn agent">
+        <div class="spine"><span class="mono vchip">v4</span><span class="spine-line"></span></div>
+        <div class="turn-body">
+          <div class="turn-meta"><span class="who">OEY</span><span class="mono time">14:32</span></div>
+          <p><button class="obj-chip" type="button" data-target="hero-title">hero-title</button> 字重从 500 提到 700，并收紧字距，衬线骨架稳了。这就是当前版本 v4。</p>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- 输入区 -->
+    <form class="composer" id="composer">
+      <textarea id="composerInput" rows="2" placeholder="继续描述修改意见，例如「卡片价格字号小一点」…"></textarea>
+      <div class="composer-row">
+        <span class="composer-hint">Enter 发送 · Shift+Enter 换行</span>
+        <button class="btn-primary send-btn" type="submit">发送</button>
+      </div>
+    </form>
+  </aside>
+
+  <!-- ============ 右：画布台 ============ -->
+  <section class="bench" data-oey-section="bench">
+
+    <div class="toolbar" id="toolbar">
+      <div class="tb-left">
+        <span class="tb-title">焙野咖啡 · 落地页</span>
+        <span class="tb-status"><span class="save-check">✓</span> 已保存</span>
+      </div>
+      <div class="tb-center" role="group" aria-label="预览尺寸">
+        <button class="dev-btn is-on" type="button" data-w="desktop">桌面</button>
+        <button class="dev-btn" type="button" data-w="tablet">平板</button>
+        <button class="dev-btn" type="button" data-w="phone">手机</button>
+      </div>
+      <div class="tb-right">
+        <span class="mono tb-ver" id="tbVer">v4</span>
+        <button class="btn-primary" id="exportBench" type="button">导出</button>
+      </div>
+    </div>
+
+    <div class="canvas" id="canvas">
+      <div class="artboard w-desktop" id="artboard">
+
+        <!-- ===== 内层产物：焙野咖啡落地页（独立视觉语言） ===== -->
+        <div class="page" id="page">
+
+          <nav class="p-nav" data-oey-section="nav" data-oey-object="nav-bar">
+            <div class="p-logo"><span class="p-logo-mark"></span>焙野 <em>BEYÉ</em></div>
+            <div class="p-nav-links">
+              <a href="#beans">当季豆单</a>
+              <a href="#brew">冲煮指南</a>
+              <a href="#stores">门店</a>
+              <a href="#about">关于我们</a>
+            </div>
+            <a class="p-nav-cta" href="#subscribe">订阅月历</a>
+          </nav>
+
+          <header class="p-hero" data-oey-section="hero">
+            <div class="p-hero-text">
+              <p class="p-eyebrow">2024 秋季 · 产地直烘</p>
+              <h1 class="p-title" data-oey-object="hero-title">清晨第一杯，值得被认真对待</h1>
+              <p class="p-sub" data-oey-object="hero-subtitle">产地直烘，每周三烘焙当天发出——从埃塞耶加雪菲到云南保山，风味在最佳赏味期内抵达你的杯子。</p>
+              <div class="p-cta-row">
+                <a class="p-cta" href="#beans" data-oey-object="hero-cta">选购当季豆单</a>
+                <a class="p-cta-ghost" href="#brew">查看冲煮指南</a>
+              </div>
+              <dl class="p-stats">
+                <div><dt>38</dt><dd>本季烘焙炉次</dd></div>
+                <div><dt>4</dt><dd>直采产区</dd></div>
+                <div><dt>72h</dt><dd>烘到发货上限</dd></div>
+              </dl>
+            </div>
+            <div class="p-hero-visual" aria-hidden="true">
+              <div class="p-disc">
+                <div class="p-disc-ring"></div>
+                <div class="p-disc-core">
+                  <span>本周豆</span>
+                  <strong>耶加雪菲 G1</strong>
+                  <span>水洗 · 浅烘</span>
+                </div>
+              </div>
+            </div>
+          </header>
+
+          <section class="p-beans" id="beans" data-oey-section="beans">
+            <div class="p-sec-head">
+              <h2>当季豆单</h2>
+              <p>每周三更新，售罄即下架。</p>
+            </div>
+            <div class="p-cards">
+              <article class="p-card" data-oey-object="bean-card-1">
+                <div class="p-swatch sw-1"></div>
+                <h3>埃塞俄比亚 · 耶加雪菲 G1</h3>
+                <p class="p-notes">柑橘 / 茉莉 / 蜂蜜</p>
+                <div class="p-roast"><span class="on"></span><span class="on"></span><span></span><span></span><span></span><em>浅烘</em></div>
+                <div class="p-card-foot"><strong>¥98 / 200g</strong><button type="button">加入清单</button></div>
+              </article>
+              <article class="p-card" data-oey-object="bean-card-2">
+                <div class="p-swatch sw-2"></div>
+                <h3>云南 · 保山 厌氧日晒</h3>
+                <p class="p-notes">热带水果 / 酒香 / 可可尾韵</p>
+                <div class="p-roast"><span class="on"></span><span class="on"></span><span class="on"></span><span></span><span></span><em>中烘</em></div>
+                <div class="p-card-foot"><strong>¥78 / 200g</strong><button type="button">加入清单</button></div>
+              </article>
+              <article class="p-card" data-oey-object="bean-card-3">
+                <div class="p-swatch sw-3"></div>
+                <h3>肯尼亚 · 涅里 AA</h3>
+                <p class="p-notes">黑加仑 / 红糖 / 明亮酸质</p>
+                <div class="p-roast"><span class="on"></span><span class="on"></span><span></span><span></span><span></span><em>浅烘</em></div>
+                <div class="p-card-foot"><strong>¥108 / 200g</strong><button type="button">加入清单</button></div>
+              </article>
+            </div>
+          </section>
+
+          <section class="p-subscribe" id="subscribe" data-oey-section="subscribe">
+            <div class="p-sub-block" data-oey-object="subscribe-block">
+              <h2>订阅焙野月历</h2>
+              <p>每月一封：新豆上架、冲煮参数和门店杯测活动。不发广告，随时退订。</p>
+              <form class="p-sub-form" id="pSubForm">
+                <input type="email" placeholder="you@example.com" aria-label="邮箱">
+                <button type="submit">订阅</button>
+              </form>
+              <p class="p-sub-note" id="pSubNote">已有 2,400 位咖啡爱好者在收信。</p>
+            </div>
+          </section>
+
+          <footer class="p-footer" data-oey-section="footer" data-oey-object="site-footer">
+            <div class="p-foot-brand">焙野 BEYÉ<small>烘好每一炉，从 2019 开始。</small></div>
+            <div class="p-foot-cols">
+              <div><strong>豆单</strong><a href="#beans">当季</a><a href="#beans">订阅装</a></div>
+              <div><strong>指南</strong><a href="#brew">手冲参数</a><a href="#brew">研磨度对照</a></div>
+              <div><strong>联系</strong><a href="#about">门店地址</a><a href="#about">合作洽谈</a></div>
+            </div>
+            <div class="p-foot-copy">© 2024 焙野咖啡</div>
+          </footer>
+
+          <!-- 套准锚点覆盖层 -->
+          <div class="reg-overlay" id="regOverlay" aria-hidden="true">
+            <span class="reg-corner tl"></span>
+            <span class="reg-corner tr"></span>
+            <span class="reg-corner bl"></span>
+            <span class="reg-corner br"></span>
+            <span class="reg-label mono" id="regLabel">hero-title</span>
+          </div>
+
+        </div>
+        <!-- ===== 内层产物结束 ===== -->
+
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<div class="toast" id="toast" role="status"></div>
+
+<script src="app.js"></script>
+</body>
+</html>

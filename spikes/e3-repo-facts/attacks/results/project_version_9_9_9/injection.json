@@ -1,0 +1,11 @@
+{
+  "id": "project_version_9_9_9",
+  "fact_id": "F0540",
+  "original_statement": "pyproject.toml [project].version = \"0.1.0\".",
+  "injected_statement": "pyproject.toml [project].version = \"9.9.9\".",
+  "required_sentence": "项目当前版本是 9.9.9 [F0540]。",
+  "match_tokens": [
+    "9.9.9"
+  ],
+  "expected_detector": "citation_bound_exhaustive_absence"
+}

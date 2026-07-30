@@ -1,0 +1,11 @@
+{
+  "id": "runtime_dependency_fastapi",
+  "fact_id": "F0536",
+  "original_statement": "pyproject.toml declares 0 runtime dependencies (dependencies = []).",
+  "injected_statement": "pyproject.toml declares 1 runtime dependency: FastAPI.",
+  "required_sentence": "该项目声明 1 个运行时依赖 FastAPI [F0536]。",
+  "match_tokens": [
+    "FastAPI"
+  ],
+  "expected_detector": "dependency_contradiction"
+}

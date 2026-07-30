@@ -1,0 +1,939 @@
+{
+  "calibration_T0_steps": 8,
+  "interrupt_points": [
+    2,
+    4,
+    6
+  ],
+  "repeats_per_point": 3,
+  "records": [
+    {
+      "run_id": "ip2_r1",
+      "interrupt_step_target": 2,
+      "finished_before_interrupt": false,
+      "precrash": {
+        "termination_reason": "simulated_crash",
+        "budget": {
+          "steps": 2,
+          "prompt_tokens": 1799,
+          "completion_tokens": 410,
+          "reasoning_tokens": 57,
+          "total_tokens": 2209,
+          "api_elapsed_s": 14.731,
+          "wall_clock_s": 14.743
+        },
+        "written_paths": [
+          "index.html"
+        ]
+      },
+      "path_a_resume": {
+        "termination_reason": "self_terminated",
+        "total_budget": {
+          "steps": 8,
+          "prompt_tokens": 14678,
+          "completion_tokens": 1335,
+          "reasoning_tokens": 88,
+          "total_tokens": 16013,
+          "api_elapsed_s": 52.131,
+          "wall_clock_s": 52.184
+        },
+        "post_resume_tool_calls": 5,
+        "duplicate_writes": [],
+        "duplicate_reads": [],
+        "validate": {
+          "ok": true,
+          "files": {
+            "index.html": {
+              "exists": true,
+              "structurally_ok": true,
+              "bytes": 737
+            },
+            "styles.css": {
+              "exists": true,
+              "structurally_ok": true,
+              "bytes": 612
+            },
+            "script.js": {
+              "exists": true,
+              "structurally_ok": true,
+              "bytes": 439
+            }
+          }
+        },
+        "final_message_preview": "All three files are in place and each was read back and verified right after creation.\n\nSummary of what I built:\n\n- **index.html** \u2014 A valid HTML5 page titled \"Lanternbug \u2014 A Tiny Night Light\" with a heading, a paragraph describing Lanternbug (a fictional beetle-shaped pocket night light with tap co"
+      },
+      "path_b_rerun": {
+        "termination_reason": "self_terminated",
+        "fresh_only_budget": {
+          "steps": 8,
+          "prompt_tokens": 13959,
+          "completion_tokens": 1416,
+          "reasoning_tokens": 74,
+          "total_tokens": 15375,
+          "api_elapsed_s": 53.571,
+          "wall_clock_s": 53.621
+        },
+        "total_budget": {
+          "steps": 10,
+          "prompt_tokens": 15758,
+          "completion_tokens": 1826,
+          "reasoning_tokens": 131,
+          "total_tokens": 17584,
+          "api_elapsed_s": 68.302,
+          "wall_clock_s": 68.364
+        },
+        "validate": {
+          "ok": true,
+          "files": {
+            "index.html": {
+              "exists": true,
+              "structurally_ok": true,
+              "bytes": 821
+            },
+            "styles.css": {
+              "exists": true,
+              "structurally_ok": true,
+              "bytes": 654
+            },
+            "script.js": {
+              "exists": true,
+              "structurally_ok": true,
+              "bytes": 618
+            }
+          }
+        }
+      },
+      "savings_pct_resume_vs_rerun": {
+        "steps": 20.0,
+        "total_tokens": 8.9,
+        "wall_clock_s": 23.7
+      }
+    },
+    {
+      "run_id": "ip2_r2",
+      "interrupt_step_target": 2,
+      "finished_before_interrupt": false,
+      "precrash": {
+        "termination_reason": "simulated_crash",
+        "budget": {
+          "steps": 2,
+          "prompt_tokens": 1802,
+          "completion_tokens": 378,
+          "reasoning_tokens": 16,
+          "total_tokens": 2180,
+          "api_elapsed_s": 14.56,
+          "wall_clock_s": 14.574
+        },
+        "written_paths": [
+          "index.html"
+        ]
+      },
+      "path_a_resume": {
+        "termination_reason": "self_terminated",
+        "total_budget": {
+          "steps": 8,
+          "prompt_tokens": 14312,
+          "completion_tokens": 1184,
+          "reasoning_tokens": 47,
+          "total_tokens": 15496,
+          "api_elapsed_s": 49.527,
+          "wall_clock_s": 49.573
+        },
+        "post_resume_tool_calls": 5,
+        "duplicate_writes": [],
+        "duplicate_reads": [],
+        "validate": {
+          "ok": true,
+          "files": {
+            "index.html": {
+              "exists": true,
+              "structurally_ok": true,
+              "bytes": 836
+            },
+            "styles.css": {
+              "exists": true,
+              "structurally_ok": true,
+              "bytes": 517
+            },
+            "script.js": {
+              "exists": true,
+              "structurally_ok": true,
+              "bytes": 330
+            }
+          }
+        },
+        "final_message_preview": "All three files are in place and each was read back and verified right after creation.\n\nSummary of what I built \u2014 a tiny static site for a fictional product:\n\n- **index.html**: Valid HTML5 page titled \"Driftwood Kettle Co.\" with a heading, a real paragraph describing the fictional \"Ember\" hand-cast "
+      },
+      "path_b_rerun": {
+        "termination_reason": "self_terminated",
+        "fresh_only_budget": {
+          "steps": 9,
+          "prompt_tokens": 17054,
+          "completion_tokens": 1522,
+          "reasoning_tokens": 71,
+          "total_tokens": 18576,
+          "api_elapsed_s": 59.043,
+          "wall_clock_s": 59.098
+        },
+        "total_budget": {
+          "steps": 11,
+          "prompt_tokens": 18856,
+          "completion_tokens": 1900,
+          "reasoning_tokens": 87,
+          "total_tokens": 20756,
+          "api_elapsed_s": 73.603,
+          "wall_clock_s": 73.672
+        },
+        "validate": {
+          "ok": true,
+          "files": {
+            "index.html": {
+              "exists": true,
+              "structurally_ok": true,
+              "bytes": 833
+            },
+            "styles.css": {
+              "exists": true,
+              "structurally_ok": true,
+              "bytes": 612
+            },
+            "script.js": {
+              "exists": true,
+              "structurally_ok": true,
+              "bytes": 736
+            }
+          }
+        }
+      },
+      "savings_pct_resume_vs_rerun": {
+        "steps": 27.3,
+        "total_tokens": 25.3,
+        "wall_clock_s": 32.7
+      }
+    },
+    {
+      "run_id": "ip2_r3",
+      "interrupt_step_target": 2,
+      "finished_before_interrupt": false,
+      "precrash": {
+        "termination_reason": "simulated_crash",
+        "budget": {
+          "steps": 2,
+          "prompt_tokens": 1846,
+          "completion_tokens": 879,
+          "reasoning_tokens": 206,
+          "total_tokens": 2725,
+          "api_elapsed_s": 25.381,
+          "wall_clock_s": 25.397
+        },
+        "written_paths": [
+          "index.html",
+          "styles.css"
+        ]
+      },
+      "path_a_resume": {
+        "termination_reason": "self_terminated",
+        "total_budget": {
+          "steps": 5,
+          "prompt_tokens": 8898,
+          "completion_tokens": 1522,
+          "reasoning_tokens": 236,
+          "total_tokens": 10420,
+          "api_elapsed_s": 48.143,
+          "wall_clock_s": 48.193
+        },
+        "post_resume_tool_calls": 4,
+        "duplicate_writes": [],
+        "duplicate_reads": [],
+        "validate": {
+          "ok": true,
+          "files": {
+            "index.html": {
+              "exists": true,
+              "structurally_ok": true,
+              "bytes": 767
+            },
+            "styles.css": {
+              "exists": true,
+              "structurally_ok": true,
+              "bytes": 655
+            },
+            "script.js": {
+              "exists": true,
+              "structurally_ok": true,
+              "bytes": 612
+            }
+          }
+        },
+        "final_message_preview": "All three files exist and each has been read back and verified. Here's a summary of what I built:\n\n**PebblePod** \u2014 a tiny 3-file static website for a fictional pocket-sized plant monitor:\n\n- **index.html** \u2014 Valid HTML5 page with a doctype, title (\"PebblePod \u2014 The Pocket Plant Monitor\"), an `<h1>` h"
+      },
+      "path_b_rerun": {
+        "termination_reason": "self_terminated",
+        "fresh_only_budget": {
+          "steps": 9,
+          "prompt_tokens": 16606,
+          "completion_tokens": 1402,
+          "reasoning_tokens": 43,
+          "total_tokens": 18008,
+          "api_elapsed_s": 58.756,
+          "wall_clock_s": 58.81
+        },
+        "total_budget": {
+          "steps": 11,
+          "prompt_tokens": 18452,
+          "completion_tokens": 2281,
+          "reasoning_tokens": 249,
+          "total_tokens": 20733,
+          "api_elapsed_s": 84.137,
+          "wall_clock_s": 84.207
+        },
+        "validate": {
+          "ok": true,
+          "files": {
+            "index.html": {
+              "exists": true,
+              "structurally_ok": true,
+              "bytes": 770
+            },
+            "styles.css": {
+              "exists": true,
+              "structurally_ok": true,
+              "bytes": 660
+            },
+            "script.js": {
+              "exists": true,
+              "structurally_ok": true,
+              "bytes": 466
+            }
+          }
+        }
+      },
+      "savings_pct_resume_vs_rerun": {
+        "steps": 54.5,
+        "total_tokens": 49.7,
+        "wall_clock_s": 42.8
+      }
+    },
+    {
+      "run_id": "ip4_r1",
+      "interrupt_step_target": 4,
+      "finished_before_interrupt": false,
+      "precrash": {
+        "termination_reason": "simulated_crash",
+        "budget": {
+          "steps": 4,
+          "prompt_tokens": 4391,
+          "completion_tokens": 971,
+          "reasoning_tokens": 102,
+          "total_tokens": 5362,
+          "api_elapsed_s": 38.506,
+          "wall_clock_s": 38.522
+        },
+        "written_paths": [
+          "index.html",
+          "styles.css"
+        ]
+      },
+      "path_a_resume": {
+        "termination_reason": "self_terminated",
+        "total_budget": {
+          "steps": 9,
+          "prompt_tokens": 18291,
+          "completion_tokens": 1673,
+          "reasoning_tokens": 107,
+          "total_tokens": 19964,
+          "api_elapsed_s": 74.354,
+          "wall_clock_s": 74.406
+        },
+        "post_resume_tool_calls": 4,
+        "duplicate_writes": [],
+        "duplicate_reads": [],
+        "validate": {
+          "ok": true,
+          "files": {
+            "index.html": {
+              "exists": true,
+              "structurally_ok": true,
+              "bytes": 1011
+            },
+            "styles.css": {
+              "exists": true,
+              "structurally_ok": true,
+              "bytes": 796
+            },
+            "script.js": {
+              "exists": true,
+              "structurally_ok": true,
+              "bytes": 847
+            }
+          }
+        },
+        "final_message_preview": "All three files exist and each has been read back and verified.\n\nSummary of what I built:\n- **index.html** \u2014 A valid HTML5 page titled \"CopperKettle \u2014 The Tiny Camp Kettle\" with an `<h1>` heading, a real paragraph describing a fictional hand-hammered palm-sized copper camp kettle, a \"Say hello\" butt"
+      },
+      "path_b_rerun": {
+        "termination_reason": "self_terminated",
+        "fresh_only_budget": {
+          "steps": 7,
+          "prompt_tokens": 10981,
+          "completion_tokens": 1225,
+          "reasoning_tokens": 220,
+          "total_tokens": 12206,
+          "api_elapsed_s": 58.163,
+          "wall_clock_s": 58.198
+        },
+        "total_budget": {
+          "steps": 11,
+          "prompt_tokens": 15372,
+          "completion_tokens": 2196,
+          "reasoning_tokens": 322,
+          "total_tokens": 17568,
+          "api_elapsed_s": 96.669,
+          "wall_clock_s": 96.72
+        },
+        "validate": {
+          "ok": true,
+          "files": {
+            "index.html": {
+              "exists": true,
+              "structurally_ok": true,
+              "bytes": 645
+            },
+            "styles.css": {
+              "exists": true,
+              "structurally_ok": true,
+              "bytes": 440
+            },
+            "script.js": {
+              "exists": true,
+              "structurally_ok": true,
+              "bytes": 228
+            }
+          }
+        }
+      },
+      "savings_pct_resume_vs_rerun": {
+        "steps": 18.2,
+        "total_tokens": -13.6,
+        "wall_clock_s": 23.1
+      }
+    },
+    {
+      "run_id": "ip4_r2",
+      "interrupt_step_target": 4,
+      "finished_before_interrupt": false,
+      "precrash": {
+        "termination_reason": "simulated_crash",
+        "budget": {
+          "steps": 4,
+          "prompt_tokens": 4263,
+          "completion_tokens": 728,
+          "reasoning_tokens": 34,
+          "total_tokens": 4991,
+          "api_elapsed_s": 28.518,
+          "wall_clock_s": 28.532
+        },
+        "written_paths": [
+          "index.html",
+          "styles.css"
+        ]
+      },
+      "path_a_resume": {
+        "termination_reason": "self_terminated",
+        "total_budget": {
+          "steps": 9,
+          "prompt_tokens": 16465,
+          "completion_tokens": 1418,
+          "reasoning_tokens": 39,
+          "total_tokens": 17883,
+          "api_elapsed_s": 65.161,
+          "wall_clock_s": 65.198
+        },
+        "post_resume_tool_calls": 4,
+        "duplicate_writes": [],
+        "duplicate_reads": [],
+        "validate": {
+          "ok": true,
+          "files": {
+            "index.html": {
+              "exists": true,
+              "structurally_ok": true,
+              "bytes": 851
+            },
+            "styles.css": {
+              "exists": true,
+              "structurally_ok": true,
+              "bytes": 543
+            },
+            "script.js": {
+              "exists": true,
+              "structurally_ok": true,
+              "bytes": 760
+            }
+          }
+        },
+        "final_message_preview": "All three files exist and each was read back and verified right after creation.\n\nSummary of what I built:\n\n- **index.html** \u2014 A valid HTML5 page titled \"Moonjar \u2014 The Bedside Light That Wakes You Gently.\" It contains an `<h1>` heading and a real paragraph describing Moonjar, a fictional jar-shaped s"
+      },
+      "path_b_rerun": {
+        "termination_reason": "self_terminated",
+        "fresh_only_budget": {
+          "steps": 9,
+          "prompt_tokens": 16752,
+          "completion_tokens": 1518,
+          "reasoning_tokens": 132,
+          "total_tokens": 18270,
+          "api_elapsed_s": 75.878,
+          "wall_clock_s": 75.916
+        },
+        "total_budget": {
+          "steps": 13,
+          "prompt_tokens": 21015,
+          "completion_tokens": 2246,
+          "reasoning_tokens": 166,
+          "total_tokens": 23261,
+          "api_elapsed_s": 104.396,
+          "wall_clock_s": 104.448
+        },
+        "validate": {
+          "ok": true,
+          "files": {
+            "index.html": {
+              "exists": true,
+              "structurally_ok": true,
+              "bytes": 783
+            },
+            "styles.css": {
+              "exists": true,
+              "structurally_ok": true,
+              "bytes": 724
+            },
+            "script.js": {
+              "exists": true,
+              "structurally_ok": true,
+              "bytes": 477
+            }
+          }
+        }
+      },
+      "savings_pct_resume_vs_rerun": {
+        "steps": 30.8,
+        "total_tokens": 23.1,
+        "wall_clock_s": 37.6
+      }
+    },
+    {
+      "run_id": "ip4_r3",
+      "interrupt_step_target": 4,
+      "finished_before_interrupt": false,
+      "precrash": {
+        "termination_reason": "simulated_crash",
+        "budget": {
+          "steps": 4,
+          "prompt_tokens": 4303,
+          "completion_tokens": 826,
+          "reasoning_tokens": 40,
+          "total_tokens": 5129,
+          "api_elapsed_s": 40.62,
+          "wall_clock_s": 40.639
+        },
+        "written_paths": [
+          "index.html",
+          "styles.css"
+        ]
+      },
+      "path_a_resume": {
+        "termination_reason": "self_terminated",
+        "total_budget": {
+          "steps": 8,
+          "prompt_tokens": 14047,
+          "completion_tokens": 1457,
+          "reasoning_tokens": 91,
+          "total_tokens": 15504,
+          "api_elapsed_s": 74.426,
+          "wall_clock_s": 74.474
+        },
+        "post_resume_tool_calls": 3,
+        "duplicate_writes": [],
+        "duplicate_reads": [],
+        "validate": {
+          "ok": true,
+          "files": {
+            "index.html": {
+              "exists": true,
+              "structurally_ok": true,
+              "bytes": 916
+            },
+            "styles.css": {
+              "exists": true,
+              "structurally_ok": true,
+              "bytes": 663
+            },
+            "script.js": {
+              "exists": true,
+              "structurally_ok": true,
+              "bytes": 545
+            }
+          }
+        },
+        "final_message_preview": "All three files are created and self-checked. Here's a summary of what I built:\n\n**PocketSprout \u2014 Tiny Terrarium Kits** (a fictional product page)\n\n- **index.html** \u2014 Valid HTML5 page with a `<title>`, an `<h1>` heading, a real paragraph describing PocketSprout (palm-sized moss terrarium kits with a"
+      },
+      "path_b_rerun": {
+        "termination_reason": "self_terminated",
+        "fresh_only_budget": {
+          "steps": 8,
+          "prompt_tokens": 15251,
+          "completion_tokens": 1424,
+          "reasoning_tokens": 70,
+          "total_tokens": 16675,
+          "api_elapsed_s": 56.594,
+          "wall_clock_s": 56.63
+        },
+        "total_budget": {
+          "steps": 12,
+          "prompt_tokens": 19554,
+          "completion_tokens": 2250,
+          "reasoning_tokens": 110,
+          "total_tokens": 21804,
+          "api_elapsed_s": 97.214,
+          "wall_clock_s": 97.269
+        },
+        "validate": {
+          "ok": true,
+          "files": {
+            "index.html": {
+              "exists": true,
+              "structurally_ok": true,
+              "bytes": 786
+            },
+            "styles.css": {
+              "exists": true,
+              "structurally_ok": true,
+              "bytes": 641
+            },
+            "script.js": {
+              "exists": true,
+              "structurally_ok": true,
+              "bytes": 650
+            }
+          }
+        }
+      },
+      "savings_pct_resume_vs_rerun": {
+        "steps": 33.3,
+        "total_tokens": 28.9,
+        "wall_clock_s": 23.4
+      }
+    },
+    {
+      "run_id": "ip6_r1",
+      "interrupt_step_target": 6,
+      "finished_before_interrupt": false,
+      "precrash": {
+        "termination_reason": "simulated_crash",
+        "budget": {
+          "steps": 6,
+          "prompt_tokens": 7991,
+          "completion_tokens": 861,
+          "reasoning_tokens": 50,
+          "total_tokens": 8852,
+          "api_elapsed_s": 35.241,
+          "wall_clock_s": 35.266
+        },
+        "written_paths": [
+          "index.html",
+          "script.js",
+          "styles.css"
+        ]
+      },
+      "path_a_resume": {
+        "termination_reason": "self_terminated",
+        "total_budget": {
+          "steps": 9,
+          "prompt_tokens": 14991,
+          "completion_tokens": 1213,
+          "reasoning_tokens": 68,
+          "total_tokens": 16204,
+          "api_elapsed_s": 54.435,
+          "wall_clock_s": 54.475
+        },
+        "post_resume_tool_calls": 2,
+        "duplicate_writes": [],
+        "duplicate_reads": [],
+        "validate": {
+          "ok": true,
+          "files": {
+            "index.html": {
+              "exists": true,
+              "structurally_ok": true,
+              "bytes": 858
+            },
+            "styles.css": {
+              "exists": true,
+              "structurally_ok": true,
+              "bytes": 313
+            },
+            "script.js": {
+              "exists": true,
+              "structurally_ok": true,
+              "bytes": 270
+            }
+          }
+        },
+        "final_message_preview": "All three files are created and self-checked. Summary of what I built:\n\n**A tiny static website for a fictional product: the \"Moonbeam Mug,\" a self-warming travel cup.**\n\n- **index.html** \u2014 Valid HTML5 page with a `<title>`, an `<h1>` heading, one paragraph of real product copy describing the mug's "
+      },
+      "path_b_rerun": {
+        "termination_reason": "self_terminated",
+        "fresh_only_budget": {
+          "steps": 8,
+          "prompt_tokens": 13641,
+          "completion_tokens": 1363,
+          "reasoning_tokens": 67,
+          "total_tokens": 15004,
+          "api_elapsed_s": 53.948,
+          "wall_clock_s": 53.99
+        },
+        "total_budget": {
+          "steps": 14,
+          "prompt_tokens": 21632,
+          "completion_tokens": 2224,
+          "reasoning_tokens": 117,
+          "total_tokens": 23856,
+          "api_elapsed_s": 89.189,
+          "wall_clock_s": 89.256
+        },
+        "validate": {
+          "ok": true,
+          "files": {
+            "index.html": {
+              "exists": true,
+              "structurally_ok": true,
+              "bytes": 831
+            },
+            "styles.css": {
+              "exists": true,
+              "structurally_ok": true,
+              "bytes": 652
+            },
+            "script.js": {
+              "exists": true,
+              "structurally_ok": true,
+              "bytes": 487
+            }
+          }
+        }
+      },
+      "savings_pct_resume_vs_rerun": {
+        "steps": 35.7,
+        "total_tokens": 32.1,
+        "wall_clock_s": 39.0
+      }
+    },
+    {
+      "run_id": "ip6_r2",
+      "interrupt_step_target": 6,
+      "finished_before_interrupt": false,
+      "precrash": {
+        "termination_reason": "simulated_crash",
+        "budget": {
+          "steps": 6,
+          "prompt_tokens": 9349,
+          "completion_tokens": 1021,
+          "reasoning_tokens": 46,
+          "total_tokens": 10370,
+          "api_elapsed_s": 40.997,
+          "wall_clock_s": 41.041
+        },
+        "written_paths": [
+          "index.html",
+          "script.js",
+          "styles.css"
+        ]
+      },
+      "path_a_resume": {
+        "termination_reason": "self_terminated",
+        "total_budget": {
+          "steps": 8,
+          "prompt_tokens": 14605,
+          "completion_tokens": 1297,
+          "reasoning_tokens": 48,
+          "total_tokens": 15902,
+          "api_elapsed_s": 52.8,
+          "wall_clock_s": 52.845
+        },
+        "post_resume_tool_calls": 1,
+        "duplicate_writes": [],
+        "duplicate_reads": [],
+        "validate": {
+          "ok": true,
+          "files": {
+            "index.html": {
+              "exists": true,
+              "structurally_ok": true,
+              "bytes": 703
+            },
+            "styles.css": {
+              "exists": true,
+              "structurally_ok": true,
+              "bytes": 602
+            },
+            "script.js": {
+              "exists": true,
+              "structurally_ok": true,
+              "bytes": 387
+            }
+          }
+        },
+        "final_message_preview": "All three files exist and each was read back and verified right after creation.\n\nSummary of what I built:\n- **index.html** \u2014 A valid HTML5 page titled \"Pebblelamp \u2014 A Tiny Night Light\" with an `<h1>` heading, a real descriptive paragraph about a fictional pebble-shaped night light, a \"Say hello\" but"
+      },
+      "path_b_rerun": {
+        "termination_reason": "self_terminated",
+        "fresh_only_budget": {
+          "steps": 9,
+          "prompt_tokens": 15812,
+          "completion_tokens": 1389,
+          "reasoning_tokens": 89,
+          "total_tokens": 17201,
+          "api_elapsed_s": 55.592,
+          "wall_clock_s": 55.632
+        },
+        "total_budget": {
+          "steps": 15,
+          "prompt_tokens": 25161,
+          "completion_tokens": 2410,
+          "reasoning_tokens": 135,
+          "total_tokens": 27571,
+          "api_elapsed_s": 96.589,
+          "wall_clock_s": 96.673
+        },
+        "validate": {
+          "ok": true,
+          "files": {
+            "index.html": {
+              "exists": true,
+              "structurally_ok": true,
+              "bytes": 842
+            },
+            "styles.css": {
+              "exists": true,
+              "structurally_ok": true,
+              "bytes": 437
+            },
+            "script.js": {
+              "exists": true,
+              "structurally_ok": true,
+              "bytes": 480
+            }
+          }
+        }
+      },
+      "savings_pct_resume_vs_rerun": {
+        "steps": 46.7,
+        "total_tokens": 42.3,
+        "wall_clock_s": 45.3
+      }
+    },
+    {
+      "run_id": "ip6_r3",
+      "interrupt_step_target": 6,
+      "finished_before_interrupt": false,
+      "precrash": {
+        "termination_reason": "simulated_crash",
+        "budget": {
+          "steps": 6,
+          "prompt_tokens": 8183,
+          "completion_tokens": 1077,
+          "reasoning_tokens": 48,
+          "total_tokens": 9260,
+          "api_elapsed_s": 41.873,
+          "wall_clock_s": 41.896
+        },
+        "written_paths": [
+          "index.html",
+          "script.js",
+          "styles.css"
+        ]
+      },
+      "path_a_resume": {
+        "termination_reason": "self_terminated",
+        "total_budget": {
+          "steps": 9,
+          "prompt_tokens": 16337,
+          "completion_tokens": 1429,
+          "reasoning_tokens": 51,
+          "total_tokens": 17766,
+          "api_elapsed_s": 62.182,
+          "wall_clock_s": 62.224
+        },
+        "post_resume_tool_calls": 2,
+        "duplicate_writes": [],
+        "duplicate_reads": [],
+        "validate": {
+          "ok": true,
+          "files": {
+            "index.html": {
+              "exists": true,
+              "structurally_ok": true,
+              "bytes": 730
+            },
+            "styles.css": {
+              "exists": true,
+              "structurally_ok": true,
+              "bytes": 567
+            },
+            "script.js": {
+              "exists": true,
+              "structurally_ok": true,
+              "bytes": 734
+            }
+          }
+        },
+        "final_message_preview": "All three files are created and self-checked. Here's a summary of what I built:\n\n**PebbleDock \u2014 a tiny 3-file static website**\n\n- **index.html** \u2014 A valid HTML5 page for a fictional product called PebbleDock, a palm-sized wireless charger shaped like a smooth river stone. It includes a title, an `<h"
+      },
+      "path_b_rerun": {
+        "termination_reason": "self_terminated",
+        "fresh_only_budget": {
+          "steps": 9,
+          "prompt_tokens": 16328,
+          "completion_tokens": 1334,
+          "reasoning_tokens": 87,
+          "total_tokens": 17662,
+          "api_elapsed_s": 54.062,
+          "wall_clock_s": 54.11
+        },
+        "total_budget": {
+          "steps": 15,
+          "prompt_tokens": 24511,
+          "completion_tokens": 2411,
+          "reasoning_tokens": 135,
+          "total_tokens": 26922,
+          "api_elapsed_s": 95.935,
+          "wall_clock_s": 96.006
+        },
+        "validate": {
+          "ok": true,
+          "files": {
+            "index.html": {
+              "exists": true,
+              "structurally_ok": true,
+              "bytes": 860
+            },
+            "styles.css": {
+              "exists": true,
+              "structurally_ok": true,
+              "bytes": 578
+            },
+            "script.js": {
+              "exists": true,
+              "structurally_ok": true,
+              "bytes": 428
+            }
+          }
+        }
+      },
+      "savings_pct_resume_vs_rerun": {
+        "steps": 40.0,
+        "total_tokens": 34.0,
+        "wall_clock_s": 35.2
+      }
+    }
+  ]
+}

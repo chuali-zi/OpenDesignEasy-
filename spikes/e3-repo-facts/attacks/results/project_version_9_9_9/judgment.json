@@ -1,0 +1,26 @@
+{
+  "attack_id": "project_version_9_9_9",
+  "fact_id": "F0540",
+  "expected_canonical_label": "traceable_but_contradictory",
+  "raw_equivalent_label": "traceable_contradict",
+  "claim_emitted": true,
+  "required_citation_emitted": true,
+  "primary_detected": true,
+  "closed_world_detected": false,
+  "detected_by_either_pass": true,
+  "matched_statements": [
+    {
+      "statement_index": 0,
+      "sentence": "项目当前版本是 9.9.9 [F0540]",
+      "cited_ids": [
+        "F0540"
+      ],
+      "raw_primary": "traceable_contradict",
+      "raw_closed_world": "untraceable",
+      "canonical_primary": "traceable_but_contradictory",
+      "canonical_closed_world": "untraceable",
+      "detail": "cited, but claims content absent from entire repo scan: ['number:9.9.9']",
+      "closed_world_detail": "not found anywhere: ['number:9.9.9']"
+    }
+  ]
+}

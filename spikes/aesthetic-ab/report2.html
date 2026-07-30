@@ -1,0 +1,266 @@
+<!doctype html><html lang="zh"><meta charset="utf-8">
+<title>OEYdesign 审美实验第二轮 — 挑一个（或几个）</title>
+<style>
+body{font:15px/1.65 system-ui,"Microsoft YaHei",sans-serif;margin:0;background:#12100e;color:#f0ece6}
+header{padding:26px 32px;background:#1c1815;border-bottom:2px solid #d9762b}
+h1{margin:0 0 6px;font-size:23px}
+.sub{color:#a49585;font-size:14px}
+.note{background:#2a1f14;border-left:4px solid #d9762b;padding:14px 18px;margin:18px 32px;border-radius:4px}
+.note b{color:#f7b267}
+.terr{margin:30px 32px;padding:20px;background:#171412;border:1px solid #332c25;border-radius:10px}
+h2{margin:0 0 4px;font-size:19px}
+.tag{display:inline-block;background:#d9762b;color:#12100e;font-weight:700;padding:2px 10px;border-radius:4px;margin-right:8px}
+.armdesc{color:#a49585;font-size:14px;margin:0 0 16px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px}
+.route{padding:16px;background:#1e1a17;border:1px solid #332c25;border-radius:8px;min-width:0}
+h4{margin:0 0 4px;font-size:15px}
+.m,.kv{border-collapse:collapse;font-size:13px;margin:10px 0 12px;width:100%}
+.m td,.kv td{border:1px solid #332c25;padding:5px 11px}
+.m td:nth-child(odd),.kv td:first-child{color:#a49585;white-space:nowrap}
+.good{color:#7ee29b;font-weight:700}
+.warn{color:#f7b267;font-weight:700}
+.bad{color:#e28787;font-weight:700}
+.shots{display:flex;gap:12px;overflow-x:auto;padding-bottom:6px}
+figure{margin:0;flex:0 0 auto}
+img{width:600px;border:1px solid #332c25;border-radius:5px;display:block;background:#000}
+figcaption{font-size:11px;color:#a49585;margin-top:5px}
+.dir{background:#141b18;border-left:3px solid #4a8f6b;padding:12px 14px;border-radius:4px;margin:12px 0}
+.dirname{font-weight:700;color:#7ee29b;margin-bottom:4px}
+.swrow{display:flex;gap:6px;margin:10px 0}
+.sw{width:34px;height:34px;border-radius:4px;border:1px solid #332c25}
+.move{background:#1c1712;padding:10px 12px;border-radius:4px;margin-top:10px}
+.ap ul{margin:4px 0 0 18px;padding:0}
+.muted{color:#a49585;font-size:13px}
+code{font-size:12px;color:#d9c9b5}
+.q{margin:20px 32px 44px;padding:16px 20px;background:#161e1a;border-left:4px solid #4a8f6b;border-radius:4px}
+.q h3{margin:0 0 8px;font-size:15px;color:#7ee29b}
+</style>
+<header>
+<h1>审美实验第二轮 — 现在是「挑」，不是「三选一」</h1>
+<div class="sub">3 块视觉领地 × 2 条实现基底 · 同一份 brief 与同一份艺术方向 · Kimi k3 流式 max_tokens=40000 ·
+真实 Chrome、<b>全程零网络</b>渲染</div>
+</header>
+
+<div class="note">
+<b>这一轮和上一轮的结构不同。</b>上一轮把 A/B/C 摆成三选一，但它们不在同一个轴上：
+「有没有艺术方向」是约束创作的问题，「用不用设计系统」是实现基底的问题。这一轮把两者拆开：
+<b>艺术方向阶段常开</b>，<b>实现基底可选</b>。<br><br>
+<b>每块领地下的两张图吃的是同一份艺术方向</b>，所以左右差异只能归因于实现基底，
+不会和方向的差异混在一起。<br><br>
+<b>三块领地是被指定的，不是 agent 自选的。</b>原因见 <code>RESULT2.md</code>：
+让 agent 自己定方向时，5 次独立生成全部收敛到「暖纸色 + 砖橙 + 校样台」，
+强调色连前两位都一样。方向的多样性必须从模型之外供给。
+</div>
+
+<div class="terr">
+<h2>分层测量：第一轮那个「token 纪律」结论错在哪</h2>
+<p class="armdesc">第一轮用<b>整页</b>颜色数判定 B 组胜出（5-7 色 vs A 的 23-31）。但产物里有两层设计，
+这个口径把它们算成了一层。分层量之后：B2 的<b>内层产物只有 4 色，比外壳还少，整页数等于外壳数</b>——
+意思是那张咖啡落地页整个用的就是工作台的调色板，<b>两层根本没隔离</b>。
+第一轮把「没做出独立产物」当成了「token 纪律好」。</p>
+<table class="m" style="width:auto">
+  <tr><td>轮次</td><td>产物</td><td>外壳色数</td><td>内层色数</td><td>整页色数</td></tr>
+  <tr><td>第一轮</td><td>A1</td><td class="warn">19</td><td>13</td><td>31</td></tr><tr><td>第一轮</td><td>A2</td><td class="warn">14</td><td>11</td><td>23</td></tr><tr><td>第一轮</td><td>B1</td><td class="good">6</td><td>7</td><td>7</td></tr><tr><td>第一轮</td><td>B2</td><td class="good">5</td><td>4</td><td>5</td></tr><tr><td>第一轮</td><td>C1</td><td class="warn">13</td><td>12</td><td>17</td></tr><tr><td>第一轮</td><td>C2</td><td class="warn">23</td><td>17</td><td>30</td></tr><tr><td>第二轮</td><td>daylight-bespoke</td><td class="good">6</td><td>10</td><td>13</td></tr><tr><td>第二轮</td><td>daylight-system</td><td class="good">6</td><td>10</td><td>11</td></tr><tr><td>第二轮</td><td>graphite-bespoke</td><td class="good">6</td><td>11</td><td>15</td></tr><tr><td>第二轮</td><td>graphite-system</td><td class="good">5</td><td>13</td><td>13</td></tr><tr><td>第二轮</td><td>paper-bespoke</td><td class="good">6</td><td>8</td><td>12</td></tr><tr><td>第二轮</td><td>paper-system</td><td class="good">6</td><td>17</td><td>20</td></tr>
+</table>
+<p class="armdesc">第二轮 6/6 的<b>外壳都是 5-6 色</b>，和第一轮 B 组持平甚至更好；
+整页数变高完全来自内层产物有了自己的视觉语言——那是硬性要求，不是纪律退步。<br>
+<b>这条同时说明：两条基底的 token 纪律没有差别（都是 5-6 色）。</b>
+纪律来自艺术方向阶段，不来自基底。所以两条基底可以都留成选项，不用担心其中一条更容易失控。</p>
+<p class="muted">口径说明：分层测量用的阈值与 D3 抽取器不同（这里按「同一 rgb 值出现 ≥2 次」计），
+所以绝对数只在本表内部可比。表内第一轮的数据量的是 <code>offline/</code> 副本，
+因为 <code>runs/C1</code>、<code>runs/C2</code> 仍指向 Tailwind CDN，在零网络下会量到一个没上样式的页面。
+画布识别是几何规则（视口内、右侧、面积 ≥18%、背景色异于 body 的最大元素），
+每行都打印了选中元素的尺寸可人工核对。</p>
+</div>
+
+
+<div class="terr">
+  <h2><span class="tag">graphite</span> 深色工作台</h2>
+  <p class="armdesc">中性近黑底、单一暖强调色。对应你在第一轮里说「对照组也挺好看」的那种长相，但这次带 token 纪律。</p>
+  
+<div class="dir">
+  <div class="dirname">灯箱校样台（Light Table）</div>
+  <p class="muted">这个产品的核心信任来自一句话：『我看到的就是我会拿到的成品。』因此外壳做成一张暗房里的灯箱校样台——中性近黑的台面把一切视觉权重让给中央那张白底样张，暖色朱砂只押在『发送生成』这一个动作上，像暗房里唯一的一盏安全灯。深色不是为了氛围，是为了让用户对成品白底的真实明度和边界有零干扰的判断。</p>
+  <div class="swrow"><span class="sw" style="background:#141311" title="bg: #141311"></span><span class="sw" style="background:#1E1C19" title="surface: #1E1C19"></span><span class="sw" style="background:#EDEAE3" title="ink: #EDEAE3"></span><span class="sw" style="background:#A8A29A" title="ink_muted: #A8A29A"></span><span class="sw" style="background:#33302B" title="line: #33302B"></span><span class="sw" style="background:#E8602C" title="accent: #E8602C"></span></div>
+  <table class="kv">
+    <tr><td>标题 / 正文</td><td><code>Space Grotesk</code> ·
+        <code>IBM Plex Sans</code></td></tr>
+    <tr><td>中文 / 等宽</td><td><code>Noto Sans SC</code> ·
+        <code>IBM Plex Mono</code></td></tr>
+    <tr><td>字号阶 / 间距阶</td><td><code>[14, 15, 17, 20, 24, 32]</code> ·
+        <code>[4, 8, 12, 16, 24, 32, 48]</code></td></tr>
+    <tr><td>版式原型</td><td>左窄右阔的校样台：顶栏 48px 一条细线压顶；左侧对话栏固定 360px，像贴在灯箱边的批注条；右侧预览区吃掉全部剩余宽度（约 75%+），成品样张以真实白色页面居中悬浮在深灰台面上，上下各留 48px 呼吸位。版本与导出收进预览区顶部的工具条，检查器做成预览区内可展开的抽屉，绝不开第三栏。</td></tr>
+    <tr><td>对比度自检</td><td>ink #EDEAE3 对 bg #141311 约 14.3:1（≥7:1 达标）；ink_muted #A8A29A 对 surface #1E1C19 约 6.5:1（≥4.5:1 达标）；accent 上近黑文字约 4.9:1（≥4.5:1 达标）。分层只用 1px 的 #33302B 描边和 bg/surface 之间约 1.3:1 的底色差，不用阴影发光。</td></tr>
+  </table>
+  <div class="move"><b>signature move：</b>预览区是一台『灯箱』：被设计的产物渲染成一张带 1px 深色描边和极浅投影的纯白页面，居中放在 #141311 的暗台面上，页面四角外侧用等宽小字标注该产物画板的实际像素尺寸（如 1440×900）。工作台的一切配色、字体、圆角在这条白页边界处戛然而止。
+    <div class="muted">它让什么更容易被找到：它让『这个成品到底长什么样、多大尺寸、交付边界在哪』这条信息可以被瞬间判断——白页与暗台的强明度差给出无歧义的裁切线，四角尺寸标注让用户不用打开检查器就知道当前画板规格，也直接防止外壳的深色视觉语言污染对内层成品的判断。</div></div>
+  <div class="ap"><b>方向自订的禁止项：</b><ul><li>禁止蓝紫渐变、发光描边、玻璃拟态、霓虹色——分层只允许 1px 灰线加底色差</li><li>禁止把外壳的深色底、Noto/IBM 字体、朱砂橙蔓延进预览区内的产物——内层是别人的品牌，有自己的白底与自己的视觉语言</li><li>禁止正文和对话内容使用等宽字体或全大写句子——mono 只给版本号、时间戳、对象 ID，大写只给 ≤2 词的加字距标签</li><li>禁止空面板与装饰性留白块——对话栏必须呈现完整迭代史，预览区必须装着成型产物，任何可见面板都要有真实内容</li></ul></div>
+</div>
+  <div class="grid">
+    
+<div class="route">
+  <h4>手写 CSS <span class="muted">— graphite-bespoke</span></h4>
+  <p class="muted">不用框架，直接按艺术方向写 CSS。</p>
+  <table class="m">
+    <tr><td><b>外壳</b>色数 / 字阶</td>
+        <td class="good">6 / 3</td>
+        <td>内层产物色数 / 字阶</td><td>11 / 4</td></tr>
+    <tr><td>锚点 sec/obj</td><td>10 / 21</td>
+        <td>console error</td><td>1</td></tr>
+    <tr><td>被阻断的外链</td><td class="good">0</td>
+        <td>输出截断</td><td>否</td></tr>
+    <tr><td>耗时 / token</td><td colspan="3">411.3s ·
+        20689</td></tr>
+  </table>
+  <div class="shots"><figure><img src="shots2/graphite-bespoke/desktop.png" alt="graphite-bespoke 桌面 1440×900"><figcaption>桌面 1440×900</figcaption></figure><figure><img src="shots2/graphite-bespoke/fullpage.png" alt="graphite-bespoke 整页"><figcaption>整页</figcaption></figure></div>
+</div>
+    
+<div class="route">
+  <h4>设计系统（离线 Tailwind） <span class="muted">— graphite-system</span></h4>
+  <p class="muted">本地 <code>assets/tailwind.js</code>，把艺术方向注册成主题，禁用 Tailwind 默认调色板。</p>
+  <table class="m">
+    <tr><td><b>外壳</b>色数 / 字阶</td>
+        <td class="good">5 / 2</td>
+        <td>内层产物色数 / 字阶</td><td>13 / 8</td></tr>
+    <tr><td>锚点 sec/obj</td><td>6 / 27</td>
+        <td>console error</td><td>0</td></tr>
+    <tr><td>被阻断的外链</td><td class="good">0</td>
+        <td>输出截断</td><td>否</td></tr>
+    <tr><td>耗时 / token</td><td colspan="3">419.6s ·
+        20319</td></tr>
+  </table>
+  <div class="shots"><figure><img src="shots2/graphite-system/desktop.png" alt="graphite-system 桌面 1440×900"><figcaption>桌面 1440×900</figcaption></figure><figure><img src="shots2/graphite-system/fullpage.png" alt="graphite-system 整页"><figcaption>整页</figcaption></figure></div>
+</div>
+  </div>
+</div>
+<div class="terr">
+  <h2><span class="tag">daylight</span> 浅色产品面</h2>
+  <p class="armdesc">近白中性底、极轻阴影 + 1px 描边。对应你说「框架的 AI 味反而最少」的那种长相。</p>
+  
+<div class="dir">
+  <div class="dirname">套准工作台（Registration Bench）</div>
+  <p class="muted">OEYdesign 的核心信任问题是「我说改哪个对象，agent 改的到底是不是那个对象」。所以外壳取印刷/制版工台的气质：冷静的近白灰底、1px 发丝线、套准角标式的精确感，让界面像一把卡尺而不是一张海报。克制的灰阶把全部色彩注意力让给预览区里「别人的产品」，内外两层自然不会串味。</p>
+  <div class="swrow"><span class="sw" style="background:#F4F5F6" title="bg: #F4F5F6"></span><span class="sw" style="background:#FFFFFF" title="surface: #FFFFFF"></span><span class="sw" style="background:#191D22" title="ink: #191D22"></span><span class="sw" style="background:#4E5764" title="ink_muted: #4E5764"></span><span class="sw" style="background:#DFE3E7" title="line: #DFE3E7"></span><span class="sw" style="background:#0A5C43" title="accent: #0A5C43"></span></div>
+  <table class="kv">
+    <tr><td>标题 / 正文</td><td><code>IBM Plex Sans</code> ·
+        <code>IBM Plex Sans</code></td></tr>
+    <tr><td>中文 / 等宽</td><td><code>Noto Sans SC</code> ·
+        <code>IBM Plex Mono</code></td></tr>
+    <tr><td>字号阶 / 间距阶</td><td><code>[12, 14, 15, 16, 20, 26]</code> ·
+        <code>[4, 8, 12, 16, 24, 32, 48]</code></td></tr>
+    <tr><td>版式原型</td><td>轨与台（Rail &amp; Bench）：顶栏 48px 通栏，其下左 352px 固定对话轨、右侧弹性画布占满剩余宽度（约 75%+）。对话轨内部消息左对齐贴轨，agent 回复前有一条 2px 竖向引出线连到版本 chip，形成一条可读的时间脊线。预览区居中放置产物画板，四周留出均匀灰底呼吸位，工具条浮于画板正上方而非贴顶——视觉上强调「产物是被摆上台面的对象」，不是外壳的一部分。</td></tr>
+    <tr><td>对比度自检</td><td>ink #191D22 对 bg #F4F5F6 约 14.8:1（≥7 达标）；ink_muted #4E5764 对 surface #FFFFFF 约 7.4:1（≥4.5 达标）；accent #0A5C43 对白色约 7.0:1，可用于白底文字与描边；白字对 accent 按钮底约 7.0:1 达标。</td></tr>
+  </table>
+  <div class="move"><b>signature move：</b>对象套准锚点系统：对话中凡是提及具体对象的回合，消息内嵌一个 mono 字体的对象 chip（如 hero-title，绿底白字或绿描边）；悬停/点击该 chip 时，预览画布中对应对象四角出现 accent 色的套准角标（⌐ ¬ ⌐ 式 1.5px 角线，不填充、不遮罩产物本体），角标旁浮出同款 mono ID 标签。选中状态下角标常驻，画布其他部分不加任何色块。
+    <div class="muted">它让什么更容易被找到：「这一轮对话改的到底是产物里的哪一个对象」这条信息——用户提出「主标题压到两行」，立刻能在画布上确认 agent 理解的对象就是 hero-title 而不是副标题或别处。</div></div>
+  <div class="ap"><b>方向自订的禁止项：</b><ul><li>任何彩色渐变、彩色侧栏、彩色面板底——色彩只允许以 accent 单点出现</li><li>把工作台的灰底、发丝线、字体样式延伸进预览产物内部；产物画板必须有自己完整的视觉语言（本项目 mock 产物用暖橙+深墨，与外壳零共享色值）</li><li>大圆角卡片堆叠：圆角统一 ≤6px，层次靠 1px #DFE3E7 描边 + 一层 0 1px 2px rgba(25,29,34,0.06) 的轻阴影</li><li>空状态占位面板或 lorem ipsum：对话必须满载 ≥6 轮真实迭代记录，版本列表面板默认收起但点开即有内容</li></ul></div>
+</div>
+  <div class="grid">
+    
+<div class="route">
+  <h4>手写 CSS <span class="muted">— daylight-bespoke</span></h4>
+  <p class="muted">不用框架，直接按艺术方向写 CSS。</p>
+  <table class="m">
+    <tr><td><b>外壳</b>色数 / 字阶</td>
+        <td class="good">6 / 3</td>
+        <td>内层产物色数 / 字阶</td><td>10 / 8</td></tr>
+    <tr><td>锚点 sec/obj</td><td>9 / 9</td>
+        <td>console error</td><td>1</td></tr>
+    <tr><td>被阻断的外链</td><td class="good">0</td>
+        <td>输出截断</td><td>否</td></tr>
+    <tr><td>耗时 / token</td><td colspan="3">582.3s ·
+        25069</td></tr>
+  </table>
+  <div class="shots"><figure><img src="shots2/daylight-bespoke/desktop.png" alt="daylight-bespoke 桌面 1440×900"><figcaption>桌面 1440×900</figcaption></figure><figure><img src="shots2/daylight-bespoke/fullpage.png" alt="daylight-bespoke 整页"><figcaption>整页</figcaption></figure></div>
+</div>
+    
+<div class="route">
+  <h4>设计系统（离线 Tailwind） <span class="muted">— daylight-system</span></h4>
+  <p class="muted">本地 <code>assets/tailwind.js</code>，把艺术方向注册成主题，禁用 Tailwind 默认调色板。</p>
+  <table class="m">
+    <tr><td><b>外壳</b>色数 / 字阶</td>
+        <td class="good">6 / 2</td>
+        <td>内层产物色数 / 字阶</td><td>10 / 6</td></tr>
+    <tr><td>锚点 sec/obj</td><td>4 / 7</td>
+        <td>console error</td><td>1</td></tr>
+    <tr><td>被阻断的外链</td><td class="good">0</td>
+        <td>输出截断</td><td>否</td></tr>
+    <tr><td>耗时 / token</td><td colspan="3">913.5s ·
+        36708</td></tr>
+  </table>
+  <div class="shots"><figure><img src="shots2/daylight-system/desktop.png" alt="daylight-system 桌面 1440×900"><figcaption>桌面 1440×900</figcaption></figure><figure><img src="shots2/daylight-system/fullpage.png" alt="daylight-system 整页"><figcaption>整页</figcaption></figure></div>
+</div>
+  </div>
+</div>
+<div class="terr">
+  <h2><span class="tag">paper</span> 暖纸编辑台</h2>
+  <p class="armdesc">agent 自选方向时的固有落点，保留一块作对照——第一轮 B 组就在这里，这次去掉了强制反常动作并加了可读性下限。</p>
+  
+<div class="dir">
+  <div class="dirname">红笔校样台（Red-Pen Proofing Table）</div>
+  <p class="muted">OEYdesign 的本质是「人与 agent 反复改稿」，这和编辑桌上纸稿被红笔层层批注的工作流完全同构。用暖纸底 + 衬线标题 + 红笔批注语言，让「迭代」成为界面的一等视觉对象，而不是藏在聊天记录里。秩序全部靠基线、字重和留白建立，不用卡片和边框，让外壳退后、产物突出——这同时解决了内外层必须严格分离的硬性要求：纸桌是纸桌，稿子归稿子。</p>
+  <div class="swrow"><span class="sw" style="background:#F3EDE0" title="bg: #F3EDE0"></span><span class="sw" style="background:#FBF7EE" title="surface: #FBF7EE"></span><span class="sw" style="background:#231D13" title="ink: #231D13"></span><span class="sw" style="background:#6B604F" title="ink_muted: #6B604F"></span><span class="sw" style="background:#DDD2BE" title="line: #DDD2BE"></span><span class="sw" style="background:#B93A22" title="accent: #B93A22"></span></div>
+  <table class="kv">
+    <tr><td>标题 / 正文</td><td><code>Fraunces</code> ·
+        <code>IBM Plex Sans</code></td></tr>
+    <tr><td>中文 / 等宽</td><td><code>Noto Serif SC</code> ·
+        <code>IBM Plex Mono</code></td></tr>
+    <tr><td>字号阶 / 间距阶</td><td><code>[12, 14, 15, 17, 21, 27, 36]</code> ·
+        <code>[4, 8, 12, 16, 24, 40, 64]</code></td></tr>
+    <tr><td>版式原型</td><td>校样桌两栏：左栏 340px 定宽对话栏（margin notes 心智），右栏弹性占满，预览产物以一张「稿纸」悬浮于纸桌之上，稿纸四周留出 40-64px 的桌边作为红笔批注的落点区。全外壳无卡片无边框，分区只靠 1px 发丝线（#DDD2BE）+ 字重层级 + 基线网格；顶栏高度 48px，版本、状态、导出以一排基线对齐的文字级控件呈现，不做按钮墙。</td></tr>
+    <tr><td>对比度自检</td><td>ink #231D13 对 bg #F3EDE0 约 14.5:1（≥7:1 达标）；ink_muted #6B604F 对 surface #FBF7EE 约 5.4:1（≥4.5:1 达标）；accent #B93A22 对 surface 约 5.8:1，可用于 ≥14px 加粗文字与图形标记。</td></tr>
+  </table>
+  <div class="move"><b>signature move：</b>「红笔批注层」：预览稿纸的边缘和对象上钉着带序号的红色标记（①-⑥，对应对话栏里每一轮修改），圈线手绘感地圈住被改过的对象（如主标题）；点击或悬停某个红色序号，对话栏自动滚动到对应那一轮对话并高亮，反向也成立——点对话里某轮，预览上对应的红圈闪烁。
+    <div class="muted">它让什么更容易被找到：它让「第几轮反馈改了产物上的哪个对象」这条信息从线性聊天记录里被提取成空间索引——用户一眼看到产物上有 6 处被改过、各自源自哪句话，而不是翻 6 屏对话去对。</div></div>
+  <div class="ap"><b>方向自订的禁止项：</b><ul><li>禁止在外壳使用卡片、圆角盒子、投影分区——任何切块必须靠留白与发丝线完成，卡片感会破坏纸桌的整版感</li><li>禁止蓝紫渐变、毛玻璃、霓虹强调色——红笔 #B93A22 是唯一强调色，出现第二种强调色即视为失控</li><li>禁止外壳的纸色、衬线、红色蔓延进内层产物——预览稿纸内的产物用产物自己的视觉语言（示例产物为独立品牌风格），外壳与产物之间以稿纸白边物理隔开</li><li>禁止等宽字体出现在正文与对话，禁止全大写句子——mono 只许出现在版本号/时间戳/对象 ID，大写只许 ≤2 词标签并加字距</li></ul></div>
+</div>
+  <div class="grid">
+    
+<div class="route">
+  <h4>手写 CSS <span class="muted">— paper-bespoke</span></h4>
+  <p class="muted">不用框架，直接按艺术方向写 CSS。</p>
+  <table class="m">
+    <tr><td><b>外壳</b>色数 / 字阶</td>
+        <td class="good">6 / 5</td>
+        <td>内层产物色数 / 字阶</td><td>8 / 9</td></tr>
+    <tr><td>锚点 sec/obj</td><td>8 / 7</td>
+        <td>console error</td><td>1</td></tr>
+    <tr><td>被阻断的外链</td><td class="good">0</td>
+        <td>输出截断</td><td>否</td></tr>
+    <tr><td>耗时 / token</td><td colspan="3">722.2s ·
+        27181</td></tr>
+  </table>
+  <div class="shots"><figure><img src="shots2/paper-bespoke/desktop.png" alt="paper-bespoke 桌面 1440×900"><figcaption>桌面 1440×900</figcaption></figure><figure><img src="shots2/paper-bespoke/fullpage.png" alt="paper-bespoke 整页"><figcaption>整页</figcaption></figure></div>
+</div>
+    
+<div class="route">
+  <h4>设计系统（离线 Tailwind） <span class="muted">— paper-system</span></h4>
+  <p class="muted">本地 <code>assets/tailwind.js</code>，把艺术方向注册成主题，禁用 Tailwind 默认调色板。</p>
+  <table class="m">
+    <tr><td><b>外壳</b>色数 / 字阶</td>
+        <td class="good">6 / 3</td>
+        <td>内层产物色数 / 字阶</td><td>17 / 9</td></tr>
+    <tr><td>锚点 sec/obj</td><td>9 / 12</td>
+        <td>console error</td><td>0</td></tr>
+    <tr><td>被阻断的外链</td><td class="good">0</td>
+        <td>输出截断</td><td>否</td></tr>
+    <tr><td>耗时 / token</td><td colspan="3">655.5s ·
+        24368</td></tr>
+  </table>
+  <div class="shots"><figure><img src="shots2/paper-system/desktop.png" alt="paper-system 桌面 1440×900"><figcaption>桌面 1440×900</figcaption></figure><figure><img src="shots2/paper-system/fullpage.png" alt="paper-system 整页"><figcaption>整页</figcaption></figure></div>
+</div>
+  </div>
+</div>
+
+<div class="q">
+<h3>需要你判断的</h3>
+<ol>
+<li><b>三块领地里，哪些值得保留成可选项？</b>可以多选，也可以说「这块换个方向重做」。</li>
+<li><b>同一块领地下，左右两条基底的差别，够不够大到两条都留？</b>
+    如果差别很小，那就只留一条，产品里少一个选项。</li>
+<li><b>可读性下限起作用了吗？</b>第一轮 B 组「看起来很累」的病因我判断是等宽正文 + 全大写标签 +
+    发丝线网格。这一轮把这些写成了硬性下限。</li>
+<li><b>内容饱满度补上了吗？</b>第一轮 B1 左栏基本空着。这一轮要求至少 6 轮真实对话。</li>
+</ol>
+</div>
+</html>

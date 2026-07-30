@@ -1,0 +1,184 @@
+[
+  {
+    "idx": 2,
+    "elapsed_s": 367.6,
+    "usage": {
+      "prompt_tokens": 809,
+      "completion_tokens": 11976,
+      "total_tokens": 12785,
+      "cached_tokens": 768,
+      "completion_tokens_details": {
+        "reasoning_tokens": 821
+      },
+      "prompt_tokens_details": {
+        "cached_tokens": 768
+      }
+    },
+    "file_count": 4,
+    "files": [
+      "index.html",
+      "styles.css",
+      "app.js",
+      "MOCK.md"
+    ],
+    "has_index_html": true,
+    "has_mock_md": true,
+    "raw_response_chars": 35775
+  },
+  {
+    "idx": 3,
+    "elapsed_s": 543.2,
+    "usage": {
+      "prompt_tokens": 809,
+      "completion_tokens": 16000,
+      "total_tokens": 16809,
+      "cached_tokens": 768,
+      "completion_tokens_details": {
+        "reasoning_tokens": 4063
+      },
+      "prompt_tokens_details": {
+        "cached_tokens": 768
+      }
+    },
+    "file_count": 4,
+    "files": [
+      "index.html",
+      "styles.css",
+      "mock.js",
+      "app.js"
+    ],
+    "has_index_html": true,
+    "has_mock_md": false,
+    "raw_response_chars": 37215
+  },
+  {
+    "idx": 4,
+    "elapsed_s": 321.9,
+    "usage": {
+      "prompt_tokens": 809,
+      "completion_tokens": 9761,
+      "total_tokens": 10570,
+      "cached_tokens": 768,
+      "completion_tokens_details": {
+        "reasoning_tokens": 730
+      },
+      "prompt_tokens_details": {
+        "cached_tokens": 768
+      }
+    },
+    "file_count": 4,
+    "files": [
+      "index.html",
+      "styles.css",
+      "app.js",
+      "MOCK.md"
+    ],
+    "has_index_html": true,
+    "has_mock_md": true,
+    "raw_response_chars": 29370
+  },
+  {
+    "idx": 5,
+    "elapsed_s": 511.6,
+    "usage": {
+      "prompt_tokens": 809,
+      "completion_tokens": 16000,
+      "total_tokens": 16809,
+      "cached_tokens": 768,
+      "completion_tokens_details": {
+        "reasoning_tokens": 7798
+      },
+      "prompt_tokens_details": {
+        "cached_tokens": 768
+      }
+    },
+    "file_count": 3,
+    "files": [
+      "index.html",
+      "styles.css",
+      "mock.js"
+    ],
+    "has_index_html": true,
+    "has_mock_md": false,
+    "raw_response_chars": 26186
+  },
+  {
+    "idx": 6,
+    "elapsed_s": 384.4,
+    "usage": {
+      "prompt_tokens": 809,
+      "completion_tokens": 12449,
+      "total_tokens": 13258,
+      "cached_tokens": 768,
+      "completion_tokens_details": {
+        "reasoning_tokens": 768
+      },
+      "prompt_tokens_details": {
+        "cached_tokens": 768
+      }
+    },
+    "file_count": 5,
+    "files": [
+      "index.html",
+      "styles.css",
+      "mock-api.js",
+      "app.js",
+      "MOCK.md"
+    ],
+    "has_index_html": true,
+    "has_mock_md": true,
+    "raw_response_chars": 36943
+  },
+  {
+    "idx": 7,
+    "elapsed_s": 337.0,
+    "usage": {
+      "prompt_tokens": 809,
+      "completion_tokens": 10066,
+      "total_tokens": 10875,
+      "cached_tokens": 768,
+      "completion_tokens_details": {
+        "reasoning_tokens": 1352
+      },
+      "prompt_tokens_details": {
+        "cached_tokens": 768
+      }
+    },
+    "file_count": 4,
+    "files": [
+      "index.html",
+      "styles.css",
+      "app.js",
+      "MOCK.md"
+    ],
+    "has_index_html": true,
+    "has_mock_md": true,
+    "raw_response_chars": 27581
+  },
+  {
+    "idx": 8,
+    "elapsed_s": 328.9,
+    "usage": {
+      "prompt_tokens": 809,
+      "completion_tokens": 10702,
+      "total_tokens": 11511,
+      "cached_tokens": 768,
+      "completion_tokens_details": {
+        "reasoning_tokens": 93
+      },
+      "prompt_tokens_details": {
+        "cached_tokens": 768
+      }
+    },
+    "file_count": 4,
+    "files": [
+      "index.html",
+      "styles.css",
+      "app.js",
+      "MOCK.md"
+    ],
+    "has_index_html": true,
+    "has_mock_md": true,
+    "raw_response_chars": 34303
+  }
+]

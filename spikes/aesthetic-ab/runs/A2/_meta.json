@@ -1,0 +1,31 @@
+{
+  "arm": "A",
+  "idx": 2,
+  "max_tokens": 40000,
+  "stages": [
+    {
+      "stage": "gen",
+      "usage": {
+        "prompt_tokens": 418,
+        "completion_tokens": 10969,
+        "total_tokens": 11387,
+        "cached_tokens": 256,
+        "completion_tokens_details": {
+          "reasoning_tokens": 562
+        },
+        "prompt_tokens_details": {
+          "cached_tokens": 256
+        },
+        "_finish_reason": "stop"
+      },
+      "elapsed_s": 274.4352831840515
+    }
+  ],
+  "files": [
+    "index.html",
+    "styles.css"
+  ],
+  "raw_chars": 29971,
+  "total_elapsed_s": 274.4,
+  "truncated": false
+}

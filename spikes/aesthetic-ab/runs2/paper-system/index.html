@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OEYdesign 工作台 · 云崖咖啡落地页</title>
+<link rel="stylesheet" href="assets/fonts/fonts.css">
+<script src="assets/tailwind.js"></script>
+<script>
+tailwind.config = {
+  theme: {
+    extend: {
+      colors: {
+        bg: '#F3EDE0',
+        surface: '#FBF7EE',
+        ink: '#231D13',
+        'ink-muted': '#6B604F',
+        line: '#DDD2BE',
+        accent: '#B93A22'
+      },
+      fontFamily: {
+        display: ['Fraunces', 'Noto Serif SC', 'serif'],
+        body: ['"IBM Plex Sans"', '"PingFang SC"', '"Microsoft YaHei"', 'sans-serif'],
+        mono: ['"IBM Plex Mono"', 'monospace']
+      },
+      fontSize: {
+        '12': '12px', '14': '14px', '15': '15px', '17': '17px',
+        '21': '21px', '27': '27px', '36': '36px'
+      },
+      spacing: {
+        sp4: '4px', sp8: '8px', sp12: '12px', sp16: '16px',
+        sp24: '24px', sp40: '40px', sp64: '64px'
+      }
+    }
+  }
+}
+</script>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body class="font-body bg-bg text-ink h-screen flex flex-col antialiased">
+
+<!-- ============ 顶栏 48px：版本 / 状态 / 导出，一排基线对齐的文字级控件 ============ -->
+<header data-oey-section="topbar" class="h-12 shrink-0 bg-surface border-b border-line flex items-baseline px-sp16 select-none">
+  <div class="flex items-baseline gap-sp8">
+    <span class="font-display font-semibold text-17 leading-none">OEYdesign</span>
+    <span class="text-12 text-ink-muted">多模态设计 Agent</span>
+  </div>
+
+  <div class="ml-auto flex items-baseline gap-sp24 relative">
+    <span class="text-14 text-ink">云崖咖啡 · 品牌落地页</span>
+    <span class="text-12 text-ink-muted">已自动保存 <span class="font-mono" id="statusTime">14:31</span></span>
+
+    <!-- 当前版本号：红笔语义之一 -->
+    <button id="versionBtn" class="rowbtn font-mono text-14 font-semibold text-accent leading-none" aria-haspopup="true">v6</button>
+
+    <!-- 主导出按钮：红笔语义之一 -->
+    <button id="exportBtn" class="rowbtn text-14 font-semibold text-accent underline underline-offset-4 leading-none" aria-haspopup="true">导出</button>
+
+    <!-- 版本历史下拉 -->
+    <div id="versionMenu" class="dropdown hidden absolute right-16 top-10 w-72 bg-surface border border-line z-40">
+      <p class="px-sp12 pt-sp12 pb-sp8 text-12 text-ink-muted">版本历史 · 每轮修改存一版</p>
+      <ul class="pb-sp8">
+        <li class="ver-row" data-ver="v1"><span class="font-mono text-14">v1</span><span class="text-14">初稿生成</span><span class="font-mono text-12 text-ink-muted ml-auto">13:40</span></li>
+        <li class="ver-row" data-ver="v2"><span class="font-mono text-14">v2</span><span class="text-14">主标题压至两行</span><span class="font-mono text-12 text-ink-muted ml-auto">13:55</span></li>
+        <li class="ver-row" data-ver="v3"><span class="font-mono text-14">v3</span><span class="text-14">按钮换为实心米色</span><span class="font-mono text-12 text-ink-muted ml-auto">14:02</span></li>
+        <li class="ver-row" data-ver="v4"><span class="font-mono text-14">v4</span><span class="text-14">导航新增「门店」</span><span class="font-mono text-12 text-ink-muted ml-auto">14:11</span></li>
+        <li class="ver-row" data-ver="v5"><span class="font-mono text-14">v5</span><span class="text-14">豆单改四列网格</span><span class="font-mono text-12 text-ink-muted ml-auto">14:19</span></li>
+        <li class="ver-row" data-ver="v6"><span class="font-mono text-14 font-semibold text-accent">v6</span><span class="text-14">订阅区 + 价格放大</span><span class="font-mono text-12 text-ink-muted ml-auto">14:27</span></li>
+      </ul>
+    </div>
+
+    <!-- 导出下拉 -->
+    <div id="exportMenu" class="dropdown hidden absolute right-0 top-10 w-56 bg-surface border border-line z-40">
+      <p class="px-sp12 pt-sp12 pb-sp8 text-12 text-ink-muted">导出当前版本 v6</p>
+      <ul class="pb-sp8">
+        <li class="exp-row" data-fmt="Web"><span class="text-14">导出为 Web</span><span class="font-mono text-12 text-ink-muted ml-auto">.html</span></li>
+        <li class="exp-row" data-fmt="PPT"><span class="text-14">导出为 PPT</span><span class="font-mono text-12 text-ink-muted ml-auto">.pptx</span></li>
+        <li class="exp-row" data-fmt="DOCX"><span class="text-14">导出为 DOCX</span><span class="font-mono text-12 text-ink-muted ml-auto">.docx</span></li>
+      </ul>
+    </div>
+  </div>
+</header>
+
+<main class="flex-1 min-h-0 flex">
+
+  <!-- ============ 左栏 340px：对话栏（margin notes） ============ -->
+  <aside data-oey-section="chat" class="w-[340px] shrink-0 bg-surface border-r border-line flex flex-col min-h-0">
+
+    <div class="h-12 shrink-0 flex items-center justify-between px-sp16 border-b border-line">
+      <div class="flex items-baseline gap-sp8">
+        <span class="font-display font-semibold text-15">修改记录</span>
+        <span class="text-12 text-ink-muted" id="roundCount">6 轮</span>
+      </div>
+      <button id="indexToggle" class="rowbtn text-12 text-ink-muted underline underline-offset-4">对象索引</button>
+    </div>
+
+    <!-- 对象索引：可展开面板，放在对话栏次级位置 -->
+    <div id="objectIndex" class="hidden shrink-0 border-b border-line px-sp16 py-sp8">
+      <p class="text-12 text-ink-muted pb-sp4">稿纸上被改过的对象 · 点击对稿</p>
+      <ul>
+        <li class="idx-row" data-round="1"><span class="font-mono text-12">hero-title</span><span class="text-14">主标题</span><span class="text-12 text-ink-muted ml-auto">第 1 轮</span></li>
+        <li class="idx-row" data-round="2"><span class="font-mono text-12">hero-cta</span><span class="text-14">按钮「立即选购」</span><span class="text-12 text-ink-muted ml-auto">第 2 轮</span></li>
+        <li class="idx-row" data-round="3"><span class="font-mono text-12">nav-link-stores</span><span class="text-14">导航「门店」</span><span class="text-12 text-ink-muted ml-auto">第 3 轮</span></li>
+        <li class="idx-row" data-round="4"><span class="font-mono text-12">product-grid</span><span class="text-14">豆单网格</span><span class="text-12 text-ink-muted ml-auto">第 4 轮</span></li>
+        <li class="idx-row" data-round="5"><span class="font-mono text-12">footer-sub</span><span class="text-14">页脚订阅区</span><span class="text-12 text-ink-muted ml-auto">第 5 轮</span></li>
+        <li class="idx-row" data-round="6"><span class="font-mono text-12">price-01</span><span class="text-14">价格与产地标签</span><span class="text-12 text-ink-muted ml-auto">第 6 轮</span></li>
+      </ul>
+    </div>
+
+    <!-- 对话流：六轮真实往返 -->
+    <div id="rounds" class="flex-1 min-h-0 overflow-y-auto">
+
+      <article class="round" data-oey-object="hero-title" data-round="1">
+        <div class="round-head"><span>第 1 轮</span><span class="font-mono">13:48</span></div>
+        <p class="who">你</p>
+        <p class="msg">主标题「把高海拔山野的完整清晨，装进你手里的每一杯咖啡」太长了，一行放不下还显啰嗦。压到两行以内，语气再短促一点。</p>
+        <p class="who">OEY</p>
+        <p class="msg"><span class="agent-mark">▸ 已改</span>主标题压为「把山野的清晨 / 装进每一杯」两行，行距收紧到 1.15，删掉了「高海拔」与「完整」，语义不变、节奏更短。</p>
+      </article>
+
+      <article class="round" data-oey-object="hero-cta" data-round="2">
+        <div class="round-head"><span>第 2 轮</span><span class="font-mono">13:55</span></div>
+        <p class="who">你</p>
+        <p class="msg">「立即选购」按钮太灰了，趴在绿色背景上像被禁用。换一个让人想点的处理。</p>
+        <p class="who">OEY</p>
+        <p class="msg"><span class="agent-mark">▸ 已换</span>按钮改为米色实心 + 深绿文字，悬停时底色加深一档；文字对比度 7.2:1，在 hero 深绿底上能跳出来。</p>
+      </article>
+
+      <article class="round" data-oey-object="nav-link-stores" data-round="3">
+        <div class="round-head"><span>第 3 轮</span><span class="font-mono">14:02</span></div>
+        <p class="who">你</p>
+        <p class="msg">导航里加上「门店」。我们线下三家店，得让人能找到。</p>
+        <p class="who">OEY</p>
+        <p class="msg"><span class="agent-mark">▸ 已加</span>导航新增「门店」，顺序放在「咖啡豆」之后；页脚同步补了门店城市锚点，点击可直达。</p>
+      </article>
+
+      <article class="round" data-oey-object="product-grid" data-round="4">
+        <div class="round-head"><span>第 4 轮</span><span class="font-mono">14:11</span></div>
+        <p class="who">你</p>
+        <p class="msg">产品一排三个太空了，右边留白浪费。改成一排四个，卡片收紧一点。</p>
+        <p class="who">OEY</p>
+        <p class="msg"><span class="agent-mark">▸ 已排</span>豆单网格改四列，卡片间距 24px 收到 16px，图片比例统一为 4:3，四款豆子的视觉重量拉平。</p>
+      </article>
+
+      <article class="round" data-oey-object="footer-sub" data-round="5">
+        <div class="round-head"><span>第 5 轮</span><span class="font-mono">14:19</span></div>
+        <p class="who">你</p>
+        <p class="msg">页脚加一个订阅邮箱输入框，文案用「每月一封产地来信」。</p>
+        <p class="who">OEY</p>
+        <p class="msg"><span class="agent-mark">▸ 已加</span>页脚新增订阅区：一句「每月一封产地来信」+ 邮箱输入框 +「订阅」按钮，输入框占位文案为「你的邮箱」。</p>
+      </article>
+
+      <article class="round" data-oey-object="price-01" data-round="6">
+        <div class="round-head"><span>第 6 轮</span><span class="font-mono">14:27</span></div>
+        <p class="who">你</p>
+        <p class="msg">价格太小了，买豆子的人第一眼就要看到价格。放大。另外每款豆子补上产地标签。</p>
+        <p class="who">OEY</p>
+        <p class="msg"><span class="agent-mark">▸ 已放大</span>价格从 14px 提到 20px 并加粗衬线；每卡新增产地标签（云南·保山 / 埃塞俄比亚·耶加雪菲 等），放在图下第一行。</p>
+      </article>
+
+    </div>
+
+    <!-- 输入区 -->
+    <div class="shrink-0 border-t border-line px-sp16 py-sp12">
+      <textarea id="chatInput" rows="2" placeholder="指出稿子上要改的地方，例如：hero 副文案再短一点…"></textarea>
+      <div class="flex items-center justify-between pt-sp8">
+        <span class="text-12 text-ink-muted">Enter 发送 · Shift+Enter 换行</span>
+        <button id="sendBtn" class="rowbtn text-14 font-semibold text-ink underline underline-offset-4 px-sp4">发送</button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ============ 右栏：纸桌 + 悬浮稿纸 + 红笔批注层 ============ -->
+  <section data-oey-section="preview" class="flex-1 min-w-0 overflow-auto bg-bg">
+    <div class="desk">
+
+      <div class="sheet" data-oey-section="artifact">
+
+        <!-- ===== 内层产物：云崖咖啡品牌落地页（独立视觉语言，与外壳物理隔离） ===== -->
+        <div class="pd">
+
+          <nav class="pd-nav" data-oey-section="pd-nav">
+            <div class="pd-logo">云崖咖啡 <span class="pd-logo-en">YUNYA</span></div>
+            <div class="pd-links">
+              <a href="#">首页</a>
+              <a href="#">咖啡豆</a>
+              <a href="#" data-oey-object="nav-link-stores">门店</a>
+              <a href="#">故事</a>
+            </div>
+          </nav>
+
+          <section class="pd-hero" data-oey-section="pd-hero">
+            <p class="pd-eyebrow">云南高海拔产区 · 直采烘焙</p>
+            <h1 class="pd-h1" data-oey-object="hero-title">把山野的清晨<br>装进每一杯</h1>
+            <p class="pd-sub">当季鲜果采收后 48 小时内完成水洗处理，中浅烘焙锁住花香与甜感，从保山庄园直送到你的杯中。</p>
+            <div class="pd-hero-actions">
+              <a href="#" class="pd-cta" data-oey-object="hero-cta">立即选购</a>
+              <a href="#" class="pd-ghost">了解产地 →</a>
+            </div>
+          </section>
+
+          <section class="pd-products" data-oey-section="pd-products">
+            <div class="pd-sec-head">
+              <h2>本季豆单</h2>
+              <span>4 款 · 本季直采</span>
+            </div>
+            <div class="pd-grid" data-oey-object="product-grid">
+              <div class="pd-card">
+                <div class="pd-img g1"><span>保</span></div>
+                <p class="pd-tag">云南 · 保山</p>
+                <p class="pd-name">保山 铁皮卡</p>
+                <p class="pd-notes">坚果 · 可可 · 尾韵甜</p>
+                <p class="pd-price" data-oey-object="price-01">¥68 <span>/ 200g</span></p>
+              </div>
+              <div class="pd-card">
+                <div class="pd-img g2"><span>耶</span></div>
+                <p class="pd-tag">埃塞俄比亚 · 耶加雪菲</p>
+                <p class="pd-name">耶加雪菲 水洗</p>
+                <p class="pd-notes">茉莉 · 柑橘 · 蜂蜜</p>
+                <p class="pd-price">¥88 <span>/ 200g</span></p>
+              </div>
+              <div class="pd-card">
+                <div class="pd-img g3"><span>慧</span></div>
+                <p class="pd-tag">哥伦比亚 · 慧兰</p>
+                <p class="pd-name">慧兰 日晒</p>
+                <p class="pd-notes">莓果 · 焦糖 · 圆润</p>
+                <p class="pd-price">¥72 <span>/ 200g</span></p>
+              </div>
+              <div class="pd-card">
+                <div class="pd-img g4"><span>曼</span></div>
+                <p class="pd-tag">印尼 · 苏门答腊</p>
+                <p class="pd-name">曼特宁 湿刨</p>
+                <p class="pd-notes">草本 · 黑巧 · 醇厚</p>
+                <p class="pd-price">¥78 <span>/ 200g</span></p>
+              </div>
+            </div>
+          </section>
+
+          <footer class="pd-footer" data-oey-section="pd-footer">
+            <div class="pd-sub-block" data-oey-object="footer-sub">
+              <h3>每月一封产地来信</h3>
+              <div class="pd-sub-row">
+                <input type="email" placeholder="你的邮箱" aria-label="订阅邮箱">
+                <button>订阅</button>
+              </div>
+            </div>
+            <div class="pd-foot-row">
+              <span>门店 · 昆明 / 上海 / 成都</span>
+              <span>© 2024 云崖咖啡 YUNYA COFFEE</span>
+            </div>
+          </footer>
+
+        </div>
+        <!-- ===== 内层产物结束 ===== -->
+
+        <!-- ===== 红笔批注层：每个标记对应一轮对话，双向导航 ===== -->
+        <div class="anno-layer" data-oey-section="annotation-layer">
+
+          <div class="anno" data-round="1" style="left:56px; top:166px;">
+            <svg class="anno-ring" width="424" height="150" viewBox="0 0 424 150">
+              <path d="M12,76 C10,32 118,8 238,12 C356,16 416,36 414,76 C412,114 322,142 206,140 C92,138 14,118 12,76 Z" />
+            </svg>
+          </div>
+          <div class="anno" data-round="1" style="left:40px; top:150px;">
+            <button class="anno-dot" title="第 1 轮 · 主标题压至两行">1</button>
+          </div>
+
+          <div class="anno" data-round="2" style="left:40px; top:408px;">
+            <button class="anno-dot" title="第 2 轮 · 按钮换为实心米色">2</button>
+          </div>
+
+          <div class="anno" data-round="3" style="left:40px; top:20px;">
+            <button class="anno-dot" title="第 3 轮 · 导航新增「门店」">3</button>
+          </div>
+
+          <div class="anno" data-round="4" style="left:40px; top:664px;">
+            <button class="anno-dot" title="第 4 轮 · 豆单改四列网格">4</button>
+          </div>
+
+          <div class="anno" data-round="5" style="left:40px; top:1124px;">
+            <button class="anno-dot" title="第 5 轮 · 页脚订阅区">5</button>
+          </div>
+
+          <div class="anno" data-round="6" style="left:56px; top:902px;">
+            <svg class="anno-ring" width="122" height="46" viewBox="0 0 122 46">
+              <path d="M7,23 C6,9 42,3 66,4 C100,5 116,12 114,24 C112,36 82,42 52,41 C24,40 8,35 7,23 Z" />
+            </svg>
+          </div>
+          <div class="anno" data-round="6" style="left:38px; top:894px;">
+            <button class="anno-dot" title="第 6 轮 · 价格放大 + 产地标签">6</button>
+          </div>
+
+        </div>
+
+      </div>
+
+      <p class="desk-note">稿纸上的红圈对应左侧六轮修改 · 点击红序号或点击某轮对话可互相对稿</p>
+    </div>
+  </section>
+
+</main>
+
+<script>
+(function () {
+  'use strict';
+
+  /* ---------- 红笔批注层 ⇄ 对话轮次：双向导航 ---------- */
+  var annoSvgs = document.querySelectorAll('.anno');
+
+  function activateRound(n, scroll) {
+    var el = document.querySelector('.round[data-round="' + n + '"]');
+    if (!el) return;
+    if (scroll) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    el.classList.add('round-highlight');
+    clearTimeout(el._t);
+    el._t = setTimeout(function () { el.classList.remove('round-highlight'); }, 1800);
+  }
+
+  function flashAnno(n) {
+    document.querySelectorAll('.anno[data-round="' + n + '"]').forEach(function (a) {
+      a.classList.remove('flash');
+      void a.offsetWidth;
+      a.classList.add('flash');
+      setTimeout(function () { a.classList.remove('flash'); }, 1500);
+    });
+  }
+
+  annoSvgs.forEach(function (a) {
+    var n = a.getAttribute('data-round');
+    a.addEventListener('click', function () { activateRound(n, true); });
+    a.addEventListener('mouseenter', function () { activateRound(n, false); });
+  });
+
+  document.querySelectorAll('.round').forEach(function (r) {
+    r.addEventListener('click', function () { flashAnno(r.getAttribute('data-round')); });
+  });
+
+  document.querySelectorAll('.idx-row').forEach(function (row) {
+    row.addEventListener('click', function () {
+      var n = row.getAttribute('data-round');
+      activateRound(n, true);
+      flashAnno(n);
+    });
+  });
+
+  /* ---------- 对象索引展开 ---------- */
+  var indexToggle = document.getElementById('indexToggle');
+  var objectIndex = document.getElementById('objectIndex');
+  indexToggle.addEventListener('click', function () {
+    objectIndex.classList.toggle('hidden');
+    indexToggle.textContent = objectIndex.classList.contains('hidden') ? '对象索引' : '收起索引';
+  });
+
+  /* ---------- 版本 / 导出下拉 ---------- */
+  function bindDropdown(btnId, menuId) {
+    var btn = document.getElementById(btnId), menu = document.getElementById(menuId);
+    btn.addEventListener('click', function (e) {
+      e.stopPropagation();
+      document.querySelectorAll('.dropdown').forEach(function (d) { if (d !== menu) d.classList.add('hidden'); });
+      menu.classList.toggle('hidden');
+    });
+    menu.addEventListener('click', function (e) { e.stopPropagation(); });
+  }
+  bindDropdown('versionBtn', 'versionMenu');
+  bindDropdown('exportBtn', 'exportMenu');
+  document.addEventListener('click', function () {
+    document.querySelectorAll('.dropdown').forEach(function (d) { d.classList.add('hidden'); });
+  });
+
+  document.querySelectorAll('.exp-row').forEach(function (row) {
+    row.addEventListener('click', function () {
+      var fmt = row.getAttribute('data-fmt');
+      var now = new Date();
+      var t = ('0' + now.getHours()).slice(-2) + ':' + ('0' + now.getMinutes()).slice(-2);
+      document.getElementById('statusTime').textContent = t;
+      document.querySelector('header .text-12.text-ink-muted').childNodes[0].textContent = '已导出 ' + fmt + ' · ';
+      document.querySelectorAll('.dropdown').forEach(function (d) { d.classList.add('hidden'); });
+    });
+  });
+
+  document.querySelectorAll('.ver-row').forEach(function (row) {
+    row.addEventListener('click', function () {
+      document.getElementById('versionBtn').textContent = row.getAttribute('data-ver');
+      document.querySelectorAll('.dropdown').forEach(function (d) { d.classList.add('hidden'); });
+    });
+  });
+
+  /* ---------- 发送消息：mock 一轮新往返 ---------- */
+  var input = document.getElementById('chatInput');
+  var sendBtn = document.getElementById('sendBtn');
+  var roundsBox = document.getElementById('rounds');
+  var roundCount = document.getElementById('roundCount');
+  var nextRound = 7;
+
+  function nowTime() {
+    var d = new Date();
+    return ('0' + d.getHours()).slice(-2) + ':' + ('0' + d.getMinutes()).slice(-2);
+  }
+
+  function send() {
+    var text = input.value.trim();
+    if (!text) return;
+    input.value = '';
+    var n = nextRound++;
+
+    var art = document.createElement('article');
+    art.className = 'round';
+    art.setAttribute('data-round', n);
+    art.setAttribute('data-oey-object', 'pending-' + n);
+    art.innerHTML =
+      '<div class="round-head"><span>第 ' + n + ' 轮</span><span class="font-mono">' + nowTime() + '</span></div>' +
+      '<p class="who">你</p><p class="msg"></p>' +
+      '<p class="who">OEY</p>' +
+      '<p class="msg"><span class="agent-mark">▸ 已记录</span>这条反馈已存为第 ' + n + ' 轮。我已按你的描述定位候选对象，确认后会钉上新的红笔序号并更新版本号。</p>';
+    art.querySelector('.msg').textContent = text;
+    art.addEventListener('click', function () { flashAnno(art.getAttribute('data-round')); });
+    roundsBox.appendChild(art);
+    roundCount.textContent = (n) + ' 轮';
+    art.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    art.classList.add('round-highlight');
+    setTimeout(function () { art.classList.remove('round-highlight'); }, 1800);
+  }
+
+  sendBtn.addEventListener('click', send);
+  input.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); }
+  });
+})();
+</script>
+</body>
+</html>

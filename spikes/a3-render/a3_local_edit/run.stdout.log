@@ -1,0 +1,43 @@
+=== fresh baseline ===
+baseline chars=22018 anchors=58 distribution={'text': 4, 'attribute': 4, 'structure': 4, 'delete-element': 4, 'add-element': 4}
+=== round 1/20: scope=hero-subtitle kind=text ===
+  anchor=True contract=True visual=False (L1=True L2=False L3=compared:False) health=True
+=== round 2/20: scope=hero-cta-primary kind=attribute ===
+  anchor=True contract=True visual=True (L1=True L2=True L3=compared:True) health=True
+=== round 3/20: scope=intro-title kind=structure ===
+  anchor=True contract=True visual=True (L1=True L2=True L3=compared:True) health=True
+=== round 4/20: scope=nav-menu kind=delete-element ===
+  anchor=True contract=True visual=True (L1=True L2=True L3=compared:True) health=True
+=== round 5/20: scope=hero-visual kind=add-element ===
+  anchor=True contract=True visual=True (L1=True L2=True L3=compared:True) health=True
+=== round 6/20: scope=cases-title kind=text ===
+  anchor=True contract=True visual=True (L1=True L2=True L3=compared:True) health=True
+=== round 7/20: scope=cases-lead kind=attribute ===
+  anchor=True contract=True visual=True (L1=True L2=True L3=compared:True) health=True
+=== round 8/20: scope=services-cta-link kind=structure ===
+  anchor=True contract=True visual=True (L1=True L2=True L3=compared:True) health=True
+=== round 9/20: scope=intro-feature-grid kind=delete-element ===
+  anchor=True contract=True visual=True (L1=True L2=True L3=compared:True) health=True
+=== round 10/20: scope=case-card-grid kind=add-element ===
+  anchor=True contract=True visual=True (L1=True L2=True L3=reflow_skipped:True) health=True
+=== round 11/20: scope=contact-title kind=text ===
+  anchor=True contract=True visual=True (L1=True L2=True L3=compared:True) health=True
+=== round 12/20: scope=contact-email-label kind=attribute ===
+  anchor=True contract=True visual=True (L1=True L2=True L3=compared:True) health=True
+=== round 13/20: scope=contact-phone kind=structure ===
+  anchor=True contract=True visual=True (L1=True L2=True L3=compared:True) health=True
+=== round 14/20: scope=testimonial-cards kind=delete-element ===
+  anchor=True contract=True visual=True (L1=True L2=True L3=compared:True) health=True
+=== round 15/20: scope=contact-form kind=add-element ===
+  anchor=True contract=True visual=True (L1=True L2=True L3=compared:True) health=True
+=== round 16/20: scope=footer-brand kind=text ===
+  anchor=True contract=True visual=True (L1=True L2=True L3=compared:True) health=True
+=== round 17/20: scope=footer-social-title kind=attribute ===
+  anchor=True contract=True visual=True (L1=True L2=True L3=compared:True) health=True
+=== round 18/20: scope=footer-join-title kind=structure ===
+  anchor=True contract=True visual=True (L1=True L2=True L3=compared:True) health=True
+=== round 19/20: scope=footer-nav-list kind=delete-element ===
+  anchor=True contract=True visual=True (L1=True L2=True L3=compared:True) health=True
+=== round 20/20: scope=footer-join-list kind=add-element ===
+  anchor=True contract=True visual=True (L1=True L2=True L3=compared:True) health=True
+complete: wrote 20-round RESULTS.json

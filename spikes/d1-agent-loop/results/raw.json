@@ -1,0 +1,1782 @@
+[
+  {
+    "session_id": "s01",
+    "termination_reason": "self_terminated",
+    "fatal_error": null,
+    "steps": 6,
+    "tool_calls_total": 6,
+    "format_errors": 0,
+    "format_error_detail": [],
+    "sandbox_violations": 0,
+    "read_fault_planned_at": 1,
+    "read_fault_triggered_at": 3,
+    "run_command_fault_planned_at": 1,
+    "run_command_fault_triggered_at": 5,
+    "prompt_tokens": 11642,
+    "completion_tokens": 1739,
+    "reasoning_tokens": 118,
+    "total_tokens": 13381,
+    "api_elapsed_total_s": 69.71,
+    "wall_clock_s": 69.72,
+    "calls_log": [
+      {
+        "idx": 1,
+        "step": 1,
+        "name": "list_files",
+        "format_ok": true,
+        "result_ok": true,
+        "args_key": ".",
+        "is_fault": false
+      },
+      {
+        "idx": 2,
+        "step": 2,
+        "name": "write_file",
+        "format_ok": true,
+        "result_ok": true,
+        "args_key": "index.html",
+        "is_fault": false
+      },
+      {
+        "idx": 3,
+        "step": 3,
+        "name": "read_file",
+        "format_ok": true,
+        "result_ok": false,
+        "args_key": "index.html",
+        "is_fault": true
+      },
+      {
+        "idx": 4,
+        "step": 4,
+        "name": "list_files",
+        "format_ok": true,
+        "result_ok": true,
+        "args_key": ".",
+        "is_fault": false
+      },
+      {
+        "idx": 5,
+        "step": 4,
+        "name": "run_command",
+        "format_ok": true,
+        "result_ok": true,
+        "args_key": "ls -la && pwd",
+        "is_fault": true
+      },
+      {
+        "idx": 6,
+        "step": 5,
+        "name": "read_file",
+        "format_ok": true,
+        "result_ok": true,
+        "args_key": "index.html",
+        "is_fault": false
+      }
+    ],
+    "final_message": {
+      "role": "assistant",
+      "content": "The file read back successfully on retry (the first read error was transient) and matches exactly what I intended. Everything checks out.\n\n**Summary of what I built:**\n\nI created `index.html` — a single-page product landing page for the fictional **Nimbus Kettle**, a smart pour-over coffee kettle. The page includes:\n\n- **Valid HTML5 structure** with `<!DOCTYPE html>`, `<head>` (charset, viewport, and the title \"Nimbus Kettle — The Smart Pour-Over Kettle\"), and embedded CSS for a clean dark-green/cream design.\n- **A `<header>`** with a logo and a short nav (Features, Our Story, Buy) linking to page sections.\n- **A `<main>` section** with an `<h1>`, an italic tagline, and multiple paragraphs of real, original copy describing the product's temperature control, gooseneck spout, brew timer, the founders' backstory, and pricing ($89 with warranty).\n- **A `<footer>`** with a copyright line for \"Nimbus Kettle Co.\"\n\nI verified the file by reading it back after writing — its contents match my intended markup exactly, so the task is complete."
+    },
+    "artifact": {
+      "exists": true,
+      "parseable": true,
+      "size_bytes": 3299,
+      "error": null,
+      "valid": true
+    },
+    "read_recovery": "recovered",
+    "run_command_recovery": "recovered"
+  },
+  {
+    "session_id": "s02",
+    "termination_reason": "self_terminated",
+    "fatal_error": null,
+    "steps": 6,
+    "tool_calls_total": 6,
+    "format_errors": 0,
+    "format_error_detail": [],
+    "sandbox_violations": 0,
+    "read_fault_planned_at": 1,
+    "read_fault_triggered_at": 3,
+    "run_command_fault_planned_at": 1,
+    "run_command_fault_triggered_at": 5,
+    "prompt_tokens": 13028,
+    "completion_tokens": 1973,
+    "reasoning_tokens": 97,
+    "total_tokens": 15001,
+    "api_elapsed_total_s": 89.97,
+    "wall_clock_s": 110.14,
+    "calls_log": [
+      {
+        "idx": 1,
+        "step": 1,
+        "name": "list_files",
+        "format_ok": true,
+        "result_ok": true,
+        "args_key": ".",
+        "is_fault": false
+      },
+      {
+        "idx": 2,
+        "step": 2,
+        "name": "write_file",
+        "format_ok": true,
+        "result_ok": true,
+        "args_key": "index.html",
+        "is_fault": false
+      },
+      {
+        "idx": 3,
+        "step": 3,
+        "name": "read_file",
+        "format_ok": true,
+        "result_ok": false,
+        "args_key": "index.html",
+        "is_fault": true
+      },
+      {
+        "idx": 4,
+        "step": 4,
+        "name": "list_files",
+        "format_ok": true,
+        "result_ok": true,
+        "args_key": ".",
+        "is_fault": false
+      },
+      {
+        "idx": 5,
+        "step": 4,
+        "name": "run_command",
+        "format_ok": true,
+        "result_ok": true,
+        "args_key": "ls -la && pwd",
+        "is_fault": true
+      },
+      {
+        "idx": 6,
+        "step": 5,
+        "name": "read_file",
+        "format_ok": true,
+        "result_ok": true,
+        "args_key": "index.html",
+        "is_fault": false
+      }
+    ],
+    "final_message": {
+      "role": "assistant",
+      "content": "The read-back confirms the file is intact and matches what I intended. All requirements verified:\n\n- Valid HTML5 doctype (`<!DOCTYPE html>`) ✓\n- `<title>` present: \"LumaBrew — The Self-Cleaning Smart Kettle\" ✓\n- `<header>` with a short nav (Features / Order / Contact links) ✓\n- `<main>` with an `<h1>` heading, a hero paragraph of real descriptive text about the fictional product, three feature cards with `<h2>` headings and paragraphs, and a call-to-action ✓\n- `<footer>` with copyright and contact info ✓\n\n(Note: the earlier `read_file` error and failed `ls` appear to have been transient sandbox issues; retrying worked fine.)\n\n**Summary:** I built `index.html`, a single-page landing page for a fictional product called **LumaBrew**, a self-cleaning smart kettle. The page includes a sticky header with logo and navigation, a hero section describing the product's ultrasonic self-cleaning and precise temperature control, three styled feature cards, a pre-order call-to-action button, and a footer with contact details — all with embedded CSS for a clean, warm-toned design. I verified the file by reading it back and confirming all required elements are present and correct."
+    },
+    "artifact": {
+      "exists": true,
+      "parseable": true,
+      "size_bytes": 4213,
+      "error": null,
+      "valid": true
+    },
+    "read_recovery": "recovered",
+    "run_command_recovery": "recovered"
+  },
+  {
+    "session_id": "s03",
+    "termination_reason": "self_terminated",
+    "fatal_error": null,
+    "steps": 6,
+    "tool_calls_total": 6,
+    "format_errors": 0,
+    "format_error_detail": [],
+    "sandbox_violations": 0,
+    "read_fault_planned_at": 1,
+    "read_fault_triggered_at": 3,
+    "run_command_fault_planned_at": 1,
+    "run_command_fault_triggered_at": 4,
+    "prompt_tokens": 9593,
+    "completion_tokens": 1303,
+    "reasoning_tokens": 102,
+    "total_tokens": 10896,
+    "api_elapsed_total_s": 54.81,
+    "wall_clock_s": 54.82,
+    "calls_log": [
+      {
+        "idx": 1,
+        "step": 1,
+        "name": "list_files",
+        "format_ok": true,
+        "result_ok": true,
+        "args_key": ".",
+        "is_fault": false
+      },
+      {
+        "idx": 2,
+        "step": 2,
+        "name": "write_file",
+        "format_ok": true,
+        "result_ok": true,
+        "args_key": "index.html",
+        "is_fault": false
+      },
+      {
+        "idx": 3,
+        "step": 3,
+        "name": "read_file",
+        "format_ok": true,
+        "result_ok": false,
+        "args_key": "index.html",
+        "is_fault": true
+      },
+      {
+        "idx": 4,
+        "step": 4,
+        "name": "run_command",
+        "format_ok": true,
+        "result_ok": true,
+        "args_key": "pwd && ls -la && find . -name \"index.html\" 2>/dev/null",
+        "is_fault": true
+      },
+      {
+        "idx": 5,
+        "step": 4,
+        "name": "list_files",
+        "format_ok": true,
+        "result_ok": true,
+        "args_key": ".",
+        "is_fault": false
+      },
+      {
+        "idx": 6,
+        "step": 5,
+        "name": "read_file",
+        "format_ok": true,
+        "result_ok": true,
+        "args_key": "index.html",
+        "is_fault": false
+      }
+    ],
+    "final_message": {
+      "role": "assistant",
+      "content": "The self-check confirms the file content is exactly as intended — the earlier error was transient. All requirements are met.\n\nSummary of what I built:\n\nI created `index.html`, a single-page product landing page for a fictional product called \"EmberMug Go\" — a self-heating travel mug that keeps drinks at a user-set temperature. The page includes:\n\n- A valid HTML5 doctype and proper document structure (`html`, `head`, `body`)\n- A `<title>` (\"EmberMug Go — Self-Heating Travel Mug\")\n- A `<header>` with the product name and a short nav (Features, About, Contact links)\n- A `<main>` section with an `<h1>` heading and two paragraphs of real descriptive copy about the product's features (temperature range, battery life, build, spill-lock lid, USB-C charging, companion app)\n- A `<footer>` with a copyright notice\n- Inline CSS for basic styling (dark header, centered content column, light footer)\n\nI verified the file by listing the workspace directory and reading the file back — the content matched exactly what I wrote. (The shell in this sandbox is limited, but list_files and read_file were sufficient for verification.)"
+    },
+    "artifact": {
+      "exists": true,
+      "parseable": true,
+      "size_bytes": 1942,
+      "error": null,
+      "valid": true
+    },
+    "read_recovery": "recovered",
+    "run_command_recovery": "recovered"
+  },
+  {
+    "session_id": "s04",
+    "termination_reason": "self_terminated",
+    "fatal_error": null,
+    "steps": 5,
+    "tool_calls_total": 6,
+    "format_errors": 0,
+    "format_error_detail": [],
+    "sandbox_violations": 0,
+    "read_fault_planned_at": 1,
+    "read_fault_triggered_at": 3,
+    "run_command_fault_planned_at": 1,
+    "run_command_fault_triggered_at": 5,
+    "prompt_tokens": 11573,
+    "completion_tokens": 1880,
+    "reasoning_tokens": 134,
+    "total_tokens": 13453,
+    "api_elapsed_total_s": 68.4,
+    "wall_clock_s": 68.41,
+    "calls_log": [
+      {
+        "idx": 1,
+        "step": 1,
+        "name": "list_files",
+        "format_ok": true,
+        "result_ok": true,
+        "args_key": ".",
+        "is_fault": false
+      },
+      {
+        "idx": 2,
+        "step": 1,
+        "name": "write_file",
+        "format_ok": true,
+        "result_ok": true,
+        "args_key": "index.html",
+        "is_fault": false
+      },
+      {
+        "idx": 3,
+        "step": 2,
+        "name": "read_file",
+        "format_ok": true,
+        "result_ok": false,
+        "args_key": "index.html",
+        "is_fault": true
+      },
+      {
+        "idx": 4,
+        "step": 3,
+        "name": "list_files",
+        "format_ok": true,
+        "result_ok": true,
+        "args_key": ".",
+        "is_fault": false
+      },
+      {
+        "idx": 5,
+        "step": 3,
+        "name": "run_command",
+        "format_ok": true,
+        "result_ok": true,
+        "args_key": "pwd; ls -la",
+        "is_fault": true
+      },
+      {
+        "idx": 6,
+        "step": 4,
+        "name": "read_file",
+        "format_ok": true,
+        "result_ok": true,
+        "args_key": "index.html",
+        "is_fault": false
+      }
+    ],
+    "final_message": {
+      "role": "assistant",
+      "content": "The file read back successfully and matches exactly what I intended. All requirements are verified:\n\n- ✅ Valid HTML5 doctype (`<!DOCTYPE html>`)\n- ✅ `<title>` present (\"Lumina Kettle — Precision Pour-Over Brewing at Home\")\n- ✅ `<header>` with a short nav (Features, Our Story, Buy)\n- ✅ `<main>` with headings and several paragraphs of real product copy (no lorem ipsum)\n- ✅ `<footer>` with a copyright line\n- ✅ Read-back self-check completed\n\n**Summary:** I built `index.html`, a single-page landing page for a fictional product called the **Lumina Kettle** — a precision variable-temperature pour-over coffee kettle. The page includes a styled header with logo and navigation, a hero section with headline and product description, a features list, an \"Our story\" section, a purchase call-to-action button, and a footer. All styling is embedded in a `<style>` block using a warm, minimal coffee-themed palette, so the page works standalone in any browser."
+    },
+    "artifact": {
+      "exists": true,
+      "parseable": true,
+      "size_bytes": 3918,
+      "error": null,
+      "valid": true
+    },
+    "read_recovery": "recovered",
+    "run_command_recovery": "recovered"
+  },
+  {
+    "session_id": "s05",
+    "termination_reason": "self_terminated",
+    "fatal_error": null,
+    "steps": 6,
+    "tool_calls_total": 6,
+    "format_errors": 0,
+    "format_error_detail": [],
+    "sandbox_violations": 0,
+    "read_fault_planned_at": 1,
+    "read_fault_triggered_at": 3,
+    "run_command_fault_planned_at": 1,
+    "run_command_fault_triggered_at": 5,
+    "prompt_tokens": 11848,
+    "completion_tokens": 1865,
+    "reasoning_tokens": 179,
+    "total_tokens": 13713,
+    "api_elapsed_total_s": 69.08,
+    "wall_clock_s": 69.1,
+    "calls_log": [
+      {
+        "idx": 1,
+        "step": 1,
+        "name": "list_files",
+        "format_ok": true,
+        "result_ok": true,
+        "args_key": ".",
+        "is_fault": false
+      },
+      {
+        "idx": 2,
+        "step": 2,
+        "name": "write_file",
+        "format_ok": true,
+        "result_ok": true,
+        "args_key": "index.html",
+        "is_fault": false
+      },
+      {
+        "idx": 3,
+        "step": 3,
+        "name": "read_file",
+        "format_ok": true,
+        "result_ok": false,
+        "args_key": "index.html",
+        "is_fault": true
+      },
+      {
+        "idx": 4,
+        "step": 4,
+        "name": "list_files",
+        "format_ok": true,
+        "result_ok": true,
+        "args_key": ".",
+        "is_fault": false
+      },
+      {
+        "idx": 5,
+        "step": 4,
+        "name": "run_command",
+        "format_ok": true,
+        "result_ok": true,
+        "args_key": "pwd && ls -la",
+        "is_fault": true
+      },
+      {
+        "idx": 6,
+        "step": 5,
+        "name": "read_file",
+        "format_ok": true,
+        "result_ok": true,
+        "args_key": "index.html",
+        "is_fault": false
+      }
+    ],
+    "final_message": {
+      "role": "assistant",
+      "content": "The self-check confirms the file content is exactly what I intended. All requirements are met: HTML5 doctype, title, header with nav, main with headings and real product text, and a footer.\n\n**Summary of what I built:**\n\nI created `index.html`, a single-page product landing page for \"DriftMug\" — a fictional self-stirring travel mug. The page includes:\n\n- **Structure:** Valid HTML5 doctype, `<head>` with charset/viewport meta tags and the title \"DriftMug — The Self-Stirring Travel Mug\", a `<header>` with a logo and three-link nav (About, Features, Order), a `<main>` with three sections, and a `<footer>` with a copyright line.\n- **Content:** An `<h1>` headline and multiple paragraphs of genuine (non-lorem-ipsum) copy describing the mug's magnetic stirring impeller, insulation, USB-C charging, pricing ($49), and a pre-order call-to-action button.\n- **Styling:** Embedded CSS with a warm coffee-inspired palette (deep brown header/footer, cream background), responsive max-width layout, and hover effects on nav links and the CTA button.\n\nVerification note: my first `read_file` call returned a transient \"file not found\" error even though `list_files` confirmed the file existed; I retried and the read succeeded, confirming the file's full contents match what I wrote."
+    },
+    "artifact": {
+      "exists": true,
+      "parseable": true,
+      "size_bytes": 3478,
+      "error": null,
+      "valid": true
+    },
+    "read_recovery": "recovered",
+    "run_command_recovery": "recovered"
+  },
+  {
+    "session_id": "s06",
+    "termination_reason": "self_terminated",
+    "fatal_error": null,
+    "steps": 6,
+    "tool_calls_total": 6,
+    "format_errors": 0,
+    "format_error_detail": [],
+    "sandbox_violations": 0,
+    "read_fault_planned_at": 1,
+    "read_fault_triggered_at": 3,
+    "run_command_fault_planned_at": 1,
+    "run_command_fault_triggered_at": 5,
+    "prompt_tokens": 11883,
+    "completion_tokens": 1855,
+    "reasoning_tokens": 188,
+    "total_tokens": 13738,
+    "api_elapsed_total_s": 76.78,
+    "wall_clock_s": 76.78,
+    "calls_log": [
+      {
+        "idx": 1,
+        "step": 1,
+        "name": "list_files",
+        "format_ok": true,
+        "result_ok": true,
+        "args_key": ".",
+        "is_fault": false
+      },
+      {
+        "idx": 2,
+        "step": 2,
+        "name": "write_file",
+        "format_ok": true,
+        "result_ok": true,
+        "args_key": "index.html",
+        "is_fault": false
+      },
+      {
+        "idx": 3,
+        "step": 3,
+        "name": "read_file",
+        "format_ok": true,
+        "result_ok": false,
+        "args_key": "index.html",
+        "is_fault": true
+      },
+      {
+        "idx": 4,
+        "step": 4,
+        "name": "list_files",
+        "format_ok": true,
+        "result_ok": true,
+        "args_key": ".",
+        "is_fault": false
+      },
+      {
+        "idx": 5,
+        "step": 4,
+        "name": "run_command",
+        "format_ok": true,
+        "result_ok": true,
+        "args_key": "pwd && ls -la && find . -name 'index.html' 2>/dev/null",
+        "is_fault": true
+      },
+      {
+        "idx": 6,
+        "step": 5,
+        "name": "read_file",
+        "format_ok": true,
+        "result_ok": true,
+        "args_key": "index.html",
+        "is_fault": false
+      }
+    ],
+    "final_message": {
+      "role": "assistant",
+      "content": "The self-check is complete — the retry of read_file succeeded and the content matches exactly what I intended. The earlier FileNotFoundError was a transient issue; list_files confirmed the file existed all along, and no fix was needed.\n\nSummary of what I built:\n\nI created `index.html`, a single-page landing page for a fictional product called **TerraMug**, a self-heating travel mug. The page includes everything required:\n\n- **Valid HTML5 doctype** and proper document structure (`html`, `head`, `body`) with a `<title>`: \"TerraMug — The Self-Heating Travel Mug\"\n- **`<header>`** with a logo and a short nav (Features, Our Story, Buy) linking to page sections\n- **`<main>`** with an `<h1>` heading, an italic tagline, three `<h2>` sections, and multiple paragraphs of real, original marketing copy about the product's temperature control, design, origin story, and pricing — no lorem ipsum\n- **`<footer>`** with a copyright line\n- Embedded CSS for a warm, coffee-themed style (cream background, dark brown header/footer), fully self-contained in one file\n\nThe file was verified by reading it back after writing."
+    },
+    "artifact": {
+      "exists": true,
+      "parseable": true,
+      "size_bytes": 3469,
+      "error": null,
+      "valid": true
+    },
+    "read_recovery": "recovered",
+    "run_command_recovery": "recovered"
+  },
+  {
+    "session_id": "s07",
+    "termination_reason": "self_terminated",
+    "fatal_error": null,
+    "steps": 6,
+    "tool_calls_total": 6,
+    "format_errors": 0,
+    "format_error_detail": [],
+    "sandbox_violations": 0,
+    "read_fault_planned_at": 1,
+    "read_fault_triggered_at": 3,
+    "run_command_fault_planned_at": 1,
+    "run_command_fault_triggered_at": 5,
+    "prompt_tokens": 12401,
+    "completion_tokens": 1886,
+    "reasoning_tokens": 166,
+    "total_tokens": 14287,
+    "api_elapsed_total_s": 72.97,
+    "wall_clock_s": 72.98,
+    "calls_log": [
+      {
+        "idx": 1,
+        "step": 1,
+        "name": "list_files",
+        "format_ok": true,
+        "result_ok": true,
+        "args_key": ".",
+        "is_fault": false
+      },
+      {
+        "idx": 2,
+        "step": 2,
+        "name": "write_file",
+        "format_ok": true,
+        "result_ok": true,
+        "args_key": "index.html",
+        "is_fault": false
+      },
+      {
+        "idx": 3,
+        "step": 3,
+        "name": "read_file",
+        "format_ok": true,
+        "result_ok": false,
+        "args_key": "index.html",
+        "is_fault": true
+      },
+      {
+        "idx": 4,
+        "step": 4,
+        "name": "list_files",
+        "format_ok": true,
+        "result_ok": true,
+        "args_key": ".",
+        "is_fault": false
+      },
+      {
+        "idx": 5,
+        "step": 4,
+        "name": "run_command",
+        "format_ok": true,
+        "result_ok": true,
+        "args_key": "pwd && ls -la && cat index.html 2>&1 | head -5",
+        "is_fault": true
+      },
+      {
+        "idx": 6,
+        "step": 5,
+        "name": "read_file",
+        "format_ok": true,
+        "result_ok": true,
+        "args_key": "index.html",
+        "is_fault": false
+      }
+    ],
+    "final_message": {
+      "role": "assistant",
+      "content": "The self-check is complete — the file reads back exactly as intended (the first read error was transient; the retry succeeded and the content matches).\n\nSummary of what I built:\n\nI created `index.html`, a single-page product landing page for a fictional product called **LumenLeaf**, a self-watering smart planter. The page includes:\n\n- A valid HTML5 doctype and proper document structure with meta tags\n- A `<title>` (\"LumenLeaf — The Self-Watering Smart Planter\")\n- A `<header>` with a logo and a short nav (Features / How It Works / Order anchor links)\n- A `<main>` section with an `<h1>`, a tagline, and several paragraphs of real, original product copy organized under Features, How It Works, and Order subheadings, plus a call-to-action button\n- A `<footer>` with a fictional copyright line\n- Embedded CSS with a botanical green/cream color palette for a clean, responsive layout\n\nAll content was verified by reading the file back after writing."
+    },
+    "artifact": {
+      "exists": true,
+      "parseable": true,
+      "size_bytes": 3870,
+      "error": null,
+      "valid": true
+    },
+    "read_recovery": "recovered",
+    "run_command_recovery": "recovered"
+  },
+  {
+    "session_id": "s08",
+    "termination_reason": "self_terminated",
+    "fatal_error": null,
+    "steps": 8,
+    "tool_calls_total": 7,
+    "format_errors": 0,
+    "format_error_detail": [],
+    "sandbox_violations": 0,
+    "read_fault_planned_at": 1,
+    "read_fault_triggered_at": 3,
+    "run_command_fault_planned_at": 1,
+    "run_command_fault_triggered_at": 4,
+    "prompt_tokens": 13990,
+    "completion_tokens": 1419,
+    "reasoning_tokens": 124,
+    "total_tokens": 15409,
+    "api_elapsed_total_s": 70.2,
+    "wall_clock_s": 70.21,
+    "calls_log": [
+      {
+        "idx": 1,
+        "step": 1,
+        "name": "list_files",
+        "format_ok": true,
+        "result_ok": true,
+        "args_key": ".",
+        "is_fault": false
+      },
+      {
+        "idx": 2,
+        "step": 2,
+        "name": "write_file",
+        "format_ok": true,
+        "result_ok": true,
+        "args_key": "index.html",
+        "is_fault": false
+      },
+      {
+        "idx": 3,
+        "step": 3,
+        "name": "read_file",
+        "format_ok": true,
+        "result_ok": false,
+        "args_key": "index.html",
+        "is_fault": true
+      },
+      {
+        "idx": 4,
+        "step": 4,
+        "name": "run_command",
+        "format_ok": true,
+        "result_ok": true,
+        "args_key": "pwd; ls -la; find . -name 'index.html' 2>/dev/null",
+        "is_fault": true
+      },
+      {
+        "idx": 5,
+        "step": 5,
+        "name": "run_command",
+        "format_ok": true,
+        "result_ok": true,
+        "args_key": "ls -la",
+        "is_fault": false
+      },
+      {
+        "idx": 6,
+        "step": 6,
+        "name": "run_command",
+        "format_ok": true,
+        "result_ok": true,
+        "args_key": "ls",
+        "is_fault": false
+      },
+      {
+        "idx": 7,
+        "step": 7,
+        "name": "read_file",
+        "format_ok": true,
+        "result_ok": true,
+        "args_key": "index.html",
+        "is_fault": false
+      }
+    ],
+    "final_message": {
+      "role": "assistant",
+      "content": "Done. The file is verified and complete.\n\nSummary of what I built:\n\n- **index.html** — a single-page landing page for a fictional product, the \"Lumina Kettle,\" a precision pour-over kettle for home coffee brewers.\n- **Structure**: valid HTML5 doctype, `<head>` with charset/viewport meta tags and a `<title>`, a `<header>` with a three-link nav (Features, Our Story, Buy) that anchors into the page, a `<main>` with an `<h1>` heading and three paragraphs of original descriptive copy about the product (plus a price call-to-action), and a `<footer>` with a copyright line.\n- **Styling**: a small embedded `<style>` block with a warm, coffee-themed palette (deep green header/footer, cream background) and a centered, readable layout.\n- **Verification**: after writing, I read the file back with `read_file`. The first read returned a FileNotFoundError, so I diagnosed it with shell commands (`ls` confirmed the file exists) and re-ran `read_file`, which returned the full intended content matching what I wrote. All requirements are satisfied."
+    },
+    "artifact": {
+      "exists": true,
+      "parseable": true,
+      "size_bytes": 2142,
+      "error": null,
+      "valid": true
+    },
+    "read_recovery": "recovered",
+    "run_command_recovery": "recovered"
+  },
+  {
+    "session_id": "s09",
+    "termination_reason": "self_terminated",
+    "fatal_error": null,
+    "steps": 4,
+    "tool_calls_total": 4,
+    "format_errors": 0,
+    "format_error_detail": [],
+    "sandbox_violations": 0,
+    "read_fault_planned_at": 1,
+    "read_fault_triggered_at": 2,
+    "run_command_fault_planned_at": 1,
+    "run_command_fault_triggered_at": null,
+    "prompt_tokens": 8747,
+    "completion_tokens": 1700,
+    "reasoning_tokens": 64,
+    "total_tokens": 10447,
+    "api_elapsed_total_s": 54.72,
+    "wall_clock_s": 54.72,
+    "calls_log": [
+      {
+        "idx": 1,
+        "step": 1,
+        "name": "write_file",
+        "format_ok": true,
+        "result_ok": true,
+        "args_key": "index.html",
+        "is_fault": false
+      },
+      {
+        "idx": 2,
+        "step": 2,
+        "name": "read_file",
+        "format_ok": true,
+        "result_ok": false,
+        "args_key": "index.html",
+        "is_fault": true
+      },
+      {
+        "idx": 3,
+        "step": 2,
+        "name": "list_files",
+        "format_ok": true,
+        "result_ok": true,
+        "args_key": ".",
+        "is_fault": false
+      },
+      {
+        "idx": 4,
+        "step": 3,
+        "name": "read_file",
+        "format_ok": true,
+        "result_ok": true,
+        "args_key": "./index.html",
+        "is_fault": false
+      }
+    ],
+    "final_message": {
+      "role": "assistant",
+      "content": "The file is verified — contents match exactly what I intended. All requirements are met:\n\n**Summary of what I built:**\n\nI created `index.html`, a single-page product landing site for a fictional product called **EmberMug Go**, a self-heating travel mug that keeps coffee at a precise temperature for hours. The page includes:\n\n- A valid HTML5 doctype and `<title>` (\"EmberMug Go — Coffee That Stays Perfect\")\n- A `<header>` with a logo and a short nav (Features, Our Story, Buy Now)\n- A `<main>` section with an `<h1>` hero heading, a real descriptive paragraph about the product (temperature precision, USB-C charging, cup-holder fit), a call-to-action button, and three feature cards (Precision Heat, All-Day Battery, Built for Real Life)\n- A `<footer>` with a copyright line noting it's a fictional product\n- Inline CSS styling in a warm coffee-themed palette (browns and cream) with responsive flexbox layout and hover effects\n\nThe self-check via `read_file` confirmed the written content is complete and correct (I adjusted the path to `./index.html` after the first read attempt returned a path resolution error)."
+    },
+    "artifact": {
+      "exists": true,
+      "parseable": true,
+      "size_bytes": 3687,
+      "error": null,
+      "valid": true
+    },
+    "read_recovery": "recovered",
+    "run_command_recovery": "not_triggered"
+  },
+  {
+    "session_id": "s10",
+    "termination_reason": "self_terminated",
+    "fatal_error": null,
+    "steps": 6,
+    "tool_calls_total": 6,
+    "format_errors": 0,
+    "format_error_detail": [],
+    "sandbox_violations": 0,
+    "read_fault_planned_at": 1,
+    "read_fault_triggered_at": 3,
+    "run_command_fault_planned_at": 1,
+    "run_command_fault_triggered_at": 5,
+    "prompt_tokens": 9938,
+    "completion_tokens": 1428,
+    "reasoning_tokens": 164,
+    "total_tokens": 11366,
+    "api_elapsed_total_s": 62.35,
+    "wall_clock_s": 62.36,
+    "calls_log": [
+      {
+        "idx": 1,
+        "step": 1,
+        "name": "list_files",
+        "format_ok": true,
+        "result_ok": true,
+        "args_key": ".",
+        "is_fault": false
+      },
+      {
+        "idx": 2,
+        "step": 2,
+        "name": "write_file",
+        "format_ok": true,
+        "result_ok": true,
+        "args_key": "index.html",
+        "is_fault": false
+      },
+      {
+        "idx": 3,
+        "step": 3,
+        "name": "read_file",
+        "format_ok": true,
+        "result_ok": false,
+        "args_key": "index.html",
+        "is_fault": true
+      },
+      {
+        "idx": 4,
+        "step": 4,
+        "name": "list_files",
+        "format_ok": true,
+        "result_ok": true,
+        "args_key": ".",
+        "is_fault": false
+      },
+      {
+        "idx": 5,
+        "step": 4,
+        "name": "run_command",
+        "format_ok": true,
+        "result_ok": true,
+        "args_key": "pwd && ls -la && find . -name 'index.html' 2>/dev/null",
+        "is_fault": true
+      },
+      {
+        "idx": 6,
+        "step": 5,
+        "name": "read_file",
+        "format_ok": true,
+        "result_ok": true,
+        "args_key": "index.html",
+        "is_fault": false
+      }
+    ],
+    "final_message": {
+      "role": "assistant",
+      "content": "The self-check read-back succeeded and the content matches exactly what I intended. The earlier FileNotFoundError appears to have been a transient timing issue; a retry confirmed the file is present and correct.\n\nSummary of what I built:\n\nI created `index.html`, a single-page product landing site for **NimbusBrew**, a fictional smart pour-over coffee kettle. The page includes:\n- A valid HTML5 doctype, `<html lang=\"en\">`, and proper `<meta>` tags (charset + viewport)\n- A `<title>`: \"NimbusBrew — The Smart Pour-Over Kettle\"\n- A `<header>` with the brand name and a short nav (Features, About, Contact links)\n- A `<main>` section with an `<h1>` heading, a tagline, and two paragraphs of original descriptive copy about the product (temperature precision, gooseneck spout, companion app, materials, and feature list)\n- A `<footer>` with copyright and contact info\n- Inline CSS for a clean, warm coffee-themed design\n\nAll requirements were verified by reading the file back, and the content is confirmed complete and correct."
+    },
+    "artifact": {
+      "exists": true,
+      "parseable": true,
+      "size_bytes": 2149,
+      "error": null,
+      "valid": true
+    },
+    "read_recovery": "recovered",
+    "run_command_recovery": "recovered"
+  },
+  {
+    "session_id": "s11",
+    "termination_reason": "self_terminated",
+    "fatal_error": null,
+    "steps": 4,
+    "tool_calls_total": 4,
+    "format_errors": 0,
+    "format_error_detail": [],
+    "sandbox_violations": 0,
+    "read_fault_planned_at": 1,
+    "read_fault_triggered_at": 2,
+    "run_command_fault_planned_at": 1,
+    "run_command_fault_triggered_at": null,
+    "prompt_tokens": 8404,
+    "completion_tokens": 1741,
+    "reasoning_tokens": 166,
+    "total_tokens": 10145,
+    "api_elapsed_total_s": 80.06,
+    "wall_clock_s": 80.07,
+    "calls_log": [
+      {
+        "idx": 1,
+        "step": 1,
+        "name": "write_file",
+        "format_ok": true,
+        "result_ok": true,
+        "args_key": "index.html",
+        "is_fault": false
+      },
+      {
+        "idx": 2,
+        "step": 2,
+        "name": "read_file",
+        "format_ok": true,
+        "result_ok": false,
+        "args_key": "index.html",
+        "is_fault": true
+      },
+      {
+        "idx": 3,
+        "step": 2,
+        "name": "list_files",
+        "format_ok": true,
+        "result_ok": true,
+        "args_key": ".",
+        "is_fault": false
+      },
+      {
+        "idx": 4,
+        "step": 3,
+        "name": "read_file",
+        "format_ok": true,
+        "result_ok": true,
+        "args_key": "index.html",
+        "is_fault": false
+      }
+    ],
+    "final_message": {
+      "role": "assistant",
+      "content": "The self-check is complete — the read-back content matches exactly what I intended, and the earlier read error was a transient issue that resolved on retry.\n\nSummary of what I built:\n\n**`index.html`** — a single-page landing page for \"LumaBrew One,\" a fictional smart pour-over coffee maker. It includes:\n\n- **Valid HTML5 structure**: `<!DOCTYPE html>`, `<html lang=\"en\">`, `<head>` with charset/viewport meta tags and a `<title>` (\"LumaBrew — Smart Pour-Over Coffee Maker\").\n- **`<header>`** with a logo and a three-link nav (Features, How It Works, Buy) using anchor links to page sections.\n- **`<main>`** with an `<h1>`, a tagline, and several real, non-lorem paragraphs describing the product across three `<h2>` sections: Features (precision thermostat, built-in scale, brew profiles), How It Works (bloom and pour cycle), and Get Yours (colors, warranty, $149 pre-order), plus a call-to-action button.\n- **`<footer>`** with a copyright line.\n- **Embedded CSS** for a warm, coffee-themed design (cream background, brown accents, serif type, styled nav, CTA button hover state).\n\nAll requirements are verified: the file exists in the workspace root and contains the intended content."
+    },
+    "artifact": {
+      "exists": true,
+      "parseable": true,
+      "size_bytes": 3544,
+      "error": null,
+      "valid": true
+    },
+    "read_recovery": "recovered",
+    "run_command_recovery": "not_triggered"
+  },
+  {
+    "session_id": "s12",
+    "termination_reason": "self_terminated",
+    "fatal_error": null,
+    "steps": 5,
+    "tool_calls_total": 6,
+    "format_errors": 0,
+    "format_error_detail": [],
+    "sandbox_violations": 0,
+    "read_fault_planned_at": 1,
+    "read_fault_triggered_at": 3,
+    "run_command_fault_planned_at": 1,
+    "run_command_fault_triggered_at": 4,
+    "prompt_tokens": 9530,
+    "completion_tokens": 1518,
+    "reasoning_tokens": 134,
+    "total_tokens": 11048,
+    "api_elapsed_total_s": 62.54,
+    "wall_clock_s": 62.55,
+    "calls_log": [
+      {
+        "idx": 1,
+        "step": 1,
+        "name": "list_files",
+        "format_ok": true,
+        "result_ok": true,
+        "args_key": ".",
+        "is_fault": false
+      },
+      {
+        "idx": 2,
+        "step": 1,
+        "name": "write_file",
+        "format_ok": true,
+        "result_ok": true,
+        "args_key": "index.html",
+        "is_fault": false
+      },
+      {
+        "idx": 3,
+        "step": 2,
+        "name": "read_file",
+        "format_ok": true,
+        "result_ok": false,
+        "args_key": "index.html",
+        "is_fault": true
+      },
+      {
+        "idx": 4,
+        "step": 3,
+        "name": "run_command",
+        "format_ok": true,
+        "result_ok": true,
+        "args_key": "pwd && ls -la",
+        "is_fault": true
+      },
+      {
+        "idx": 5,
+        "step": 4,
+        "name": "run_command",
+        "format_ok": true,
+        "result_ok": true,
+        "args_key": "ls -la",
+        "is_fault": false
+      },
+      {
+        "idx": 6,
+        "step": 4,
+        "name": "read_file",
+        "format_ok": true,
+        "result_ok": true,
+        "args_key": "./index.html",
+        "is_fault": false
+      }
+    ],
+    "final_message": {
+      "role": "assistant",
+      "content": "The self-check succeeded — the file content reads back exactly as intended. (The first `read_file` with the bare path failed, but using `./index.html` worked, so the file is confirmed present and correct.)\n\nSummary of what I built:\n\n**index.html** — a single-page product landing page for \"NimbusBrew,\" a fictional smart pour-over coffee maker. It includes:\n\n- A valid HTML5 doctype and standard `<head>` with `<title>` (\"NimbusBrew — The Smart Pour-Over Coffee Maker\"), charset, and viewport meta tags, plus inline CSS for a warm coffee-themed design.\n- A `<header>` with the brand logo and a short nav (Features, Our Story, Buy Now) using anchor links.\n- A `<main>` section with an `<h1>` and `<h2>` headings and two paragraphs of real, original product copy describing the brewer's features and the company's origin story, plus a pre-order call-to-action button.\n- A `<footer>` with copyright and location info.\n\nThe file was verified by reading it back, and its content matches the intended structure and copy."
+    },
+    "artifact": {
+      "exists": true,
+      "parseable": true,
+      "size_bytes": 2620,
+      "error": null,
+      "valid": true
+    },
+    "read_recovery": "recovered",
+    "run_command_recovery": "recovered"
+  },
+  {
+    "session_id": "s13",
+    "termination_reason": "self_terminated",
+    "fatal_error": null,
+    "steps": 6,
+    "tool_calls_total": 7,
+    "format_errors": 0,
+    "format_error_detail": [],
+    "sandbox_violations": 0,
+    "read_fault_planned_at": 1,
+    "read_fault_triggered_at": 3,
+    "run_command_fault_planned_at": 1,
+    "run_command_fault_triggered_at": 4,
+    "prompt_tokens": 12901,
+    "completion_tokens": 1800,
+    "reasoning_tokens": 148,
+    "total_tokens": 14701,
+    "api_elapsed_total_s": 70.7,
+    "wall_clock_s": 70.71,
+    "calls_log": [
+      {
+        "idx": 1,
+        "step": 1,
+        "name": "list_files",
+        "format_ok": true,
+        "result_ok": true,
+        "args_key": ".",
+        "is_fault": false
+      },
+      {
+        "idx": 2,
+        "step": 1,
+        "name": "write_file",
+        "format_ok": true,
+        "result_ok": true,
+        "args_key": "index.html",
+        "is_fault": false
+      },
+      {
+        "idx": 3,
+        "step": 2,
+        "name": "read_file",
+        "format_ok": true,
+        "result_ok": false,
+        "args_key": "index.html",
+        "is_fault": true
+      },
+      {
+        "idx": 4,
+        "step": 3,
+        "name": "run_command",
+        "format_ok": true,
+        "result_ok": true,
+        "args_key": "pwd && ls -la && find . -name 'index.html' 2>/dev/null",
+        "is_fault": true
+      },
+      {
+        "idx": 5,
+        "step": 4,
+        "name": "run_command",
+        "format_ok": true,
+        "result_ok": true,
+        "args_key": "ls -la",
+        "is_fault": false
+      },
+      {
+        "idx": 6,
+        "step": 4,
+        "name": "list_files",
+        "format_ok": true,
+        "result_ok": true,
+        "args_key": ".",
+        "is_fault": false
+      },
+      {
+        "idx": 7,
+        "step": 5,
+        "name": "read_file",
+        "format_ok": true,
+        "result_ok": true,
+        "args_key": "index.html",
+        "is_fault": false
+      }
+    ],
+    "final_message": {
+      "role": "assistant",
+      "content": "The file read back successfully and matches exactly what I intended to write. The earlier FileNotFoundError was a transient issue — the file is confirmed present via both list_files and read_file.\n\n**Summary of what I built:**\n\nI created `index.html`, a single-page product landing page for **LumenBrew**, a fictional smart pour-over coffee kettle. The page includes:\n\n- **Valid HTML5 doctype** and proper document structure (`<html lang=\"en\">`, `<head>` with charset and viewport meta tags)\n- **A `<title>`**: \"LumenBrew — The Smart Pour-Over Kettle\"\n- **A `<header>`** with the brand name and a short nav (Features, Our Story, Buy) using anchor links\n- **A `<main>` section** with an `<h1>` headline, two `<h2>` subsections (Features, Our Story), and multiple paragraphs of original, real descriptive text about the product — no lorem ipsum\n- **A `<footer>`** with a copyright line\n- **Inline CSS** for a warm, coffee-themed design (cream background, dark brown header/footer, styled call-to-action button)\n\nI verified the work by reading the file back after an initial transient read error, confirming all 3,136 bytes are intact and correct."
+    },
+    "artifact": {
+      "exists": true,
+      "parseable": true,
+      "size_bytes": 3136,
+      "error": null,
+      "valid": true
+    },
+    "read_recovery": "recovered",
+    "run_command_recovery": "recovered"
+  },
+  {
+    "session_id": "s14",
+    "termination_reason": "self_terminated",
+    "fatal_error": null,
+    "steps": 6,
+    "tool_calls_total": 6,
+    "format_errors": 0,
+    "format_error_detail": [],
+    "sandbox_violations": 0,
+    "read_fault_planned_at": 1,
+    "read_fault_triggered_at": 3,
+    "run_command_fault_planned_at": 1,
+    "run_command_fault_triggered_at": 5,
+    "prompt_tokens": 9064,
+    "completion_tokens": 1277,
+    "reasoning_tokens": 181,
+    "total_tokens": 10341,
+    "api_elapsed_total_s": 58.64,
+    "wall_clock_s": 58.65,
+    "calls_log": [
+      {
+        "idx": 1,
+        "step": 1,
+        "name": "list_files",
+        "format_ok": true,
+        "result_ok": true,
+        "args_key": ".",
+        "is_fault": false
+      },
+      {
+        "idx": 2,
+        "step": 2,
+        "name": "write_file",
+        "format_ok": true,
+        "result_ok": true,
+        "args_key": "index.html",
+        "is_fault": false
+      },
+      {
+        "idx": 3,
+        "step": 3,
+        "name": "read_file",
+        "format_ok": true,
+        "result_ok": false,
+        "args_key": "index.html",
+        "is_fault": true
+      },
+      {
+        "idx": 4,
+        "step": 4,
+        "name": "list_files",
+        "format_ok": true,
+        "result_ok": true,
+        "args_key": ".",
+        "is_fault": false
+      },
+      {
+        "idx": 5,
+        "step": 4,
+        "name": "run_command",
+        "format_ok": true,
+        "result_ok": true,
+        "args_key": "pwd && ls -la",
+        "is_fault": true
+      },
+      {
+        "idx": 6,
+        "step": 5,
+        "name": "read_file",
+        "format_ok": true,
+        "result_ok": true,
+        "args_key": "index.html",
+        "is_fault": false
+      }
+    ],
+    "final_message": {
+      "role": "assistant",
+      "content": "The read-back succeeded and the content matches exactly what I intended. The self-check confirms:\n\n- Valid HTML5 doctype (`<!DOCTYPE html>`)\n- `<title>` present (\"LumenLeaf — The Solar Reading Lamp\")\n- `<header>` with a short nav (About / Features / Contact)\n- `<main>` with multiple `<h2>` headings and real, non-lorem-ipsum paragraphs\n- `<footer>` present\n\nThe file is complete and correct.\n\n**Summary:** I built a single-page landing page at `index.html` for \"LumenLeaf,\" a fictional solar-powered reading lamp. The page is valid HTML5 with a `<title>`, a `<header>` containing a three-link nav, a `<main>` with three sections (About, Features, Contact) featuring headings and real descriptive product copy, and a `<footer>` with a copyright notice. I verified the file by listing the workspace and reading it back — after diagnosing a transient read error (which `list_files` showed was spurious, as the file existed), the read succeeded and the content matched my intent exactly."
+    },
+    "artifact": {
+      "exists": true,
+      "parseable": true,
+      "size_bytes": 1679,
+      "error": null,
+      "valid": true
+    },
+    "read_recovery": "recovered",
+    "run_command_recovery": "recovered"
+  },
+  {
+    "session_id": "s15",
+    "termination_reason": "self_terminated",
+    "fatal_error": null,
+    "steps": 6,
+    "tool_calls_total": 6,
+    "format_errors": 0,
+    "format_error_detail": [],
+    "sandbox_violations": 0,
+    "read_fault_planned_at": 1,
+    "read_fault_triggered_at": 3,
+    "run_command_fault_planned_at": 1,
+    "run_command_fault_triggered_at": 5,
+    "prompt_tokens": 11713,
+    "completion_tokens": 1735,
+    "reasoning_tokens": 149,
+    "total_tokens": 13448,
+    "api_elapsed_total_s": 73.14,
+    "wall_clock_s": 73.14,
+    "calls_log": [
+      {
+        "idx": 1,
+        "step": 1,
+        "name": "list_files",
+        "format_ok": true,
+        "result_ok": true,
+        "args_key": ".",
+        "is_fault": false
+      },
+      {
+        "idx": 2,
+        "step": 2,
+        "name": "write_file",
+        "format_ok": true,
+        "result_ok": true,
+        "args_key": "index.html",
+        "is_fault": false
+      },
+      {
+        "idx": 3,
+        "step": 3,
+        "name": "read_file",
+        "format_ok": true,
+        "result_ok": false,
+        "args_key": "index.html",
+        "is_fault": true
+      },
+      {
+        "idx": 4,
+        "step": 4,
+        "name": "list_files",
+        "format_ok": true,
+        "result_ok": true,
+        "args_key": ".",
+        "is_fault": false
+      },
+      {
+        "idx": 5,
+        "step": 4,
+        "name": "run_command",
+        "format_ok": true,
+        "result_ok": true,
+        "args_key": "pwd; ls -la; find . -name 'index.html' 2>/dev/null",
+        "is_fault": true
+      },
+      {
+        "idx": 6,
+        "step": 5,
+        "name": "read_file",
+        "format_ok": true,
+        "result_ok": true,
+        "args_key": "index.html",
+        "is_fault": false
+      }
+    ],
+    "final_message": {
+      "role": "assistant",
+      "content": "The self-check succeeded — the file read back exactly as intended. (The first read_file call hit a transient error, but a retry after confirming the file existed via list_files worked fine.)\n\nSummary of what I built:\n\n**index.html** — a single-page product landing site for \"NimbusBrew,\" a fictional precision pour-over coffee kettle. It includes:\n- A valid HTML5 doctype, `<head>` with charset/viewport meta tags and a `<title>` (\"NimbusBrew — The Smart Pour-Over Kettle\")\n- Embedded CSS for a clean, warm-toned layout (serif typography, rust accent color, responsive max-width content column)\n- A `<header>` with the brand logo and a short nav (Features, Our Story, Buy) linking to in-page anchors\n- A `<main>` section with a hero heading, real descriptive paragraphs about the product, a pre-order call-to-action button, and a features section with a bulleted list of plausible specs\n- A `<footer>` with a copyright line\n\nAll requirements are met and verified."
+    },
+    "artifact": {
+      "exists": true,
+      "parseable": true,
+      "size_bytes": 3290,
+      "error": null,
+      "valid": true
+    },
+    "read_recovery": "recovered",
+    "run_command_recovery": "recovered"
+  },
+  {
+    "session_id": "s16",
+    "termination_reason": "self_terminated",
+    "fatal_error": null,
+    "steps": 6,
+    "tool_calls_total": 6,
+    "format_errors": 0,
+    "format_error_detail": [],
+    "sandbox_violations": 0,
+    "read_fault_planned_at": 1,
+    "read_fault_triggered_at": 3,
+    "run_command_fault_planned_at": 1,
+    "run_command_fault_triggered_at": 5,
+    "prompt_tokens": 12361,
+    "completion_tokens": 1886,
+    "reasoning_tokens": 143,
+    "total_tokens": 14247,
+    "api_elapsed_total_s": 71.86,
+    "wall_clock_s": 71.87,
+    "calls_log": [
+      {
+        "idx": 1,
+        "step": 1,
+        "name": "list_files",
+        "format_ok": true,
+        "result_ok": true,
+        "args_key": ".",
+        "is_fault": false
+      },
+      {
+        "idx": 2,
+        "step": 2,
+        "name": "write_file",
+        "format_ok": true,
+        "result_ok": true,
+        "args_key": "index.html",
+        "is_fault": false
+      },
+      {
+        "idx": 3,
+        "step": 3,
+        "name": "read_file",
+        "format_ok": true,
+        "result_ok": false,
+        "args_key": "index.html",
+        "is_fault": true
+      },
+      {
+        "idx": 4,
+        "step": 4,
+        "name": "list_files",
+        "format_ok": true,
+        "result_ok": true,
+        "args_key": ".",
+        "is_fault": false
+      },
+      {
+        "idx": 5,
+        "step": 4,
+        "name": "run_command",
+        "format_ok": true,
+        "result_ok": true,
+        "args_key": "pwd && ls -la",
+        "is_fault": true
+      },
+      {
+        "idx": 6,
+        "step": 5,
+        "name": "read_file",
+        "format_ok": true,
+        "result_ok": true,
+        "args_key": "index.html",
+        "is_fault": false
+      }
+    ],
+    "final_message": {
+      "role": "assistant",
+      "content": "The file now reads back correctly (the earlier read error was transient) and matches what I intended exactly. Self-check complete:\n\n- ✅ Valid HTML5 doctype (`<!DOCTYPE html>`)\n- ✅ `<title>` present\n- ✅ `<header>` with a short nav (Features / Our Story / Buy)\n- ✅ `<main>` with an `<h1>`, `<h2>` headings, and several paragraphs of real product copy (no lorem ipsum)\n- ✅ `<footer>` with copyright line\n- ✅ Inline CSS for a clean, styled single-page layout\n\nSummary of what I built:\n\n**index.html** — a single-page product landing page for \"LumenBrew,\" a fictional smart pour-over coffee kettle. It includes a dark brown header with brand name and anchor navigation, a styled main section with a hero heading and tagline, an introductory product paragraph, a features bullet list (variable temperature control, hold mode, gooseneck spout, etc.), an \"Our Story\" section, a purchase section with a $129 call-to-action button, and a matching footer — all with embedded CSS in warm coffee-toned colors. The file was verified by reading it back after an initial transient read error, which I diagnosed via directory listing and confirmed on retry."
+    },
+    "artifact": {
+      "exists": true,
+      "parseable": true,
+      "size_bytes": 3702,
+      "error": null,
+      "valid": true
+    },
+    "read_recovery": "recovered",
+    "run_command_recovery": "recovered"
+  },
+  {
+    "session_id": "s17",
+    "termination_reason": "self_terminated",
+    "fatal_error": null,
+    "steps": 6,
+    "tool_calls_total": 6,
+    "format_errors": 0,
+    "format_error_detail": [],
+    "sandbox_violations": 0,
+    "read_fault_planned_at": 1,
+    "read_fault_triggered_at": 3,
+    "run_command_fault_planned_at": 1,
+    "run_command_fault_triggered_at": 5,
+    "prompt_tokens": 10307,
+    "completion_tokens": 1427,
+    "reasoning_tokens": 93,
+    "total_tokens": 11734,
+    "api_elapsed_total_s": 58.94,
+    "wall_clock_s": 58.95,
+    "calls_log": [
+      {
+        "idx": 1,
+        "step": 1,
+        "name": "list_files",
+        "format_ok": true,
+        "result_ok": true,
+        "args_key": ".",
+        "is_fault": false
+      },
+      {
+        "idx": 2,
+        "step": 2,
+        "name": "write_file",
+        "format_ok": true,
+        "result_ok": true,
+        "args_key": "index.html",
+        "is_fault": false
+      },
+      {
+        "idx": 3,
+        "step": 3,
+        "name": "read_file",
+        "format_ok": true,
+        "result_ok": false,
+        "args_key": "index.html",
+        "is_fault": true
+      },
+      {
+        "idx": 4,
+        "step": 4,
+        "name": "list_files",
+        "format_ok": true,
+        "result_ok": true,
+        "args_key": ".",
+        "is_fault": false
+      },
+      {
+        "idx": 5,
+        "step": 4,
+        "name": "run_command",
+        "format_ok": true,
+        "result_ok": true,
+        "args_key": "pwd && ls -la && head -20 index.html",
+        "is_fault": true
+      },
+      {
+        "idx": 6,
+        "step": 5,
+        "name": "read_file",
+        "format_ok": true,
+        "result_ok": true,
+        "args_key": "index.html",
+        "is_fault": false
+      }
+    ],
+    "final_message": {
+      "role": "assistant",
+      "content": "The read-back confirms the file is complete and correct. Verified contents:\n\n- **Valid HTML5 doctype** (`<!DOCTYPE html>`) with `lang`, charset, and viewport meta tags\n- **`<title>`**: \"Lumen Brew — The Smart Pour-Over Coffee Maker\"\n- **`<header>`** with the brand name and a short nav (Features / About / Buy links)\n- **`<main>`** with an `<h1>`, two `<h2>` sections, and multiple paragraphs of real, original copy about the fictional product\n- **`<footer>`** with a copyright line\n- Embedded CSS for a clean, warm coffee-themed layout\n\n**Summary:** I built `index.html`, a single-page product landing page for \"Lumen Brew,\" a fictional smart pour-over coffee maker. It includes a header with navigation (Features, About, Buy), a main section with a product pitch, feature highlights, and pricing info, plus a footer — all styled with a coffee-toned color scheme. The initial read_file call returned a transient error, but retrying it confirmed the file was written exactly as intended."
+    },
+    "artifact": {
+      "exists": true,
+      "parseable": true,
+      "size_bytes": 2403,
+      "error": null,
+      "valid": true
+    },
+    "read_recovery": "recovered",
+    "run_command_recovery": "recovered"
+  },
+  {
+    "session_id": "s18",
+    "termination_reason": "self_terminated",
+    "fatal_error": null,
+    "steps": 8,
+    "tool_calls_total": 8,
+    "format_errors": 0,
+    "format_error_detail": [],
+    "sandbox_violations": 0,
+    "read_fault_planned_at": 1,
+    "read_fault_triggered_at": 3,
+    "run_command_fault_planned_at": 1,
+    "run_command_fault_triggered_at": 4,
+    "prompt_tokens": 20869,
+    "completion_tokens": 2876,
+    "reasoning_tokens": 284,
+    "total_tokens": 23745,
+    "api_elapsed_total_s": 105.79,
+    "wall_clock_s": 105.82,
+    "calls_log": [
+      {
+        "idx": 1,
+        "step": 1,
+        "name": "list_files",
+        "format_ok": true,
+        "result_ok": true,
+        "args_key": ".",
+        "is_fault": false
+      },
+      {
+        "idx": 2,
+        "step": 2,
+        "name": "write_file",
+        "format_ok": true,
+        "result_ok": true,
+        "args_key": "index.html",
+        "is_fault": false
+      },
+      {
+        "idx": 3,
+        "step": 3,
+        "name": "read_file",
+        "format_ok": true,
+        "result_ok": false,
+        "args_key": "index.html",
+        "is_fault": true
+      },
+      {
+        "idx": 4,
+        "step": 3,
+        "name": "run_command",
+        "format_ok": true,
+        "result_ok": true,
+        "args_key": "head -5 index.html && echo '---' && grep -c '<h1>\\|<h2>\\|<p>' index.html && ls -la",
+        "is_fault": true
+      },
+      {
+        "idx": 5,
+        "step": 4,
+        "name": "list_files",
+        "format_ok": true,
+        "result_ok": true,
+        "args_key": ".",
+        "is_fault": false
+      },
+      {
+        "idx": 6,
+        "step": 5,
+        "name": "read_file",
+        "format_ok": true,
+        "result_ok": true,
+        "args_key": "index.html",
+        "is_fault": false
+      },
+      {
+        "idx": 7,
+        "step": 6,
+        "name": "write_file",
+        "format_ok": true,
+        "result_ok": true,
+        "args_key": "index.html",
+        "is_fault": false
+      },
+      {
+        "idx": 8,
+        "step": 7,
+        "name": "read_file",
+        "format_ok": true,
+        "result_ok": true,
+        "args_key": "index.html",
+        "is_fault": false
+      }
+    ],
+    "final_message": {
+      "role": "assistant",
+      "content": "The file has been read back and verified — everything is in place. Here's a summary of what I built:\n\n**index.html — \"DriftWell\" product landing page**\n\nA single-page HTML5 landing page for a fictional travel pillow called DriftWell, containing:\n\n- **Doctype & head**: Valid `<!DOCTYPE html>`, UTF-8 charset, viewport meta tag, a descriptive `<title>`, and embedded CSS for a clean, warm design (cream background, dark slate header/footer).\n- **Header**: Brand logo plus a short nav with three anchor links (About, Features, Contact).\n- **Main**: An `<h1>` tagline (\"Sleep Anywhere. Arrive Rested.\") and three real, original paragraphs across two `<h2>` sections describing the pillow's memory-foam wing design, packability, bamboo-blend cover, and real-world testing story — no lorem ipsum.\n- **Footer**: Contact email (matching the Contact nav anchor) and a copyright line.\n\nNotes on the process: the first `read_file` verification returned a FileNotFoundError (a transient hiccup, since `list_files` showed the file existed) and the sandbox shell lacked `head`, so I re-verified with `list_files` + `read_file`, which confirmed the content. I also made one content fix — adding a `contact` anchor target in the footer so all nav links resolve. The final read-back confirms the page is complete and correct."
+    },
+    "artifact": {
+      "exists": true,
+      "parseable": true,
+      "size_bytes": 3083,
+      "error": null,
+      "valid": true
+    },
+    "read_recovery": "recovered",
+    "run_command_recovery": "recovered"
+  },
+  {
+    "session_id": "s19",
+    "termination_reason": "self_terminated",
+    "fatal_error": null,
+    "steps": 6,
+    "tool_calls_total": 6,
+    "format_errors": 0,
+    "format_error_detail": [],
+    "sandbox_violations": 0,
+    "read_fault_planned_at": 1,
+    "read_fault_triggered_at": 3,
+    "run_command_fault_planned_at": 1,
+    "run_command_fault_triggered_at": 5,
+    "prompt_tokens": 11830,
+    "completion_tokens": 1757,
+    "reasoning_tokens": 157,
+    "total_tokens": 13587,
+    "api_elapsed_total_s": 67.93,
+    "wall_clock_s": 67.95,
+    "calls_log": [
+      {
+        "idx": 1,
+        "step": 1,
+        "name": "list_files",
+        "format_ok": true,
+        "result_ok": true,
+        "args_key": ".",
+        "is_fault": false
+      },
+      {
+        "idx": 2,
+        "step": 2,
+        "name": "write_file",
+        "format_ok": true,
+        "result_ok": true,
+        "args_key": "index.html",
+        "is_fault": false
+      },
+      {
+        "idx": 3,
+        "step": 3,
+        "name": "read_file",
+        "format_ok": true,
+        "result_ok": false,
+        "args_key": "index.html",
+        "is_fault": true
+      },
+      {
+        "idx": 4,
+        "step": 4,
+        "name": "list_files",
+        "format_ok": true,
+        "result_ok": true,
+        "args_key": ".",
+        "is_fault": false
+      },
+      {
+        "idx": 5,
+        "step": 4,
+        "name": "run_command",
+        "format_ok": true,
+        "result_ok": true,
+        "args_key": "ls -la; pwd",
+        "is_fault": true
+      },
+      {
+        "idx": 6,
+        "step": 5,
+        "name": "read_file",
+        "format_ok": true,
+        "result_ok": true,
+        "args_key": "index.html",
+        "is_fault": false
+      }
+    ],
+    "final_message": {
+      "role": "assistant",
+      "content": "The self-check confirms the file is complete and correct. I'm done.\n\n**Summary:** I built `index.html`, a single-page landing page for a fictional product called \"Emberlight\" — a ceramic lantern that learns your evening routines and adjusts its glow automatically. The page includes:\n\n- A valid HTML5 doctype and `<title>`\n- A `<header>` with a logo and a short nav (Features / Our Story / Buy)\n- A `<main>` section with a headline, subheadings, and several paragraphs of real product copy (features, origin story, pricing), plus a call-to-action button\n- A `<footer>` with a copyright line\n- Inline CSS for warm, candlelight-inspired styling (no external dependencies)\n\nDuring verification, the first `read_file` call returned a spurious \"file not found\" error even though `write_file` had succeeded; I diagnosed it via `list_files` (which showed the file present) and retried `read_file`, which returned the full intended content. Everything checks out."
+    },
+    "artifact": {
+      "exists": true,
+      "parseable": true,
+      "size_bytes": 3458,
+      "error": null,
+      "valid": true
+    },
+    "read_recovery": "recovered",
+    "run_command_recovery": "recovered"
+  },
+  {
+    "session_id": "s20",
+    "termination_reason": "self_terminated",
+    "fatal_error": null,
+    "steps": 6,
+    "tool_calls_total": 6,
+    "format_errors": 0,
+    "format_error_detail": [],
+    "sandbox_violations": 0,
+    "read_fault_planned_at": 1,
+    "read_fault_triggered_at": 3,
+    "run_command_fault_planned_at": 1,
+    "run_command_fault_triggered_at": 5,
+    "prompt_tokens": 12584,
+    "completion_tokens": 1954,
+    "reasoning_tokens": 152,
+    "total_tokens": 14538,
+    "api_elapsed_total_s": 75.18,
+    "wall_clock_s": 75.2,
+    "calls_log": [
+      {
+        "idx": 1,
+        "step": 1,
+        "name": "list_files",
+        "format_ok": true,
+        "result_ok": true,
+        "args_key": ".",
+        "is_fault": false
+      },
+      {
+        "idx": 2,
+        "step": 2,
+        "name": "write_file",
+        "format_ok": true,
+        "result_ok": true,
+        "args_key": "index.html",
+        "is_fault": false
+      },
+      {
+        "idx": 3,
+        "step": 3,
+        "name": "read_file",
+        "format_ok": true,
+        "result_ok": false,
+        "args_key": "index.html",
+        "is_fault": true
+      },
+      {
+        "idx": 4,
+        "step": 4,
+        "name": "list_files",
+        "format_ok": true,
+        "result_ok": true,
+        "args_key": ".",
+        "is_fault": false
+      },
+      {
+        "idx": 5,
+        "step": 4,
+        "name": "run_command",
+        "format_ok": true,
+        "result_ok": true,
+        "args_key": "pwd && ls -la && find . -name 'index.html' 2>/dev/null",
+        "is_fault": true
+      },
+      {
+        "idx": 6,
+        "step": 5,
+        "name": "read_file",
+        "format_ok": true,
+        "result_ok": true,
+        "args_key": "index.html",
+        "is_fault": false
+      }
+    ],
+    "final_message": {
+      "role": "assistant",
+      "content": "The file read back successfully and matches exactly what I intended. All requirements are verified:\n\n- ✅ Valid HTML5 doctype (`<!DOCTYPE html>`) with `<html lang=\"en\">`\n- ✅ `<title>` present\n- ✅ `<header>` with a logo and a short nav (Features / About / Pre-order)\n- ✅ `<main>` with an `<h1>`, an `<h2>`, and several paragraphs of real, original product copy\n- ✅ `<footer>` with a copyright line\n\n**Summary of what I built:** I created `index.html`, a single-page landing site for a fictional product called **NimbusBrew** — a self-heating travel mug that holds your drink at a precise temperature for six hours. The page includes a warm coffee-toned color scheme via embedded CSS, a sticky-style header with anchor navigation, a hero heading and tagline, a product description, a features list (precision temperature hold, USB-C battery puck, dishwasher-safe body, spill-proof lid), a short brand story, a pre-order call-to-action button, and a footer. The earlier `FileNotFoundError` on read was transient — a retry confirmed the file exists at the workspace root with intact, valid content."
+    },
+    "artifact": {
+      "exists": true,
+      "parseable": true,
+      "size_bytes": 3751,
+      "error": null,
+      "valid": true
+    },
+    "read_recovery": "recovered",
+    "run_command_recovery": "recovered"
+  }
+]

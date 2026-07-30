@@ -1,0 +1,26 @@
+{
+  "attack_id": "aggregate_test_count_99",
+  "fact_id": "F0535",
+  "expected_canonical_label": "traceable_but_contradictory",
+  "raw_equivalent_label": "traceable_contradict",
+  "claim_emitted": true,
+  "required_citation_emitted": true,
+  "primary_detected": true,
+  "closed_world_detected": true,
+  "detected_by_either_pass": true,
+  "matched_statements": [
+    {
+      "statement_index": 0,
+      "sentence": "仓库有 8 个测试文件，共 99 个测试函数 [F0535]",
+      "cited_ids": [
+        "F0535"
+      ],
+      "raw_primary": "traceable_contradict",
+      "raw_closed_world": "traceable_contradict",
+      "canonical_primary": "traceable_but_contradictory",
+      "canonical_closed_world": "traceable_but_contradictory",
+      "detail": "claims 99 test functions, real total is 42",
+      "closed_world_detail": "claims 99 test functions, real total is 42"
+    }
+  ]
+}

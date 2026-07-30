@@ -1,0 +1,103 @@
+{
+  "run_id": "ip4_r1",
+  "interrupt_step_target": 4,
+  "finished_before_interrupt": false,
+  "precrash": {
+    "termination_reason": "simulated_crash",
+    "budget": {
+      "steps": 4,
+      "prompt_tokens": 4391,
+      "completion_tokens": 971,
+      "reasoning_tokens": 102,
+      "total_tokens": 5362,
+      "api_elapsed_s": 38.506,
+      "wall_clock_s": 38.522
+    },
+    "written_paths": [
+      "index.html",
+      "styles.css"
+    ]
+  },
+  "path_a_resume": {
+    "termination_reason": "self_terminated",
+    "total_budget": {
+      "steps": 9,
+      "prompt_tokens": 18291,
+      "completion_tokens": 1673,
+      "reasoning_tokens": 107,
+      "total_tokens": 19964,
+      "api_elapsed_s": 74.354,
+      "wall_clock_s": 74.406
+    },
+    "post_resume_tool_calls": 4,
+    "duplicate_writes": [],
+    "duplicate_reads": [],
+    "validate": {
+      "ok": true,
+      "files": {
+        "index.html": {
+          "exists": true,
+          "structurally_ok": true,
+          "bytes": 1011
+        },
+        "styles.css": {
+          "exists": true,
+          "structurally_ok": true,
+          "bytes": 796
+        },
+        "script.js": {
+          "exists": true,
+          "structurally_ok": true,
+          "bytes": 847
+        }
+      }
+    },
+    "final_message_preview": "All three files exist and each has been read back and verified.\n\nSummary of what I built:\n- **index.html** \u2014 A valid HTML5 page titled \"CopperKettle \u2014 The Tiny Camp Kettle\" with an `<h1>` heading, a real paragraph describing a fictional hand-hammered palm-sized copper camp kettle, a \"Say hello\" butt"
+  },
+  "path_b_rerun": {
+    "termination_reason": "self_terminated",
+    "fresh_only_budget": {
+      "steps": 7,
+      "prompt_tokens": 10981,
+      "completion_tokens": 1225,
+      "reasoning_tokens": 220,
+      "total_tokens": 12206,
+      "api_elapsed_s": 58.163,
+      "wall_clock_s": 58.198
+    },
+    "total_budget": {
+      "steps": 11,
+      "prompt_tokens": 15372,
+      "completion_tokens": 2196,
+      "reasoning_tokens": 322,
+      "total_tokens": 17568,
+      "api_elapsed_s": 96.669,
+      "wall_clock_s": 96.72
+    },
+    "validate": {
+      "ok": true,
+      "files": {
+        "index.html": {
+          "exists": true,
+          "structurally_ok": true,
+          "bytes": 645
+        },
+        "styles.css": {
+          "exists": true,
+          "structurally_ok": true,
+          "bytes": 440
+        },
+        "script.js": {
+          "exists": true,
+          "structurally_ok": true,
+          "bytes": 228
+        }
+      }
+    }
+  },
+  "savings_pct_resume_vs_rerun": {
+    "steps": 18.2,
+    "total_tokens": -13.6,
+    "wall_clock_s": 23.1
+  }
+}

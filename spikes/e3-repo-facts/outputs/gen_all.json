@@ -1,0 +1,182 @@
+[
+  {
+    "index": 1,
+    "content": "OEYdesign 是一个「契约优先」（contract-first）的参考实现项目，当前版本为 0.1.0，要求 Python 3.11 及以上版本，且运行时零第三方依赖。[F0541][F0540][F0538][F0536] 它将一套完整的设计生产流程建模为严格分层的架构：vendor-neutral 的领域语言模块集中定义了项目、候选方案、审批、交付等核心数据结构，所有适配器共享同一套词汇。[F0144][F0213][F0200][F0201][F0210]\n\n系统的写入入口是「项目控制面」，ControlPlane 是唯一可以修改项目业务状态的组件，提供创建项目、生成候选、审批方向、产出制品、校验、导出、交付、反馈以及暂停/恢复/取消工作流等 35 个方法。[F0107][F0143] 外围能力通过可替换的端口协议接入，包括设计智能、制品生产、质量治理、交付、证据解析与确认等 Protocol 接口，仓库同时提供了确定性、无副作用的桩实现，便于在无外部服务的情况下运行和测试。[F0294][F0354][F0359][F0364][F0367][F0439][F0445]\n\n持久化与可靠性方面，项目提供基于 SQLite 的仓储、命令账本、事件存储、审计日志与副作用账本，以及支持检查点、确定性故障注入和恢复的工作流运行时。[F0256][F0271][F0282][F0288][F0397][F0418][F0426] 证据与上下文子系统支持 CSV 与 PNG 素材的解析、确定性解释与人工确认，并配有独立的 SQLite 证据仓库。[F0082][F0084][F0087][F0089][F0229] 此外还内置一个无依赖的 HTTP 产品外壳，可直接以本地服务器形式体验完整流程。[F0368][F0384][F0388]\n\n质量保障上，仓库包含 8 个测试文件、共 42 个测试函数，覆盖契约骨架、持久化、运行时、上下文与产品外壳各阶段。[F0535][F0498][F0534] 另附 lab30min 实验目录，提供循序渐进的教学脚本帮助开发者快速理解整套流程。[F0463][F0471][F0484]",
+    "reasoning_content_len": 79,
+    "usage": {
+      "prompt_tokens": 9743,
+      "completion_tokens": 534,
+      "total_tokens": 10277,
+      "cached_tokens": 9728,
+      "completion_tokens_details": {
+        "reasoning_tokens": 19
+      },
+      "prompt_tokens_details": {
+        "cached_tokens": 9728
+      }
+    },
+    "elapsed_s": 21.19529938697815
+  },
+  {
+    "index": 2,
+    "content": "OEYdesign 是一个「契约优先（contract-first）」的参考实现项目，其核心代码位于 `src/oeydesign` 包中，项目自述为 \"OEYdesign contract-first reference implementation\"[F0064]，当前版本为 0.1.0，要求 Python 3.11 及以上环境[F0540][F0538]。整个项目在运行时完全零依赖，不引入任何第三方库[F0536]，所有模块——从领域模型到 HTTP 适配层——均基于标准库构建。\n\n项目架构围绕分层契约展开：`domain.py` 定义了供应商中立的领域语言[F0144]，涵盖 `Project`、`Candidate`、`ArtifactRevision`、`QualityDecision`、`DeliveryBundle` 等冻结数据类以及 `ProjectState`、`WorkflowStatus` 等枚举[F0213][F0200][F0203][F0207][F0210][F0149][F0155]；`ports.py` 则声明了可替换的厂商中立端口协议[F0294]，包括 `DesignIntelligencePort`、`ArtifactProductionPort`、`QualityGovernancePort` 和 `DeliveryPort` 等[F0354][F0359][F0364][F0367]。`control.py` 中的 `ControlPlane` 是项目业务状态的唯一写入者[F0107][F0143]，所有变更都通过 `CreateProject`、`GenerateCandidates`、`ApproveDirection` 等命令对象驱动[F0179][F0181][F0182]。\n\n在持久化与恢复方面，项目提供基于 SQLite 的参考实现：`SQLiteStore`、`SQLiteProjectRepository`、`SQLiteEventStore` 等适配器负责业务数据与事件存储[F0261][F0271][F0278]，`SQLiteWorkflowRuntime` 支持工作流的启动、暂停、恢复与检查点，并内置确定性的故障注入机制[F0418][F0426]。同时附带有内存版适配器供契约一致性测试使用[F0230]。`product_shell.py` 提供了一个零依赖的 HTTP 产品外壳[F0368]，而 `context.py` 则实现了证据采集、解析与人工确认等参考适配器[F0071]。\n\n仓库包含 8 个测试文件、共 42 个测试函数，覆盖从契约骨架到产品外壳的各个阶段[F0535]，并配有 `lab30min` 目录下的教学实验脚本，帮助学习者循序理解各阶段设计[F0063][F0463]。",
+    "reasoning_content_len": 50,
+    "usage": {
+      "prompt_tokens": 9743,
+      "completion_tokens": 533,
+      "total_tokens": 10276,
+      "cached_tokens": 9728,
+      "completion_tokens_details": {
+        "reasoning_tokens": 12
+      },
+      "prompt_tokens_details": {
+        "cached_tokens": 9728
+      }
+    },
+    "elapsed_s": 24.404095888137817
+  },
+  {
+    "index": 3,
+    "content": "OEYdesign 是一个面向最终用户的「契约优先」设计工作流参考实现，其定位在 pyproject.toml 中被描述为 \"Contract-first reference implementation for OEYdesign\"[F0541]，当前版本为 0.1.0[F0540]，要求 Python 3.11 及以上环境运行[F0538]。\n\n它的核心是一个项目控制平面：control.py 模块中的 ControlPlane 类承担「项目业务状态的唯一写入者」角色，提供 35 个方法覆盖创建项目、生成候选方案、审批方向、产出制品、校验、导出审批与交付等完整流程[F0107][F0143]。所有命令都以领域语言建模，domain.py 定义了从 CreateProject、GenerateCandidates 到 DeliverArtifact、RestoreProjectRevision 等一系列命令与领域对象[F0144][F0179][F0181][F0187][F0192]，保证每一方可替换适配器共享同一套厂商中立词汇。\n\n架构上，系统通过 ports.py 中的一组 Protocol 端口（如 ProjectRepository、WorkflowRuntimePort、DesignIntelligencePort、DeliveryPort 等）与外部能力解耦[F0294][F0299][F0349][F0354][F0367]，并同时提供内存参考适配器[F0230]与 SQLite 持久化适配器[F0256][F0271]，运行时可由 composition.py 中的 SQLiteApplication 组合根装配[F0065][F0070]。工作流执行由 SQLite 支撑的 runtime 承担，支持断点、恢复与确定性故障注入[F0397][F0426]；上下文与证据层则提供 CSV、PNG 解析器与人工确认机制[F0071][F0082][F0084][F0089]。此外还附带一个零依赖的 HTTP 产品外壳[F0368]，以及 lab30min 目录下的动手实验脚本[F0063]。\n\n整个项目零运行时第三方依赖[F0536]，仅构建期需要 setuptools>=68[F0537]；质量由 tests/ 下 8 个测试文件共 42 个测试函数保障，覆盖四个阶段的契约、持久化、运行时与产品外壳[F0535]。",
+    "reasoning_content_len": 55,
+    "usage": {
+      "prompt_tokens": 9743,
+      "completion_tokens": 482,
+      "total_tokens": 10225,
+      "cached_tokens": 9728,
+      "completion_tokens_details": {
+        "reasoning_tokens": 13
+      },
+      "prompt_tokens_details": {
+        "cached_tokens": 9728
+      }
+    },
+    "elapsed_s": 21.514993906021118
+  },
+  {
+    "index": 4,
+    "content": "OEYdesign 是一个契约优先（contract-first）的参考实现项目，以 Python 编写，要求 Python 3.11 及以上版本 [F0538][F0541]。它采用清晰的端口-适配器架构：核心领域语言集中在 `src/oeydesign/domain.py`，以厂商中立的方式定义了从项目创建、设计候选生成、方向审批、产物制作、质量校验到导出交付的完整命令与数据模型，例如 `CreateProject`、`GenerateCandidates`、`ApproveDirection`、`DeliverArtifact` 等命令类 [F0144][F0179][F0181][F0182][F0187]。所有外部能力都被抽象为可替换的协议端口，定义在 `ports.py` 中，涵盖设计智能、产物生产、质量治理、交付与工作流运行时等十余个接口 [F0294][F0354][F0359][F0364][F0367][F0349]。\n\n项目的 `ControlPlane` 是业务状态的唯一写入方，统一调度项目全生命周期的命令执行 [F0107][F0143]。持久化方面提供了基于 SQLite 的参考适配器，包括项目仓库、命令账本、事件存储、审计日志与副作用账本 [F0256][F0271][F0275][F0278][F0282][F0288]，同时还内置了确定性的、无副作用的桩实现用于演示与测试 [F0439]。此外，项目附带一个零依赖的 HTTP 产品外壳，可直接启动本地演示服务 [F0368]，以及 `lab30min` 目录下的动手实验脚本帮助快速上手 [F0463][F0471]。\n\n整个项目零运行时依赖，仅构建时需要 setuptools [F0536][F0537]，并通过 `tests/` 目录下 8 个测试文件、共 42 个测试函数对各阶段行为进行验证 [F0535]。它适合作为理解契约驱动设计与可恢复工作流架构的学习与参考范本。",
+    "reasoning_content_len": 61,
+    "usage": {
+      "prompt_tokens": 9743,
+      "completion_tokens": 441,
+      "total_tokens": 10184,
+      "cached_tokens": 9728,
+      "completion_tokens_details": {
+        "reasoning_tokens": 14
+      },
+      "prompt_tokens_details": {
+        "cached_tokens": 9728
+      }
+    },
+    "elapsed_s": 17.694562435150146
+  },
+  {
+    "index": 5,
+    "content": "OEYdesign 是一个「契约先行」（contract-first）的参考实现项目，用 Python 编写，要求 Python 3.11 及以上版本，且运行时零第三方依赖 [F0536][F0538][F0541]。它围绕一套厂商中立的领域语言展开：在 `domain.py` 中定义了项目状态、约束档案、设计简报、证据记录、候选方案、审批、交付包等核心数据模型，以及创建项目、生成候选、审批方向、产出制品、验证、导出、交付、暂停/恢复工作流等一系列命令对象 [F0144][F0167][F0169][F0173][F0179][F0181][F0184][F0187][F0190]。架构上采用端口与适配器模式，`ports.py` 以 Protocol 定义了项目仓库、命令台账、事件存储、审计日志、设计智能、制品生产、质量治理、交付等可替换端口 [F0294][F0354][F0359][F0364][F0367]；`control.py` 中的 ControlPlane 是项目业务状态的唯一写入者 [F0107][F0143]。持久层提供 SQLite 参考实现，覆盖项目仓库、事件、审计与副作用台账 [F0256][F0271][F0282][F0288]，另有内存适配器用于一致性测试 [F0230]。项目还内置确定性的桩实现与失败注入机制，便于可恢复工作流的验证 [F0439][F0426]，并附带一个零依赖的 HTTP 产品外壳 [F0368]。质量方面，仓库包含 8 个测试文件共 42 个测试函数 [F0535]，并提供 30 分钟上手的实验教程目录 [F0463][F0471]。",
+    "reasoning_content_len": 103,
+    "usage": {
+      "prompt_tokens": 9743,
+      "completion_tokens": 417,
+      "total_tokens": 10160,
+      "cached_tokens": 9728,
+      "completion_tokens_details": {
+        "reasoning_tokens": 23
+      },
+      "prompt_tokens_details": {
+        "cached_tokens": 9728
+      }
+    },
+    "elapsed_s": 25.306658506393433
+  },
+  {
+    "index": 6,
+    "content": "OEYdesign 是一个以「契约优先（contract-first）」为理念的参考实现项目，用 Python 编写，要求 Python 3.11 及以上版本，当前发布版本为 0.1.0 [F0538][F0540][F0541]。项目最突出的特点是零运行时依赖——pyproject.toml 中声明的 dependencies 为空列表，仅构建时需要 setuptools>=68 [F0536][F0537]。\n\n它的核心代码位于 src/oeydesign 包中，整体围绕一条完整的设计生产流水线组织：domain.py 定义了供应商中立的领域语言，包含 Project、DesignBrief、Candidate、Approval、ArtifactRevision、QualityDecision、DeliveryBundle 等数十个以冻结 dataclass 建模的领域类型 [F0144][F0169][F0200][F0201][F0210][F0213]；ports.py 以 Protocol 形式定义了可替换的中立端口，涵盖项目仓库、工作流运行时、设计智能、制品生产、质量治理与交付等能力 [F0294][F0349][F0354][F0359][F0364][F0367]。\n\ncontrol.py 是项目控制面，其中 ControlPlane 类提供 35 个方法，是项目业务状态的唯一写入者 [F0107][F0143]。持久化方面，项目提供了完整的 SQLite 参考适配器，包括项目仓库、命令账本、事件存储、审计日志与副作用账本 [F0256][F0271][F0275][F0278][F0282][F0288]，runtime.py 还内置了 SQLite 支撑的工作流运行时与确定性故障注入机制，便于验证恢复能力 [F0397][F0426]。stubs.py 则提供了确定性、无副作用的端口实现，方便在不接入真实外部服务的情况下运行全流程 [F0439]。\n\n仓库顶层包含 docs、lab30min、product-client、src、tests 五个目录 [F0063]，其中 product_shell.py 是一个无第三方依赖的 HTTP 适配器，可直接把系统包装为可用的产品外壳 [F0368]。质量保障方面，tests 目录下共 8 个测试文件、静态统计含 42 个测试函数，按 Phase 1 至 Phase 4 分阶段覆盖契约、持久化、运行时与产品外壳 [F0535]。总体而言，这是一个适合学习领域驱动架构与契约式设计的教学型参考工程。",
+    "reasoning_content_len": 83,
+    "usage": {
+      "prompt_tokens": 9743,
+      "completion_tokens": 545,
+      "total_tokens": 10288,
+      "cached_tokens": 9728,
+      "completion_tokens_details": {
+        "reasoning_tokens": 18
+      },
+      "prompt_tokens_details": {
+        "cached_tokens": 9728
+      }
+    },
+    "elapsed_s": 27.13646650314331
+  },
+  {
+    "index": 7,
+    "content": "OEYdesign 是一个「契约优先」的参考实现项目，其包自述为 \"OEYdesign contract-first reference implementation\"，项目描述为 \"Contract-first reference implementation for OEYdesign\"[F0064][F0541]。它面向需要可替换、厂商中立架构的设计生产流程：核心领域语言集中在 `domain.py`（689 行），其中定义了 `Project`、`Candidate`、`ArtifactRevision`、`DeliveryBundle`、`Approval` 等冻结数据类以及 `ProjectState`、`WorkflowStatus` 等枚举，供所有适配器共享[F0144][F0213][F0200][F0203][F0210][F0149]。所有外部能力通过 `ports.py` 中以 Protocol 定义的端口抽象，如 `ProjectRepository`、`DesignIntelligencePort`、`QualityGovernancePort`、`WorkflowRuntimePort` 等[F0294][F0299][F0354][F0364][F0349]。业务状态的唯一写入者是 `control.py` 中的 `ControlPlane`（35 个方法），负责从创建项目、生成候选到审批导出的全流程命令分发[F0107][F0143]。持久化方面提供 SQLite 参考适配器（项目仓库、命令账本、事件存储、审计日志、副作用账本）以及由 `SQLiteApplication` 组装而成的 Phase 2 组合根[F0256][F0271][F0275][F0278][F0282][F0288][F0065][F0070]。工作流运行时基于 SQLite 并内置确定性故障注入机制，支持暂停、恢复与检查点[F0397][F0418][F0426]。此外还包含证据与上下文适配层（CSV/PNG 解析器、人工确认器等）以及一个零依赖的 HTTP 产品外壳[F0071][F0082][F0084][F0089][F0368]。项目声明零运行时依赖、要求 Python ≥3.11，并在 tests/ 下配有 8 个测试文件共 42 个测试函数，另有 lab30min 目录提供渐进式实验教程[F0536][F0538][F0535][F0463]。",
+    "reasoning_content_len": 691,
+    "usage": {
+      "prompt_tokens": 9743,
+      "completion_tokens": 648,
+      "total_tokens": 10391,
+      "cached_tokens": 9728,
+      "completion_tokens_details": {
+        "reasoning_tokens": 183
+      },
+      "prompt_tokens_details": {
+        "cached_tokens": 9728
+      }
+    },
+    "elapsed_s": 28.37747359275818
+  },
+  {
+    "index": 8,
+    "content": "OEYdesign 是一个「契约优先」（contract-first）的参考实现项目，包名为 oeydesign，当前版本 0.1.0，要求 Python 3.11 及以上 [F0541][F0539][F0540][F0538]。它的最大特点是零运行时依赖——pyproject.toml 中 dependencies 为空列表，构建仅依赖 setuptools>=68 [F0536][F0537]。\n\n整个项目围绕一套厂商中立、可替换的端口契约组织：ports.py 定义了 ProjectRepository、WorkflowRuntimePort、DesignIntelligencePort、QualityGovernancePort、DeliveryPort 等一系列 Protocol 接口 [F0294][F0299][F0349][F0354][F0364][F0367]，而 domain.py（689 行）提供所有适配器共享的领域语言，包含 ProjectState、WorkflowStatus 等枚举以及 Project、Command、Candidate 等不可变数据类 [F0144][F0149][F0155][F0213][F0178][F0200]。核心的 ControlPlane 是项目业务状态的唯一写入者，负责执行创建项目、生成候选、审批方向、产出、校验、导出、交付以及工作流暂停/恢复/对账等 35 个方法 [F0107][F0143]。\n\n在落地层面，项目提供 SQLite 持久化适配器（SQLiteProjectRepository、SQLiteCommandLedger、SQLiteEventStore、SQLiteAuditLog 等）[F0256][F0271][F0275][F0278][F0282]，SQLite 驱动的工作流运行时支持阶段检查点与确定性失败注入以便演练恢复 [F0397][F0418][F0426]，stubs.py 则给出设计、产物、质量与交付端口的确定性、无副作用实现 [F0439][F0445][F0450][F0457][F0462]。上下文与证据子系统（context.py，616 行）内置本地源存储、CSV/PNG 证据解析器与人工确认机制 [F0071][F0078][F0082][F0084][F0089]，并附带一个零依赖的 HTTP 产品外壳 [F0368]。仓库包含 8 个测试文件、共 42 个测试函数，另设 lab30min 教学目录帮助使用者按阶段上手 [F0535][F0463][F0471]。",
+    "reasoning_content_len": 834,
+    "usage": {
+      "prompt_tokens": 9743,
+      "completion_tokens": 835,
+      "total_tokens": 10578,
+      "cached_tokens": 9728,
+      "completion_tokens_details": {
+        "reasoning_tokens": 316
+      },
+      "prompt_tokens_details": {
+        "cached_tokens": 9728
+      }
+    },
+    "elapsed_s": 31.63679075241089
+  },
+  {
+    "index": 9,
+    "content": "OEYdesign 是一个「契约优先」（contract-first）的参考实现项目，当前版本 0.1.0，其官方定位即是\"Contract-first reference implementation for OEYdesign\"[F0539][F0540][F0541]。整个项目在 pyproject.toml 中声明了 0 个运行时依赖，仅要求 Python 3.11 及以上版本即可运行[F0536][F0538]。\n\n它的核心是一套供应商中立（vendor-neutral）的领域语言，集中定义在 `src/oeydesign/domain.py`（689 行）中，涵盖项目状态、约束配置、设计简报、候选方案、审批、交付与反馈等全部业务对象[F0144]。系统的「项目控制平面」由 `control.py` 中的 `ControlPlane` 类承担，它是项目业务状态的唯一写入者，提供 35 个方法来驱动从创建项目、生成候选到审批导出的完整流程[F0107][F0143]。所有外部能力都通过 `ports.py` 中可替换的协议接口（如设计智能、工件生产、质量治理、交付等端口）进行抽象[F0294][F0354][F0359][F0364][F0367]，并配有 `stubs.py` 中确定性、无副作用的桩实现便于测试与演示[F0439]。\n\n在持久化与可恢复性方面，项目提供了基于 SQLite 的参考持久化适配器与工作流运行时，支持阶段检查点与确定性故障注入[F0256][F0397][F0418]，并通过 `composition.py` 中的 `SQLiteApplication` 组合根一键装配[F0065][F0070]。面向最终用户，它还内置了一个零依赖的 HTTP 产品外壳，由 `ProductShellService` 提供项目与命令接口[F0368][F0384]。\n\n质量保障方面，仓库在 `tests/` 目录下包含 8 个测试文件、共 42 个测试函数，覆盖四个阶段的契约与集成行为[F0535]；此外还附有 `lab30min/` 实验目录，提供循序渐进的动手实验脚本帮助学习者理解各阶段设计[F0463][F0471]。",
+    "reasoning_content_len": 701,
+    "usage": {
+      "prompt_tokens": 9743,
+      "completion_tokens": 677,
+      "total_tokens": 10420,
+      "cached_tokens": 9728,
+      "completion_tokens_details": {
+        "reasoning_tokens": 206
+      },
+      "prompt_tokens_details": {
+        "cached_tokens": 9728
+      }
+    },
+    "elapsed_s": 28.9836528301239
+  },
+  {
+    "index": 10,
+    "content": "OEYdesign 是一个「契约优先」（contract-first）的参考实现项目，旨在用清晰、可替换、可恢复的架构，演示一条从设计简报到成品交付的完整设计生产工作流 [F0064][F0541]。\n\n它的核心是一套与厂商无关的领域语言：从 `ProjectState`、`WorkflowStatus` 等状态枚举，到 `DesignBrief`、`ContextPackage`、`EvidenceRecord`、`Candidate`、`ArtifactRevision`、`QualityDecision`、`DeliveryBundle` 等冻结数据类，把设计项目从创建、准备、生成候选、审批方向、产出工件、校验、批准导出到交付的每一步都建模为显式的命令与事件 [F0144][F0169][F0193]。所有业务状态由唯一的写入者——项目控制平面 `ControlPlane` 统一驱动，它提供 35 个方法来处理命令分发、工作流恢复与审计 [F0107][F0143]。\n\n架构上采用端口与适配器模式：`ports.py` 定义了 `DesignIntelligencePort`、`ArtifactProductionPort`、`QualityGovernancePort`、`DeliveryPort` 等可替换的协议接口 [F0294][F0354][F0364]，同时提供确定性的无副作用桩实现 [F0439]、内存参考适配器 [F0230] 以及 SQLite 持久化与工作流运行时，后者还支持确定性故障注入与断点恢复 [F0256][F0397]。证据与上下文管理覆盖 CSV、PNG 解析、人工确认和上下文组装 [F0071][F0082][F0084][F0103]，并附带一个零依赖的 HTTP 产品外壳 `product_shell.py`，可直接启动本地演示服务 [F0368][F0388]。\n\n整个项目运行时依赖为零，仅要求 Python 3.11 及以上 [F0536][F0538]；质量由 tests/ 目录下 8 个测试文件、共 42 个测试函数保障 [F0535]，另附 30 分钟动手实验脚本帮助快速上手 [F0063][F0463]。如果你希望学习如何构建契约清晰、可测试、可恢复的系统，这是一个绝佳的范本。",
+    "reasoning_content_len": 55,
+    "usage": {
+      "prompt_tokens": 9743,
+      "completion_tokens": 480,
+      "total_tokens": 10223,
+      "cached_tokens": 9728,
+      "completion_tokens_details": {
+        "reasoning_tokens": 12
+      },
+      "prompt_tokens_details": {
+        "cached_tokens": 9728
+      }
+    },
+    "elapsed_s": 20.919623851776123
+  }
+]

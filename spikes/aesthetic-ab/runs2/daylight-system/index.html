@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OEYdesign · 琥珀烘焙落地页</title>
+<link rel="stylesheet" href="assets/fonts/fonts.css">
+<script src="assets/tailwind.js"></script>
+<script>
+  tailwind.config = { theme: { extend: {
+    colors: { bg:'#F4F5F6', surface:'#FFFFFF', ink:'#191D22', 'ink-muted':'#4E5764', line:'#DFE3E7', accent:'#0A5C43' },
+    fontFamily: {
+      display:['"IBM Plex Sans"','"Noto Sans SC"','sans-serif'],
+      body:['"IBM Plex Sans"','"Noto Sans SC"','sans-serif'],
+      mono:['"IBM Plex Mono"','"Noto Sans SC"','monospace']
+    },
+    fontSize: { '12':'12px','14':'14px','15':'15px','16':'16px','20':'20px','26':'26px' },
+    spacing: { '0':'0px','1':'4px','2':'8px','3':'12px','4':'16px','6':'24px','8':'32px','12':'48px' }
+  } } }
+</script>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body class="bg-bg text-ink font-body text-14 h-screen flex flex-col overflow-hidden">
+
+<!-- ================= 顶栏 48px ================= -->
+<header class="h-12 shrink-0 bg-surface border-b border-line flex items-center px-4 gap-3">
+  <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="#191D22" stroke-width="1.5" stroke-linecap="square" aria-hidden="true">
+    <path d="M2 6V2h4M14 2h4v4M18 14v4h-4M6 18H2v-4"/>
+  </svg>
+  <span class="font-display text-15 font-semibold tracking-tight">OEYdesign</span>
+  <span class="w-px h-4 bg-line"></span>
+  <span class="text-14 text-ink-muted">琥珀烘焙 · 品牌落地页</span>
+
+  <div class="ml-auto flex items-center gap-3">
+    <span class="flex items-center gap-2">
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="#4E5764" stroke-width="1.5" aria-hidden="true">
+        <circle cx="7" cy="7" r="5.5"/><path d="M4.5 7.2l1.7 1.7 3.3-3.4"/>
+      </svg>
+      <span class="text-14 text-ink-muted">已同步</span>
+      <span class="font-mono text-12 text-ink-muted">14:26</span>
+    </span>
+    <span class="ver cur">v4</span>
+
+    <div class="relative">
+      <button id="expBtn" type="button" class="h-8 px-3 rounded-md bg-accent text-surface text-14 font-medium flex items-center gap-2">
+        导出
+        <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M2 3.5l3 3 3-3"/></svg>
+      </button>
+      <div id="expMenu" class="hidden absolute right-0 top-full mt-2 w-[224px] bg-surface border border-line rounded-md sh z-50 py-1">
+        <button type="button" class="exp-item" data-file="amber-landing-v4.zip"><span>Web 页面</span><span class="font-mono text-12 text-ink-muted">.zip</span></button>
+        <button type="button" class="exp-item" data-file="amber-landing-v4.pptx"><span>演示文稿</span><span class="font-mono text-12 text-ink-muted">.pptx</span></button>
+        <button type="button" class="exp-item" data-file="amber-landing-v4.docx"><span>品牌文档</span><span class="font-mono text-12 text-ink-muted">.docx</span></button>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- ================= 主区：对话轨 + 画布台 ================= -->
+<main class="flex-1 min-h-0 flex">
+
+  <!-- 左：对话轨 352px -->
+  <aside class="w-[352px] shrink-0 bg-surface border-r border-line flex flex-col min-h-0">
+    <div class="h-12 shrink-0 px-4 border-b border-line flex items-center justify-between">
+      <span class="font-display text-16 font-semibold">对话</span>
+      <span class="font-mono text-12 text-ink-muted">7 轮 · v4</span>
+    </div>
+
+    <div id="msgs" class="flex-1 min-h-0 overflow-y-auto p-4 space-y-6">
+
+      <!-- R1 -->
+      <div class="msg">
+        <div class="flex items-baseline gap-2">
+          <span class="text-14 font-semibold">你</span>
+          <span class="font-mono text-12 text-ink-muted">14:02</span>
+        </div>
+        <p class="mt-1 text-14 leading-relaxed">帮我给「琥珀烘焙」做一个品牌落地页。我们主打产地直送的手冲单品豆，首屏要有一句话主张和购买按钮，下面放三档订阅价格，整体暖一点。</p>
+      </div>
+      <div class="msg-agent">
+        <span class="lead"></span>
+        <div class="flex-1 min-w-0">
+          <div class="flex items-baseline gap-2">
+            <span class="text-14 font-semibold">OEY</span>
+            <span class="ver">v1</span>
+            <span class="font-mono text-12 text-ink-muted">14:05</span>
+          </div>
+          <p class="mt-1 text-14 leading-relaxed">已生成 v1 初版，共四个区块：导航、首屏、三档订阅、页脚。首屏用暖橙主色，主标题 <button type="button" class="obj-chip" data-target="hero-title">hero-title</button> 先放了一版长文案。你可以直接点名任何对象让我改。</p>
+        </div>
+      </div>
+
+      <!-- R2 -->
+      <div class="msg">
+        <div class="flex items-baseline gap-2">
+          <span class="text-14 font-semibold">你</span>
+          <span class="font-mono text-12 text-ink-muted">14:07</span>
+        </div>
+        <p class="mt-1 text-14 leading-relaxed">主标题太长了，「把清晨的第一杯，交给产地直送的慢烘焙」一口气读不完。压到两行以内，语气干脆一点。</p>
+      </div>
+      <div class="msg-agent">
+        <span class="lead"></span>
+        <div class="flex-1 min-w-0">
+          <div class="flex items-baseline gap-2">
+            <span class="text-14 font-semibold">OEY</span>
+            <span class="ver">v2</span>
+            <span class="font-mono text-12 text-ink-muted">14:09</span>
+          </div>
+          <p class="mt-1 text-14 leading-relaxed">已把 <button type="button" class="obj-chip" data-target="hero-title">hero-title</button> 改为「产地直送，慢烘到手。」两行排版、加重字重；<button type="button" class="obj-chip" data-target="hero-sub">hero-sub</button> 同步收紧，避免和新标题抢节奏。</p>
+        </div>
+      </div>
+
+      <!-- R3 -->
+      <div class="msg">
+        <div class="flex items-baseline gap-2">
+          <span class="text-14 font-semibold">你</span>
+          <span class="font-mono text-12 text-ink-muted">14:11</span>
+        </div>
+        <p class="mt-1 text-14 leading-relaxed">购买按钮不够醒目，首屏一屏之内就得让人看见它。</p>
+      </div>
+      <div class="msg-agent">
+        <span class="lead"></span>
+        <div class="flex-1 min-w-0">
+          <div class="flex items-baseline gap-2">
+            <span class="text-14 font-semibold">OEY</span>
+            <span class="ver">v2</span>
+            <span class="font-mono text-12 text-ink-muted">14:13</span>
+          </div>
+          <p class="mt-1 text-14 leading-relaxed"><button type="button" class="obj-chip" data-target="cta-primary">cta-primary</button> 改为实心橙底白字，尺寸加大并上移；旁边补了一个描边副按钮「查看豆单」做次级动线，不抢主按钮。</p>
+        </div>
+      </div>
+
+      <!-- R4 -->
+      <div class="msg">
+        <div class="flex items-baseline gap-2">
+          <span class="text-14 font-semibold">你</span>
+          <span class="font-mono text-12 text-ink-muted">14:15</span>
+        </div>
+        <p class="mt-1 text-14 leading-relaxed">价格三档里把「深烘 · 月配」标成推荐款，这款复购最高。</p>
+      </div>
+      <div class="msg-agent">
+        <span class="lead"></span>
+        <div class="flex-1 min-w-0">
+          <div class="flex items-baseline gap-2">
+            <span class="text-14 font-semibold">OEY</span>
+            <span class="ver">v3</span>
+            <span class="font-mono text-12 text-ink-muted">14:18</span>
+          </div>
+          <p class="mt-1 text-14 leading-relaxed"><button type="button" class="obj-chip" data-target="pricing-card-3">pricing-card-3</button> 加了「推荐」角标和深一档的描边，按钮改为实心；三档顺序与价格不变。</p>
+        </div>
+      </div>
+
+      <!-- R5 -->
+      <div class="msg">
+        <div class="flex items-baseline gap-2">
+          <span class="text-14 font-semibold">你</span>
+          <span class="font-mono text-12 text-ink-muted">14:20</span>
+        </div>
+        <p class="mt-1 text-14 leading-relaxed">导航里加个「门店」入口，我们有三家线下店。</p>
+      </div>
+      <div class="msg-agent">
+        <span class="lead"></span>
+        <div class="flex-1 min-w-0">
+          <div class="flex items-baseline gap-2">
+            <span class="text-14 font-semibold">OEY</span>
+            <span class="ver">v4</span>
+            <span class="font-mono text-12 text-ink-muted">14:22</span>
+          </div>
+          <p class="mt-1 text-14 leading-relaxed">导航新增 <button type="button" class="obj-chip" data-target="nav-store-link">nav-store-link</button>，放在「订阅」之后，悬停有下划线态；窄屏下会随导航一起换行收纳。</p>
+        </div>
+      </div>
+
+      <!-- R6 -->
+      <div class="msg">
+        <div class="flex items-baseline gap-2">
+          <span class="text-14 font-semibold">你</span>
+          <span class="font-mono text-12 text-ink-muted">14:23</span>
+        </div>
+        <p class="mt-1 text-14 leading-relaxed">页脚补上备案号和营业时间。</p>
+      </div>
+      <div class="msg-agent">
+        <span class="lead"></span>
+        <div class="flex-1 min-w-0">
+          <div class="flex items-baseline gap-2">
+            <span class="text-14 font-semibold">OEY</span>
+            <span class="ver">v4</span>
+            <span class="font-mono text-12 text-ink-muted">14:24</span>
+          </div>
+          <p class="mt-1 text-14 leading-relaxed"><button type="button" class="obj-chip" data-target="footer-legal">footer-legal</button> 已加：营业时间 08:00–20:00、沪ICP备2024-01883号，低对比小号与上方内容分区。</p>
+        </div>
+      </div>
+
+      <!-- R7 -->
+      <div class="msg">
+        <div class="flex items-baseline gap-2">
+          <span class="text-14 font-semibold">你</span>
+          <span class="font-mono text-12 text-ink-muted">14:25</span>
+        </div>
+        <p class="mt-1 text-14 leading-relaxed">副标题里「SCA 认证烘焙师」改成「Q-Grader 认证」，措辞准确一点。</p>
+      </div>
+      <div class="msg-agent">
+        <span class="lead"></span>
+        <div class="flex-1 min-w-0">
+          <div class="flex items-baseline gap-2">
+            <span class="text-14 font-semibold">OEY</span>
+            <span class="ver cur">v4</span>
+            <span class="font-mono text-12 text-ink-muted">14:26</span>
+          </div>
+          <p class="mt-1 text-14 leading-relaxed"><button type="button" class="obj-chip" data-target="hero-sub">hero-sub</button> 中已替换为「Q-Grader 认证杯测师团队」。v4 为当前版本，可以从顶栏导出。</p>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- 输入区 -->
+    <form id="composer" class="shrink-0 border-t border-line p-4">
+      <div class="border border-line rounded-md bg-surface focus-within:border-ink-muted transition-colors">
+        <textarea id="input" rows="3" class="w-full resize-none bg-transparent px-3 pt-3 text-14 leading-relaxed outline-none placeholder:text-ink-muted" placeholder="点名对象继续改，例如：把 hero-title 换得更短"></textarea>
+        <div class="flex items-center justify-between px-3 pb-2">
+          <span class="text-14 text-ink-muted">Enter 发送 · Shift+Enter 换行</span>
+          <button type="submit" class="h-8 px-3 rounded-md bg-accent text-surface text-14 font-medium">发送</button>
+        </div>
+      </div>
+    </form>
+  </aside>
+
+  <!-- 右：画布台 -->
+  <section id="bench" class="flex-1 min-w-0 bg-bg overflow-auto">
+    <div class="min-w-max p-6">
+
+      <!-- 浮动工具条（悬于画板正上方） -->
+      <div class="relative mx-auto w-max mb-4">
+        <div class="flex items-center gap-1 bg-surface border border-line rounded-md sh p-1">
+          <span class="font-mono text-12 text-ink-muted px-2">landing-page.html</span>
+          <span class="w-px h-4 bg-line"></span>
+          <span class="text-14 text-ink-muted px-2">4 区块 · 6 对象</span>
+          <span class="w-px h-4 bg-line"></span>
+          <button type="button" class="tb-btn view-btn active" data-view="desktop" title="桌面">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.25"><rect x="1.5" y="2.5" width="13" height="9" rx="1"/><path d="M5.5 13.5h5"/></svg>
+          </button>
+          <button type="button" class="tb-btn view-btn" data-view="tablet" title="平板">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.25"><rect x="3" y="1.5" width="10" height="13" rx="1"/></svg>
+          </button>
+          <button type="button" class="tb-btn view-btn" data-view="phone" title="手机">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.25"><rect x="5" y="1.5" width="6" height="13" rx="1"/></svg>
+          </button>
+          <span class="w-px h-4 bg-line"></span>
+          <button type="button" id="zoomOut" class="tb-btn w-8" title="缩小">−</button>
+          <span id="zoomPct" class="font-mono text-12 text-ink-muted w-12 text-center">100%</span>
+          <button type="button" id="zoomIn" class="tb-btn w-8" title="放大">+</button>
+          <span class="w-px h-4 bg-line"></span>
+          <button type="button" id="verToggle" class="tb-btn px-3">
+            版本
+            <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 3.5l3 3 3-3"/></svg>
+          </button>
+        </div>
+
+        <!-- 版本列表面板（默认收起） -->
+        <div id="verPanel" class="hidden absolute right-0 top-full mt-2 w-[300px] bg-surface border border-line rounded-md sh z-50 py-2">
+          <div class="px-3 pt-1 pb-2 flex items-baseline justify-between">
+            <span class="font-display text-16 font-semibold">版本历史</span>
+            <span class="font-mono text-12 text-ink-muted">4 个版本</span>
+          </div>
+          <button type="button" class="ver-row" data-ver="v4">
+            <span class="w-2 flex justify-center"><span class="w-1 h-1 rounded-full bg-accent"></span></span>
+            <span class="font-mono text-12 text-ink">v4</span>
+            <span class="text-14 text-ink flex-1 text-left">导航「门店」与页脚信息</span>
+            <span class="font-mono text-12 text-accent">当前</span>
+            <span class="font-mono text-12 text-ink-muted">14:26</span>
+          </button>
+          <button type="button" class="ver-row" data-ver="v3">
+            <span class="w-2"></span>
+            <span class="font-mono text-12 text-ink">v3</span>
+            <span class="text-14 text-ink flex-1 text-left">订阅推荐款标记</span>
+            <span class="font-mono text-12 text-ink-muted">14:18</span>
+          </button>
+          <button type="button" class="ver-row" data-ver="v2">
+            <span class="w-2"></span>
+            <span class="font-mono text-12 text-ink">v2</span>
+            <span class="text-14 text-ink flex-1 text-left">标题两行化与按钮动线</span>
+            <span class="font-mono text-12 text-ink-muted">14:09</span>
+          </button>
+          <button type="button" class="ver-row" data-ver="v1">
+            <span class="w-2"></span>
+            <span class="font-mono text-12 text-ink">v1</span>
+            <span class="text-14 text-ink flex-1 text-left">初版结构生成</span>
+            <span class="font-mono text-12 text-ink-muted">14:02</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- 台面上的画板 -->
+      <div id="stage" class="relative mx-auto w-max pb-12">
+        <div id="scaler">
+          <!-- ============ 内层产物：琥珀烘焙落地页（独立视觉语言） ============ -->
+          <article id="artboard" class="prod sh-lift" data-oey-root>
+
+            <nav class="p-nav" data-oey-section="nav">
+              <a class="p-brand" data-oey-object="brand-mark">
+                <span class="p-brand-dot"></span>
+                <span class="p-serif">琥珀烘焙</span>
+                <span class="p-brand-en">AMBER ROAST</span>
+              </a>
+              <div class="p-nav-links">
+                <a>豆单</a>
+                <a>订阅</a>
+                <a data-oey-object="nav-store-link">门店</a>
+                <a>关于</a>
+              </div>
+              <a class="p-nav-cta">小程序下单</a>
+            </nav>
+
+            <header class="p-hero" data-oey-section="hero">
+              <div class="p-hero-text">
+                <p class="p-eyebrow">SINGLE ORIGIN · 手冲单品豆</p>
+                <h1 class="p-title p-serif" data-oey-object="hero-title">产地直送，<br>慢烘到手。</h1>
+                <p class="p-sub" data-oey-object="hero-sub">海拔 1,600 米以上的当季豆，由 Q-Grader 认证杯测师团队逐批把关，烘焙后 72 小时内发出。</p>
+                <div class="p-cta-row">
+                  <a class="p-btn p-btn-primary" data-oey-object="cta-primary">订购第一季</a>
+                  <a class="p-btn p-btn-ghost">查看豆单</a>
+                </div>
+              </div>
+              <div class="p-pack">
+                <span class="p-tag">BATCH 24-06</span>
+                <div class="p-band"></div>
+                <h3 class="p-serif">耶加雪菲 · 日晒</h3>
+                <div class="p-spec"><span>ORIGIN</span><span>Ethiopia · Gedeo</span></div>
+                <div class="p-spec"><span>ALTITUDE</span><span>1,900–2,200 m</span></div>
+                <div class="p-spec"><span>ROAST</span><span>浅中烘 · 72h 内发出</span></div>
+                <div class="p-spec"><span>NOTES</span><span>柑橘 / 茉莉 / 蜂蜜</span></div>
+              </div>
+            </header>
+
+            <section class="p-stats">
+              <div class="p-stat"><span class="p-num p-serif">12 个</span><span class="p-lab">合作产区</span></div>
+              <div class="p-stat"><span class="p-num p-serif">72h</span><span class="p-lab">烘焙到发货</span></div>
+              <div class="p-stat"><span class="p-num p-serif">92+</span><span class="p-lab">平均杯测分</span></div>
+            </section>
+
+            <section class="p-pricing" data-oey-section="pricing">
+              <h2 class="p-h2 p-serif">订阅计划</h2>
+              <p class="p-h2-sub">按月或按季配送，随时停订，首单附冲煮指南。</p>
+              <div class="p-plans">
+                <div class="p-plan">
+                  <p class="p-plan-name">浅烘 · 季配</p>
+                  <p class="p-price"><span class="p-num p-serif">¥179</span><span class="p-unit"> / 季</span></p>
+                  <ul class="p-feats">
+                    <li>每季 3 支单一庄园豆</li>
+                    <li>附产地故事卡</li>
+                    <li>手冲参数建议</li>
+                  </ul>
+                  <a class="p-plan-btn">选择季配</a>
+                </div>
+                <div class="p-plan">
+                  <p class="p-plan-name">中烘 · 月配</p>
+                  <p class="p-price"><span class="p-num p-serif">¥69</span><span class="p-unit"> / 月</span></p>
+                  <ul class="p-feats">
+                    <li>每月 2 支产区轮换</li>
+                    <li>会员价豆单</li>
+                    <li>免费调整研磨度</li>
+                  </ul>
+                  <a class="p-plan-btn">选择月配</a>
+                </div>
+                <div class="p-plan hot" data-oey-object="pricing-card-3">
+                  <span class="p-badge">推荐</span>
+                  <p class="p-plan-name">深烘 · 月配</p>
+                  <p class="p-price"><span class="p-num p-serif">¥79</span><span class="p-unit"> / 月</span></p>
+                  <ul class="p-feats">
+                    <li>每月 2 支意式 / 奶咖适配</li>
+                    <li>免费磨粉分装</li>
+                    <li>复购用户双倍积分</li>
+                  </ul>
+                  <a class="p-plan-btn">选择推荐款</a>
+                </div>
+              </div>
+            </section>
+
+            <footer class="p-foot" data-oey-section="footer">
+              <span class="p-foot-brand"><span class="p-brand-dot"></span><span class="p-serif">琥珀烘焙</span><span class="p-brand-en">© 2024</span></span>
+              <p class="p-legal" data-oey-object="footer-legal">营业时间 08:00–20:00 · 沪ICP备2024-01883号</p>
+            </footer>
+
+          </article>
+        </div>
+
+        <!-- 套准锚点覆盖层 -->
+        <div id="regOverlay" class="reg" aria-hidden="true">
+          <i class="c tl"></i><i class="c tr"></i><i class="c bl"></i><i class="c br"></i>
+          <span class="reg-label"></span>
+        </div>
+      </div>
+
+    </div>
+  </section>
+</main>
+
+<div id="toast" class="toast" role="status"></div>
+
+<script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,58 @@
+[20:50:27] === calibration run (uninterrupted, full completion) ===
+[20:51:21] calibration termination=self_terminated steps=8 tokens=16098 wall_s=53.34
+[20:51:21] calibration T0=8 steps -> interrupt points=[2, 4, 6]
+[20:51:21] --- ip2_r1: precrash phase (target interrupt at step 2) ---
+[20:51:36] ip2_r1: precrash termination=simulated_crash steps=2
+[20:51:36] ip2_r1: resume phase (loading persisted state from disk)
+[20:52:13] ip2_r1: resume termination=self_terminated total_steps=8 dup_writes=0 dup_reads=0 valid=True
+[20:52:13] ip2_r1: rerun-from-zero phase
+[20:53:07] ip2_r1: rerun termination=self_terminated fresh_steps=8 total_steps=10 valid=True
+[20:53:07] --- ip2_r2: precrash phase (target interrupt at step 2) ---
+[20:53:21] ip2_r2: precrash termination=simulated_crash steps=2
+[20:53:21] ip2_r2: resume phase (loading persisted state from disk)
+[20:53:56] ip2_r2: resume termination=self_terminated total_steps=8 dup_writes=0 dup_reads=0 valid=True
+[20:53:56] ip2_r2: rerun-from-zero phase
+[20:54:55] ip2_r2: rerun termination=self_terminated fresh_steps=9 total_steps=11 valid=True
+[20:54:55] --- ip2_r3: precrash phase (target interrupt at step 2) ---
+[20:55:21] ip2_r3: precrash termination=simulated_crash steps=2
+[20:55:21] ip2_r3: resume phase (loading persisted state from disk)
+[20:55:44] ip2_r3: resume termination=self_terminated total_steps=5 dup_writes=0 dup_reads=0 valid=True
+[20:55:44] ip2_r3: rerun-from-zero phase
+[20:56:43] ip2_r3: rerun termination=self_terminated fresh_steps=9 total_steps=11 valid=True
+[20:56:43] --- ip4_r1: precrash phase (target interrupt at step 4) ---
+[20:57:21] ip4_r1: precrash termination=simulated_crash steps=4
+[20:57:21] ip4_r1: resume phase (loading persisted state from disk)
+[20:57:57] ip4_r1: resume termination=self_terminated total_steps=9 dup_writes=0 dup_reads=0 valid=True
+[20:57:57] ip4_r1: rerun-from-zero phase
+[20:58:55] ip4_r1: rerun termination=self_terminated fresh_steps=7 total_steps=11 valid=True
+[20:58:55] --- ip4_r2: precrash phase (target interrupt at step 4) ---
+[20:59:24] ip4_r2: precrash termination=simulated_crash steps=4
+[20:59:24] ip4_r2: resume phase (loading persisted state from disk)
+[21:00:01] ip4_r2: resume termination=self_terminated total_steps=9 dup_writes=0 dup_reads=0 valid=True
+[21:00:01] ip4_r2: rerun-from-zero phase
+[21:01:16] ip4_r2: rerun termination=self_terminated fresh_steps=9 total_steps=13 valid=True
+[21:01:16] --- ip4_r3: precrash phase (target interrupt at step 4) ---
+[21:01:57] ip4_r3: precrash termination=simulated_crash steps=4
+[21:01:57] ip4_r3: resume phase (loading persisted state from disk)
+[21:02:31] ip4_r3: resume termination=self_terminated total_steps=8 dup_writes=0 dup_reads=0 valid=True
+[21:02:31] ip4_r3: rerun-from-zero phase
+[21:03:28] ip4_r3: rerun termination=self_terminated fresh_steps=8 total_steps=12 valid=True
+[21:03:28] --- ip6_r1: precrash phase (target interrupt at step 6) ---
+[21:04:03] ip6_r1: precrash termination=simulated_crash steps=6
+[21:04:03] ip6_r1: resume phase (loading persisted state from disk)
+[21:04:22] ip6_r1: resume termination=self_terminated total_steps=9 dup_writes=0 dup_reads=0 valid=True
+[21:04:22] ip6_r1: rerun-from-zero phase
+[21:05:16] ip6_r1: rerun termination=self_terminated fresh_steps=8 total_steps=14 valid=True
+[21:05:16] --- ip6_r2: precrash phase (target interrupt at step 6) ---
+[21:05:57] ip6_r2: precrash termination=simulated_crash steps=6
+[21:05:57] ip6_r2: resume phase (loading persisted state from disk)
+[21:06:09] ip6_r2: resume termination=self_terminated total_steps=8 dup_writes=0 dup_reads=0 valid=True
+[21:06:09] ip6_r2: rerun-from-zero phase
+[21:07:05] ip6_r2: rerun termination=self_terminated fresh_steps=9 total_steps=15 valid=True
+[21:07:05] --- ip6_r3: precrash phase (target interrupt at step 6) ---
+[21:07:47] ip6_r3: precrash termination=simulated_crash steps=6
+[21:07:47] ip6_r3: resume phase (loading persisted state from disk)
+[21:08:07] ip6_r3: resume termination=self_terminated total_steps=9 dup_writes=0 dup_reads=0 valid=True
+[21:08:07] ip6_r3: rerun-from-zero phase
+[21:09:01] ip6_r3: rerun termination=self_terminated fresh_steps=9 total_steps=15 valid=True
+[21:09:01] === DONE. 9 groups written to results/raw_data.json ===

@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NimbusBrew — The Smart Pour-Over Kettle</title>
+  <style>
+    :root {
+      --ink: #1d2733;
+      --accent: #c07a3e;
+      --paper: #faf7f2;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: Georgia, 'Times New Roman', serif;
+      color: var(--ink);
+      background: var(--paper);
+      line-height: 1.6;
+    }
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1.25rem 2rem;
+      border-bottom: 1px solid #e5ddd2;
+    }
+    .logo { font-weight: bold; font-size: 1.25rem; letter-spacing: 0.5px; }
+    nav a {
+      margin-left: 1.5rem;
+      text-decoration: none;
+      color: var(--ink);
+    }
+    nav a:hover { color: var(--accent); }
+    main {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 3rem 2rem;
+    }
+    .hero h1 {
+      font-size: 2.5rem;
+      line-height: 1.2;
+      margin-bottom: 1rem;
+    }
+    .hero p.lead { font-size: 1.15rem; margin-bottom: 2rem; }
+    .cta {
+      display: inline-block;
+      background: var(--accent);
+      color: #fff;
+      padding: 0.75rem 1.75rem;
+      border-radius: 4px;
+      text-decoration: none;
+      font-family: inherit;
+    }
+    .features { margin-top: 3rem; }
+    .features h2 { font-size: 1.5rem; margin-bottom: 0.75rem; }
+    .features ul { margin-left: 1.25rem; }
+    .features li { margin-bottom: 0.5rem; }
+    footer {
+      text-align: center;
+      padding: 1.5rem;
+      border-top: 1px solid #e5ddd2;
+      font-size: 0.9rem;
+      color: #6b6b6b;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <span class="logo">NimbusBrew</span>
+    <nav>
+      <a href="#features">Features</a>
+      <a href="#story">Our Story</a>
+      <a href="#buy">Buy</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero" id="story">
+      <h1>Coffee that waits for you, not the other way around.</h1>
+      <p class="lead">
+        NimbusBrew is a precision pour-over kettle that heats water to the exact
+        degree your beans deserve — and holds it there until you wander into the
+        kitchen. Built from brushed stainless steel with a counterbalanced
+        gooseneck spout, it gives you the slow, controlled pour that baristas
+        train years to master, from the very first cup.
+      </p>
+      <a class="cta" id="buy" href="#buy">Pre-order for $129</a>
+    </section>
+
+    <section class="features" id="features">
+      <h2>Why you'll love it</h2>
+      <p>
+        We spent two years testing prototypes with roasters in Portland and
+        Copenhagen. Here's what survived the process:
+      </p>
+      <ul>
+        <li>Degree-by-degree temperature control from 40°C to 100°C</li>
+        <li>Hold mode keeps water at your set temperature for up to 60 minutes</li>
+        <li>Whisper-quiet heating element — no rattling at 6 a.m.</li>
+        <li>A gooseneck spout tuned for a steady 8 ml/s flow rate</li>
+        <li>No app required. Every control is a physical dial on the base.</li>
+      </ul>
+    </section>
+  </main>
+
+  <footer>
+    <p>&copy; 2025 NimbusBrew Co. Brewed slowly in Portland, Oregon.</p>
+  </footer>
+</body>
+</html>

@@ -1,0 +1,102 @@
+{
+  "run_id": "ip2_r2",
+  "interrupt_step_target": 2,
+  "finished_before_interrupt": false,
+  "precrash": {
+    "termination_reason": "simulated_crash",
+    "budget": {
+      "steps": 2,
+      "prompt_tokens": 1802,
+      "completion_tokens": 378,
+      "reasoning_tokens": 16,
+      "total_tokens": 2180,
+      "api_elapsed_s": 14.56,
+      "wall_clock_s": 14.574
+    },
+    "written_paths": [
+      "index.html"
+    ]
+  },
+  "path_a_resume": {
+    "termination_reason": "self_terminated",
+    "total_budget": {
+      "steps": 8,
+      "prompt_tokens": 14312,
+      "completion_tokens": 1184,
+      "reasoning_tokens": 47,
+      "total_tokens": 15496,
+      "api_elapsed_s": 49.527,
+      "wall_clock_s": 49.573
+    },
+    "post_resume_tool_calls": 5,
+    "duplicate_writes": [],
+    "duplicate_reads": [],
+    "validate": {
+      "ok": true,
+      "files": {
+        "index.html": {
+          "exists": true,
+          "structurally_ok": true,
+          "bytes": 836
+        },
+        "styles.css": {
+          "exists": true,
+          "structurally_ok": true,
+          "bytes": 517
+        },
+        "script.js": {
+          "exists": true,
+          "structurally_ok": true,
+          "bytes": 330
+        }
+      }
+    },
+    "final_message_preview": "All three files are in place and each was read back and verified right after creation.\n\nSummary of what I built \u2014 a tiny static site for a fictional product:\n\n- **index.html**: Valid HTML5 page titled \"Driftwood Kettle Co.\" with a heading, a real paragraph describing the fictional \"Ember\" hand-cast "
+  },
+  "path_b_rerun": {
+    "termination_reason": "self_terminated",
+    "fresh_only_budget": {
+      "steps": 9,
+      "prompt_tokens": 17054,
+      "completion_tokens": 1522,
+      "reasoning_tokens": 71,
+      "total_tokens": 18576,
+      "api_elapsed_s": 59.043,
+      "wall_clock_s": 59.098
+    },
+    "total_budget": {
+      "steps": 11,
+      "prompt_tokens": 18856,
+      "completion_tokens": 1900,
+      "reasoning_tokens": 87,
+      "total_tokens": 20756,
+      "api_elapsed_s": 73.603,
+      "wall_clock_s": 73.672
+    },
+    "validate": {
+      "ok": true,
+      "files": {
+        "index.html": {
+          "exists": true,
+          "structurally_ok": true,
+          "bytes": 833
+        },
+        "styles.css": {
+          "exists": true,
+          "structurally_ok": true,
+          "bytes": 612
+        },
+        "script.js": {
+          "exists": true,
+          "structurally_ok": true,
+          "bytes": 736
+        }
+      }
+    }
+  },
+  "savings_pct_resume_vs_rerun": {
+    "steps": 27.3,
+    "total_tokens": 25.3,
+    "wall_clock_s": 32.7
+  }
+}

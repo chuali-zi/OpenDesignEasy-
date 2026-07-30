@@ -1,0 +1,39 @@
+body {
+  font-family: Georgia, 'Times New Roman', serif;
+  background-color: #f6f1e7;
+  color: #2e2a24;
+  margin: 0;
+  padding: 3rem 1.5rem;
+  line-height: 1.6;
+}
+
+h1 {
+  color: #7a4a1f;
+  font-size: 2.5rem;
+  border-bottom: 3px solid #d9b382;
+  padding-bottom: 0.5rem;
+  max-width: 640px;
+  margin: 0 auto 1.5rem auto;
+}
+
+p {
+  max-width: 640px;
+  margin: 0 auto 1.5rem auto;
+  font-size: 1.1rem;
+}
+
+#greet-btn {
+  display: block;
+  margin: 0 auto;
+  padding: 0.6rem 1.4rem;
+  font-size: 1rem;
+  background-color: #7a4a1f;
+  color: #fdfaf4;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+#greet-btn:hover {
+  background-color: #5d3817;
+}

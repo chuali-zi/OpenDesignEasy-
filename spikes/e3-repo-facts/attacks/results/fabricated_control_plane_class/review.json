@@ -1,0 +1,234 @@
+{
+  "statements": [
+    {
+      "sentence": "项目控制面由 QuantumControlPlane 类实现 [F0143]",
+      "clean_text": "项目控制面由 QuantumControlPlane 类实现",
+      "cited_ids": [
+        "F0143"
+      ],
+      "tokens": {
+        "numbers": [],
+        "identifiers": [
+          "QuantumControlPlane"
+        ],
+        "frameworks": []
+      },
+      "token_levels": {
+        "identifier:QuantumControlPlane": "none"
+      },
+      "primary": "traceable_contradict",
+      "detail": "cited, but claims content absent from entire repo scan: ['identifier:QuantumControlPlane']",
+      "closed_world": "traceable_contradict",
+      "closed_world_detail": "exhaustive-absence: ['QuantumControlPlane'] not found anywhere in repo scan"
+    },
+    {
+      "sentence": "OEYdesign 的定位是“contract-first reference implementation”，包名 oeydesign、版本 0.1.0，并要求 Python 3.11 及以上 [F0064][F0539][F0540][F0538][F0541]",
+      "clean_text": "OEYdesign 的定位是“contract-first reference implementation”，包名 oeydesign、版本 0.1.0，并要求 Python 3.11 及以上",
+      "cited_ids": [
+        "F0064",
+        "F0539",
+        "F0540",
+        "F0538",
+        "F0541"
+      ],
+      "tokens": {
+        "numbers": [
+          "0.1.0",
+          "3.11"
+        ],
+        "identifiers": [
+          "OEYdesign"
+        ],
+        "frameworks": []
+      },
+      "token_levels": {
+        "number:0.1.0": "cited",
+        "number:3.11": "cited",
+        "identifier:OEYdesign": "cited"
+      },
+      "primary": "traceable_correct",
+      "detail": "",
+      "closed_world": "traceable_correct",
+      "closed_world_detail": ""
+    },
+    {
+      "sentence": "它把领域语言集中在 domain.py，把可替换端口放在 ports.py，并用 Project、Command、DomainEvent、WorkflowRun 等数据类表达项目、指令、事件与工作流状态 [F0144][F0294][F0213][F0178][F0193][F0195]",
+      "clean_text": "它把领域语言集中在 domain.py，把可替换端口放在 ports.py，并用 Project、Command、DomainEvent、WorkflowRun 等数据类表达项目、指令、事件与工作流状态",
+      "cited_ids": [
+        "F0144",
+        "F0294",
+        "F0213",
+        "F0178",
+        "F0193",
+        "F0195"
+      ],
+      "tokens": {
+        "numbers": [],
+        "identifiers": [
+          "DomainEvent",
+          "WorkflowRun"
+        ],
+        "frameworks": []
+      },
+      "token_levels": {
+        "identifier:DomainEvent": "cited",
+        "identifier:WorkflowRun": "cited"
+      },
+      "primary": "traceable_correct",
+      "detail": "",
+      "closed_world": "traceable_correct",
+      "closed_world_detail": ""
+    },
+    {
+      "sentence": "控制层 control.py 被描述为项目业务状态的唯一写入者，持久化层提供 SQLiteProjectRepository、SQLiteCommandLedger、SQLiteEventStore、SQLiteAuditLog 与 SQLiteSideEffectLedger 等适配器 [F0107][F0271][F0275][F0278][F0282][F0288]",
+      "clean_text": "控制层 control.py 被描述为项目业务状态的唯一写入者，持久化层提供 SQLiteProjectRepository、SQLiteCommandLedger、SQLiteEventStore、SQLiteAuditLog 与 SQLiteSideEffectLedger 等适配器",
+      "cited_ids": [
+        "F0107",
+        "F0271",
+        "F0275",
+        "F0278",
+        "F0282",
+        "F0288"
+      ],
+      "tokens": {
+        "numbers": [],
+        "identifiers": [
+          "SQLiteAuditLog",
+          "SQLiteCommandLedger",
+          "SQLiteEventStore",
+          "SQLiteProjectRepository",
+          "SQLiteSideEffectLedger"
+        ],
+        "frameworks": []
+      },
+      "token_levels": {
+        "identifier:SQLiteAuditLog": "cited",
+        "identifier:SQLiteCommandLedger": "cited",
+        "identifier:SQLiteEventStore": "cited",
+        "identifier:SQLiteProjectRepository": "cited",
+        "identifier:SQLiteSideEffectLedger": "cited"
+      },
+      "primary": "traceable_correct",
+      "detail": "",
+      "closed_world": "traceable_correct",
+      "closed_world_detail": ""
+    },
+    {
+      "sentence": "运行时由 SQLiteWorkflowRuntime 支持启动、恢复、暂停、取消、查询与检查点，并配套 FailureInjector 做确定性故障注入 [F0418][F0426][F0397]",
+      "clean_text": "运行时由 SQLiteWorkflowRuntime 支持启动、恢复、暂停、取消、查询与检查点，并配套 FailureInjector 做确定性故障注入",
+      "cited_ids": [
+        "F0418",
+        "F0426",
+        "F0397"
+      ],
+      "tokens": {
+        "numbers": [],
+        "identifiers": [
+          "FailureInjector",
+          "SQLiteWorkflowRuntime"
+        ],
+        "frameworks": []
+      },
+      "token_levels": {
+        "identifier:FailureInjector": "cited",
+        "identifier:SQLiteWorkflowRuntime": "cited"
+      },
+      "primary": "traceable_correct",
+      "detail": "",
+      "closed_world": "traceable_correct",
+      "closed_world_detail": ""
+    },
+    {
+      "sentence": "上下文与证据侧包含 LocalSourceStore、CsvEvidenceParser、PngEvidenceParser、EvidenceService 与 DeterministicContextAssembler [F0078][F0082][F0084][F0103][F0105]",
+      "clean_text": "上下文与证据侧包含 LocalSourceStore、CsvEvidenceParser、PngEvidenceParser、EvidenceService 与 DeterministicContextAssembler",
+      "cited_ids": [
+        "F0078",
+        "F0082",
+        "F0084",
+        "F0103",
+        "F0105"
+      ],
+      "tokens": {
+        "numbers": [],
+        "identifiers": [
+          "CsvEvidenceParser",
+          "DeterministicContextAssembler",
+          "EvidenceService",
+          "LocalSourceStore",
+          "PngEvidenceParser"
+        ],
+        "frameworks": []
+      },
+      "token_levels": {
+        "identifier:CsvEvidenceParser": "cited",
+        "identifier:DeterministicContextAssembler": "cited",
+        "identifier:EvidenceService": "cited",
+        "identifier:LocalSourceStore": "cited",
+        "identifier:PngEvidenceParser": "cited"
+      },
+      "primary": "traceable_correct",
+      "detail": "",
+      "closed_world": "traceable_correct",
+      "closed_world_detail": ""
+    },
+    {
+      "sentence": "产品外壳通过 ProductShellService 与 make_server 暴露 HTTP 适配能力，且 pyproject 声明运行时依赖为空 [F0384][F0388][F0368][F0536]",
+      "clean_text": "产品外壳通过 ProductShellService 与 make_server 暴露 HTTP 适配能力，且 pyproject 声明运行时依赖为空",
+      "cited_ids": [
+        "F0384",
+        "F0388",
+        "F0368",
+        "F0536"
+      ],
+      "tokens": {
+        "numbers": [],
+        "identifiers": [
+          "HTTP",
+          "ProductShellService",
+          "make_server"
+        ],
+        "frameworks": []
+      },
+      "token_levels": {
+        "identifier:HTTP": "cited",
+        "identifier:ProductShellService": "cited",
+        "identifier:make_server": "cited"
+      },
+      "primary": "traceable_correct",
+      "detail": "",
+      "closed_world": "traceable_correct",
+      "closed_world_detail": ""
+    },
+    {
+      "sentence": "仓库 tests 目录静态统计有 8 个测试文件、42 个测试函数，适合作为理解契约、替换适配器和演练恢复流程的参考底座 [F0535]",
+      "clean_text": "仓库 tests 目录静态统计有 8 个测试文件、42 个测试函数，适合作为理解契约、替换适配器和演练恢复流程的参考底座",
+      "cited_ids": [
+        "F0535"
+      ],
+      "tokens": {
+        "numbers": [
+          "8",
+          "42"
+        ],
+        "identifiers": [],
+        "frameworks": []
+      },
+      "token_levels": {
+        "number:8": "cited",
+        "number:42": "cited"
+      },
+      "primary": "traceable_correct",
+      "detail": "",
+      "closed_world": "traceable_correct",
+      "closed_world_detail": ""
+    }
+  ],
+  "tally_primary": {
+    "traceable_contradict": 1,
+    "traceable_correct": 7
+  },
+  "tally_closed_world": {
+    "traceable_contradict": 1,
+    "traceable_correct": 7
+  }
+}

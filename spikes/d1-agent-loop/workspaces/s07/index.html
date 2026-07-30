@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LumenLeaf — The Self-Watering Smart Planter</title>
+  <style>
+    :root {
+      --leaf-green: #2f7d4f;
+      --deep-green: #1c4d30;
+      --cream: #faf7f0;
+      --charcoal: #26332b;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: Georgia, 'Times New Roman', serif;
+      background: var(--cream);
+      color: var(--charcoal);
+      line-height: 1.6;
+    }
+    header {
+      background: var(--deep-green);
+      color: var(--cream);
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+    .logo { font-size: 1.4rem; font-weight: bold; letter-spacing: 1px; }
+    nav a {
+      color: var(--cream);
+      text-decoration: none;
+      margin-left: 1.5rem;
+      font-size: 0.95rem;
+    }
+    nav a:hover { text-decoration: underline; }
+    main {
+      max-width: 760px;
+      margin: 0 auto;
+      padding: 3rem 1.5rem;
+    }
+    h1 {
+      font-size: 2.4rem;
+      color: var(--deep-green);
+      margin-bottom: 0.5rem;
+    }
+    h2 {
+      font-size: 1.5rem;
+      color: var(--leaf-green);
+      margin: 2rem 0 0.5rem;
+    }
+    p { margin: 0.75rem 0; }
+    .tagline {
+      font-style: italic;
+      color: var(--leaf-green);
+      font-size: 1.1rem;
+    }
+    .cta {
+      display: inline-block;
+      margin-top: 1.5rem;
+      background: var(--leaf-green);
+      color: var(--cream);
+      padding: 0.75rem 1.75rem;
+      border-radius: 4px;
+      text-decoration: none;
+      font-weight: bold;
+    }
+    .cta:hover { background: var(--deep-green); }
+    footer {
+      background: var(--charcoal);
+      color: var(--cream);
+      text-align: center;
+      padding: 1.5rem;
+      font-size: 0.9rem;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo">🌿 LumenLeaf</div>
+    <nav>
+      <a href="#features">Features</a>
+      <a href="#how-it-works">How It Works</a>
+      <a href="#order">Order</a>
+    </nav>
+  </header>
+
+  <main>
+    <h1>LumenLeaf</h1>
+    <p class="tagline">The self-watering smart planter that keeps your plants alive — even when you forget they exist.</p>
+
+    <p>
+      LumenLeaf is a countertop planter with a built-in water reservoir, a light-sensing
+      canopy, and a simple companion app. Fill the reservoir once every three weeks, and
+      LumenLeaf meters out exactly the moisture your plant needs based on the soil
+      conditions it measures every hour. No schedules to remember, no wilted basil on the
+      windowsill, no guilt.
+    </p>
+
+    <h2 id="features">Features</h2>
+    <p>
+      A three-liter reservoir quietly feeds the roots from below, so plants drink only
+      what they need. A frosted glass canopy tracks ambient light and gently tilts toward
+      the sunniest spot in the room. When the reservoir runs low, the rim glows a soft
+      amber — and if you ignore that, the app sends one polite notification. Just one.
+    </p>
+
+    <h2 id="how-it-works">How It Works</h2>
+    <p>
+      Plant your favorite herb or houseplant in the included mineral substrate, top up the
+      reservoir, and choose the plant type in the app. LumenLeaf's soil sensors handle the
+      rest, adjusting watering to the seasons so your fern thrives in January just as well
+      as it does in July.
+    </p>
+
+    <h2 id="order">Order</h2>
+    <p>
+      LumenLeaf ships this autumn in three finishes — Sage, Charcoal, and Terracotta —
+      for $89, including a starter kit of basil, mint, and thyme pods.
+    </p>
+    <a class="cta" href="#order">Reserve yours today</a>
+  </main>
+
+  <footer>
+    <p>&copy; 2025 LumenLeaf Gardens, Inc. Grown with care in Portland, Oregon.</p>
+  </footer>
+</body>
+</html>

@@ -1,0 +1,30 @@
+{
+  "attempt": 1,
+  "message": {
+    "role": "assistant",
+    "content": "<!DOCTYPE html>\n<html lang=\"zh-CN\">\n<head>\n<meta charset=\"UTF-8\">\n<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n<title>2024 城市马拉松报名</title>\n<style>\n*{margin:0;padding:0;box-sizing:border-box}\nbody{font-family:-apple-system,\"Segoe UI\",Roboto,\"Helvetica Neue\",Arial,sans-serif;color:#1e293b;background:#f1f5f9;line-height:1.6}\n.wrap{max-width:960px;margin:0 auto;padding:0 20px}\nh2{font-size:26px;margin-bottom:14px;color:#0f172a}\n.hero{background:linear-gradient(135deg,#0f766e,#134e4a);color:#fff;padding:64px 0;text-align:center}\n.hero .logo{width:72px;height:72px;margin-bottom:12px}\n.hero h1{font-size:36px;letter-spacing:2px;margin-bottom:8px}\n.hero .sub{font-size:17px;opacity:.9;margin-bottom:24px}\n.btn{display:inline-block;background:#f97316;color:#fff;padding:12px 34px;border-radius:999px;text-decoration:none;font-size:16px;font-weight:600;border:none;cursor:pointer}\n.btn.secondary{background:#0f766e}\n.info{padding:48px 0}\n.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px}\n.card{background:#fff;border-radius:12px;padding:20px;box-shadow:0 1px 4px rgba(15,23,42,.08)}\n.card h3{font-size:17px;margin-bottom:6px;color:#0f766e}\n.card p{font-size:14px;color:#475569}\n.card .num{font-size:28px;font-weight:700;color:#f97316}\n.signup{background:#fff;padding:48px 0;border-top:1px solid #e2e8f0}\n.form{max-width:560px;margin:0 auto}\n.field{margin-bottom:16px}\nlabel{display:block;font-size:14px;font-weight:600;margin-bottom:6px;color:#334155}\ninput,select{width:100%;padding:10px 12px;border:1px solid #cbd5e1;border-radius:8px;font-size:14px;font-family:inherit;background:#f8fafc}\n.notice{font-size:13px;color:#64748b;margin-bottom:18px}\n.footer{background:#0f172a;color:#94a3b8;padding:28px 0;text-align:center;font-size:14px}\n.footer strong{color:#fff}\n</style>\n</head>\n<body>\n\n<header class=\"hero\" data-oey-section=\"hero\">\n  <div class=\"wrap\">\n    <img class=\"logo\" data-oey-object=\"hero.logo\" alt=\"赛事标志\" src=\"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+PGNpcmNsZSBjeD0iMzIiIGN5PSIzMiIgcj0iMzAiIGZpbGw9IiNmOTczMTYiLz48cGF0aCBkPSJNMjAgNDJsNi0xOCA0IDggNC0xMiA2IDIyIiBzdHJva2U9IiNmZmYiIHN0cm9rZS13aWR0aD0iNCIgZmlsbD0ibm9uZSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+PGNpcmNsZSBjeD0iNDQiIGN5PSIxNiIgcj0iNSIgZmlsbD0iI2ZmZiIvPjwvc3ZnPg==\">\n    <h1 data-oey-object=\"hero.title\">2024 滨江城市马拉松</h1>\n    <p class=\"sub\" data-oey-object=\"hero.subtitle\">10月20日 · 沿江赛道 · 全程42.195公里 · 限额8000人</p>\n    <a href=\"#signup\" class=\"btn\" data-oey-object=\"hero.cta\">立即报名</a>\n  </div>\n</header>\n\n<section class=\"info\" data-oey-section=\"race-info\">\n  <div class=\"wrap\">\n    <h2 data-oey-object=\"race-info.heading\">赛事信息</h2>\n    <div class=\"grid\">\n      <div class=\"card\">\n        <h3 data-oey-object=\"race-info.date-label\">比赛日期</h3>\n        <p class=\"num\" data-oey-object=\"race-info.date-value\">10月20日</p>\n        <p data-oey-object=\"race-info.date-desc\">上午 7:30 鸣枪起跑</p>\n      </div>\n      <div class=\"card\">\n        <h3 data-oey-object=\"race-info.distance-label\">比赛项目</h3>\n        <p class=\"num\" data-oey-object=\"race-info.distance-value\">全马 / 半马</p>\n        <p data-oey-object=\"race-info.distance-desc\">42.195km 与 21.0975km 两个组别</p>\n      </div>\n      <div class=\"card\">\n        <h3 data-oey-object=\"race-info.fee-label\">报名费用</h3>\n        <p class=\"num\" data-oey-object=\"race-info.fee-value\">¥180 起</p>\n        <p data-oey-object=\"race-info.fee-desc\">含参赛包、计时芯片与完赛奖牌</p>\n      </div>\n    </div>\n  </div>\n</section>\n\n<section class=\"signup\" id=\"signup\" data-oey-section=\"signup-form\">\n  <div class=\"wrap\">\n    <h2 style=\"text-align:center\" data-oey-object=\"signup-form.heading\">报名表单</h2>\n    <form class=\"form\" action=\"#\" method=\"post\">\n      <div class=\"field\">\n        <label for=\"name\" data-oey-object=\"signup-form.name-label\">姓名</label>\n        <input id=\"name\" name=\"name\" type=\"text\" placeholder=\"请输入真实姓名\" data-oey-object=\"signup-form.name-input\">\n      </div>\n      <div class=\"field\">\n        <label for=\"phone\" data-oey-object=\"signup-form.phone-label\">联系电话</label>\n        <input id=\"phone\" name=\"phone\" type=\"tel\" placeholder=\"用于接收赛事通知\" data-oey-object=\"signup-form.phone-input\">\n      </div>\n      <div class=\"field\">\n        <label for=\"group\" data-oey-object=\"signup-form.group-label\">参赛组别</label>\n        <select id=\"group\" name=\"group\" data-oey-object=\"signup-form.group-select\">\n          <option>全程马拉松（42.195km）</option>\n          <option>半程马拉松（21.0975km）</option>\n        </select>\n      </div>\n      <p class=\"notice\" data-oey-object=\"signup-form.notice\">提交即表示您已阅读并同意《参赛声明》与《安全须知》。</p>\n      <button type=\"submit\" class=\"btn secondary\" style=\"width:100%\" data-oey-object=\"signup-form.submit\">提交报名</button>\n    </form>\n  </div>\n</section>\n\n<footer class=\"footer\" data-oey-section=\"footer\">\n  <div class=\"wrap\">\n    <p><strong data-oey-object=\"footer.org\">滨江马拉松组委会</strong></p>\n    <p data-oey-object=\"footer.contact\">咨询电话：0000-1234567 · 邮箱：race@example.local</p>\n  </div>\n</footer>\n\n</body>\n</html>",
+    "reasoning_content": "Create a marathon registration page with sections: hero, race-info, registration-form, footer. Include base64 SVG. Under 300 lines, compact CSS, no animations."
+  },
+  "usage": {
+    "prompt_tokens": 452,
+    "completion_tokens": 1758,
+    "total_tokens": 2210,
+    "completion_tokens_details": {
+      "reasoning_tokens": 35
+    }
+  },
+  "elapsed_s": 42.68841004371643,
+  "validation": {
+    "valid": true,
+    "errors": [],
+    "section_count": 4,
+    "object_counts": [
+      4,
+      10,
+      9,
+      2
+    ],
+    "decodable_data_uri_count": 1
+  },
+  "retryable": false
+}

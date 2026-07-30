@@ -1,0 +1,47 @@
+{
+  "run": "run-05",
+  "load_ok": true,
+  "console_errors": [
+    "Failed to load resource: the server responded with a status of 404 (File not found)",
+    "Failed to load resource: the server responded with a status of 404 (File not found)",
+    "Failed to load resource: the server responded with a status of 404 (File not found)"
+  ],
+  "failed_requests": [
+    "404 http://127.0.0.1:9348/app.js",
+    "GET http://127.0.0.1:9348/app.js -> net::ERR_ABORTED",
+    "404 http://127.0.0.1:9348/app.js",
+    "GET http://127.0.0.1:9348/app.js -> net::ERR_ABORTED"
+  ],
+  "sections_found": [
+    "topbar",
+    "project-list",
+    "chat",
+    "preview"
+  ],
+  "project_switch": {
+    "attempted": true,
+    "changed": false,
+    "detail": "no clickable candidate rows found"
+  },
+  "chat_send": {
+    "attempted": true,
+    "changed": true,
+    "detail": "chat area innerHTML length 761 -> 752; probe text present=False"
+  },
+  "classification": "PARTIALLY_INTERACTIVE",
+  "screenshots": [
+    "spikes\\e4-mock\\shots\\run-05\\01-initial.png",
+    "spikes\\e4-mock\\shots\\run-05\\03-after-chat-send.png"
+  ],
+  "console_errors_excluding_favicon": [
+    "Failed to load resource: the server responded with a status of 404 (File not found)",
+    "Failed to load resource: the server responded with a status of 404 (File not found)",
+    "Failed to load resource: the server responded with a status of 404 (File not found)"
+  ],
+  "failed_requests_excluding_favicon": [
+    "404 http://127.0.0.1:9348/app.js",
+    "GET http://127.0.0.1:9348/app.js -> net::ERR_ABORTED",
+    "404 http://127.0.0.1:9348/app.js",
+    "GET http://127.0.0.1:9348/app.js -> net::ERR_ABORTED"
+  ]
+}

@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>简账 MoneyLite · 你的个人理财助手</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    color: #1c2333;
+    background: #f6f8fc;
+    line-height: 1.6;
+  }
+  img { display: block; }
+  .wrap { max-width: 1120px; margin: 0 auto; padding: 0 24px; }
+
+  /* ---------- 顶部导航 ---------- */
+  .nav {
+    background: #ffffff;
+    border-bottom: 1px solid #e8ecf4;
+  }
+  .nav-inner {
+    display: flex; align-items: center; justify-content: space-between;
+    height: 68px;
+  }
+  .brand { display: flex; align-items: center; gap: 10px; }
+  .brand-dot {
+    width: 34px; height: 34px; border-radius: 10px;
+    background: linear-gradient(135deg, #2f80ed, #27ae60);
+    display: flex; align-items: center; justify-content: center;
+    overflow: hidden;
+  }
+  .brand-dot img { width: 18px; height: 18px; border-radius: 50%; }
+  .brand-name { font-size: 19px; font-weight: 700; letter-spacing: .5px; }
+  .nav-links { display: flex; gap: 28px; align-items: center; }
+  .nav-links a { color: #5a6478; text-decoration: none; font-size: 15px; }
+  .btn {
+    display: inline-block; text-decoration: none; font-size: 15px; font-weight: 600;
+    padding: 11px 22px; border-radius: 10px;
+  }
+  .btn-primary { background: #2f80ed; color: #fff; }
+  .btn-ghost { background: #eef3fb; color: #2f80ed; }
+
+  /* ---------- Hero ---------- */
+  .hero { background: linear-gradient(180deg, #eaf1fd 0%, #f6f8fc 100%); padding: 72px 0 80px; }
+  .hero-inner { display: flex; align-items: center; gap: 56px; }
+  .hero-text { flex: 1.15; }
+  .hero-badge {
+    display: inline-block; background: #e2f5e9; color: #1e8e4f;
+    font-size: 13px; font-weight: 600; padding: 6px 14px; border-radius: 999px;
+    margin-bottom: 20px;
+  }
+  .hero h1 { font-size: 44px; line-height: 1.25; font-weight: 800; color: #141b2d; }
+  .hero h1 em { font-style: normal; color: #2f80ed; }
+  .hero p.lead { margin: 18px 0 30px; font-size: 17px; color: #5a6478; max-width: 480px; }
+  .hero-actions { display: flex; gap: 14px; align-items: center; }
+  .hero-note { margin-top: 16px; font-size: 13px; color: #93a0b5; }
+
+  /* 手机模型（纯 CSS） */
+  .phone {
+    flex: 0 0 280px; width: 280px; height: 560px;
+    background: #141b2d; border-radius: 42px; padding: 14px;
+    box-shadow: 0 30px 60px rgba(31, 45, 84, .25);
+  }
+  .phone-screen {
+    background: #f7f9fd; height: 100%; border-radius: 30px; overflow: hidden;
+    padding: 22px 18px;
+  }
+  .ps-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+  .ps-title { font-size: 14px; font-weight: 700; color: #141b2d; }
+  .ps-avatar { width: 26px; height: 26px; border-radius: 50%; overflow: hidden; background: #dbe6f8; }
+  .ps-avatar img { width: 100%; height: 100%; }
+  .ps-card {
+    background: linear-gradient(135deg, #2f80ed, #6a5ae0);
+    border-radius: 16px; color: #fff; padding: 18px; margin-bottom: 14px;
+  }
+  .ps-card .lab { font-size: 12px; opacity: .85; }
+  .ps-card .num { font-size: 26px; font-weight: 800; margin-top: 4px; }
+  .ps-card .sub { font-size: 11px; opacity: .8; margin-top: 8px; }
+  .ps-row {
+    display: flex; align-items: center; gap: 10px; background: #fff;
+    border-radius: 12px; padding: 12px; margin-bottom: 10px;
+    box-shadow: 0 2px 8px rgba(31,45,84,.05);
+  }
+  .ps-ico { width: 32px; height: 32px; border-radius: 9px; flex: 0 0 32px; }
+  .ps-ico.c1 { background: #ffe9d6; }
+  .ps-ico.c2 { background: #dff3e6; }
+  .ps-ico.c3 { background: #e3ecff; }
+  .ps-meta { flex: 1; }
+  .ps-meta .t { font-size: 12px; font-weight: 600; color: #2a3348; }
+  .ps-meta .d { font-size: 10px; color: #9aa5b8; }
+  .ps-amt { font-size: 12px; font-weight: 700; }
+  .ps-amt.minus { color: #e05a5a; }
+  .ps-amt.plus { color: #1e8e4f; }
+  .ps-bars { display: flex; align-items: flex-end; gap: 8px; height: 70px; background: #fff; border-radius: 12px; padding: 12px; box-shadow: 0 2px 8px rgba(31,45,84,.05); }
+  .ps-bars span { flex: 1; border-radius: 4px 4px 0 0; background: #c9dcfb; }
+  .ps-bars span.hi { background: #2f80ed; }
+
+  /* ---------- 功能特性 ---------- */
+  .features { padding: 84px 0; background: #ffffff; }
+  .sec-head { text-align: center; max-width: 620px; margin: 0 auto 52px; }
+  .sec-tag { color: #2f80ed; font-size: 14px; font-weight: 700; letter-spacing: 2px; }
+  .sec-head h2 { font-size: 32px; font-weight: 800; color: #141b2d; margin: 10px 0 12px; }
+  .sec-head p { color: #5a6478; font-size: 16px; }
+  .feat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+  .feat-card {
+    background: #f8fafd; border: 1px solid #e8ecf4; border-radius: 18px; padding: 30px 26px;
+  }
+  .feat-ico {
+    width: 52px; height: 52px; border-radius: 14px; margin-bottom: 18px;
+    display: flex; align-items: center; justify-content: center; font-size: 24px;
+  }
+  .f1 { background: #e3ecff; }
+  .f2 { background: #dff3e6; }
+  .f3 { background: #ffe9d6; }
+  .feat-card h3 { font-size: 19px; font-weight: 700; margin-bottom: 10px; color: #1c2333; }
+  .feat-card p { font-size: 14.5px; color: #5a6478; }
+  .feat-link { display: inline-block; margin-top: 16px; font-size: 14px; font-weight: 600; color: #2f80ed; text-decoration: none; }
+
+  /* ---------- 数据 ---------- */
+  .stats { background: #141b2d; padding: 64px 0; }
+  .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; text-align: center; }
+  .stat .num { font-size: 38px; font-weight: 800; color: #ffffff; }
+  .stat .num em { font-style: normal; color: #6fb1ff; }
+  .stat .lab { font-size: 14px; color: #93a0b5; margin-top: 6px; }
+
+  /* ---------- 下载 CTA ---------- */
+  .cta { padding: 88px 0; background: #f6f8fc; }
+  .cta-box {
+    background: linear-gradient(120deg, #2f80ed 0%, #27ae60 100%);
+    border-radius: 24px; padding: 60px 56px; color: #fff;
+    display: flex; align-items: center; justify-content: space-between; gap: 40px;
+  }
+  .cta-box h2 { font-size: 30px; font-weight: 800; line-height: 1.35; }
+  .cta-box p { margin-top: 12px; font-size: 15px; opacity: .9; max-width: 460px; }
+  .cta-actions { display: flex; flex-direction: column; gap: 12px; flex: 0 0 auto; }
+  .btn-white { background: #ffffff; color: #1e8e4f; text-align: center; }
+  .btn-outline { border: 1.5px solid rgba(255,255,255,.7); color: #fff; text-align: center; }
+
+  /* ---------- 页脚 ---------- */
+  .footer { background: #ffffff; border-top: 1px solid #e8ecf4; padding: 32px 0; }
+  .footer-inner { display: flex; justify-content: space-between; align-items: center; }
+  .footer p { font-size: 13px; color: #93a0b5; }
+  .footer .f-links a { color: #5a6478; font-size: 13px; text-decoration: none; margin-left: 22px; }
+</style>
+</head>
+<body>
+
+<!-- ================= 区块 1：Hero ================= -->
+<section data-oey-section="hero">
+  <div class="nav">
+    <div class="wrap nav-inner">
+      <div class="brand">
+        <span class="brand-dot">
+          <img data-oey-object="hero.logo-image" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==" alt="简账 logo">
+        </span>
+        <span class="brand-name" data-oey-object="hero.brand-name">简账 MoneyLite</span>
+      </div>
+      <nav class="nav-links">
+        <a href="#" data-oey-object="hero.nav-features">功能</a>
+        <a href="#" data-oey-object="hero.nav-data">数据</a>
+        <a href="#" class="btn btn-primary" data-oey-object="hero.nav-cta">免费下载</a>
+      </nav>
+    </div>
+  </div>
+
+  <div class="hero">
+    <div class="wrap hero-inner">
+      <div class="hero-text">
+        <span class="hero-badge" data-oey-object="hero.badge">新用户专享 · 30 天高级版免费体验</span>
+        <h1 data-oey-object="hero.title">把每一分钱<br>都花在<em>刀刃上</em></h1>
+        <p class="lead" data-oey-object="hero.subtitle">简账是一款轻量好用的个人理财 App：3 秒记一笔账，自动生成收支报表，智能预算提醒，帮你轻松存下人生第一个 10 万。</p>
+        <div class="hero-actions">
+          <a href="#" class="btn btn-primary" data-oey-object="hero.primary-button">立即免费开始</a>
+          <a href="#" class="btn btn-ghost" data-oey-object="hero.secondary-button">观看介绍视频</a>
+        </div>
+        <p class="hero-note" data-oey-object="hero.note">支持 iOS 与 Android · 无需信用卡 · 数据本地加密存储</p>
+      </div>
+
+      <div class="phone" data-oey-object="hero.phone-mockup">
+        <div class="phone-screen">
+          <div class="ps-head">
+            <span class="ps-title">我的账本</span>
+            <span class="ps-avatar">
+              <img data-oey-object="hero.avatar-image" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==" alt="用户头像">
+            </span>
+          </div>
+          <div class="ps-card">
+            <div class="lab">本月结余（元）</div>
+            <div class="num">¥ 8,642.50</div>
+            <div class="sub">预算使用 62% · 状态良好</div>
+          </div>
+          <div class="ps-row">
+            <span class="ps-ico c1"></span>
+            <span class="ps-meta"><span class="t">午餐 · 公司食堂</span><br><span class="d">餐饮美食</span></span>
+            <span class="ps-amt minus">-28.00</span>
+          </div>
+          <div class="ps-row">
+            <span class="ps-ico c2"></span>
+            <span class="ps-meta"><span class="t">工资到账</span><br><span class="d">薪资收入</span></span>
+            <span class="ps-amt plus">+15,000.00</span>
+          </div>
+          <div class="ps-row">
+            <span class="ps-ico c3"></span>
+            <span class="ps-meta"><span class="t">地铁通勤</span><br><span class="d">交通出行</span></span>
+            <span class="ps-amt minus">-6.00</span>
+          </div>
+          <div class="ps-bars">
+            <span style="height:35%"></span>
+            <span style="height:55%"></span>
+            <span class="hi" style="height:90%"></span>
+            <span style="height:48%"></span>
+            <span style="height:66%"></span>
+            <span style="height:40%"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= 区块 2：功能特性 ================= -->
+<section class="features" data-oey-section="features">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="sec-tag" data-oey-object="features.tag">核心功能</span>
+      <h2 data-oey-object="features.title">简单三步，掌控你的财务生活</h2>
+      <p data-oey-object="features.subtitle">不需要财务知识，也不需要复杂表格。简账把记账、分析、储蓄做成了一件毫不费力的小事。</p>
+    </div>
+    <div class="feat-grid">
+      <div class="feat-card">
+        <div class="feat-ico f1" data-oey-object="features.card1-icon">⚡</div>
+        <h3 data-oey-object="features.card1-title">3 秒极速记账</h3>
+        <p data-oey-object="features.card1-text">下拉即记、语音输入、账单截图识别，常用分类一键完成。每天坚持记账，原来可以这么轻松。</p>
+        <a href="#" class="feat-link" data-oey-object="features.card1-link">了解记账方式 →</a>
+      </div>
+      <div class="feat-card">
+        <div class="feat-ico f2" data-oey-object="features.card2-icon">📊</div>
+        <h3 data-oey-object="features.card2-title">智能收支报表</h3>
+        <p data-oey-object="features.card2-text">周报、月报、年报自动生成，消费结构一目了然。哪笔钱花得不值，图表替你说清楚。</p>
+        <a href="#" class="feat-link" data-oey-object="features.card2-link">查看报表示例 →</a>
+      </div>
+      <div class="feat-card">
+        <div class="feat-ico f3" data-oey-object="features.card3-icon">🎯</div>
+        <h3 data-oey-object="features.card3-title">预算与储蓄目标</h3>
+        <p data-oey-object="features.card3-text">为每个分类设定预算，超支前温柔提醒；设立旅行、买房等储蓄目标，见证进度条一点点填满。</p>
+        <a href="#" class="feat-link" data-oey-object="features.card3-link">开始设定目标 →</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= 区块 3：数据一览 ================= -->
+<section class="stats" data-oey-section="stats">
+  <div class="wrap stats-grid">
+    <div class="stat">
+      <div class="num" data-oey-object="stats.item1-num">500<em>万+</em></div>
+      <div class="lab" data-oey-object="stats.item1-label">注册用户的选择</div>
+    </div>
+    <div class="stat">
+      <div class="num" data-oey-object="stats.item2-num">4.9<em>分</em></div>
+      <div class="lab" data-oey-object="stats.item2-label">应用商店平均评分</div>
+    </div>
+    <div class="stat">
+      <div class="num" data-oey-object="stats.item3-num">23<em>%</em></div>
+      <div class="lab" data-oey-object="stats.item3-label">用户平均月储蓄率提升</div>
+    </div>
+    <div class="stat">
+      <div class="num" data-oey-object="stats.item4-num">12<em>亿笔</em></div>
+      <div class="lab" data-oey-object="stats.item4-label">累计安全记录账单</div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= 区块 4：下载 CTA ================= -->
+<section class="cta" data-oey-section="download">
+  <div class="wrap">
+    <div class="cta-box">
+      <div>
+        <h2 data-oey-object="download.title">现在开始，<br>让存钱成为一种习惯</h2>
+        <p data-oey-object="download.subtitle">下载简账 MoneyLite，3 分钟建立你的第一本账。基础功能永久免费，数据只属于你自己。</p>
+      </div>
+      <div class="cta-actions">
+        <a href="#" class="btn btn-white" data-oey-object="download.ios-button"> App Store 下载</a>
+        <a href="#" class="btn btn-outline" data-oey-object="download.android-button"> Android 版下载</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= 区块 5：页脚 ================= -->
+<footer class="footer" data-oey-section="footer">
+  <div class="wrap footer-inner">
+    <p data-oey-object="footer.copyright">© 2024 简账 MoneyLite 团队 · 让理财更简单</p>
+    <div class="f-links">
+      <a href="#" data-oey-object="footer.link-privacy">隐私政策</a>
+      <a href="#" data-oey-object="footer.link-terms">用户协议</a>
+      <a href="#" data-oey-object="footer.link-contact">联系我们</a>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>

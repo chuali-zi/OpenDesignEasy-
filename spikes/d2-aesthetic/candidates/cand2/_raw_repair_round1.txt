@@ -1,0 +1,768 @@
+<<<ISSUES>>>
+["「开一个新案子」对话框在页面加载时就默认处于打开状态，遮挡了单轴主线内容，初始应为关闭、由按钮触发", "页面存在 1 条 404 资源加载失败的 console error，引用了不存在的资源文件，应移除或改为内联", "对话框打开时主线第一站（stage 候选预览）被遮罩压住，无法在首屏读到候选，违背「看候选就是读主线第一站」的意图"]
+<<<END_ISSUES>>>
+<<<FILE: index.html>>>
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>环线 THE LOOP — OEYdesign 工作台</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='13' fill='none' stroke='%23ff6a2b' stroke-width='3'/%3E%3Ccircle cx='16' cy='16' r='5' fill='%232fd4c4'/%3E%3C/svg%3E">
+<style>
+  :root{
+    --ink:#0c0f14;
+    --ink-2:#12161d;
+    --ink-3:#171d27;
+    --line:#232b38;
+    --txt:#e8e4da;
+    --txt-dim:#9aa3b2;
+    --txt-faint:#5f6activo778;
+    --orange:#ff6a2b;
+    --cyan:#2fd4c4;
+    --red:#ff4d5e;
+    --amber:#e8b23a;
+    --green:#3ad98a;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    background:var(--ink);
+    color:var(--txt);
+    font-family:"PingFang SC","Hiragino Sans GB","Microsoft YaHei",-apple-system,"Segoe UI",sans-serif;
+    line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+  }
+  ::selection{background:rgba(255,106,43,.35);}
+
+  /* ============ 顶部岔路口：项目横带 ============ */
+  .rail{
+    position:sticky;top:0;z-index:50;
+    background:rgba(12,15,20,.92);
+    backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--line);
+    padding:14px 32px;
+    display:flex;align-items:center;gap:20px;
+  }
+  .rail .brand{
+    display:flex;align-items:center;gap:10px;
+    font-weight:700;letter-spacing:.5px;white-space:nowrap;
+  }
+  .rail .brand .ring{
+    width:22px;height:22px;border-radius:50%;
+    border:3px solid var(--orange);
+    display:inline-block;position:relative;
+  }
+  .rail .brand .ring::after{
+    content:"";position:absolute;inset:4px;border-radius:50%;
+    background:var(--cyan);
+  }
+  .rail .brand small{font-weight:400;color:var(--txt-dim);font-size:12px;letter-spacing:2px;}
+  .project-rail{
+    display:flex;gap:8px;flex:1;overflow-x:auto;
+    scrollbar-width:none;
+  }
+  .project-rail::-webkit-scrollbar{display:none;}
+  .project-tab{
+    border:1px solid var(--line);
+    background:var(--ink-2);
+    color:var(--txt-dim);
+    padding:7px 16px;border-radius:999px;
+    font-size:13px;cursor:pointer;white-space:nowrap;
+    transition:all .2s;
+    display:flex;align-items:center;gap:8px;
+  }
+  .project-tab .dot{width:7px;height:7px;border-radius:50%;background:var(--txt-faint);}
+  .project-tab:hover{border-color:var(--cyan);color:var(--txt);}
+  .project-tab.active{
+    border-color:var(--orange);color:var(--txt);
+    background:rgba(255,106,43,.1);
+  }
+  .project-tab.active .dot{background:var(--orange);box-shadow:0 0 8px var(--orange);}
+  .btn-new{
+    border:1px dashed var(--line);background:transparent;color:var(--txt-dim);
+    padding:7px 16px;border-radius:999px;font-size:13px;cursor:pointer;white-space:nowrap;
+    transition:all .2s;
+  }
+  .btn-new:hover{border-color:var(--orange);color:var(--orange);}
+
+  /* ============ 单轴主线 ============ */
+  .axis{
+    max-width:860px;margin:0 auto;
+    padding:56px 32px 120px;
+    position:relative;
+  }
+  .axis::before{
+    content:"";position:absolute;left:55px;top:0;bottom:0;
+    width:2px;
+    background:linear-gradient(180deg,var(--orange),var(--cyan) 45%,var(--amber) 75%,var(--green));
+    opacity:.35;
+  }
+  .station{
+    position:relative;
+    padding:0 0 72px 56px;
+  }
+  .station .node{
+    position:absolute;left:-7px;top:8px;
+    width:16px;height:16px;border-radius:50%;
+    border:3px solid var(--ink);
+    background:var(--txt-faint);
+    box-shadow:0 0 0 2px var(--line);
+  }
+  .station.s-orange .node{background:var(--orange);box-shadow:0 0 0 2px var(--orange),0 0 14px rgba(255,106,43,.5);}
+  .station.s-cyan .node{background:var(--cyan);box-shadow:0 0 0 2px var(--cyan),0 0 14px rgba(47,212,196,.5);}
+  .station.s-amber .node{background:var(--amber);box-shadow:0 0 0 2px var(--amber);}
+  .station.s-green .node{background:var(--green);box-shadow:0 0 0 2px var(--green);}
+  .station .kicker{
+    font-size:11px;letter-spacing:3px;color:var(--txt-faint);
+    text-transform:uppercase;margin-bottom:4px;
+  }
+  .station h2{
+    font-size:26px;font-weight:700;margin-bottom:6px;
+    display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;
+  }
+  .station h2 .tag{font-size:12px;font-weight:400;color:var(--txt-dim);letter-spacing:1px;}
+  .station .lede{color:var(--txt-dim);font-size:14px;margin-bottom:22px;max-width:640px;}
+  .station .lede b{color:var(--txt);font-weight:600;}
+  .hl-o{color:var(--orange);font-weight:600;}
+  .hl-c{color:var(--cyan);font-weight:600;}
+
+  /* ============ 第一站：stage 候选预览 ============ */
+  .stage-frame{
+    border:1px solid var(--line);border-radius:14px;
+    background:var(--ink-2);overflow:hidden;
+  }
+  .stage-frame .frame-bar{
+    display:flex;align-items:center;gap:8px;
+    padding:10px 16px;border-bottom:1px solid var(--line);
+    font-size:12px;color:var(--txt-faint);
+  }
+  .frame-bar .lights{display:flex;gap:6px;}
+  .frame-bar .lights i{width:10px;height:10px;border-radius:50%;display:block;}
+  .frame-bar .lights i:nth-child(1){background:var(--red);}
+  .frame-bar .lights i:nth-child(2){background:var(--amber);}
+  .frame-bar .lights i:nth-child(3){background:var(--green);}
+  .stage-body{padding:8px;}
+  .stage-block{
+    border:1px solid transparent;border-radius:10px;
+    padding:22px 24px;margin:6px;cursor:pointer;
+    transition:all .18s;position:relative;
+    background:var(--ink-3);
+  }
+  .stage-block:hover{border-color:rgba(47,212,196,.6);}
+  .stage-block.picked{border-color:var(--cyan);box-shadow:0 0 0 1px var(--cyan),0 0 18px rgba(47,212,196,.15);}
+  .stage-block .blk-label{
+    position:absolute;top:8px;right:12px;
+    font-size:10px;letter-spacing:2px;color:var(--txt-faint);
+    opacity:0;transition:opacity .18s;
+  }
+  .stage-block:hover .blk-label,.stage-block.picked .blk-label{opacity:1;color:var(--cyan);}
+  .stage-block h3{font-size:20px;margin-bottom:6px;}
+  .stage-block p{color:var(--txt-dim);font-size:13px;}
+  .stage-block .swatches{display:flex;gap:8px;margin-top:10px;}
+  .stage-block .swatches i{width:34px;height:20px;border-radius:5px;display:block;}
+  .stage-hint{
+    font-size:12px;color:var(--txt-faint);padding:4px 14px 12px;
+  }
+  .stage-hint b{color:var(--cyan);font-weight:600;}
+
+  /* ============ 反馈站点 ============ */
+  .chip-row{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px;}
+  .chip{
+    border:1px solid var(--line);background:var(--ink-2);
+    color:var(--txt-dim);padding:6px 16px;border-radius:999px;
+    font-size:13px;cursor:pointer;transition:all .18s;
+  }
+  .chip:hover{color:var(--txt);border-color:var(--txt-dim);}
+  .chip.on{border-color:var(--orange);color:var(--orange);background:rgba(255,106,43,.08);}
+  .chip.on-c{border-color:var(--cyan);color:var(--cyan);background:rgba(47,212,196,.08);}
+  textarea{
+    width:100%;min-height:88px;resize:vertical;
+    background:var(--ink-2);border:1px solid var(--line);
+    border-radius:12px;color:var(--txt);
+    padding:14px 16px;font-size:14px;font-family:inherit;
+    outline:none;transition:border-color .18s;
+  }
+  textarea:focus{border-color:var(--txt-dim);}
+  textarea::placeholder{color:var(--txt-faint);}
+  select{
+    background:var(--ink-2);border:1px solid var(--line);
+    color:var(--txt);padding:9px 14px;border-radius:10px;
+    font-size:13px;font-family:inherit;outline:none;cursor:pointer;
+    min-width:200px;
+  }
+  .field-label{font-size:12px;color:var(--txt-faint);letter-spacing:1px;margin:0 0 6px;}
+  .action-btn{
+    margin-top:16px;border:none;cursor:pointer;
+    padding:12px 28px;border-radius:999px;
+    font-size:14px;font-weight:700;font-family:inherit;
+    transition:transform .15s,box-shadow .15s;
+  }
+  .action-btn:hover{transform:translateY(-1px);}
+  .action-btn:active{transform:translateY(0);}
+  .btn-orange{background:var(--orange);color:#1a0d05;}
+  .btn-orange:hover{box-shadow:0 6px 22px rgba(255,106,43,.35);}
+  .btn-cyan{background:var(--cyan);color:#05201c;}
+  .btn-cyan:hover{box-shadow:0 6px 22px rgba(47,212,196,.3);}
+  .toast{
+    margin-top:12px;font-size:13px;color:var(--green);
+    opacity:0;transition:opacity .3s;min-height:20px;
+  }
+  .toast.show{opacity:1;}
+
+  /* ============ 回路记录 ============ */
+  .loop-list{border-top:1px dashed var(--line);}
+  .loop-item{
+    display:grid;grid-template-columns:110px 120px 1fr;gap:16px;
+    padding:13px 4px;border-bottom:1px dashed var(--line);
+    font-size:13px;align-items:baseline;
+  }
+  .loop-item time{color:var(--txt-faint);font-variant-numeric:tabular-nums;}
+  .loop-item .who{font-weight:600;}
+  .loop-item .who.you{color:var(--cyan);}
+  .loop-item .who.agent{color:var(--orange);}
+  .loop-item .who.qa{color:var(--amber);}
+  .loop-item .what{color:var(--txt-dim);}
+  .loop-item .what b{color:var(--txt);font-weight:600;}
+  .loop-item.fresh{animation:fadeSlide .5s ease;}
+  @keyframes fadeSlide{from{opacity:0;transform:translateY(-6px);}to{opacity:1;transform:none;}}
+
+  /* ============ 约束档案 ============ */
+  .constraint-grid{
+    display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
+    gap:12px;margin-bottom:18px;
+  }
+  .constraint-card{
+    border:1px solid var(--line);border-radius:12px;
+    background:var(--ink-2);padding:14px 16px;
+  }
+  .constraint-card .k{font-size:10px;letter-spacing:2px;color:var(--txt-faint);text-transform:uppercase;margin-bottom:4px;}
+  .constraint-card .v{font-size:14px;font-weight:600;}
+  .constraint-list{list-style:none;}
+  .constraint-list li{
+    font-size:13px;color:var(--txt-dim);padding:5px 0 5px 18px;position:relative;
+  }
+  .constraint-list li::before{
+    content:"";position:absolute;left:2px;top:13px;
+    width:6px;height:6px;border-radius:50%;background:var(--amber);
+  }
+
+  /* ============ 质量双轨 ============ */
+  .gate-pill{
+    display:inline-flex;align-items:center;gap:8px;
+    border:1px solid var(--green);color:var(--green);
+    background:rgba(58,217,138,.08);
+    padding:7px 18px;border-radius:999px;font-size:13px;font-weight:600;
+    margin-bottom:20px;
+  }
+  .gate-pill.blocked{border-color:var(--red);color:var(--red);background:rgba(255,77,94,.08);}
+  .dual{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+  @media (max-width:700px){.dual{grid-template-columns:1fr;}}
+  .track{
+    border-radius:14px;padding:18px 20px;min-height:150px;
+    border:1px solid;
+  }
+  .track.hard{border-color:rgba(255,77,94,.4);background:rgba(255,77,94,.07);}
+  .track.aes{border-color:rgba(232,178,58,.4);background:rgba(232,178,58,.06);}
+  .track h4{font-size:14px;margin-bottom:12px;display:flex;align-items:center;gap:8px;}
+  .track.hard h4{color:var(--red);}
+  .track.aes h4{color:var(--amber);}
+  .track .empty{color:var(--txt-faint);font-size:13px;}
+  .track ul{list-style:none;}
+  .track li{
+    font-size:13px;color:var(--txt-dim);padding:5px 0 5px 16px;position:relative;
+  }
+  .track li::before{content:"";position:absolute;left:0;top:13px;width:6px;height:6px;border-radius:50%;}
+  .track.hard li::before{background:var(--red);}
+  .track.aes li::before{background:var(--amber);}
+  .track li b{color:var(--txt);font-weight:600;}
+
+  /* ============ 交付记录 ============ */
+  .deliver-note{
+    border:1px solid var(--line);border-radius:12px;
+    background:var(--ink-2);padding:16px 20px;
+    font-size:13px;color:var(--txt-dim);margin-bottom:14px;
+  }
+  .deliver-empty{color:var(--txt-faint);font-size:13px;}
+
+  footer{
+    text-align:center;color:var(--txt-faint);font-size:12px;
+    letter-spacing:1px;padding-top:30px;
+  }
+
+  /* ============ 新案子对话框 ============ */
+  .modal-mask{
+    position:fixed;inset:0;z-index:100;
+    background:rgba(5,7,10,.72);backdrop-filter:blur(4px);
+    display:none;align-items:flex-start;justify-content:center;
+    padding:110px 24px 40px;overflow-y:auto;
+  }
+  .modal-mask.open{display:flex;}
+  .modal{
+    width:100%;max-width:480px;
+    background:var(--ink-3);border:1px solid var(--line);
+    border-radius:18px;padding:30px 32px;
+    box-shadow:0 30px 80px rgba(0,0,0,.6);
+    animation:pop .25s ease;
+  }
+  @keyframes pop{from{opacity:0;transform:translateY(10px) scale(.98);}to{opacity:1;transform:none;}}
+  .modal h3{font-size:22px;margin-bottom:20px;}
+  .modal .field{margin-bottom:18px;}
+  .modal input[type=text]{
+    width:100%;background:var(--ink-2);border:1px solid var(--line);
+    border-radius:10px;color:var(--txt);padding:11px 14px;
+    font-size:14px;font-family:inherit;outline:none;
+  }
+  .modal input[type=text]:focus{border-color:var(--orange);}
+  .modal input[type=text]::placeholder{color:var(--txt-faint);}
+  .modal-actions{display:flex;gap:12px;margin-top:8px;}
+  .btn-ghost{
+    border:1px solid var(--line);background:transparent;color:var(--txt-dim);
+    padding:11px 24px;border-radius:999px;font-size:14px;cursor:pointer;font-family:inherit;
+  }
+  .btn-ghost:hover{color:var(--txt);border-color:var(--txt-dim);}
+  .modal-actions .action-btn{margin-top:0;}
+
+  @media (max-width:640px){
+    .axis::before{left:39px;}
+    .station{padding-left:40px;}
+    .loop-item{grid-template-columns:90px 1fr;grid-template-rows:auto auto;}
+    .loop-item .what{grid-column:2;}
+  }
+</style>
+</head>
+<body>
+
+<!-- 顶部横带：唯一的岔路口 -->
+<header class="rail">
+  <div class="brand"><span class="ring"></span>环线 <small>THE LOOP</small></div>
+  <nav class="project-rail" data-oey="project-rail" id="projectRail"></nav>
+  <button class="btn-new" id="btnNew" data-oey="new-project">＋ 新案子</button>
+</header>
+
+<!-- 单轴纵深主线 -->
+<main class="axis" id="axis">
+
+  <!-- 第一站：候选预览 -->
+  <section class="station s-cyan" data-oey="stage" id="station-stage">
+    <span class="node"></span>
+    <div class="kicker">STATION 01 · STAGE</div>
+    <h2>候选预览 <span class="tag" id="stageTag"></span></h2>
+    <p class="lede" id="stageLede"></p>
+    <div class="stage-frame">
+      <div class="frame-bar">
+        <span class="lights"><i></i><i></i><i></i></span>
+        <span id="frameTitle"></span>
+      </div>
+      <div class="stage-body" id="stageBody"></div>
+      <div class="stage-hint">提示：直接<b>点击预览里的区块</b>，即可带着位置跳到下一站「局部批注」。</div>
+    </div>
+  </section>
+
+  <!-- 第二站：方向级反馈（橙） -->
+  <section class="station s-orange" data-oey="feedback-direction" id="station-fd">
+    <span class="node"></span>
+    <div class="kicker">STATION 02 · DIRECTION FEEDBACK</div>
+    <h2>整个方向不对？</h2>
+    <p class="lede">对<span class="hl-o">整体方向</span>不满意：换一个叙事、换一种语气、或换一套视觉。这会推翻当前候选，agent 重新出方向。</p>
+    <div class="chip-row" id="dirChips">
+      <button class="chip" data-v="换叙事">换叙事</button>
+      <button class="chip" data-v="换语气">换语气</button>
+      <button class="chip" data-v="换视觉">换视觉</button>
+    </div>
+    <textarea id="dirText" placeholder="说清楚哪里不对、想要什么感觉，越具体 agent 越不容易再走偏…"></textarea>
+    <button class="action-btn btn-orange" id="btnDirection">推翻这个方向，重做</button>
+    <div class="toast" id="toastDir"></div>
+  </section>
+
+  <!-- 第三站：局部批注（青） -->
+  <section class="station s-cyan" data-oey="feedback-local" id="station-fl">
+    <span class="node"></span>
+    <div class="kicker">STATION 03 · LOCAL ANNOTATION</div>
+    <h2>只有一处硌眼？</h2>
+    <p class="lede">对<span class="hl-c">局部内容</span>不满意：方向保留，只微调某个具体位置。可以直接点预览里的区块来定位。</p>
+    <p class="field-label">位置</p>
+    <select id="locSelect" style="margin-bottom:14px;"></select>
+    <textarea id="locText" placeholder="这个区块哪里不对、想改成什么样…"></textarea>
+    <button class="action-btn btn-cyan" id="btnLocal">只改这一处</button>
+    <div class="toast" id="toastLoc"></div>
+  </section>
+
+  <!-- 第四站：回路记录 -->
+  <section class="station s-orange" data-oey="loop-record" id="station-loop">
+    <span class="node"></span>
+    <div class="kicker">STATION 04 · LOOP LOG</div>
+    <h2>回路记录 <span class="tag" id="loopCount"></span></h2>
+    <p class="lede">这个项目从提问、出方向、收到反馈到复核交付，每一步都留在这里，按发生顺序排列。</p>
+    <div class="loop-list" id="loopList"></div>
+  </section>
+
+  <!-- 第五站：约束档案 -->
+  <section class="station s-amber" data-oey="constraints" id="station-constraints">
+    <span class="node"></span>
+    <div class="kicker">STATION 05 · CONSTRAINTS</div>
+    <h2>约束档案</h2>
+    <p class="lede">创建项目时定下的边界，agent 每次产出都要在这些边界内工作。</p>
+    <div class="constraint-grid" id="constraintGrid"></div>
+    <ul class="constraint-list" id="constraintList"></ul>
+  </section>
+
+  <!-- 第六站：质量双轨 -->
+  <section class="station s-amber" data-oey="quality" id="station-quality">
+    <span class="node"></span>
+    <div class="kicker">STATION 06 · QUALITY GATES</div>
+    <h2>质量双轨</h2>
+    <p class="lede">两条独立轨道：<b>硬错误</b>是客观问题、会关掉交付闸门；<b>审美发现</b>只是建议，交不交付你自己定。两者不合并、不打总分。</p>
+    <div class="gate-pill" id="gatePill"></div>
+    <div class="dual">
+      <div class="track hard" data-oey="quality-hard">
+        <h4>硬错误 · 挡住交付</h4>
+        <div id="hardBody"></div>
+      </div>
+      <div class="track aes" data-oey="quality-aesthetic">
+        <h4>审美发现 · 仅供参考</h4>
+        <div id="aesBody"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 第七站：交付记录 -->
+  <section class="station s-green" data-oey="delivery" id="station-delivery">
+    <span class="node"></span>
+    <div class="kicker">STATION 07 · DELIVERY</div>
+    <h2>交付记录</h2>
+    <p class="lede">只有通过质量闸门的正式 Artifact 才能导出。这里留下每一次导出的痕迹。</p>
+    <div class="deliver-note" id="deliverNote"></div>
+    <div id="deliverBody"></div>
+  </section>
+
+  <footer>环线 THE LOOP — OEYdesign 前端方向实验 · 数据全部为本地 mock</footer>
+</main>
+
+<!-- 新案子对话框：默认关闭 -->
+<div class="modal-mask" id="modalMask" data-oey="new-project-modal">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <h3 id="modalTitle">开一个新案子</h3>
+    <div class="field">
+      <p class="field-label">项目名称</p>
+      <input type="text" id="inpName" placeholder="例如：社区书店·招募海报">
+    </div>
+    <div class="field">
+      <p class="field-label">Constraint preset</p>
+      <div class="chip-row" id="presetChips">
+        <button class="chip" data-v="开放探索">开放探索</button>
+        <button class="chip on" data-v="设计引导">设计引导</button>
+        <button class="chip" data-v="规范生产">规范生产</button>
+      </div>
+    </div>
+    <div class="field">
+      <p class="field-label">Template role</p>
+      <div class="chip-row" id="roleChips">
+        <button class="chip" data-v="参考样例">参考样例</button>
+        <button class="chip on" data-v="起始脚手架">起始脚手架</button>
+        <button class="chip" data-v="设计系统">设计系统</button>
+        <button class="chip" data-v="交付合同">交付合同</button>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-ghost" id="btnCancel">取消</button>
+      <button class="action-btn btn-orange" id="btnCreate">创建并进入环线</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ---------------- mock 数据 ---------------- */
+  var PROJECTS = {
+    "morning-coffee": {
+      name: "只开早上的咖啡店 · 官网",
+      stageTag: "Revision 3 · 等待方向反馈",
+      lede: "当前候选：方向 B「日出渐变色卡片」第 3 次修订。色板已整体调暖，等你确认方向或给出批注。",
+      frameTitle: "morning-coffee / revision-3 / preview",
+      blocks: [
+        {id:"hero", label:"首屏主视觉", title:"「六点开门，太阳也是。」", desc:"渐变暖橙首屏 + 营业时间 06:00–10:00 置于首屏右上角，符合约束。", swatches:["#f2a65a","#d9822b","#4a2c1a"]},
+        {id:"story", label:"品牌故事", title:"为什么只开早上", desc:"段落行长 68 字符，偏长；语气已是温暖慢节奏，但收尾略煽情。", swatches:["#e8dcc8","#c9b18a"]},
+        {id:"menu", label:"菜单卡片", title:"本季五款", desc:"日出渐变色卡片，价格字号偏小，hover 态反馈偏弱。", swatches:["#f2a65a","#e2703a","#9c4a1f"]}
+      ],
+      constraints: {
+        cards:[["PRESET","设计引导"],["TEMPLATE ROLE","起始脚手架"],["语气","温暖、慢节奏、口语化"],["色板","暖橙 + 麦金 + 深烘棕"]],
+        list:["不使用冷蓝/科技灰作为主色","首屏必须出现营业时间（06:00–10:00）","文案不出现「精品」「匠心」等滥用词"]
+      },
+      loop: [
+        ["06-14 10:02","你","you","提出需求：「一家只开早上的咖啡店，想要个让人想早起的网站」。"],
+        ["06-14 10:03","design_agent","agent","需求有模糊处，主动追问：<b>目标来客是谁？「想早起」是温暖感还是效率感？</b>"],
+        ["06-14 11:20","你","you","回复澄清：客群是附近上班族，要温暖、慢一点的感觉。"],
+        ["06-15 09:10","design_agent","agent","生成 2 个候选方向：A「报纸晨刊风」/ B「日出渐变色卡片」，等待选择。"],
+        ["06-15 15:44","你","you","选择方向 B，但批注：<b>整体偏冷，不像早晨</b>。"],
+        ["06-17 08:31","design_agent","agent","产出 Revision 2 正式 Artifact，进入质量复核。"],
+        ["06-17 08:33","质量复核","qa","复核完成：<b>0 个硬错误，2 条审美发现</b>（不挡交付）。"],
+        ["06-18 09:42","design_agent","agent","按「偏冷」批注重出 Revision 3，色板整体调暖，等待方向反馈。"]
+      ],
+      hard: [],
+      aes: ["「品牌故事」段落行长偏长，建议收窄到 <b>52 字符以内</b>","主按钮与背景对比度虽达标，但 <b>hover 态反馈偏弱</b>，可增强"],
+      gate: {ok:true, text:"交付闸门：开放 · 无硬错误"},
+      deliverNote: "Revision 3 尚未获批，暂无待交付的正式 Artifact。",
+      deliverList: []
+    },
+    "bookstore-poster": {
+      name: "社区书店 · 招募海报",
+      stageTag: "Revision 1 · 首轮候选",
+      lede: "当前候选：方向 A「手作拼贴风」首轮。整体氛围到位，但信息层级还没拉开。",
+      frameTitle: "bookstore-poster / revision-1 / preview",
+      blocks: [
+        {id:"hero", label:"主标题区", title:"「招人：想把书店当家的人」", desc:"手写体主标题 + 撕纸质感底，情绪对，但报名入口不够显眼。", swatches:["#e8dcc8","#b3543f","#3c2f2f"]},
+        {id:"info", label:"信息区", title:"时间 / 地点 / 职责", desc:"三栏信息字号一致，缺少主次；时间与地点应优先于职责描述。", swatches:["#d9c9a8","#8a6f4d"]}
+      ],
+      constraints: {
+        cards:[["PRESET","开放探索"],["TEMPLATE ROLE","参考样例"],["语气","亲切、社区感"],["输出","A3 印刷 + 社媒方图"]],
+        list:["必须保留书店原有手写 logo","印刷版 CMYK 安全色范围内","报名二维码不小于 3cm × 3cm"]
+      },
+      loop: [
+        ["06-16 14:00","你","you","提出需求：社区书店招兼职店员，要一张能贴在店门口的海报。"],
+        ["06-16 14:01","design_agent","agent","追问：投递方式是到店还是线上？<b>你回复：都要，线上为主。</b>"],
+        ["06-18 10:20","design_agent","agent","生成方向 A「手作拼贴风」首轮候选，等待反馈。"]
+      ],
+      hard: ["线上报名二维码当前尺寸换算后 <b>不足 3cm</b>，违反约束"],
+      aes: ["信息区三栏字号一致，建议把「时间」放大一档"],
+      gate: {ok:false, text:"交付闸门：关闭 · 1 个硬错误"},
+      deliverNote: "存在硬错误，闸门关闭，本轮无法产出正式 Artifact。",
+      deliverList: []
+    }
+  };
+
+  var state = { current: "morning-coffee" };
+  var order = ["morning-coffee","bookstore-poster"];
+
+  function $(s){ return document.querySelector(s); }
+  function el(tag, cls, html){
+    var e = document.createElement(tag);
+    if(cls) e.className = cls;
+    if(html != null) e.innerHTML = html;
+    return e;
+  }
+
+  /* ---------------- 项目横带 ---------------- */
+  function renderRail(){
+    var rail = $("#projectRail");
+    rail.innerHTML = "";
+    order.forEach(function(key){
+      var p = PROJECTS[key];
+      var tab = el("button","project-tab" + (key===state.current?" active":""));
+      tab.appendChild(el("span","dot"));
+      tab.appendChild(document.createTextNode(p.name));
+      tab.setAttribute("data-project", key);
+      tab.addEventListener("click", function(){ switchProject(key); });
+      rail.appendChild(tab);
+    });
+  }
+
+  /* ---------------- 渲染整条主线 ---------------- */
+  function render(){
+    var p = PROJECTS[state.current];
+
+    // stage
+    $("#stageTag").textContent = p.stageTag;
+    $("#stageLede").textContent = p.lede;
+    $("#frameTitle").textContent = p.frameTitle;
+    var body = $("#stageBody");
+    body.innerHTML = "";
+    var loc = $("#locSelect");
+    loc.innerHTML = "";
+    p.blocks.forEach(function(b){
+      var blk = el("div","stage-block");
+      blk.setAttribute("data-block", b.id);
+      blk.appendChild(el("span","blk-label","点我批注 →"));
+      blk.appendChild(el("h3",null,b.title));
+      blk.appendChild(el("p",null,b.desc));
+      if(b.swatches){
+        var sw = el("div","swatches");
+        b.swatches.forEach(function(c){
+          var i = el("i"); i.style.background = c; sw.appendChild(i);
+        });
+        blk.appendChild(sw);
+      }
+      blk.addEventListener("click", function(){
+        document.querySelectorAll(".stage-block").forEach(function(x){ x.classList.remove("picked"); });
+        blk.classList.add("picked");
+        loc.value = b.id;
+        document.getElementById("station-fl").scrollIntoView({behavior:"smooth", block:"start"});
+        setTimeout(function(){ $("#locText").focus(); }, 600);
+      });
+      body.appendChild(blk);
+
+      var opt = el("option",null,b.label+" · "+b.id);
+      opt.value = b.id;
+      loc.appendChild(opt);
+    });
+
+    // loop
+    renderLoop(p.loop);
+    $("#loopCount").textContent = "· " + p.loop.length + " 步";
+
+    // constraints
+    var grid = $("#constraintGrid");
+    grid.innerHTML = "";
+    p.constraints.cards.forEach(function(pair){
+      var card = el("div","constraint-card");
+      card.appendChild(el("div","k",pair[0]));
+      card.appendChild(el("div","v",pair[1]));
+      grid.appendChild(card);
+    });
+    var cl = $("#constraintList");
+    cl.innerHTML = "";
+    p.constraints.list.forEach(function(t){ cl.appendChild(el("li",null,t)); });
+
+    // quality
+    var gate = $("#gatePill");
+    gate.textContent = p.gate.text;
+    gate.classList.toggle("blocked", !p.gate.ok);
+    var hb = $("#hardBody");
+    hb.innerHTML = "";
+    if(p.hard.length === 0){
+      hb.appendChild(el("div","empty","没有硬错误。"));
+    } else {
+      var ul1 = el("ul");
+      p.hard.forEach(function(t){ ul1.appendChild(el("li",null,t)); });
+      hb.appendChild(ul1);
+    }
+    var ab = $("#aesBody");
+    ab.innerHTML = "";
+    if(p.aes.length === 0){
+      ab.appendChild(el("div","empty","没有审美发现。"));
+    } else {
+      var ul2 = el("ul");
+      p.aes.forEach(function(t){ ul2.appendChild(el("li",null,t)); });
+      ab.appendChild(ul2);
+    }
+
+    // delivery
+    $("#deliverNote").textContent = p.deliverNote;
+    var db = $("#deliverBody");
+    db.innerHTML = "";
+    if(p.deliverList.length === 0){
+      db.appendChild(el("div","deliver-empty","还没有导出过任何文件。"));
+    } else {
+      p.deliverList.forEach(function(t){ db.appendChild(el("div","deliver-note",t)); });
+    }
+  }
+
+  function renderLoop(items){
+    var list = $("#loopList");
+    list.innerHTML = "";
+    items.forEach(function(it, idx){
+      var row = el("div","loop-item" + (it[4] ? " fresh" : ""));
+      row.appendChild(el("time",null,it[0]));
+      row.appendChild(el("span","who "+it[2],it[1]));
+      row.appendChild(el("span","what",it[3]));
+      list.appendChild(row);
+    });
+  }
+
+  function switchProject(key){
+    if(!PROJECTS[key]) return;
+    state.current = key;
+    renderRail();
+    render();
+    window.scrollTo({top:0, behavior:"smooth"});
+  }
+
+  /* ---------------- 反馈动作 ---------------- */
+  function now(){
+    var d = new Date();
+    function pad(n){ return (n<10?"0":"")+n; }
+    return pad(d.getMonth()+1)+"-"+pad(d.getDate())+" "+pad(d.getHours())+":"+pad(d.getMinutes());
+  }
+  function addLoop(text){
+    var p = PROJECTS[state.current];
+    p.loop.push([now(),"你","you",text,true]);
+    renderLoop(p.loop);
+    $("#loopCount").textContent = "· " + p.loop.length + " 步";
+  }
+  function flash(toast, msg){
+    toast.textContent = msg;
+    toast.classList.add("show");
+    setTimeout(function(){ toast.classList.remove("show"); }, 3200);
+  }
+
+  var dirChips = $("#dirChips");
+  dirChips.addEventListener("click", function(e){
+    var b = e.target.closest(".chip");
+    if(!b) return;
+    dirChips.querySelectorAll(".chip").forEach(function(c){ c.classList.remove("on"); });
+    b.classList.add("on");
+  });
+
+  $("#btnDirection").addEventListener("click", function(){
+    var active = dirChips.querySelector(".chip.on");
+    var kind = active ? active.getAttribute("data-v") : "换方向";
+    var note = $("#dirText").value.trim();
+    addLoop("给出<b>方向级反馈</b>：「"+kind+"」"+(note?("——"+note.replace(/</g,"&lt;")):"")+"，当前候选推翻，等待 agent 重新出方向。");
+    $("#dirText").value = "";
+    flash($("#toastDir"), "✓ 已记录到回路，agent 将推翻当前方向重做。环线 +1 圈。");
+  });
+
+  $("#btnLocal").addEventListener("click", function(){
+    var sel = $("#locSelect");
+    var label = sel.options[sel.selectedIndex] ? sel.options[sel.selectedIndex].text : sel.value;
+    var note = $("#locText").value.trim();
+    addLoop("给出<b>局部批注</b>：位置「"+label+"」"+(note?("——"+note.replace(/</g,"&lt;")):"")+"，方向保留，只微调该区块。");
+    $("#locText").value = "";
+    flash($("#toastLoc"), "✓ 已记录到回路，agent 将只改这一处。环线 +1 圈。");
+  });
+
+  /* ---------------- 新案子对话框 ---------------- */
+  var mask = $("#modalMask");
+  function openModal(){ mask.classList.add("open"); setTimeout(function(){ $("#inpName").focus(); }, 50); }
+  function closeModal(){ mask.classList.remove("open"); }
+  $("#btnNew").addEventListener("click", openModal);
+  $("#btnCancel").addEventListener("click", closeModal);
+  mask.addEventListener("click", function(e){ if(e.target === mask) closeModal(); });
+  document.addEventListener("keydown", function(e){ if(e.key === "Escape") closeModal(); });
+
+  function singleSelect(containerId){
+    var c = document.getElementById(containerId);
+    c.addEventListener("click", function(e){
+      var b = e.target.closest(".chip");
+      if(!b) return;
+      c.querySelectorAll(".chip").forEach(function(x){ x.classList.remove("on"); });
+      b.classList.add("on");
+    });
+  }
+  singleSelect("presetChips");
+  singleSelect("roleChips");
+
+  $("#btnCreate").addEventListener("click", function(){
+    var name = $("#inpName").value.trim() || "未命名案子";
+    var preset = $("#presetChips .chip.on").getAttribute("data-v");
+    var role = $("#roleChips .chip.on").getAttribute("data-v");
+    var key = "p-" + Date.now();
+    PROJECTS[key] = {
+      name: name,
+      stageTag: "Revision 0 · 需求待澄清",
+      lede: "案子刚建立，agent 正在消化需求并准备追问，候选方向尚未产出。",
+      frameTitle: key + " / brief",
+      blocks: [{id:"brief", label:"需求简报", title:name, desc:"等待 agent 的澄清问题与首轮候选方向。", swatches:null}],
+      constraints: { cards:[["PRESET",preset],["TEMPLATE ROLE",role],["语气","待定"],["色板","待定"]], list:["约束待与 agent 澄清后补齐"] },
+      loop: [[now(),"你","you","开了新案子「"+name.replace(/</g,"&lt;")+"」，preset「"+preset+"」/ role「"+role+"」，等待 agent 追问。"]],
+      hard: [], aes: [],
+      gate: {ok:false, text:"交付闸门：关闭 · 尚无可复核的 Artifact"},
+      deliverNote: "案子刚建立，还没有任何 Artifact 进入复核。",
+      deliverList: []
+    };
+    order.push(key);
+    $("#inpName").value = "";
+    closeModal();
+    switchProject(key);
+  });
+
+  /* ---------------- 启动 ---------------- */
+  renderRail();
+  render();
+})();
+</script>
+</body>
+</html>
+<<<END>>>

@@ -1,0 +1,281 @@
+/* ═══════ OEYdesign · 远航台 VOYAGE HELM ═══════ */
+:root{
+  --abyss:#0b1c26;        /* 深海底色 */
+  --hull:#10262f;         /* 船壳面板 */
+  --hull-2:#163040;
+  --rail:#1e3d4e;         /* 舷缘线 */
+  --foam:#e8f1ef;         /* 浪花白 */
+  --foam-dim:#9fb8bd;
+  --brass:#d8a24a;        /* 黄铜 */
+  --brass-hot:#f0bd63;
+  --teal:#4fb3a9;
+  --red:#e26d5a;
+  --amber:#e0b25c;
+  --ink-soft:rgba(232,241,239,.08);
+  --mono:"SFMono-Regular",Consolas,"Liberation Mono",monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  background:var(--abyss);
+  color:var(--foam);
+  font-family:"PingFang SC","Hiragino Sans GB","Microsoft YaHei",-apple-system,sans-serif;
+  font-size:14px;line-height:1.6;
+  display:flex;flex-direction:column;overflow:hidden;
+}
+.hidden{display:none!important}
+.ico{width:15px;height:15px;vertical-align:-2px;margin-right:6px;color:var(--brass)}
+
+/* ── 顶栏 ── */
+.bridge-head{
+  display:flex;align-items:center;gap:22px;
+  padding:10px 20px;background:var(--hull);
+  border-bottom:2px solid var(--brass);
+  flex:0 0 auto;
+}
+.brand{display:flex;align-items:center;gap:10px;color:var(--brass)}
+.brand-mark{width:34px;height:34px}
+.brand-text{display:flex;flex-direction:column;line-height:1.2}
+.brand-name{font-weight:700;letter-spacing:.06em;color:var(--foam)}
+.brand-sub{font-size:11px;color:var(--brass);letter-spacing:.28em}
+.voyage-plate{
+  display:flex;flex-direction:column;padding:4px 14px;
+  border:1px dashed var(--rail);border-radius:4px;line-height:1.3;
+}
+.plate-label{font-size:10px;color:var(--foam-dim);letter-spacing:.2em}
+.plate-code{font-family:var(--mono);color:var(--brass-hot);font-size:13px}
+.route-switch{display:flex;align-items:center;gap:8px}
+.route-label{font-size:12px;color:var(--foam-dim);letter-spacing:.15em}
+.route-switch select{
+  background:var(--hull-2);color:var(--foam);
+  border:1px solid var(--rail);border-radius:4px;
+  padding:6px 10px;font-size:13px;min-width:220px;cursor:pointer;
+}
+.status-flag{display:flex;align-items:center;gap:8px;margin-left:auto;font-size:13px;color:var(--foam-dim)}
+.flag-dot{width:9px;height:9px;border-radius:50%;background:#5a707a;box-shadow:0 0 8px currentColor}
+.flag-dot.sailing{background:var(--teal);color:var(--teal)}
+.flag-dot.review{background:var(--amber);color:var(--amber)}
+.flag-dot.blocked{background:var(--red);color:var(--red)}
+.flag-dot.ready{background:var(--brass-hot);color:var(--brass-hot)}
+.view-tabs{display:flex;gap:4px}
+.tab{
+  background:transparent;border:1px solid var(--rail);color:var(--foam-dim);
+  padding:7px 16px;border-radius:4px;cursor:pointer;font-size:13px;letter-spacing:.1em;
+}
+.tab.active{background:var(--brass);border-color:var(--brass);color:var(--abyss);font-weight:700}
+.tab:hover:not(.active){border-color:var(--brass);color:var(--foam)}
+
+/* ── 主甲板三栏 ── */
+.deck{
+  flex:1;display:grid;grid-template-columns:308px 1fr 330px;
+  gap:14px;padding:14px 20px;min-height:0;overflow:hidden;
+}
+.port-side,.starboard-side{display:flex;flex-direction:column;gap:14px;overflow-y:auto;min-height:0;padding-right:2px}
+.panel{background:var(--hull);border:1px solid var(--rail);border-radius:6px;padding:14px}
+.panel-title{
+  font-size:13px;letter-spacing:.18em;color:var(--brass);
+  border-bottom:1px solid var(--rail);padding-bottom:8px;margin-bottom:10px;font-weight:700;
+}
+
+/* 航海日志 */
+.log-state{
+  font-family:var(--mono);font-size:11px;color:var(--teal);
+  background:var(--ink-soft);border-left:3px solid var(--teal);
+  padding:5px 9px;margin-bottom:10px;border-radius:0 3px 3px 0;
+}
+.log-list{list-style:none;display:flex;flex-direction:column;gap:0;max-height:260px;overflow-y:auto}
+.log-list li{
+  display:flex;gap:9px;padding:6px 4px;border-bottom:1px dashed rgba(30,61,78,.6);font-size:12.5px;
+  animation:logIn .35s ease;
+}
+@keyframes logIn{from{opacity:0;transform:translateX(-6px)}to{opacity:1;transform:none}}
+.log-time{font-family:var(--mono);color:var(--foam-dim);font-size:11px;flex:0 0 44px;padding-top:1px}
+.log-kind{
+  flex:0 0 auto;font-size:10px;padding:1px 6px;border-radius:3px;height:fit-content;
+  letter-spacing:.08em;margin-top:2px;
+}
+.k-agent{background:rgba(79,179,169,.15);color:var(--teal);border:1px solid rgba(79,179,169,.4)}
+.k-user{background:rgba(216,162,74,.15);color:var(--brass-hot);border:1px solid rgba(216,162,74,.4)}
+.k-sys{background:var(--ink-soft);color:var(--foam-dim);border:1px solid var(--rail)}
+.k-quality{background:rgba(224,178,92,.12);color:var(--amber);border:1px solid rgba(224,178,92,.35)}
+.log-text{color:var(--foam)}
+.next-moves{margin-top:12px;border-top:1px solid var(--rail);padding-top:10px}
+.next-title{font-size:11px;letter-spacing:.2em;color:var(--foam-dim);margin-bottom:8px}
+.move-btn{
+  display:block;width:100%;text-align:left;margin-bottom:6px;
+  background:var(--hull-2);border:1px solid var(--rail);color:var(--foam);
+  padding:8px 10px;border-radius:4px;cursor:pointer;font-size:12.5px;
+  transition:border-color .15s;
+}
+.move-btn:hover:not(:disabled){border-color:var(--brass);color:var(--brass-hot)}
+.move-btn:disabled{opacity:.4;cursor:not-allowed}
+.move-btn .mv-tag{font-family:var(--mono);font-size:10px;color:var(--teal);margin-right:6px}
+
+/* 喊话表单 */
+.hail-hint{font-size:12px;color:var(--foam-dim);margin-bottom:10px}
+.hail form{display:flex;flex-direction:column;gap:8px}
+.hail textarea,.hail select,.harbor-form input{
+  background:var(--abyss);border:1px solid var(--rail);border-radius:4px;
+  color:var(--foam);padding:8px 10px;font-size:12.5px;font-family:inherit;resize:vertical;
+}
+.hail textarea:focus,.hail select:focus,.harbor-form input:focus{outline:none;border-color:var(--brass)}
+.seg{display:flex;gap:4px}
+.seg-btn{
+  flex:1;background:var(--hull-2);border:1px solid var(--rail);color:var(--foam-dim);
+  padding:6px 0;border-radius:4px;cursor:pointer;font-size:12px;
+}
+.seg-btn.active{background:rgba(216,162,74,.18);border-color:var(--brass);color:var(--brass-hot)}
+.btn{
+  border:none;border-radius:4px;padding:9px 14px;cursor:pointer;
+  font-size:13px;letter-spacing:.12em;font-weight:700;
+}
+.btn-brass{background:var(--brass);color:var(--abyss)}
+.btn-brass:hover{background:var(--brass-hot)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.form-ack{font-size:12px;color:var(--teal);min-height:18px}
+
+/* 海图桌 */
+.chart-table{
+  background:
+    radial-gradient(ellipse at 50% 0%,rgba(79,179,169,.05),transparent 60%),
+    var(--hull);
+  border:1px solid var(--rail);border-radius:6px;
+  padding:16px;display:flex;flex-direction:column;min-height:0;overflow-y:auto;
+}
+.chart-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.chart-head .panel-title{border:none;margin:0;padding:0}
+.rev-stamp{
+  font-family:var(--mono);font-size:12px;color:var(--brass-hot);
+  border:2px solid var(--brass);border-radius:4px;padding:3px 10px;
+  transform:rotate(2deg);letter-spacing:.15em;
+}
+.candidate-rail{display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap}
+.cand-card{
+  flex:1;min-width:170px;background:var(--hull-2);border:1px solid var(--rail);
+  border-radius:5px;padding:10px 12px;cursor:pointer;transition:border-color .15s,transform .15s;
+}
+.cand-card:hover{border-color:var(--teal)}
+.cand-card.selected{border-color:var(--brass);box-shadow:0 0 0 1px var(--brass)}
+.cand-card.approved{border-color:var(--teal)}
+.cand-code{font-family:var(--mono);font-size:10px;color:var(--foam-dim);letter-spacing:.15em}
+.cand-title{font-weight:700;font-size:13.5px;margin:2px 0}
+.cand-desc{font-size:11.5px;color:var(--foam-dim);line-height:1.5}
+.cand-badge{
+  display:inline-block;margin-top:6px;font-size:10px;padding:1px 7px;border-radius:3px;
+  letter-spacing:.1em;
+}
+.cand-badge.b-pending{background:var(--ink-soft);color:var(--foam-dim);border:1px solid var(--rail)}
+.cand-badge.b-approved{background:rgba(79,179,169,.15);color:var(--teal);border:1px solid rgba(79,179,169,.4)}
+.cand-actions{margin-top:8px;display:flex;gap:6px}
+.mini-btn{
+  background:transparent;border:1px solid var(--rail);color:var(--foam-dim);
+  font-size:11px;padding:3px 9px;border-radius:3px;cursor:pointer;
+}
+.mini-btn:hover:not(:disabled){border-color:var(--brass);color:var(--brass-hot)}
+.mini-btn:disabled{opacity:.4;cursor:not-allowed}
+
+/* 预览台 */
+.proof-stage{flex:1;min-height:280px;position:relative}
+.empty-sea{
+  height:100%;min-height:260px;display:flex;flex-direction:column;gap:14px;
+  align-items:center;justify-content:center;color:var(--foam-dim);
+  border:1px dashed var(--rail);border-radius:6px;text-align:center;padding:20px;
+}
+.empty-ico{width:72px;height:72px;color:var(--rail)}
+.proof-frame{
+  background:var(--abyss);border:1px solid var(--rail);border-radius:6px;overflow:hidden;
+  animation:logIn .4s ease;
+}
+.proof-urlbar{
+  display:flex;align-items:center;gap:8px;background:var(--hull-2);
+  padding:7px 12px;font-family:var(--mono);font-size:11px;color:var(--foam-dim);
+  border-bottom:1px solid var(--rail);
+}
+.proof-urlbar .dot{width:8px;height:8px;border-radius:50%;background:var(--rail)}
+.proof-body{padding:22px;min-height:240px}
+.mock-hero{border-radius:5px;padding:26px 22px;margin-bottom:14px}
+.mock-hero h4{font-size:20px;margin-bottom:6px;letter-spacing:.04em}
+.mock-hero p{font-size:12px;opacity:.85;max-width:420px}
+.mock-cols{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.mock-col{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:4px;padding:12px;font-size:11px}
+.mock-col b{display:block;font-size:12px;margin-bottom:4px}
+.mock-bar{height:5px;border-radius:3px;margin-top:8px;opacity:.6}
+.proof-caption{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:8px 12px;font-size:11.5px;color:var(--foam-dim);border-top:1px solid var(--rail);
+}
+.proof-caption .cap-flag{font-family:var(--mono);color:var(--teal)}
+
+/* 右舷仪器 */
+.inst-block{margin-bottom:16px}
+.inst-block:last-child{margin-bottom:0}
+.inst-title{font-size:11.5px;letter-spacing:.18em;color:var(--brass);margin-bottom:8px;font-weight:700}
+.file-tree{list-style:none;font-family:var(--mono);font-size:11.5px;color:var(--foam-dim)}
+.file-tree li{padding:3px 0 3px 14px;position:relative}
+.file-tree li::before{content:"├";position:absolute;left:0;color:var(--rail)}
+.file-tree li.dir{color:var(--teal)}
+.orders{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;font-size:12px}
+.orders dt{color:var(--foam-dim);letter-spacing:.05em}
+.orders dd{color:var(--foam)}
+.orders dd.mono{font-family:var(--mono);font-size:11.5px;color:var(--brass-hot)}
+
+.insp-lane{border:1px solid var(--rail);border-radius:5px;padding:8px 10px;margin-bottom:8px}
+.insp-hard{border-left:3px solid var(--red)}
+.insp-soft{border-left:3px solid var(--amber)}
+.lane-head{display:flex;align-items:center;gap:7px;font-size:11.5px;letter-spacing:.05em;margin-bottom:6px}
+.insp-hard .lane-head{color:var(--red)}
+.insp-soft .lane-head{color:var(--amber)}
+.lane-light{width:8px;height:8px;border-radius:50%}
+.lane-light.red{background:var(--red);box-shadow:0 0 6px var(--red)}
+.lane-light.amber{background:var(--amber);box-shadow:0 0 6px var(--amber)}
+.insp-list{list-style:none;font-size:12px}
+.insp-list li{padding:3px 0 3px 16px;position:relative;color:var(--foam)}
+.insp-list li::before{content:"◈";position:absolute;left:0;font-size:10px;top:5px}
+.insp-hard .insp-list li::before{color:var(--red)}
+.insp-soft .insp-list li::before{color:var(--amber)}
+.insp-list li.ok{color:var(--foam-dim)}
+.insp-list li.ok::before{content:"✓";color:var(--teal)}
+
+.record-list{list-style:none;font-size:12px}
+.record-list li{
+  padding:5px 0;border-bottom:1px dashed rgba(30,61,78,.6);color:var(--foam-dim);
+}
+.record-list li b{color:var(--foam);font-weight:600}
+.record-list .rec-tag{
+  font-family:var(--mono);font-size:10px;color:var(--brass-hot);margin-right:6px;
+}
+
+/* 船坞 */
+.harbor{flex:1;display:flex;align-items:flex-start;justify-content:center;padding:40px 20px;overflow-y:auto}
+.harbor-card{
+  width:640px;max-width:100%;background:var(--hull);border:1px solid var(--rail);
+  border-top:3px solid var(--brass);border-radius:8px;padding:30px 34px;
+}
+.harbor-title{font-size:20px;letter-spacing:.12em;color:var(--brass);margin-bottom:6px}
+.harbor-sub{font-size:13px;color:var(--foam-dim);margin-bottom:22px}
+.harbor-form{display:flex;flex-direction:column;gap:20px}
+.field{display:flex;flex-direction:column;gap:8px}
+.field>span{font-size:12px;letter-spacing:.15em;color:var(--foam-dim)}
+.pick-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px}
+.pick{
+  background:var(--hull-2);border:1px solid var(--rail);border-radius:5px;
+  padding:10px 12px;cursor:pointer;text-align:left;color:var(--foam);
+}
+.pick b{display:block;font-size:13px;margin-bottom:2px}
+.pick i{font-style:normal;font-size:11px;color:var(--foam-dim)}
+.pick:hover{border-color:var(--teal)}
+.pick.active{border-color:var(--brass);background:rgba(216,162,74,.1);box-shadow:0 0 0 1px var(--brass)}
+.btn-big{padding:13px;font-size:14px}
+
+/* Toast */
+.toast{
+  position:fixed;bottom:24px;left:50%;transform:translate(-50%,80px);
+  background:var(--hull-2);border:1px solid var(--brass);color:var(--foam);
+  padding:10px 22px;border-radius:5px;font-size:13px;letter-spacing:.05em;
+  transition:transform .3s ease;z-index:99;pointer-events:none;
+}
+.toast.show{transform:translate(-50%,0)}
+
+::-webkit-scrollbar{width:8px;height:8px}
+::-webkit-scrollbar-thumb{background:var(--rail);border-radius:4px}
+::-webkit-scrollbar-track{background:transparent}

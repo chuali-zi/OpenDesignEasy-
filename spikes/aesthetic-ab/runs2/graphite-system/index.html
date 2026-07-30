@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OEYdesign — KILN Coffee 落地页</title>
+<link rel="stylesheet" href="assets/fonts/fonts.css">
+<script src="assets/tailwind.js"></script>
+<script>
+tailwind.config = { theme: { extend: {
+  colors: {
+    bg: '#141311',
+    surface: '#1E1C19',
+    ink: '#EDEAE3',
+    'ink-muted': '#A8A29A',
+    line: '#33302B',
+    accent: '#E8602C'
+  },
+  fontFamily: {
+    display: ['"Space Grotesk"', '"Noto Sans SC"', 'sans-serif'],
+    body: ['"IBM Plex Sans"', '"Noto Sans SC"', 'sans-serif'],
+    mono: ['"IBM Plex Mono"', 'monospace']
+  },
+  fontSize: {
+    '14': ['14px', '22px'],
+    '15': ['15px', '24px'],
+    '17': ['17px', '26px'],
+    '20': ['20px', '30px'],
+    '24': ['24px', '32px'],
+    '32': ['32px', '40px']
+  },
+  spacing: {
+    '1': '4px',
+    '2': '8px',
+    '3': '12px',
+    '4': '16px',
+    '6': '24px',
+    '8': '32px',
+    '12': '48px'
+  }
+} } }
+</script>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body class="bg-bg text-ink font-body text-15 h-screen flex flex-col overflow-hidden">
+
+<!-- ============ 顶栏 48px ============ -->
+<header class="h-12 shrink-0 bg-bg border-b border-line flex items-center px-6 gap-6">
+  <div class="flex items-center gap-3">
+    <span class="font-display text-20 tracking-tight text-ink">OEYdesign</span>
+    <span class="font-mono text-14 text-ink-muted">v0.9.4</span>
+  </div>
+  <div class="h-4 w-px bg-line"></div>
+  <div class="flex items-center gap-2 text-14 text-ink-muted">
+    <span>项目</span>
+    <span class="text-ink">KILN Coffee · 品牌落地页</span>
+  </div>
+  <div class="flex-1"></div>
+  <div class="font-mono text-14 text-ink-muted" id="clock">14:32:08</div>
+  <div class="h-4 w-px bg-line"></div>
+  <div class="flex items-center gap-2">
+    <span class="w-2 h-2 rounded-full bg-ink-muted"></span>
+    <span class="text-14 text-ink-muted">本地会话 · 未发布</span>
+  </div>
+</header>
+
+<!-- ============ 主区：左对话 360px / 右预览 ============ -->
+<main class="flex-1 flex min-h-0">
+
+  <!-- ---- 左侧对话栏 ---- -->
+  <aside class="w-[360px] shrink-0 bg-surface border-r border-line flex flex-col min-h-0">
+    <div class="h-12 shrink-0 border-b border-line flex items-center justify-between px-4">
+      <span class="font-display text-15 text-ink">迭代对话</span>
+      <span class="font-mono text-14 text-ink-muted">#sess-0417</span>
+    </div>
+
+    <div id="chat" class="flex-1 overflow-y-auto px-4 py-4 flex flex-col gap-4">
+
+      <!-- 第 1 轮 -->
+      <div class="msg msg-user">
+        <div class="msg-meta"><span>你</span><span class="font-mono">13:58</span></div>
+        <div class="msg-bubble bubble-user">帮我做一个手冲咖啡品牌的落地页。品牌叫 KILN，主打单一产地小批量烘焙。首屏要有大标题和一句主张，下面放三支在售豆子的卡片，底部要有门店信息和订阅邮箱的入口。</div>
+      </div>
+      <div class="msg msg-agent">
+        <div class="msg-meta"><span>OEY · Agent</span><span class="font-mono">13:59</span></div>
+        <div class="msg-bubble bubble-agent">已生成 <span class="font-mono text-14">v1.0.0</span>。结构：导航 → 主视觉（标题 + 主张 + 双按钮）→ 三支豆子卡片 → 门店与订阅底栏。初稿用了冷灰蓝做品牌色，标题暂定为「一杯咖啡的完整旅程」，你先看看整体骨架。</div>
+      </div>
+
+      <!-- 第 2 轮 -->
+      <div class="msg msg-user">
+        <div class="msg-meta"><span>你</span><span class="font-mono">14:04</span></div>
+        <div class="msg-bubble bubble-user">配色不对。KILN 是「窑」的意思，品牌感觉是暖的、陶土的，不要冷灰蓝。整体换成陶土橙加深棕，底色用米白。</div>
+      </div>
+      <div class="msg msg-agent">
+        <div class="msg-meta"><span>OEY · Agent</span><span class="font-mono">14:05</span></div>
+        <div class="msg-bubble bubble-agent">已切换到暖陶土色系并发布 <span class="font-mono text-14">v1.1.0</span>：底色米白，主色陶土橙，文字深棕。主视觉右侧加了一个窑炉剖面的装饰色块呼应品牌名。</div>
+      </div>
+
+      <!-- 第 3 轮 -->
+      <div class="msg msg-user">
+        <div class="msg-meta"><span>你</span><span class="font-mono">14:11</span></div>
+        <div class="msg-bubble bubble-user">主标题「一杯咖啡的完整旅程」太长也太虚，压到两行内，要直接一点。副标题也弱，说清楚「单一产地、小批量、每周烘焙」。</div>
+      </div>
+      <div class="msg msg-agent">
+        <div class="msg-meta"><span>OEY · Agent</span><span class="font-mono">14:12</span></div>
+        <div class="msg-bubble bubble-agent">改好了，<span class="font-mono text-14">v1.2.0</span>。主标题改为「Slow Brewed. Honest Coffee.」，两行内；副标题重写为「单一产地 · 小批量 · 每周四新鲜烘焙直发」。锚点 <span class="obj-chip font-mono">#hero-title</span> 已更新。</div>
+      </div>
+
+      <!-- 第 4 轮 -->
+      <div class="msg msg-user">
+        <div class="msg-meta"><span>你</span><span class="font-mono">14:19</span></div>
+        <div class="msg-bubble bubble-user">豆子卡片：价格没有对齐，看着乱。每张卡片加烘焙度标签（浅烘 / 中烘 / 深烘），价格统一沉到卡片底部一行。</div>
+      </div>
+      <div class="msg msg-agent">
+        <div class="msg-meta"><span>OEY · Agent</span><span class="font-mono">14:21</span></div>
+        <div class="msg-bubble bubble-agent">完成，<span class="font-mono text-14">v1.3.0</span>。卡片改为等高弹性布局：烘焙度标签放在产地旁，价格行用 <span class="obj-chip font-mono">#bean-price</span> 统一固定在卡片底部，三张卡基线对齐。顺带把风味描述统一压到两行。</div>
+      </div>
+
+      <!-- 第 5 轮 -->
+      <div class="msg msg-user">
+        <div class="msg-meta"><span>你</span><span class="font-mono">14:26</span></div>
+        <div class="msg-bubble bubble-user">中间太白了，眼睛累。在卡片和底栏之间加一条深棕色的引用带，放一句品牌的话，让页面有个重音。</div>
+      </div>
+      <div class="msg msg-agent">
+        <div class="msg-meta"><span>OEY · Agent</span><span class="font-mono">14:27</span></div>
+        <div class="msg-bubble bubble-agent">加了，<span class="font-mono text-14">v1.3.1</span>。深棕引用带插入在产区卡片与底栏之间，文案「We roast like potters fire — patience first.」，米白反白字，陶土色引号作点缀。</div>
+      </div>
+
+      <!-- 第 6 轮 -->
+      <div class="msg msg-user">
+        <div class="msg-meta"><span>你</span><span class="font-mono">14:31</span></div>
+        <div class="msg-bubble bubble-user">底栏的订阅输入框和按钮挤在一起了，拉开点距离；门店地址后面补一句营业时间。这版改完就可以定稿导出了。</div>
+      </div>
+      <div class="msg msg-agent">
+        <div class="msg-meta"><span>OEY · Agent</span><span class="font-mono">14:32</span></div>
+        <div class="msg-bubble bubble-agent">定稿 <span class="font-mono text-14">v1.3.2</span>（当前版本）：订阅区间距拉开到 12px，输入框与按钮分置两端；门店信息补上「周一至周日 8:00–19:00」。七轮迭代全部落版，可从右上角导出 PDF / PNG 或复制交付链接。</div>
+      </div>
+    </div>
+
+    <!-- 输入区 -->
+    <div class="shrink-0 border-t border-line p-4 flex flex-col gap-3">
+      <div id="typing" class="hidden items-center gap-2 text-14 text-ink-muted">
+        <span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span>
+        <span class="ml-1">Agent 正在修改产物…</span>
+      </div>
+      <textarea id="composer" rows="3" placeholder="描述下一轮修改，例如「把引用带的字号再放大一点」…"
+        class="w-full bg-bg border border-line rounded px-3 py-3 text-15 text-ink placeholder:text-ink-muted resize-none focus:outline-none focus:border-ink-muted"></textarea>
+      <div class="flex items-center justify-between">
+        <span class="text-14 text-ink-muted">对象级反馈：点击预览中的元素</span>
+        <button id="sendBtn"
+          class="h-8 px-6 bg-accent text-bg font-display text-15 rounded flex items-center gap-2 hover:opacity-90 active:opacity-80">
+          发送 / 生成
+        </button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ---- 右侧预览区 ---- -->
+  <section class="flex-1 flex flex-col min-w-0 min-h-0 relative">
+
+    <!-- 工具条 48px -->
+    <div class="h-12 shrink-0 bg-bg border-b border-line flex items-center px-6 gap-4">
+      <span class="text-14 text-ink-muted">产物</span>
+      <span class="text-15 text-ink">落地页 · 首页画板</span>
+      <div class="h-4 w-px bg-line"></div>
+
+      <!-- 版本 -->
+      <div class="relative">
+        <button id="verBtn" class="h-8 px-3 border border-line rounded flex items-center gap-2 text-14 text-ink hover:border-ink-muted">
+          <span class="font-mono" id="verLabel">v1.3.2</span>
+          <svg width="10" height="6" viewBox="0 0 10 6" fill="none"><path d="M1 1l4 4 4-4" stroke="#A8A29A" stroke-width="1.5"/></svg>
+        </button>
+        <div id="verMenu" class="hidden absolute top-8 left-0 mt-1 w-[240px] bg-surface border border-line rounded py-1 z-40">
+          <button class="ver-item" data-v="v1.3.2"><span class="font-mono">v1.3.2</span><span class="ver-note">当前 · 底栏定稿</span></button>
+          <button class="ver-item" data-v="v1.3.1"><span class="font-mono">v1.3.1</span><span class="ver-note">新增引用带</span></button>
+          <button class="ver-item" data-v="v1.3.0"><span class="font-mono">v1.3.0</span><span class="ver-note">卡片价格对齐</span></button>
+          <button class="ver-item" data-v="v1.2.0"><span class="font-mono">v1.2.0</span><span class="ver-note">主标题两行</span></button>
+          <button class="ver-item" data-v="v1.1.0"><span class="font-mono">v1.1.0</span><span class="ver-note">暖陶土配色</span></button>
+          <button class="ver-item" data-v="v1.0.0"><span class="font-mono">v1.0.0</span><span class="ver-note">初版骨架</span></button>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <span class="w-2 h-2 rounded-full bg-ink"></span>
+        <span class="text-14 text-ink-muted">已同步 · 7 轮迭代</span>
+      </div>
+
+      <div class="flex-1"></div>
+
+      <button class="exp-btn h-8 px-3 border border-line rounded text-14 text-ink hover:border-ink-muted" data-fmt="PDF">导出 PDF</button>
+      <button class="exp-btn h-8 px-3 border border-line rounded text-14 text-ink hover:border-ink-muted" data-fmt="PNG">导出 PNG</button>
+      <button class="exp-btn h-8 px-3 border border-line rounded text-14 text-ink hover:border-ink-muted" data-fmt="链接">复制链接</button>
+    </div>
+
+    <!-- 灯箱台面 -->
+    <div id="stage" class="flex-1 overflow-auto relative flex items-center justify-center bg-bg">
+
+      <!-- 白页 + 四角标注 -->
+      <div id="pageWrap" class="relative shrink-0">
+        <span class="dim dim-tl font-mono">1440 × 900</span>
+        <span class="dim dim-tr font-mono">1440 × 900</span>
+        <span class="dim dim-bl font-mono">1440 × 900</span>
+        <span class="dim dim-br font-mono">1440 × 900</span>
+
+        <!-- ======== 内层产物：KILN Coffee 落地页（自有视觉语言，勿污染） ======== -->
+        <div id="artifact" class="art" data-oey-section="page-root">
+
+          <!-- 导航 -->
+          <nav class="art-nav" data-oey-section="nav">
+            <span class="art-logo" data-oey-object="nav-logo">KILN</span>
+            <div class="art-nav-links">
+              <a href="#" data-oey-object="nav-link-beans">豆单</a>
+              <a href="#" data-oey-object="nav-link-story">烘焙理念</a>
+              <a href="#" data-oey-object="nav-link-visit">门店</a>
+            </div>
+            <a href="#" class="art-nav-cta" data-oey-object="nav-cta">订阅鲜豆</a>
+          </nav>
+
+          <!-- 主视觉 -->
+          <header class="art-hero" data-oey-section="hero">
+            <div class="art-hero-text">
+              <span class="art-eyebrow" data-oey-object="hero-eyebrow">Single Origin · Small Batch</span>
+              <h1 class="art-h1" data-oey-object="hero-title">Slow Brewed.<br>Honest Coffee.</h1>
+              <p class="art-sub" data-oey-object="hero-sub">单一产地 · 小批量 · 每周四新鲜烘焙直发。我们只烘自己愿意天天喝的豆子。</p>
+              <div class="art-hero-actions">
+                <a href="#" class="art-btn-primary" data-oey-object="hero-cta-main">浏览本周豆单</a>
+                <a href="#" class="art-btn-ghost" data-oey-object="hero-cta-sub">了解烘焙理念</a>
+              </div>
+            </div>
+            <div class="art-hero-visual" data-oey-object="hero-visual">
+              <div class="art-kiln">
+                <div class="art-kiln-arch"></div>
+                <div class="art-kiln-fire"></div>
+                <div class="art-kiln-base"></div>
+              </div>
+              <span class="art-kiln-caption">窑炉 · 慢火</span>
+            </div>
+          </header>
+
+          <!-- 豆子卡片 -->
+          <section class="art-beans" data-oey-section="beans">
+            <div class="art-beans-head">
+              <h2 data-oey-object="beans-heading">本周在售</h2>
+              <span data-oey-object="beans-note">每周四烘焙 · 周五寄出</span>
+            </div>
+            <div class="art-bean-row">
+              <article class="art-card" data-oey-object="bean-card-1">
+                <div class="art-card-top">
+                  <h3>埃塞俄比亚 · 耶加雪菲</h3>
+                  <span class="art-roast">浅烘</span>
+                </div>
+                <p class="art-card-notes" data-oey-object="bean-notes-1">柑橘、茉莉花香，尾韵带蜂蜜甜感。水洗处理。</p>
+                <div class="art-card-foot">
+                  <span class="art-price" data-oey-object="bean-price">¥98 <em>/ 200g</em></span>
+                  <a href="#" class="art-card-buy">加入</a>
+                </div>
+              </article>
+              <article class="art-card" data-oey-object="bean-card-2">
+                <div class="art-card-top">
+                  <h3>哥伦比亚 · 慧兰</h3>
+                  <span class="art-roast">中烘</span>
+                </div>
+                <p class="art-card-notes" data-oey-object="bean-notes-2">焦糖、红苹果，口感圆润平衡。日晒处理。</p>
+                <div class="art-card-foot">
+                  <span class="art-price" data-oey-object="bean-price">¥88 <em>/ 200g</em></span>
+                  <a href="#" class="art-card-buy">加入</a>
+                </div>
+              </article>
+              <article class="art-card" data-oey-object="bean-card-3">
+                <div class="art-card-top">
+                  <h3>印尼 · 曼特宁</h3>
+                  <span class="art-roast">深烘</span>
+                </div>
+                <p class="art-card-notes" data-oey-object="bean-notes-3">黑巧、雪松，醇厚低酸，适合奶咖。湿刨处理。</p>
+                <div class="art-card-foot">
+                  <span class="art-price" data-oey-object="bean-price">¥78 <em>/ 200g</em></span>
+                  <a href="#" class="art-card-buy">加入</a>
+                </div>
+              </article>
+            </div>
+          </section>
+
+          <!-- 引用带 -->
+          <section class="art-quote" data-oey-section="quote-band">
+            <blockquote data-oey-object="quote-text">“We roast like potters fire — patience first.”</blockquote>
+            <cite data-oey-object="quote-cite">— KILN 烘焙室手记</cite>
+          </section>
+
+          <!-- 底栏 -->
+          <footer class="art-footer" data-oey-section="footer">
+            <div class="art-visit" data-oey-object="footer-visit">
+              <h3>门店</h3>
+              <p>上海市徐汇区武康路 376 号 KILN Coffee</p>
+              <p>周一至周日 8:00 – 19:00</p>
+            </div>
+            <div class="art-news" data-oey-object="footer-news">
+              <h3>订阅鲜豆信</h3>
+              <p>每周三晚寄出：新到产区、烘焙日志、门店活动。</p>
+              <form class="art-news-form" data-oey-object="footer-form">
+                <input type="email" placeholder="you@example.com">
+                <button type="button">订阅</button>
+              </form>
+            </div>
+          </footer>
+
+        </div>
+        <!-- ======== /内层产物 ======== -->
+      </div>
+
+      <!-- 检查器抽屉（预览区内） -->
+      <div id="drawer" class="drawer">
+        <div class="flex items-center justify-between px-4 h-12 border-b border-line shrink-0">
+          <span class="font-display text-15">对象检查器</span>
+          <button id="drawerClose" class="h-8 w-8 flex items-center justify-center text-ink-muted hover:text-ink">✕</button>
+        </div>
+        <div class="p-4 flex flex-col gap-4 overflow-y-auto">
+          <div>
+            <div class="insp-label">对象锚点</div>
+            <div class="font-mono text-14 text-ink" id="inspId">#hero-title</div>
+          </div>
+          <div>
+            <div class="insp-label">所属分区</div>
+            <div class="text-14 text-ink" id="inspSection">hero · 主视觉</div>
+          </div>
+          <div>
+            <div class="insp-label">类型</div>
+            <div class="text-14 text-ink" id="inspType">标题文本</div>
+          </div>
+          <div>
+            <div class="insp-label">当前内容</div>
+            <div class="text-14 text-ink leading-snug" id="inspValue">Slow Brewed. Honest Coffee.</div>
+          </div>
+          <div>
+            <div class="insp-label">最近修改</div>
+            <div class="text-14 text-ink-muted" id="inspNote">v1.2.0 · 标题压至两行内</div>
+          </div>
+          <button id="citeBtn" class="h-8 px-3 border border-line rounded text-14 text-ink hover:border-ink-muted text-left">
+            在对话中引用此对象
+          </button>
+        </div>
+      </div>
+
+      <!-- 提示 Toast -->
+      <div id="toast" class="toast hidden"></div>
+    </div>
+  </section>
+</main>
+
+<script>
+/* ---------- 时钟 ---------- */
+(function(){
+  var el = document.getElementById('clock');
+  function tick(){ var d=new Date(); el.textContent = [d.getHours(),d.getMinutes(),d.getSeconds()].map(function(n){return String(n).padStart(2,'0')}).join(':'); }
+  tick(); setInterval(tick,1000);
+})();
+
+/* ---------- 画板缩放（保持 1440×900 真实规格） ---------- */
+var stage = document.getElementById('stage'),
+    wrap  = document.getElementById('pageWrap'),
+    art   = document.getElementById('artifact');
+function fit(){
+  var aw = stage.clientWidth - 96, ah = stage.clientHeight - 96;
+  var s = Math.min(aw/1440, ah/900, 1);
+  wrap.style.width  = 1440*s + 'px';
+  wrap.style.height = 900*s + 'px';
+  art.style.transform = 'scale(' + s + ')';
+}
+window.addEventListener('resize', fit);
+fit();
+
+/* ---------- Toast ---------- */
+var toast = document.getElementById('toast'), toastTimer;
+function showToast(msg){
+  toast.innerHTML = msg;
+  toast.classList.remove('hidden');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(function(){ toast.classList.add('hidden'); }, 3200);
+}
+
+/* ---------- 对话：发送 ---------- */
+var chat = document.getElementById('chat'),
+    composer = document.getElementById('composer'),
+    typing = document.getElementById('typing'),
+    patch = 3;
+var replies = [
+  '收到。我按这条意见调整了 <span class="obj-chip font-mono">#hero-title</span> 的字号与行距，页面重音更集中。已落版 <span class="font-mono text-14">v1.3.{n}</span>，预览区即是最新效果。',
+  '明白。这次改动涉及配色与留白，我保持了米白底 + 陶土橙的品牌系统，只在你指定的区域动手。新版本 <span class="font-mono text-14">v1.3.{n}</span> 已同步到右侧灯箱。',
+  '已处理。改动落在 <span class="obj-chip font-mono">#bean-price</span> 一行：对齐方式与字重都按你说的来。版本推进到 <span class="font-mono text-14">v1.3.{n}</span>，可从工具条回滚对比。',
+  '好的，这条我记为对象级反馈，锚点已挂到对应元素上。<span class="font-mono text-14">v1.3.{n}</span> 已生成，如果这版满意，右上角可以直接导出交付。'
+];
+var replyIdx = 0;
+function timeNow(){ var d=new Date(); return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0'); }
+function addMsg(who, html){
+  var m = document.createElement('div');
+  m.className = 'msg ' + (who==='user' ? 'msg-user' : 'msg-agent');
+  m.innerHTML = '<div class="msg-meta"><span>' + (who==='user'?'你':'OEY · Agent') + '</span><span class="font-mono">' + timeNow() + '</span></div>'
+              + '<div class="msg-bubble ' + (who==='user'?'bubble-user':'bubble-agent') + '">' + html + '</div>';
+  chat.appendChild(m);
+  chat.scrollTop = chat.scrollHeight;
+}
+function send(){
+  var t = composer.value.trim();
+  if(!t) return;
+  addMsg('user', t.replace(/</g,'&lt;'));
+  composer.value = '';
+  typing.classList.remove('hidden'); typing.classList.add('flex');
+  setTimeout(function(){
+    typing.classList.add('hidden'); typing.classList.remove('flex');
+    var r = replies[replyIdx % replies.length].replace(/\{n\}/g, patch);
+    replyIdx++; patch++;
+    addMsg('agent', r);
+    document.getElementById('verLabel').textContent = 'v1.3.' + (patch-1);
+    showToast('已生成新版本 <span class="font-mono">v1.3.' + (patch-1) + '</span> · 预览已更新');
+  }, 1200);
+}
+document.getElementById('sendBtn').addEventListener('click', send);
+composer.addEventListener('keydown', function(e){
+  if(e.key === 'Enter' && !e.shiftKey){ e.preventDefault(); send(); }
+});
+
+/* ---------- 版本菜单 ---------- */
+var verBtn = document.getElementById('verBtn'), verMenu = document.getElementById('verMenu');
+verBtn.addEventListener('click', function(e){ e.stopPropagation(); verMenu.classList.toggle('hidden'); });
+document.addEventListener('click', function(){ verMenu.classList.add('hidden'); });
+Array.prototype.forEach.call(document.querySelectorAll('.ver-item'), function(btn){
+  btn.addEventListener('click', function(e){
+    e.stopPropagation();
+    var v = btn.getAttribute('data-v');
+    document.getElementById('verLabel').textContent = v;
+    verMenu.classList.add('hidden');
+    showToast('已切换到 <span class="font-mono">' + v + '</span> · 预览已回滚至该版本');
+  });
+});
+
+/* ---------- 导出 ---------- */
+Array.prototype.forEach.call(document.querySelectorAll('.exp-btn'), function(btn){
+  btn.addEventListener('click', function(){
+    var fmt = btn.getAttribute('data-fmt');
+    var v = document.getElementById('verLabel').textContent;
+    if(fmt === '链接'){
+      showToast('交付链接已复制 · <span class="font-mono">oey.design/p/kiln-' + v + '</span>');
+    } else {
+      var size = fmt === 'PDF' ? '2.4 MB' : '5.1 MB';
+      showToast('导出任务已完成 · <span class="font-mono">kiln-landing-' + v + '.' + fmt.toLowerCase() + '（' + size + '）</span>');
+    }
+  });
+});
+
+/* ---------- 对象检查器 ---------- */
+var drawer = document.getElementById('drawer'),
+    selected = null;
+var meta = {
+  'hero-title':   { section:'hero · 主视觉',   type:'标题文本', value:'Slow Brewed. Honest Coffee.', note:'v1.2.0 · 标题压至两行内' },
+  'hero-sub':     { section:'hero · 主视觉',   type:'段落文本', value:'单一产地 · 小批量 · 每周四新鲜烘焙直发。', note:'v1.2.0 · 副标题重写' },
+  'hero-visual':  { section:'hero · 主视觉',   type:'装饰图形', value:'窑炉剖面色块组合', note:'v1.1.0 · 呼应「窑」品牌名' },
+  'hero-cta-main':{ section:'hero · 主视觉',   type:'按钮',     value:'浏览本周豆单', note:'v1.0.0 · 初版' },
+  'bean-price':   { section:'beans · 豆单',    type:'价格行',   value:'¥98 / ¥88 / ¥78 · 200g', note:'v1.3.0 · 三卡基线对齐' },
+  'quote-text':   { section:'quote-band · 引用带', type:'引用文本', value:'We roast like potters fire — patience first.', note:'v1.3.1 · 新增重音带' },
+  'footer-form':  { section:'footer · 底栏',   type:'表单',     value:'邮箱输入 + 订阅按钮', note:'v1.3.2 · 间距拉开 12px' },
+  'footer-visit': { section:'footer · 底栏',   type:'门店信息', value:'武康路 376 号 · 8:00–19:00', note:'v1.3.2 · 补营业时间' }
+};
+var selTag = null;
+art.addEventListener('click', function(e){
+  var obj = e.target.closest('[data-oey-object]');
+  if(!obj) return;
+  e.preventDefault();
+  if(selected) selected.classList.remove('obj-selected');
+  if(selTag) selTag.remove();
+  selected = obj;
+  obj.classList.add('obj-selected');
+  var id = obj.getAttribute('data-oey-object');
+  var m = meta[id] || { section: (obj.closest('[data-oey-section]')||{}).dataset ? obj.closest('[data-oey-section]').getAttribute('data-oey-section') : '—',
+                        type:'元素', value:(obj.textContent||'').trim().slice(0,60), note:'v1.0.0 · 初版' };
+  document.getElementById('inspId').textContent = '#' + id;
+  document.getElementById('inspSection').textContent = m.section;
+  document.getElementById('inspType').textContent = m.type;
+  document.getElementById('inspValue').textContent = m.value;
+  document.getElementById('inspNote').textContent = m.note;
+  drawer.classList.add('open');
+  /* 选中标签（外壳层覆盖物，中性灰） */
+  selTag = document.createElement('span');
+  selTag.className = 'sel-tag font-mono';
+  selTag.textContent = '#' + id;
+  obj.appendChild(selTag);
+});
+document.getElementById('drawerClose').addEventListener('click', function(){
+  drawer.classList.remove('open');
+  if(selected) selected.classList.remove('obj-selected');
+  if(selTag) selTag.remove();
+  selected = null;
+});
+document.getElementById('citeBtn').addEventListener('click', function(){
+  var id = document.getElementById('inspId').textContent;
+  composer.value = composer.value + (composer.value ? ' ' : '') + '关于 ' + id + '：';
+  composer.focus();
+});
+</script>
+</body>
+</html>

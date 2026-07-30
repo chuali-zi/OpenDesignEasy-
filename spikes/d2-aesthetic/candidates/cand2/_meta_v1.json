@@ -1,0 +1,32 @@
+{
+  "cand_id": 2,
+  "axis_key": "layout",
+  "axis_label": "版式结构 / layout & information architecture",
+  "elapsed_s": 506.3,
+  "usage": {
+    "prompt_tokens": 1823,
+    "completion_tokens": 17997,
+    "total_tokens": 19820,
+    "cached_tokens": 1792,
+    "completion_tokens_details": {
+      "reasoning_tokens": 3069
+    },
+    "prompt_tokens_details": {
+      "cached_tokens": 1792
+    }
+  },
+  "file_count": 7,
+  "files": [
+    "index.html",
+    "styles.css",
+    "data.js",
+    "api.js",
+    "app.js",
+    "MOCK.md",
+    "INTENT.md"
+  ],
+  "has_index_html": true,
+  "has_mock_md": true,
+  "has_intent_md": true,
+  "raw_response_chars": 45512
+}

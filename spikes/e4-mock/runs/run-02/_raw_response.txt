@@ -1,0 +1,1095 @@
+<<<FILE: index.html>>>
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nexus · Agent 工作台</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="app-shell">
+
+  <!-- ============ 顶栏 ============ -->
+  <header class="topbar" data-oey-section="topbar">
+    <div class="topbar-left">
+      <span class="logo-mark" aria-hidden="true"></span>
+      <span class="logo-text" data-oey-object="topbar.brand">Nexus 工作台</span>
+      <span class="env-badge" data-oey-object="topbar.env">本地原型 · Mock 数据</span>
+    </div>
+    <div class="topbar-right">
+      <span class="net-status" id="netStatus" data-oey-object="topbar.network">mock 链路正常</span>
+    </div>
+  </header>
+
+  <div class="app-body">
+
+    <!-- ============ 项目列表区 ============ -->
+    <aside class="sidebar" data-oey-section="projects">
+      <div class="sidebar-head">
+        <h2 class="sidebar-title" data-oey-object="projects.title">项目 / 会话</h2>
+        <button class="btn-ghost" id="btnNewProject" data-oey-object="projects.newButton" title="新建一个空项目">＋ 新建</button>
+      </div>
+      <ul class="project-list" id="projectList" data-oey-object="projects.list">
+        <!-- 列表项由 app.js 渲染，结构：
+             <li class="project-item" data-oey-object="projects.item">
+               <span class="project-dot" data-oey-object="projects.item.dot"></span>
+               <span class="project-name" data-oey-object="projects.item.name"></span>
+               <span class="project-meta" data-oey-object="projects.item.meta"></span>
+               <span class="project-status" data-oey-object="projects.item.status"></span>
+             </li> -->
+      </ul>
+      <div class="sidebar-foot">
+        <span class="foot-hint" data-oey-object="projects.hint">点击任意项目切换上下文</span>
+      </div>
+    </aside>
+
+    <!-- ============ 对话区 ============ -->
+    <main class="chat-pane" data-oey-section="chat">
+      <div class="chat-head">
+        <div class="chat-head-main">
+          <h1 class="chat-title" id="chatTitle" data-oey-object="chat.title">加载中…</h1>
+          <p class="chat-subtitle" id="chatSubtitle" data-oey-object="chat.subtitle"></p>
+        </div>
+        <span class="chat-agent-tag" data-oey-object="chat.agentTag">Agent · nexus-1</span>
+      </div>
+
+      <div class="chat-messages" id="chatMessages" data-oey-object="chat.messages">
+        <!-- 消息气泡由 app.js 渲染，结构：
+             <div class="msg msg-user|msg-agent" data-oey-object="chat.message">
+               <div class="msg-author" data-oey-object="chat.message.author"></div>
+               <div class="msg-bubble" data-oey-object="chat.message.text"></div>
+               <div class="msg-time" data-oey-object="chat.message.time"></div>
+             </div> -->
+      </div>
+
+      <div class="typing-indicator hidden" id="typingIndicator" data-oey-object="chat.typing">
+        <span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span>
+        <span class="typing-label">agent 正在组织回复…</span>
+      </div>
+
+      <form class="composer" id="composer" data-oey-object="chat.composer">
+        <textarea id="composerInput" class="composer-input" rows="2"
+                  placeholder="给 agent 发一条指令，例如：帮我生成一段代码 / 出一份总结 / 整理成表格"
+                  data-oey-object="chat.composer.input"></textarea>
+        <button type="submit" class="composer-send" id="composerSend" data-oey-object="chat.composer.send">发送</button>
+      </form>
+    </main>
+
+    <!-- ============ 预览区 ============ -->
+    <section class="preview-pane" data-oey-section="preview">
+      <div class="preview-head">
+        <h2 class="preview-title" data-oey-object="preview.title">产出预览</h2>
+        <span class="preview-kind" id="previewKind" data-oey-object="preview.kind">—</span>
+      </div>
+      <div class="preview-body" id="previewBody" data-oey-object="preview.body">
+        <!-- 预览卡片由 app.js 渲染，结构：
+             <article class="preview-card" data-oey-object="preview.card">
+               <h3 class="preview-card-title" data-oey-object="preview.card.title"></h3>
+               <div class="preview-card-content" data-oey-object="preview.card.content"></div>
+               <div class="preview-card-foot" data-oey-object="preview.card.meta"></div>
+             </article> -->
+      </div>
+    </section>
+
+  </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
+<<<END>>>
+<<<FILE: styles.css>>>
+/* ========== 基础 ========== */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --bg: #0f1115;
+  --panel: #161a22;
+  --panel-2: #1c212c;
+  --border: #262d3a;
+  --text: #e6e9f0;
+  --text-dim: #8b93a5;
+  --accent: #5b8cff;
+  --accent-soft: rgba(91, 140, 255, 0.14);
+  --green: #3ecf8e;
+  --amber: #f0b429;
+  --user-bubble: #2a3published452;
+  --user-bubble: #2a3452;
+  --agent-bubble: #1c212c;
+  --radius: 10px;
+  font-size: 15px;
+}
+
+html, body { height: 100%; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: "PingFang SC", "Microsoft YaHei", "Segoe UI", system-ui, -apple-system, sans-serif;
+  overflow: hidden;
+}
+
+.hidden { display: none !important; }
+
+/* ========== 整体布局 ========== */
+.app-shell { display: flex; flex-direction: column; height: 100vh; }
+.app-body {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 260px 1fr 380px;
+  min-height: 0;
+}
+
+/* ========== 顶栏 ========== */
+.topbar {
+  height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 18px;
+  background: var(--panel);
+  border-bottom: 1px solid var(--border);
+}
+.topbar-left { display: flex; align-items: center; gap: 10px; }
+.logo-mark {
+  width: 20px; height: 20px; border-radius: 6px;
+  background: linear-gradient(135deg, var(--accent), #9b6bff);
+  display: inline-block;
+}
+.logo-text { font-weight: 700; letter-spacing: 0.5px; }
+.env-badge {
+  font-size: 12px;
+  color: var(--amber);
+  background: rgba(240, 180, 41, 0.12);
+  border: 1px solid rgba(240, 180, 41, 0.35);
+  border-radius: 999px;
+  padding: 2px 10px;
+}
+.net-status { font-size: 12px; color: var(--green); }
+.net-status.busy { color: var(--amber); }
+
+/* ========== 项目列表区 ========== */
+.sidebar {
+  background: var(--panel);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+.sidebar-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 14px 10px;
+}
+.sidebar-title { font-size: 13px; color: var(--text-dim); font-weight: 600; text-transform: uppercase; letter-spacing: 1px; }
+.btn-ghost {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  border-radius: 6px;
+  padding: 3px 10px;
+  font-size: 12px;
+  cursor: pointer;
+}
+.btn-ghost:hover { color: var(--text); border-color: var(--accent); }
+
+.project-list { list-style: none; overflow-y: auto; flex: 1; padding: 4px 8px; }
+.project-item {
+  display: grid;
+  grid-template-columns: 10px 1fr;
+  grid-template-rows: auto auto;
+  column-gap: 10px;
+  padding: 10px 10px;
+  border-radius: var(--radius);
+  cursor: pointer;
+  border: 1px solid transparent;
+  margin-bottom: 4px;
+  transition: background 0.15s ease;
+}
+.project-item:hover { background: var(--panel-2); }
+.project-item.active {
+  background: var(--accent-soft);
+  border-color: rgba(91, 140, 255, 0.4);
+}
+.project-dot { width: 8px; height: 8px; border-radius: 50%; margin-top: 6px; grid-row: 1; }
+.project-name { font-size: 14px; font-weight: 600; grid-column: 2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.project-meta { font-size: 12px; color: var(--text-dim); grid-column: 2; margin-top: 2px; }
+.project-status {
+  grid-column: 2;
+  margin-top: 6px;
+  font-size: 11px;
+  display: inline-block;
+  width: fit-content;
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: var(--panel-2);
+  color: var(--text-dim);
+}
+.project-item.active .project-status { background: rgba(91, 140, 255, 0.2); color: var(--accent); }
+.sidebar-foot { padding: 10px 14px; border-top: 1px solid var(--border); }
+.foot-hint { font-size: 11px; color: var(--text-dim); }
+
+/* ========== 对话区 ========== */
+.chat-pane { display: flex; flex-direction: column; min-width: 0; min-height: 0; }
+.chat-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--border);
+  background: var(--panel);
+}
+.chat-title { font-size: 17px; }
+.chat-subtitle { font-size: 12px; color: var(--text-dim); margin-top: 3px; }
+.chat-agent-tag {
+  font-size: 12px;
+  color: var(--accent);
+  background: var(--accent-soft);
+  padding: 3px 10px;
+  border-radius: 999px;
+}
+
+.chat-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.msg { max-width: 78%; display: flex; flex-direction: column; }
+.msg-user { align-self: flex-end; align-items: flex-end; }
+.msg-agent { align-self: flex-start; align-items: flex-start; }
+.msg-author { font-size: 11px; color: var(--text-dim); margin-bottom: 4px; }
+.msg-bubble {
+  padding: 10px 14px;
+  border-radius: var(--radius);
+  line-height: 1.6;
+  font-size: 14px;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.msg-user .msg-bubble { background: var(--user-bubble); border-bottom-right-radius: 2px; }
+.msg-agent .msg-bubble { background: var(--agent-bubble); border: 1px solid var(--border); border-bottom-left-radius: 2px; }
+.msg-time { font-size: 10px; color: var(--text-dim); margin-top: 4px; }
+
+.typing-indicator {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 20px 0;
+}
+.typing-dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--accent);
+  animation: blink 1.2s infinite;
+}
+.typing-dot:nth-child(2) { animation-delay: 0.2s; }
+.typing-dot:nth-child(3) { animation-delay: 0.4s; }
+.typing-label { font-size: 12px; color: var(--text-dim); margin-left: 6px; }
+@keyframes blink { 0%, 80%, 100% { opacity: 0.25; } 40% { opacity: 1; } }
+
+.composer {
+  display: flex;
+  gap: 10px;
+  padding: 14px 20px 18px;
+  border-top: 1px solid var(--border);
+  background: var(--panel);
+}
+.composer-input {
+  flex: 1;
+  resize: none;
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text);
+  padding: 10px 12px;
+  font-family: inherit;
+  font-size: 14px;
+  outline: none;
+}
+.composer-input:focus { border-color: var(--accent); }
+.composer-send {
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius);
+  padding: 0 22px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.composer-send:disabled { opacity: 0.45; cursor: not-allowed; }
+.composer-send:hover:not(:disabled) { filter: brightness(1.1); }
+
+/* ========== 预览区 ========== */
+.preview-pane {
+  background: var(--panel);
+  border-left: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+.preview-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border);
+}
+.preview-title { font-size: 14px; }
+.preview-kind {
+  font-size: 11px;
+  color: var(--text-dim);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 2px 10px;
+}
+.preview-body { flex: 1; overflow-y: auto; padding: 14px; display: flex; flex-direction: column; gap: 12px; }
+
+.preview-card {
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px;
+}
+.preview-card.flash { animation: flash 0.9s ease; }
+@keyframes flash {
+  0% { box-shadow: 0 0 0 2px var(--accent); }
+  100% { box-shadow: 0 0 0 0 transparent; }
+}
+.preview-card-title { font-size: 13px; margin-bottom: 10px; color: var(--text); }
+.preview-card-content { font-size: 13px; color: var(--text-dim); line-height: 1.7; }
+.preview-card-foot { font-size: 11px; color: var(--text-dim); margin-top: 10px; opacity: 0.7; }
+
+.preview-code {
+  font-family: "SFMono-Regular", Consolas, "Courier New", monospace;
+  font-size: 12px;
+  background: #0b0d12;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px;
+  white-space: pre;
+  overflow-x: auto;
+  color: #a9d18b;
+  line-height: 1.6;
+}
+.preview-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.preview-table th, .preview-table td {
+  border: 1px solid var(--border);
+  padding: 6px 8px;
+  text-align: left;
+}
+.preview-table th { background: var(--panel); color: var(--text); }
+.preview-stat-row { display: flex; gap: 10px; flex-wrap: wrap; }
+.preview-stat {
+  flex: 1;
+  min-width: 90px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px;
+  text-align: center;
+}
+.preview-stat b { display: block; font-size: 18px; color: var(--accent); }
+.preview-stat span { font-size: 11px; color: var(--text-dim); }
+.preview-empty { color: var(--text-dim); font-size: 13px; text-align: center; padding: 40px 0; }
+
+/* ========== 滚动条 ========== */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+<<<END>>>
+<<<FILE: app.js>>>
+/* =====================================================================
+ * Nexus Agent 工作台 —— 纯前端静态原型
+ *
+ * 本文件包含两部分：
+ *   1) window.__mockApi__ —— 一个完全在前端实现的假后端客户端，
+ *      用「内联数据 + 规则推导 + setTimeout 延迟」模拟网络接口。
+ *   2) UI 层 —— 项目列表 / 对话区 / 预览区 的渲染与交互。
+ *
+ * 所有 mock 行为的详细声明见 MOCK.md。
+ * ===================================================================== */
+
+(function () {
+  "use strict";
+
+  /* ==================================================================
+   * 一、内联假数据（纯虚构）
+   * ================================================================== */
+
+  var SEED_PROJECTS = [
+    {
+      id: "p-website",
+      name: "官网重构助手",
+      desc: "把旧官网迁移到语义化静态页面",
+      color: "#5b8cff",
+      status: "进行中",
+      kindLabel: "代码产出",
+      messages: [
+        { role: "user", text: "先帮我看一下旧站首页的结构问题。", time: "10:02" },
+        { role: "agent", text: "已分析旧首页：存在 3 层无意义 div 嵌套、内联样式 27 处、缺少语义化标签。建议先落地一个 header/nav/main/footer 的骨架，我已在右侧预览区生成初版代码。", time: "10:02" }
+      ],
+      artifact: {
+        kind: "code",
+        title: "index.html · 语义化骨架 v1",
+        meta: "由 agent 在会话初始化时生成",
+        code: [
+          "<!DOCTYPE html>",
+          "<html lang=\"zh-CN\">",
+          "<head>",
+          "  <meta charset=\"UTF-8\">",
+          "  <title>公司官网 · 重构版</title>",
+          "</head>",
+          "<body>",
+          "  <header class=\"site-header\">…</header>",
+          "  <nav class=\"site-nav\">…</nav>",
+          "  <main>",
+          "    <section class=\"hero\">…</section>",
+          "    <section class=\"features\">…</section>",
+          "  </main>",
+          "  <footer class=\"site-footer\">…</footer>",
+          "</body>",
+          "</html>"
+        ].join("\n")
+      }
+    },
+    {
+      id: "p-weekly",
+      name: "周报撰写助手",
+      desc: "每周五自动汇总产出周报草稿",
+      color: "#3ecf8e",
+      status: "待命",
+      kindLabel: "图文报告",
+      messages: [
+        { role: "user", text: "这周的周报先起个草稿。", time: "周五 16:40" },
+        { role: "agent", text: "已按「本周进展 / 数据亮点 / 下周计划」三段式生成草稿，摘要卡片在右侧预览区。数据亮点部分是占位数字，记得替换成真实数据。", time: "周五 16:41" }
+      ],
+      artifact: {
+        kind: "report",
+        title: "本周周报 · 草稿 v1",
+        meta: "三段式模板自动生成",
+        paragraphs: [
+          "本周进展：完成官网信息架构梳理，输出重构方案并与设计侧对齐；周报自动化流程跑通首轮。",
+          "数据亮点（占位）：页面平均加载耗时下降 38%，核心流程转化率环比 +6.2%。",
+          "下周计划：落地首页语义化重构；补充周报数据采集脚本，去掉手工填数环节。"
+        ],
+        stats: [
+          { label: "完成任务", value: "7" },
+          { label: "进行中", value: "3" },
+          { label: "阻塞项", value: "1" }
+        ]
+      }
+    },
+    {
+      id: "p-data",
+      name: "数据分析助手",
+      desc: "对导出报表做快速解读",
+      color: "#f0b429",
+      status: "进行中",
+      kindLabel: "数据表格",
+      messages: [
+        { role: "user", text: "看一下上季度各渠道的注册量。", time: "昨天 11:20" },
+        { role: "agent", text: "已整理成对照表放在右侧预览区。自然搜索占比最高（41%），但环比增速最快的是社群渠道（+18%），建议下周拆一下社群的获客路径。", time: "昨天 11:21" }
+      ],
+      artifact: {
+        kind: "table",
+        title: "Q3 各渠道注册量对照",
+        meta: "示例报表 · 数据为虚构",
+        columns: ["渠道", "注册量", "占比", "环比"],
+        rows: [
+          ["自然搜索", "12,480", "41%", "+4%"],
+          ["社群裂变", "6,930", "23%", "+18%"],
+          ["广告投放", "6,120", "20%", "-3%"],
+          ["老带新", "4,890", "16%", "+7%"]
+        ]
+      }
+    },
+    {
+      id: "p-blank",
+      name: "新会话 · 未命名",
+      desc: "空白项目，还没有任何产出",
+      color: "#9b6bff",
+      status: "空闲",
+      kindLabel: "暂无产出",
+      messages: [
+        { role: "agent", text: "你好，我是这个项目的专属 agent。告诉我你想做什么，例如「帮我生成一段代码」「出一份总结」「整理成表格」，产出会实时显示在右侧预览区。", time: "刚刚" }
+      ],
+      artifact: null
+    }
+  ];
+
+  /* ==================================================================
+   * 二、Mock 客户端：window.__mockApi__
+   *
+   * 技术手段：内联数据 + 规则推导 + setTimeout 模拟网络延迟。
+   * 没有发起任何真实网络请求。
+   * ================================================================== */
+
+  var LATENCY_MIN = 250;
+  var LATENCY_MAX = 700;
+
+  function delay(value) {
+    var ms = LATENCY_MIN + Math.random() * (LATENCY_MAX - LATENCY_MIN);
+    return new Promise(function (resolve) {
+      setTimeout(function () { resolve(value); }, ms);
+    });
+  }
+
+  function clone(obj) {
+    return JSON.parse(JSON.stringify(obj));
+  }
+
+  function nowTime() {
+    var d = new Date();
+    var h = String(d.getHours()).padStart(2, "0");
+    var m = String(d.getMinutes()).padStart(2, "0");
+    return h + ":" + m;
+  }
+
+  /* ---------- 回复与产出的「规则推导」引擎 ---------- */
+
+  function pick(arr, seed) {
+    return arr[seed % arr.length];
+  }
+
+  /**
+   * 根据用户输入文本推导 agent 回复 + 预览产出更新。
+   * 规则（与 MOCK.md 一致）：
+   *  - 含「代码/code/函数/接口」→ 生成代码型产出，代码内容按输入长度生成行数；
+   *  - 含「总结/报告/周报/汇总」→ 生成报告型产出，段落由输入关键词拼接；
+   *  - 含「表/数据/统计/对比」→ 生成表格型产出，行由输入分词生成；
+   *  - 其它 → 纯文本回复，不更新预览。
+   */
+  function deriveReply(project, userText, historyCount) {
+    var text = userText.trim();
+    var lower = text.toLowerCase();
+    var seed = text.length + historyCount;
+
+    var isCode = /代码|code|函数|接口|脚本/i.test(lower);
+    var isReport = /总结|报告|周报|汇总|复盘/.test(text);
+    var isTable = /表格|数据|统计|对比|清单/.test(text);
+
+    if (isCode) {
+      var fnName = "task_" + (historyCount + 1);
+      var lines = [
+        "// 由 nexus-1 根据指令生成：" + (text.length > 24 ? text.slice(0, 24) + "…" : text),
+        "function " + fnName + "(input) {",
+        "  const payload = normalize(input);"
+      ];
+      var extra = 2 + (seed % 4); // 由输入长度推导出 2~5 行占位逻辑
+      for (var i = 0; i < extra; i++) {
+        lines.push("  step" + (i + 1) + "(payload); // TODO: 与真实逻辑对齐");
+      }
+      lines.push("  return payload;");
+      lines.push("}");
+      return {
+        text: pick([
+          "收到，已生成一版代码草稿放在右侧预览区，共 " + lines.length + " 行。占位步骤数量是按你这条指令的长度推导的，接入真实逻辑前先把 TODO 补掉。",
+          "已在预览区更新代码卡片。这版是骨架实现，行内 TODO 的数量由指令长度决定，方便你评估还剩多少工作量。"
+        ], seed),
+        artifact: {
+          kind: "code",
+          title: project.name + " · 代码草稿 v" + (historyCount + 1),
+          meta: "由规则引擎按指令长度生成 · " + nowTime(),
+          code: lines.join("\n")
+        }
+      };
+    }
+
+    if (isReport) {
+      var keywords = text.split(/[，,。.\s、；;]+/).filter(function (w) { return w.length >= 2; }).slice(0, 3);
+      if (keywords.length === 0) keywords = ["整体工作"];
+      return {
+        text: "已按「进展 / 亮点 / 计划」三段式生成总结草稿，正文围绕你提到的「" + keywords.join("」「") + "」展开，摘要卡片已同步到预览区。数字均为占位，请替换为真实数据。",
+        artifact: {
+          kind: "report",
+          title: project.name + " · 总结草稿 v" + (historyCount + 1),
+          meta: "三段式模板 · 关键词取自你的指令 · " + nowTime(),
+          paragraphs: [
+            "进展：围绕「" + keywords[0] + "」的推进已完成阶段性目标，关键节点均已对齐。",
+            "亮点（占位）：" + (keywords[1] || keywords[0]) + "相关指标环比 +" + (3 + seed % 15) + "%，整体走势向好。",
+            "计划：下一步聚焦「" + (keywords[2] || keywords[0]) + "」，并补齐数据回收链路。"
+          ],
+          stats: [
+            { label: "覆盖要点", value: String(keywords.length) },
+            { label: "草稿版本", value: "v" + (historyCount + 1) },
+            { label: "待核对", value: String(1 + seed % 3) }
+          ]
+        }
+      };
+    }
+
+    if (isTable) {
+      var words = text.split(/[，,。.\s、；;]+/).filter(function (w) { return w.length >= 1; }).slice(0, 4);
+      if (words.length === 0) words = ["默认项"];
+      var rows = words.map(function (w, idx) {
+        return [
+          w.length > 8 ? w.slice(0, 8) : w,
+          String((seed + idx * 7) % 90 + 10) + "," + String((seed * (idx + 3)) % 900 + 100),
+          String(5 + ((seed + idx * 11) % 40)) + "%",
+          (idx % 2 === 0 ? "+" : "-") + (1 + (seed + idx) % 12) + "%"
+        ];
+      });
+      return {
+        text: "已把你的指令拆成 " + rows.length + " 个维度整理成对照表，放在右侧预览区。表内数值由固定伪随机规则生成，仅作布局演示，不要当作真实数据使用。",
+        artifact: {
+          kind: "table",
+          title: project.name + " · 数据对照 v" + (historyCount + 1),
+          meta: "行由指令分词生成 · 数值为伪随机占位 · " + nowTime(),
+          columns: ["维度", "量级", "占比", "环比"],
+          rows: rows
+        }
+      };
+    }
+
+    return {
+      text: pick([
+        "明白了。你这条指令没有命中代码 / 总结 / 表格的生成规则，所以我先记录为待办。试试加上「生成代码」「出一份总结」或「整理成表格」，预览区会立刻给出对应产出。",
+        "已收到并归档。当前这条更像讨论而非产出型指令，我暂不改动预览区。如果要我产出东西，可以在指令里说明想要代码、报告还是表格。",
+        "好的，我记下了（这是本会话第 " + (historyCount + 1) + " 条消息）。需要可交付的产出时，直接说「帮我写代码 / 写总结 / 做表格」即可。"
+      ], seed),
+      artifact: null
+    };
+  }
+
+  /* ---------- mock 接口 ---------- */
+
+  var mockApi = {
+    /** 项目列表：返回内联种子数据的摘要 */
+    listProjects: function () {
+      return delay(clone(SEED_PROJECTS).map(function (p) {
+        return {
+          id: p.id, name: p.name, desc: p.desc,
+          color: p.color, status: p.status,
+          messageCount: p.messages.length
+        };
+      }));
+    },
+
+    /** 打开项目：返回完整会话与产出 */
+    openProject: function (id) {
+      var p = SEED_PROJECTS.find(function (x) { return x.id === id; });
+      if (!p) return delay(null);
+      p.status = "进行中";
+      return delay(clone(p));
+    },
+
+    /** 新建项目：前端本地创建，立即入列 */
+    createProject: function () {
+      var n = SEED_PROJECTS.filter(function (p) { return p.id.indexOf("p-custom-") === 0; }).length + 1;
+      var p = {
+        id: "p-custom-" + Date.now(),
+        name: "新会话 · " + n,
+        desc: "本地新建的空项目",
+        color: "#e06c9f",
+        status: "空闲",
+        kindLabel: "暂无产出",
+        messages: [
+          { role: "agent", text: "项目已创建。发一条指令试试，比如「帮我生成一段代码」。", time: nowTime() }
+        ],
+        artifact: null
+      };
+      SEED_PROJECTS.unshift(p);
+      return delay(clone(p));
+    },
+
+    /** 发送消息：规则推导回复，并把回复与产出写回项目 */
+    sendMessage: function (projectId, userText) {
+      var p = SEED_PROJECTS.find(function (x) { return x.id === projectId; });
+      if (!p) return delay({ error: "project not found" });
+
+      var t = nowTime();
+      p.messages.push({ role: "user", text: userText, time: t });
+
+      var derived = deriveReply(p, userText, p.messages.length);
+      p.messages.push({ role: "agent", text: derived.text, time: t });
+      if (derived.artifact) {
+        p.artifact = derived.artifact;
+        p.kindLabel = derived.artifact.kind === "code" ? "代码产出"
+                    : derived.artifact.kind === "report" ? "图文报告" : "数据表格";
+      }
+
+      return delay({
+        reply: clone(p.messages[p.messages.length - 1]),
+        artifact: clone(p.artifact),
+        kindLabel: p.kindLabel
+      });
+    }
+  };
+
+  window.__mockApi__ = mockApi;
+
+  /* ==================================================================
+   * 三、UI 层
+   * ================================================================== */
+
+  var state = {
+    projects: [],
+    currentId: null,
+    sending: false
+  };
+
+  var els = {
+    projectList: document.getElementById("projectList"),
+    chatTitle: document.getElementById("chatTitle"),
+    chatSubtitle: document.getElementById("chatSubtitle"),
+    chatMessages: document.getElementById("chatMessages"),
+    typing: document.getElementById("typingIndicator"),
+    composer: document.getElementById("composer"),
+    input: document.getElementById("composerInput"),
+    sendBtn: document.getElementById("composerSend"),
+    previewBody: document.getElementById("previewBody"),
+    previewKind: document.getElementById("previewKind"),
+    netStatus: document.getElementById("netStatus"),
+    btnNew: document.getElementById("btnNewProject")
+  };
+
+  function setBusy(busy, label) {
+    els.netStatus.textContent = busy ? (label || "mock 请求中…") : "mock 链路正常";
+    els.netStatus.classList.toggle("busy", busy);
+  }
+
+  /* ---------- 项目列表渲染 ---------- */
+
+  function renderProjects() {
+    els.projectList.innerHTML = "";
+    state.projects.forEach(function (p) {
+      var li = document.createElement("li");
+      li.className = "project-item" + (p.id === state.currentId ? " active" : "");
+      li.setAttribute("data-oey-object", "projects.item");
+      li.dataset.projectId = p.id;
+
+      var dot = document.createElement("span");
+      dot.className = "project-dot";
+      dot.style.background = p.color;
+      dot.setAttribute("data-oey-object", "projects.item.dot");
+
+      var name = document.createElement("span");
+      name.className = "project-name";
+      name.textContent = p.name;
+      name.setAttribute("data-oey-object", "projects.item.name");
+
+      var meta = document.createElement("span");
+      meta.className = "project-meta";
+      meta.textContent = p.desc;
+      meta.setAttribute("data-oey-object", "projects.item.meta");
+
+      var status = document.createElement("span");
+      status.className = "project-status";
+      status.textContent = p.status;
+      status.setAttribute("data-oey-object", "projects.item.status");
+
+      li.appendChild(dot);
+      li.appendChild(name);
+      li.appendChild(meta);
+      li.appendChild(status);
+
+      li.addEventListener("click", function () { switchProject(p.id); });
+      els.projectList.appendChild(li);
+    });
+  }
+
+  /* ---------- 对话区渲染 ---------- */
+
+  function appendMessage(msg) {
+    var wrap = document.createElement("div");
+    wrap.className = "msg " + (msg.role === "user" ? "msg-user" : "msg-agent");
+    wrap.setAttribute("data-oey-object", "chat.message");
+
+    var author = document.createElement("div");
+    author.className = "msg-author";
+    author.textContent = msg.role === "user" ? "我" : "nexus-1 · agent";
+    author.setAttribute("data-oey-object", "chat.message.author");
+
+    var bubble = document.createElement("div");
+    bubble.className = "msg-bubble";
+    bubble.textContent = msg.text;
+    bubble.setAttribute("data-oey-object", "chat.message.text");
+
+    var time = document.createElement("div");
+    time.className = "msg-time";
+    time.textContent = msg.time || "";
+    time.setAttribute("data-oey-object", "chat.message.time");
+
+    wrap.appendChild(author);
+    wrap.appendChild(bubble);
+    wrap.appendChild(time);
+    els.chatMessages.appendChild(wrap);
+    els.chatMessages.scrollTop = els.chatMessages.scrollHeight;
+  }
+
+  function renderMessages(messages) {
+    els.chatMessages.innerHTML = "";
+    messages.forEach(appendMessage);
+  }
+
+  /* ---------- 预览区渲染 ---------- */
+
+  function makeCard(titleText, metaText) {
+    var card = document.createElement("article");
+    card.className = "preview-card";
+    card.setAttribute("data-oey-object", "preview.card");
+
+    var title = document.createElement("h3");
+    title.className = "preview-card-title";
+    title.textContent = titleText;
+    title.setAttribute("data-oey-object", "preview.card.title");
+
+    var content = document.createElement("div");
+    content.className = "preview-card-content";
+    content.setAttribute("data-oey-object", "preview.card.content");
+
+    var foot = document.createElement("div");
+    foot.className = "preview-card-foot";
+    foot.textContent = metaText || "";
+    foot.setAttribute("data-oey-object", "preview.card.meta");
+
+    card.appendChild(title);
+    card.appendChild(content);
+    card.appendChild(foot);
+    return { card: card, content: content };
+  }
+
+  function renderPreview(artifact, kindLabel, flash) {
+    els.previewBody.innerHTML = "";
+    els.previewKind.textContent = kindLabel || "暂无产出";
+
+    if (!artifact) {
+      var empty = document.createElement("div");
+      empty.className = "preview-empty";
+      empty.textContent = "当前项目还没有产出。在对话里发出指令后，这里会实时更新。";
+      empty.setAttribute("data-oey-object", "preview.empty");
+      els.previewBody.appendChild(empty);
+      return;
+    }
+
+    var parts = makeCard(artifact.title, artifact.meta);
+
+    if (artifact.kind === "code") {
+      var pre = document.createElement("pre");
+      pre.className = "preview-code";
+      pre.textContent = artifact.code;
+      parts.content.appendChild(pre);
+    } else if (artifact.kind === "report") {
+      if (artifact.stats && artifact.stats.length) {
+        var statRow = document.createElement("div");
+        statRow.className = "preview-stat-row";
+        artifact.stats.forEach(function (s) {
+          var box = document.createElement("div");
+          box.className = "preview-stat";
+          var b = document.createElement("b");
+          b.textContent = s.value;
+          var span = document.createElement("span");
+          span.textContent = s.label;
+          box.appendChild(b);
+          box.appendChild(span);
+          statRow.appendChild(box);
+        });
+        parts.content.appendChild(statRow);
+      }
+      artifact.paragraphs.forEach(function (pText) {
+        var p = document.createElement("p");
+        p.textContent = pText;
+        p.style.marginTop = "8px";
+        parts.content.appendChild(p);
+      });
+    } else if (artifact.kind === "table") {
+      var table = document.createElement("table");
+      table.className = "preview-table";
+      var thead = document.createElement("thead");
+      var trHead = document.createElement("tr");
+      artifact.columns.forEach(function (c) {
+        var th = document.createElement("th");
+        th.textContent = c;
+        trHead.appendChild(th);
+      });
+      thead.appendChild(trHead);
+      table.appendChild(thead);
+      var tbody = document.createElement("tbody");
+      artifact.rows.forEach(function (row) {
+        var tr = document.createElement("tr");
+        row.forEach(function (cell) {
+          var td = document.createElement("td");
+          td.textContent = cell;
+          tr.appendChild(td);
+        });
+        tbody.appendChild(tr);
+      });
+      table.appendChild(tbody);
+      parts.content.appendChild(table);
+    }
+
+    if (flash) parts.card.classList.add("flash");
+    els.previewBody.appendChild(parts.card);
+  }
+
+  /* ---------- 交互流程 ---------- */
+
+  function switchProject(id) {
+    if (state.sending || id === state.currentId) return;
+    state.currentId = id;
+    renderProjects();
+    els.chatTitle.textContent = "加载中…";
+    els.chatSubtitle.textContent = "";
+    els.chatMessages.innerHTML = "";
+    renderPreview(null, "加载中…", false);
+
+    setBusy(true, "正在打开项目…");
+    mockApi.openProject(id).then(function (project) {
+      setBusy(false);
+      if (!project || state.currentId !== id) return;
+      els.chatTitle.textContent = project.name;
+      els.chatSubtitle.textContent = project.desc;
+      renderMessages(project.messages);
+      renderPreview(project.artifact, project.kindLabel, false);
+    });
+  }
+
+  function sendCurrentMessage() {
+    var text = els.input.value.trim();
+    if (!text || state.sending || !state.currentId) return;
+
+    state.sending = true;
+    els.sendBtn.disabled = true;
+    els.input.value = "";
+
+    // 用户消息立即上屏（乐观渲染），同时走 mock 接口拿回复
+    appendMessage({ role: "user", text: text, time: "" });
+    els.typing.classList.remove("hidden");
+    setBusy(true, "agent 生成中…");
+
+    mockApi.sendMessage(state.currentId, text).then(function (res) {
+      els.typing.classList.add("hidden");
+      setBusy(false);
+      state.sending = false;
+      els.sendBtn.disabled = false;
+      if (!res || res.error) return;
+
+      appendMessage(res.reply);
+      if (res.artifact) {
+        renderPreview(res.artifact, res.kindLabel, true);
+      }
+      // 列表里的状态/消息数同步刷新
+      mockApi.listProjects().then(function (list) {
+        state.projects = list;
+        renderProjects();
+      });
+    });
+  }
+
+  els.composer.addEventListener("submit", function (e) {
+    e.preventDefault();
+    sendCurrentMessage();
+  });
+
+  els.input.addEventListener("keydown", function (e) {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      sendCurrentMessage();
+    }
+  });
+
+  els.btnNew.addEventListener("click", function () {
+    if (state.sending) return;
+    setBusy(true, "正在创建项目…");
+    mockApi.createProject().then(function (p) {
+      setBusy(false);
+      return mockApi.listProjects().then(function (list) {
+        state.projects = list;
+        state.currentId = null; // 强制触发完整切换
+        renderProjects();
+        switchProject(p.id);
+      });
+    });
+  });
+
+  /* ---------- 启动 ---------- */
+
+  setBusy(true, "正在加载项目列表…");
+  mockApi.listProjects().then(function (list) {
+    setBusy(false);
+    state.projects = list;
+    renderProjects();
+    if (list.length) switchProject(list[0].id);
+  });
+
+})();
+<<<END>>>
+<<<FILE: MOCK.md>>>
+# MOCK.md —— Mock 行为声明
+
+本文件如实声明「Nexus · Agent 工作台」静态原型中**所有** mock（伪造）行为。本项目没有任何真实后端、不发起任何真实网络请求，所有数据与交互响应均在前端伪造。
+
+## 一、总体技术手段
+
+| 技术手段 | 用途 | 位置 |
+|---|---|---|
+| 内联数组（假数据） | 4 个种子项目的名称、描述、初始消息、初始产出 | `app.js` 中 `SEED_PROJECTS` |
+| `setTimeout` + `Promise` 模拟网络延迟 | 所有接口返回前延迟 250~700ms（随机），并在顶栏显示「mock 请求中」状态 | `app.js` 中 `delay()`、`LATENCY_MIN/MAX` |
+| `window.__mockApi__` 假客户端 | 对外暴露 4 个假接口，UI 层只通过它取数 | `app.js` 中 `mockApi` |
+| 规则推导引擎 | 根据用户输入文本的关键词，按固定规则生成 agent 回复与预览产出 | `app.js` 中 `deriveReply()` |
+
+未使用的手段（声明以排除歧义）：**没有**拦截/覆盖 `fetch` 或 `XMLHttpRequest`，**没有**注册 Service Worker，**没有**使用 `localStorage` 持久化（刷新页面后，运行期新建的项目和新增消息会丢失，恢复为种子数据）。
+
+## 二、Mock 接口清单（`window.__mockApi__`）
+
+### 1. `listProjects()` —— 项目列表
+- **数据来源**：纯虚构编造的 4 个种子项目（官网重构助手 / 周报撰写助手 / 数据分析助手 / 新会话·未命名），以及运行期通过 `createProject()` 追加的项目。所有名称、描述、颜色、状态均为作者编造。
+- **延迟**：`setTimeout` 随机 250~700ms。
+
+### 2. `openProject(id)` —— 打开/切换项目
+- **数据来源**：从内联数组中按 id 查找，返回该项目的完整消息记录与产出（深拷贝）。副作用：把该项目状态改为「进行中」。
+- **延迟**：同上。
+
+### 3. `createProject()` —— 新建项目
+- **数据来源**：规则推导 + 虚构。项目名按「新会话 · N」编号（N 为运行期已建数量 +1），欢迎语为固定模板文本，新建项目无产出（预览区显示空态）。
+- **延迟**：同上。
+
+### 4. `sendMessage(projectId, userText)` —— 发送消息并生成回复
+- **技术手段**：先把用户消息追加到项目消息数组，再调用规则推导引擎 `deriveReply()` 生成 agent 回复与（可选的）预览产出，写回项目后返回。
+- **延迟**：同上（此延迟在 UI 上表现为「agent 正在组织回复…」的打字指示器）。
+
+## 三、回复与预览产出的推导规则（`deriveReply()`）
+
+回复**不是**预写死的固定文案，而是按以下规则从用户输入推导：
+
+设 `seed = 用户输入字符数 + 当前消息总数`（用于伪随机取模）。
+
+1. **代码型**：输入匹配 `代码|code|函数|接口|脚本`（不区分大小写）
+   - 回复文本：从 2 条模板中按 `seed` 取模选 1 条，模板中嵌入生成代码的行数；
+   - 预览产出：代码卡片。函数名 = `task_<消息数>`，函数体占位行数 = `2 + (seed % 4)`（即 2~5 行），首行注释截取用户输入前 24 字。
+2. **报告型**：输入含 `总结|报告|周报|汇总|复盘`
+   - 把用户输入按标点/空格分词，取长度 ≥2 的前 3 个词作为关键词；
+   - 回复文本：固定句式，嵌入关键词；
+   - 预览产出：报告卡片。三段正文由关键词拼接模板生成，其中「亮点」的百分比 = `3 + seed % 15`；顶部 3 个统计格的值分别 = 关键词数、版本号 `v<消息数>`、`1 + seed % 3`。
+3. **表格型**：输入含 `表格|数据|统计|对比|清单`
+   - 用户输入分词取前 4 个词作为表格行（每行一个「维度」）；
+   - 每行的「量级 / 占比 / 环比」三列数值由 `seed` 与行号的取模运算生成（伪随机占位，非真实数据）；
+   - 回复文本：固定句式，嵌入行数。
+4. **兜底型**：以上都不命中
+   - 从 3 条模板中按 `seed` 取模选 1 条纯文本回复（其中一条嵌入消息序号）；
+   - **不更新**预览区。
+
+未命中规则时预览区保持不变，这是有意设计（模拟「讨论型消息不产生交付物」）。
+
+## 四、各交互点与数据的对应关系
+
+| 界面交互 | 触发的 mock | 数据性质 |
+|---|---|---|
+| 首次加载项目列表 | `listProjects()` | 纯虚构内联数据 |
+| 点击项目切换上下文 | `openProject(id)` | 纯虚构内联数据（初始消息、初始产出均为编造） |
+| 点击「＋ 新建」 | `createProject()` + `openProject()` | 模板编号 + 固定欢迎语（规则推导） |
+| 发送消息 | `sendMessage()` | 回复与产出按第三节规则从输入推导；种子项目的初始消息为纯虚构 |
+| 预览区初始内容 | 随 `openProject()` 返回 | 3 个种子项目的产出（代码骨架 / 周报草稿 / 渠道表格）均为纯虚构编造，其中表格内数字、周报百分比为占位假数据 |
+| 预览区随对话更新 | 随 `sendMessage()` 返回 | 规则推导生成，数值为取模运算的伪随机占位 |
+| 顶栏「mock 链路正常 / 请求中」 | UI 层根据 Promise 状态切换 | 仅为视觉状态，不代表真实网络 |
+| 打字指示器「agent 正在组织回复…」 | `sendMessage()` 延迟期间显示 | 纯视觉模拟 |
+
+## 五、覆盖率声明
+
+以上清单覆盖了代码中实际存在的全部 mock 行为：`app.js` 内不存在任何真实网络请求、不存在未声明的数据来源；`index.html` 与 `styles.css` 不含任何外部资源引用（无外链字体、图标、图片、脚本、样式）。打开 `index.html` 即可离线运行全部交互。
+<<<END>>>

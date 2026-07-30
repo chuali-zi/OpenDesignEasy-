@@ -1,0 +1,902 @@
+[
+  {
+    "id": "F0063",
+    "category": "directory_listing",
+    "statement": "Repository top level (after exclusions) contains directories: docs, lab30min, product-client, src, tests; and top-level files: .gitignore, AGENT.MD, README.md, nul, pyproject.toml."
+  },
+  {
+    "id": "F0064",
+    "category": "python_module",
+    "statement": "Module `src/oeydesign/__init__.py` has 223 lines. Module docstring: \"OEYdesign contract-first reference implementation.\""
+  },
+  {
+    "id": "F0065",
+    "category": "python_module",
+    "statement": "Module `src/oeydesign/composition.py` has 74 lines. Module docstring: \"Durable Phase 2 composition root.\""
+  },
+  {
+    "id": "F0070",
+    "category": "python_class",
+    "statement": "Class `SQLiteApplication` is defined in `src/oeydesign/composition.py`. Has 4 method(s): __init__, close, __enter__, __exit__."
+  },
+  {
+    "id": "F0071",
+    "category": "python_module",
+    "statement": "Module `src/oeydesign/context.py` has 616 lines. Module docstring: \"Small, replaceable Context & Evidence reference adapters.\""
+  },
+  {
+    "id": "F0078",
+    "category": "python_class",
+    "statement": "Class `LocalSourceStore` is defined in `src/oeydesign/context.py`. Has 6 method(s): __init__, put, ingest, read, get, _validate."
+  },
+  {
+    "id": "F0082",
+    "category": "python_class",
+    "statement": "Class `CsvEvidenceParser` is defined in `src/oeydesign/context.py`. Fields: capability_version: str, supported_media_types: tuple[str, ...]. Has 3 method(s): parse, _record, _header_key."
+  },
+  {
+    "id": "F0084",
+    "category": "python_class",
+    "statement": "Class `PngEvidenceParser` is defined in `src/oeydesign/context.py`. Fields: capability_version: str, supported_media_types: tuple[str, ...]. Has 1 method(s): parse."
+  },
+  {
+    "id": "F0087",
+    "category": "python_class",
+    "statement": "Class `DeterministicEvidenceInterpreter` is defined in `src/oeydesign/context.py` inheriting from EvidenceInterpreterPort. Has 2 method(s): __init__, interpret."
+  },
+  {
+    "id": "F0089",
+    "category": "python_class",
+    "statement": "Class `HumanEvidenceConfirmer` is defined in `src/oeydesign/context.py` inheriting from EvidenceConfirmationPort. Has 1 method(s): confirm."
+  },
+  {
+    "id": "F0090",
+    "category": "python_function",
+    "statement": "Top-level function `def _interpretation_record(evidence: EvidenceRecord, value: Any, confidence: float, capability_version: str) -> EvidenceRecord` is defined in `src/oeydesign/context.py`."
+  },
+  {
+    "id": "F0103",
+    "category": "python_class",
+    "statement": "Class `EvidenceService` is defined in `src/oeydesign/context.py`. Has 12 method(s): __init__, ingest, resolve, revise_rights, ingest_parse, draft_brief, confirm_brief, draft_constraints, confirm_constraints, record_interpretation, interpret, confirm."
+  },
+  {
+    "id": "F0105",
+    "category": "python_class",
+    "statement": "Class `DeterministicContextAssembler` is defined in `src/oeydesign/context.py`. Has 1 method(s): assemble."
+  },
+  {
+    "id": "F0106",
+    "category": "python_function",
+    "statement": "Top-level function `def _locator_ref(locator: SourceLocator) -> str` is defined in `src/oeydesign/context.py`."
+  },
+  {
+    "id": "F0107",
+    "category": "python_module",
+    "statement": "Module `src/oeydesign/control.py` has 1226 lines. Module docstring: \"Project Control Plane: the only writer of Project business state.\""
+  },
+  {
+    "id": "F0143",
+    "category": "python_class",
+    "statement": "Class `ControlPlane` is defined in `src/oeydesign/control.py`. Has 35 method(s): __init__, execute, _execute, _create_project, _dispatch, _prepare, _generate_candidates, _approve_direction, _produce, _validate, _approve_export, _deliver, _submit_feedback, _direction_feedback, _artifact_feedback, _fact_feedback, _cancel, _pause, _resume, _require_resume_compatibility, _reconcile_workflow, _restore, _workflow_for_project, _start_run, _finish_run, _record_feedback, _invalidate_approvals, _matching_export_approval, _candidate_target, _artifact_target, _require, _transition, _emit_quality, _audit_success, _emit."
+  },
+  {
+    "id": "F0144",
+    "category": "python_module",
+    "statement": "Module `src/oeydesign/domain.py` has 689 lines. Module docstring: \"Vendor-neutral domain language shared by every OEYdesign adapter.\""
+  },
+  {
+    "id": "F0145",
+    "category": "python_function",
+    "statement": "Top-level function `def utc_now() -> datetime` is defined in `src/oeydesign/domain.py`."
+  },
+  {
+    "id": "F0146",
+    "category": "python_function",
+    "statement": "Top-level function `def _json_default(value: object) -> object` is defined in `src/oeydesign/domain.py`."
+  },
+  {
+    "id": "F0147",
+    "category": "python_function",
+    "statement": "Top-level function `def canonical_json(value: object) -> str` is defined in `src/oeydesign/domain.py`. Docstring: \"Return the stable representation used for fingerprints and stub IDs.\""
+  },
+  {
+    "id": "F0148",
+    "category": "python_function",
+    "statement": "Top-level function `def stable_id(prefix: str, *parts: object) -> str` is defined in `src/oeydesign/domain.py`."
+  },
+  {
+    "id": "F0149",
+    "category": "python_class",
+    "statement": "Class `ProjectState` is defined in `src/oeydesign/domain.py` inheriting from StrEnum. Has no methods."
+  },
+  {
+    "id": "F0150",
+    "category": "python_class",
+    "statement": "Class `ErrorCategory` is defined in `src/oeydesign/domain.py` inheriting from StrEnum. Has no methods."
+  },
+  {
+    "id": "F0151",
+    "category": "python_class",
+    "statement": "Class `ConstraintPreset` is defined in `src/oeydesign/domain.py` inheriting from StrEnum. Has no methods."
+  },
+  {
+    "id": "F0152",
+    "category": "python_class",
+    "statement": "Class `TemplateRole` is defined in `src/oeydesign/domain.py` inheriting from StrEnum. Has no methods."
+  },
+  {
+    "id": "F0153",
+    "category": "python_class",
+    "statement": "Class `FeedbackKind` is defined in `src/oeydesign/domain.py` inheriting from StrEnum. Has no methods."
+  },
+  {
+    "id": "F0154",
+    "category": "python_class",
+    "statement": "Class `ApprovalAction` is defined in `src/oeydesign/domain.py` inheriting from StrEnum. Has no methods."
+  },
+  {
+    "id": "F0155",
+    "category": "python_class",
+    "statement": "Class `WorkflowStatus` is defined in `src/oeydesign/domain.py` inheriting from StrEnum. Has no methods."
+  },
+  {
+    "id": "F0156",
+    "category": "python_class",
+    "statement": "Class `GateVerdict` is defined in `src/oeydesign/domain.py` inheriting from StrEnum. Has no methods."
+  },
+  {
+    "id": "F0157",
+    "category": "python_class",
+    "statement": "Class `FindingKind` is defined in `src/oeydesign/domain.py` inheriting from StrEnum. Has no methods."
+  },
+  {
+    "id": "F0158",
+    "category": "python_class",
+    "statement": "Class `CheckpointStatus` is defined in `src/oeydesign/domain.py` inheriting from StrEnum. Has no methods."
+  },
+  {
+    "id": "F0159",
+    "category": "python_class",
+    "statement": "Class `SideEffectStatus` is defined in `src/oeydesign/domain.py` inheriting from StrEnum. Has no methods."
+  },
+  {
+    "id": "F0160",
+    "category": "python_class",
+    "statement": "Class `SideEffectReconciliationStatus` is defined in `src/oeydesign/domain.py` inheriting from StrEnum. Has no methods."
+  },
+  {
+    "id": "F0161",
+    "category": "python_class",
+    "statement": "Class `SourceKind` is defined in `src/oeydesign/domain.py` inheriting from StrEnum. Has no methods."
+  },
+  {
+    "id": "F0162",
+    "category": "python_class",
+    "statement": "Class `EvidenceLayer` is defined in `src/oeydesign/domain.py` inheriting from StrEnum. Has no methods."
+  },
+  {
+    "id": "F0163",
+    "category": "python_class",
+    "statement": "Class `RightsStatus` is defined in `src/oeydesign/domain.py` inheriting from StrEnum. Has no methods."
+  },
+  {
+    "id": "F0165",
+    "category": "python_class",
+    "statement": "Class `ContractError` is defined in `src/oeydesign/domain.py` inheriting from Exception. Has 1 method(s): __init__."
+  },
+  {
+    "id": "F0166",
+    "category": "python_class",
+    "statement": "Class `ConstraintSetting` is defined in `src/oeydesign/domain.py` decorated with dataclass(frozen=True, slots=True). Fields: level: str, source: str, value: str. Has no methods."
+  },
+  {
+    "id": "F0167",
+    "category": "python_class",
+    "statement": "Class `ConstraintProfile` is defined in `src/oeydesign/domain.py` decorated with dataclass(frozen=True, slots=True). Fields: preset: ConstraintPreset, template_role: TemplateRole, facts_evidence: ConstraintSetting, content_narrative: ConstraintSetting, brand_style: ConstraintSetting, composition_template: ConstraintSetting, delivery_properties: ConstraintSetting, runtime_permissions: ConstraintSetting. Has no methods."
+  },
+  {
+    "id": "F0168",
+    "category": "python_function",
+    "statement": "Top-level function `def constraint_profile(preset: ConstraintPreset = ConstraintPreset.DESIGN_GUIDED, template_role: TemplateRole = TemplateRole.REFERENCE_SAMPLE) -> ConstraintProfile` is defined in `src/oeydesign/domain.py`."
+  },
+  {
+    "id": "F0169",
+    "category": "python_class",
+    "statement": "Class `DesignBrief` is defined in `src/oeydesign/domain.py` decorated with dataclass(frozen=True, slots=True). Fields: goal: str, audience: str, medium: str, acceptance_direction: str. Has no methods."
+  },
+  {
+    "id": "F0170",
+    "category": "python_class",
+    "statement": "Class `ContextPackage` is defined in `src/oeydesign/domain.py` decorated with dataclass(frozen=True, slots=True). Fields: id: str, project_id: str, revision: int, confirmed_facts: tuple[str, ...], source_refs: tuple[str, ...], material_uncertainties: tuple[str, ...], evidence_refs: tuple[SourceLocator, ...], analysis_asset_refs: tuple[SourceLocator, ...], delivery_asset_refs: tuple[SourceLocator, ...], brief_record_id: str | None, brief_record_revision: int | None, constraint_record_id: str | None, constraint_record_revision: int | None, metadata: Mapping[str, Any]. Has no methods."
+  },
+  {
+    "id": "F0171",
+    "category": "python_class",
+    "statement": "Class `SourceAsset` is defined in `src/oeydesign/domain.py` decorated with dataclass(frozen=True, slots=True). Fields: id: str, project_id: str, revision: int, kind: SourceKind, original_name: str, media_type: str, byte_size: int, sha256_digest: str, storage_ref: str, rights: RightsStatus. Has no methods."
+  },
+  {
+    "id": "F0172",
+    "category": "python_class",
+    "statement": "Class `SourceLocator` is defined in `src/oeydesign/domain.py` decorated with dataclass(frozen=True, slots=True). Fields: source_id: str, source_revision: int, selector: Mapping[str, Any]. Has no methods."
+  },
+  {
+    "id": "F0173",
+    "category": "python_class",
+    "statement": "Class `EvidenceRecord` is defined in `src/oeydesign/domain.py` decorated with dataclass(frozen=True, slots=True). Fields: id: str, project_id: str, revision: int, layer: EvidenceLayer, evidence_key: str, value: Any, locator: SourceLocator, confidence: float, derived_from: tuple[str, ...], rights: RightsStatus, capability_version: str. Has no methods."
+  },
+  {
+    "id": "F0174",
+    "category": "python_class",
+    "statement": "Class `BriefRecord` is defined in `src/oeydesign/domain.py` decorated with dataclass(frozen=True, slots=True). Fields: id: str, project_id: str, revision: int, brief: DesignBrief, confirmed: bool. Has no methods."
+  },
+  {
+    "id": "F0175",
+    "category": "python_class",
+    "statement": "Class `ConstraintProfileRecord` is defined in `src/oeydesign/domain.py` decorated with dataclass(frozen=True, slots=True). Fields: id: str, project_id: str, revision: int, profile: ConstraintProfile, confirmed: bool. Has no methods."
+  },
+  {
+    "id": "F0176",
+    "category": "python_class",
+    "statement": "Class `ContextRequirements` is defined in `src/oeydesign/domain.py` decorated with dataclass(frozen=True, slots=True). Fields: required_fact_keys: tuple[str, ...], required_delivery_source_ids: tuple[str, ...], minimum_interpretation_confidence: float. Has no methods."
+  },
+  {
+    "id": "F0177",
+    "category": "python_class",
+    "statement": "Class `Lineage` is defined in `src/oeydesign/domain.py` decorated with dataclass(frozen=True, slots=True). Fields: project_id: str, workflow_run_id: str, capability_version: str. Has no methods."
+  },
+  {
+    "id": "F0178",
+    "category": "python_class",
+    "statement": "Class `Command` is defined in `src/oeydesign/domain.py` decorated with dataclass(frozen=True, slots=True, kw_only=True). Fields: command_id: str, project_id: str | None, expected_project_revision: int | None. Has no methods."
+  },
+  {
+    "id": "F0179",
+    "category": "python_class",
+    "statement": "Class `CreateProject` is defined in `src/oeydesign/domain.py` inheriting from Command decorated with dataclass(frozen=True, slots=True, kw_only=True). Fields: name: str, preset: ConstraintPreset, template_role: TemplateRole, constraints: ConstraintProfile | None. Has no methods."
+  },
+  {
+    "id": "F0180",
+    "category": "python_class",
+    "statement": "Class `PrepareProject` is defined in `src/oeydesign/domain.py` inheriting from Command decorated with dataclass(frozen=True, slots=True, kw_only=True). Fields: context_package: ContextPackage | None, brief: DesignBrief | None. Has no methods."
+  },
+  {
+    "id": "F0181",
+    "category": "python_class",
+    "statement": "Class `GenerateCandidates` is defined in `src/oeydesign/domain.py` inheriting from Command decorated with dataclass(frozen=True, slots=True, kw_only=True). Fields: candidate_count: int. Has no methods."
+  },
+  {
+    "id": "F0182",
+    "category": "python_class",
+    "statement": "Class `ApproveDirection` is defined in `src/oeydesign/domain.py` inheriting from Command decorated with dataclass(frozen=True, slots=True, kw_only=True). Fields: candidate_id: str, candidate_revision: int, impact: str. Has no methods."
+  },
+  {
+    "id": "F0183",
+    "category": "python_class",
+    "statement": "Class `SubmitFeedback` is defined in `src/oeydesign/domain.py` inheriting from Command decorated with dataclass(frozen=True, slots=True, kw_only=True). Fields: kind: FeedbackKind, target_id: str, target_revision: int, text: str, object_ref: str | None. Has no methods."
+  },
+  {
+    "id": "F0184",
+    "category": "python_class",
+    "statement": "Class `ProduceArtifact` is defined in `src/oeydesign/domain.py` inheriting from Command decorated with dataclass(frozen=True, slots=True, kw_only=True). Fields: medium: str, fidelity_mode: str. Has no methods."
+  },
+  {
+    "id": "F0185",
+    "category": "python_class",
+    "statement": "Class `ValidateArtifact` is defined in `src/oeydesign/domain.py` inheriting from Command decorated with dataclass(frozen=True, slots=True, kw_only=True). Fields: render_profile: Mapping[str, Any]. Has no methods."
+  },
+  {
+    "id": "F0186",
+    "category": "python_class",
+    "statement": "Class `ApproveExport` is defined in `src/oeydesign/domain.py` inheriting from Command decorated with dataclass(frozen=True, slots=True, kw_only=True). Fields: artifact_id: str, artifact_revision: int, impact: str. Has no methods."
+  },
+  {
+    "id": "F0187",
+    "category": "python_class",
+    "statement": "Class `DeliverArtifact` is defined in `src/oeydesign/domain.py` inheriting from Command decorated with dataclass(frozen=True, slots=True, kw_only=True). Fields: delivery_profile: Mapping[str, Any]. Has no methods."
+  },
+  {
+    "id": "F0188",
+    "category": "python_class",
+    "statement": "Class `CancelWorkflow` is defined in `src/oeydesign/domain.py` inheriting from Command decorated with dataclass(frozen=True, slots=True, kw_only=True). Fields: workflow_run_id: str, reason: str. Has no methods."
+  },
+  {
+    "id": "F0189",
+    "category": "python_class",
+    "statement": "Class `PauseWorkflow` is defined in `src/oeydesign/domain.py` inheriting from Command decorated with dataclass(frozen=True, slots=True, kw_only=True). Fields: workflow_run_id: str, reason: str. Has no methods."
+  },
+  {
+    "id": "F0190",
+    "category": "python_class",
+    "statement": "Class `ResumeWorkflow` is defined in `src/oeydesign/domain.py` inheriting from Command decorated with dataclass(frozen=True, slots=True, kw_only=True). Fields: workflow_run_id: str, resume_input: Mapping[str, Any]. Has no methods."
+  },
+  {
+    "id": "F0191",
+    "category": "python_class",
+    "statement": "Class `ReconcileWorkflowStatus` is defined in `src/oeydesign/domain.py` inheriting from Command decorated with dataclass(frozen=True, slots=True, kw_only=True). Fields: workflow_run_id: str. Has no methods."
+  },
+  {
+    "id": "F0192",
+    "category": "python_class",
+    "statement": "Class `RestoreProjectRevision` is defined in `src/oeydesign/domain.py` inheriting from Command decorated with dataclass(frozen=True, slots=True, kw_only=True). Fields: source_revision: int. Has no methods."
+  },
+  {
+    "id": "F0193",
+    "category": "python_class",
+    "statement": "Class `DomainEvent` is defined in `src/oeydesign/domain.py` decorated with dataclass(frozen=True, slots=True). Fields: id: str, sequence: int, project_id: str, project_revision: int, event_type: str, occurred_at: datetime, payload: Mapping[str, Any]. Has no methods."
+  },
+  {
+    "id": "F0194",
+    "category": "python_class",
+    "statement": "Class `WorkflowProgressEvent` is defined in `src/oeydesign/domain.py` decorated with dataclass(frozen=True, slots=True). Fields: sequence: int, event_type: str, stage: str, message: str, id: str, project_id: str, occurred_at: datetime | None, details: Mapping[str, Any]. Has no methods."
+  },
+  {
+    "id": "F0195",
+    "category": "python_class",
+    "statement": "Class `WorkflowRun` is defined in `src/oeydesign/domain.py` decorated with dataclass(frozen=True, slots=True). Fields: id: str, project_id: str, workflow_kind: str, input_revision: int, idempotency_key: str, status: WorkflowStatus, current_stage: str, completed_stages: tuple[str, ...], side_effect_keys: tuple[str, ...], events: tuple[WorkflowProgressEvent, ...], pause_reason: str | None, error_category: ErrorCategory | None, error_message: str | None, attempt: int, max_attempts: int. Has no methods."
+  },
+  {
+    "id": "F0196",
+    "category": "python_class",
+    "statement": "Class `StageCheckpoint` is defined in `src/oeydesign/domain.py` decorated with dataclass(frozen=True, slots=True). Fields: run_id: str, stage: str, input_fingerprint: str, status: CheckpointStatus, attempt: int, output_refs: tuple[str, ...], error_category: ErrorCategory | None, error_message: str | None, side_effect_key: str | None. Has no methods."
+  },
+  {
+    "id": "F0197",
+    "category": "python_class",
+    "statement": "Class `AuditEntry` is defined in `src/oeydesign/domain.py` decorated with dataclass(frozen=True, slots=True). Fields: id: str, sequence: int, project_id: str, workflow_run_id: str | None, action: str, outcome: str, project_revision: int | None, metadata: Mapping[str, Any], occurred_at: datetime. Has no methods."
+  },
+  {
+    "id": "F0198",
+    "category": "python_class",
+    "statement": "Class `SideEffectRecord` is defined in `src/oeydesign/domain.py` decorated with dataclass(frozen=True, slots=True). Fields: key: str, project_id: str, action: str, target_revision: int, status: SideEffectStatus, result: Mapping[str, Any] | None, error: str | None. Has no methods."
+  },
+  {
+    "id": "F0199",
+    "category": "python_class",
+    "statement": "Class `DesignStrategy` is defined in `src/oeydesign/domain.py` decorated with dataclass(frozen=True, slots=True). Fields: id: str, lineage: Lineage, context_package_id: str, brief: DesignBrief, constraints: ConstraintProfile, candidate_count: int. Has no methods."
+  },
+  {
+    "id": "F0200",
+    "category": "python_class",
+    "statement": "Class `Candidate` is defined in `src/oeydesign/domain.py` decorated with dataclass(frozen=True, slots=True). Fields: id: str, revision: int, parent_revision: int | None, lineage: Lineage, title: str, concept: str, preview_html: str, creative_owner: str, template_role: TemplateRole, constraints: ConstraintProfile, source_refs: tuple[str, ...]. Has no methods."
+  },
+  {
+    "id": "F0201",
+    "category": "python_class",
+    "statement": "Class `Approval` is defined in `src/oeydesign/domain.py` decorated with dataclass(frozen=True, slots=True). Fields: id: str, project_id: str, action: ApprovalAction, target_id: str, target_revision: int, impact: str, active: bool, invalidated_reason: str | None. Has no methods."
+  },
+  {
+    "id": "F0202",
+    "category": "python_class",
+    "statement": "Class `ApprovedDirection` is defined in `src/oeydesign/domain.py` decorated with dataclass(frozen=True, slots=True). Fields: id: str, lineage: Lineage, candidate_id: str, candidate_revision: int, approval_id: str, baseline_preview_html: str. Has no methods."
+  },
+  {
+    "id": "F0203",
+    "category": "python_class",
+    "statement": "Class `ArtifactRevision` is defined in `src/oeydesign/domain.py` decorated with dataclass(frozen=True, slots=True). Fields: id: str, revision: int, parent_revision: int | None, lineage: Lineage, direction_id: str, medium: str, fidelity_mode: str, content: str, object_refs: Mapping[str, str], tradeoffs: tuple[str, ...]. Has no methods."
+  },
+  {
+    "id": "F0204",
+    "category": "python_class",
+    "statement": "Class `RenderBundle` is defined in `src/oeydesign/domain.py` decorated with dataclass(frozen=True, slots=True). Fields: id: str, revision: int, lineage: Lineage, artifact_id: str, artifact_revision: int, rendered_content: str, profile: Mapping[str, Any]. Has no methods."
+  },
+  {
+    "id": "F0205",
+    "category": "python_class",
+    "statement": "Class `ExportCandidate` is defined in `src/oeydesign/domain.py` decorated with dataclass(frozen=True, slots=True). Fields: id: str, revision: int, lineage: Lineage, artifact_id: str, artifact_revision: int, exported_content: str, manifest: Mapping[str, Any]. Has no methods."
+  },
+  {
+    "id": "F0206",
+    "category": "python_class",
+    "statement": "Class `Finding` is defined in `src/oeydesign/domain.py` decorated with dataclass(frozen=True, slots=True). Fields: kind: FindingKind, code: str, message: str, severity: str, target_ref: str, repairable: bool. Has no methods."
+  },
+  {
+    "id": "F0207",
+    "category": "python_class",
+    "statement": "Class `QualityDecision` is defined in `src/oeydesign/domain.py` decorated with dataclass(frozen=True, slots=True). Fields: id: str, revision: int, lineage: Lineage, target_kind: str, target_id: str, target_revision: int, artifact_id: str | None, artifact_revision: int | None, aesthetic_findings: tuple[Finding, ...], hard_errors: tuple[Finding, ...], risks: tuple[str, ...], verdict: GateVerdict. Has no methods."
+  },
+  {
+    "id": "F0208",
+    "category": "python_class",
+    "statement": "Class `RemediationRequest` is defined in `src/oeydesign/domain.py` decorated with dataclass(frozen=True, slots=True). Fields: id: str, target_id: str, target_revision: int, instructions: tuple[str, ...], protected_constraints: ConstraintProfile, max_attempts: int. Has no methods."
+  },
+  {
+    "id": "F0209",
+    "category": "python_class",
+    "statement": "Class `GateDecision` is defined in `src/oeydesign/domain.py` decorated with dataclass(frozen=True, slots=True). Fields: authorized: bool, requested_action: str, quality_decision_id: str, approval_ids: tuple[str, ...], reason: str. Has no methods."
+  },
+  {
+    "id": "F0210",
+    "category": "python_class",
+    "statement": "Class `DeliveryBundle` is defined in `src/oeydesign/domain.py` decorated with dataclass(frozen=True, slots=True). Fields: id: str, revision: int, lineage: Lineage, artifact_id: str, artifact_revision: int, export_id: str, quality_decision_id: str, approval_id: str, side_effect_key: str, manifest: Mapping[str, Any]. Has no methods."
+  },
+  {
+    "id": "F0211",
+    "category": "python_class",
+    "statement": "Class `DeliveryReconciliation` is defined in `src/oeydesign/domain.py` decorated with dataclass(frozen=True, slots=True). Fields: status: SideEffectReconciliationStatus, bundle: DeliveryBundle | None, reason: str. Has no methods."
+  },
+  {
+    "id": "F0212",
+    "category": "python_class",
+    "statement": "Class `FeedbackRecord` is defined in `src/oeydesign/domain.py` decorated with dataclass(frozen=True, slots=True). Fields: id: str, kind: FeedbackKind, target_id: str, target_revision: int, text: str, object_ref: str | None, routed_to: tuple[str, ...]. Has no methods."
+  },
+  {
+    "id": "F0213",
+    "category": "python_class",
+    "statement": "Class `Project` is defined in `src/oeydesign/domain.py` decorated with dataclass(slots=True). Fields: id: str, name: str, constraints: ConstraintProfile, revision: int, state: ProjectState, context_package: ContextPackage | None, brief: DesignBrief | None, strategy: DesignStrategy | None, candidates: dict[str, Candidate], candidate_history: list[Candidate], approved_direction: ApprovedDirection | None, current_artifact: ArtifactRevision | None, artifact_history: list[ArtifactRevision], current_render: RenderBundle | None, render_history: list[RenderBundle], current_export: ExportCandidate | None, export_history: list[ExportCandidate], current_quality: QualityDecision | None, quality_history: list[QualityDecision], approvals: dict[str, Approval], deliveries: list[DeliveryBundle], feedback: list[FeedbackRecord], events: list[DomainEvent], active_run_id: str | None, status_reason: str | None, resume_state: ProjectState | None, restored_from_revision: int | None. Has no methods."
+  },
+  {
+    "id": "F0214",
+    "category": "python_class",
+    "statement": "Class `CommandResult` is defined in `src/oeydesign/domain.py` decorated with dataclass(frozen=True, slots=True). Fields: project_id: str, project_revision: int, state: ProjectState, event_ids: tuple[str, ...], value: Any. Has no methods."
+  },
+  {
+    "id": "F0215",
+    "category": "python_class",
+    "statement": "Class `CommandRecord` is defined in `src/oeydesign/domain.py` decorated with dataclass(frozen=True, slots=True). Fields: fingerprint: str, result: CommandResult. Has no methods."
+  },
+  {
+    "id": "F0216",
+    "category": "python_module",
+    "statement": "Module `src/oeydesign/evidence_persistence.py` has 286 lines. Module docstring: \"SQLite persistence adapter for evidence, sources, and context packages.\""
+  },
+  {
+    "id": "F0229",
+    "category": "python_class",
+    "statement": "Class `SQLiteEvidenceRepository` is defined in `src/oeydesign/evidence_persistence.py`. Has 12 method(s): __init__, _collision, _decode, add_source, get_source, list_sources, add_evidence, get_evidence, list_evidence, save_context, _validate_locators, latest_context."
+  },
+  {
+    "id": "F0230",
+    "category": "python_module",
+    "statement": "Module `src/oeydesign/memory.py` has 316 lines. Module docstring: \"In-memory reference adapters used by Phase 1 conformance tests.\""
+  },
+  {
+    "id": "F0238",
+    "category": "python_class",
+    "statement": "Class `InMemoryProjectRepository` is defined in `src/oeydesign/memory.py`. Has 7 method(s): __init__, add, get, list_projects, save, get_revision, list_revisions."
+  },
+  {
+    "id": "F0242",
+    "category": "python_class",
+    "statement": "Class `InMemoryCommandLedger` is defined in `src/oeydesign/memory.py`. Has 3 method(s): __init__, get, record."
+  },
+  {
+    "id": "F0253",
+    "category": "python_class",
+    "statement": "Class `InMemoryWorkflowRuntime` is defined in `src/oeydesign/memory.py`. Has 10 method(s): __init__, start, resume, pause, cancel, query, complete, checkpoint, get_checkpoint, _get."
+  },
+  {
+    "id": "F0254",
+    "category": "python_module",
+    "statement": "Module `src/oeydesign/paths.py` has 30 lines. Module docstring: \"Filesystem policy helpers for durable local state.\""
+  },
+  {
+    "id": "F0255",
+    "category": "python_function",
+    "statement": "Top-level function `def resolve_database_path(database: str | Path, data_root: str | Path | None = None) -> str` is defined in `src/oeydesign/paths.py`. Docstring: \"Return a validated SQLite path, preventing writes outside ``data_root``.\""
+  },
+  {
+    "id": "F0256",
+    "category": "python_module",
+    "statement": "Module `src/oeydesign/persistence.py` has 577 lines. Module docstring: \"SQLite reference persistence adapters for Phase 2.\""
+  },
+  {
+    "id": "F0261",
+    "category": "python_class",
+    "statement": "Class `SQLiteStore` is defined in `src/oeydesign/persistence.py`. Has 4 method(s): __init__, close, _migrate, transaction."
+  },
+  {
+    "id": "F0271",
+    "category": "python_class",
+    "statement": "Class `SQLiteProjectRepository` is defined in `src/oeydesign/persistence.py`. Has 9 method(s): __init__, add, _read, get, list_projects, get_revision, list_revisions, save, _append_events."
+  },
+  {
+    "id": "F0275",
+    "category": "python_class",
+    "statement": "Class `SQLiteCommandLedger` is defined in `src/oeydesign/persistence.py`. Has 3 method(s): __init__, get, record."
+  },
+  {
+    "id": "F0278",
+    "category": "python_class",
+    "statement": "Class `SQLiteEventStore` is defined in `src/oeydesign/persistence.py`. Has 2 method(s): __init__, after_sequence."
+  },
+  {
+    "id": "F0282",
+    "category": "python_class",
+    "statement": "Class `SQLiteAuditLog` is defined in `src/oeydesign/persistence.py`. Has 3 method(s): __init__, record, query."
+  },
+  {
+    "id": "F0288",
+    "category": "python_class",
+    "statement": "Class `SQLiteSideEffectLedger` is defined in `src/oeydesign/persistence.py`. Has 5 method(s): __init__, claim, complete, get, fail."
+  },
+  {
+    "id": "F0293",
+    "category": "python_class",
+    "statement": "Class `SQLiteTransactionalProjectWriter` is defined in `src/oeydesign/persistence.py`. Has 4 method(s): __init__, add_with_command, save_with_command, _record."
+  },
+  {
+    "id": "F0294",
+    "category": "python_module",
+    "statement": "Module `src/oeydesign/ports.py` has 380 lines. Module docstring: \"Replaceable, vendor-neutral ports for the Phase 1 contract.\""
+  },
+  {
+    "id": "F0299",
+    "category": "python_class",
+    "statement": "Class `ProjectRepository` is defined in `src/oeydesign/ports.py` inheriting from Protocol. Has 4 method(s): add, get, list_projects, save."
+  },
+  {
+    "id": "F0302",
+    "category": "python_class",
+    "statement": "Class `RevisionedProjectRepository` is defined in `src/oeydesign/ports.py` inheriting from ProjectRepository, Protocol. Has 2 method(s): get_revision, list_revisions."
+  },
+  {
+    "id": "F0305",
+    "category": "python_class",
+    "statement": "Class `CommandLedger` is defined in `src/oeydesign/ports.py` inheriting from Protocol. Has 2 method(s): get, record."
+  },
+  {
+    "id": "F0308",
+    "category": "python_class",
+    "statement": "Class `TransactionalProjectWriter` is defined in `src/oeydesign/ports.py` inheriting from Protocol. Has 2 method(s): add_with_command, save_with_command."
+  },
+  {
+    "id": "F0310",
+    "category": "python_class",
+    "statement": "Class `ProjectEventStore` is defined in `src/oeydesign/ports.py` inheriting from Protocol. Has 1 method(s): after_sequence."
+  },
+  {
+    "id": "F0313",
+    "category": "python_class",
+    "statement": "Class `AuditLogPort` is defined in `src/oeydesign/ports.py` inheriting from Protocol. Has 2 method(s): record, query."
+  },
+  {
+    "id": "F0318",
+    "category": "python_class",
+    "statement": "Class `SideEffectLedgerPort` is defined in `src/oeydesign/ports.py` inheriting from Protocol. Has 4 method(s): claim, complete, fail, get."
+  },
+  {
+    "id": "F0321",
+    "category": "python_class",
+    "statement": "Class `SourceIngestionPort` is defined in `src/oeydesign/ports.py` inheriting from Protocol. Has 2 method(s): ingest, read."
+  },
+  {
+    "id": "F0323",
+    "category": "python_class",
+    "statement": "Class `EvidenceParserPort` is defined in `src/oeydesign/ports.py` inheriting from Protocol. Fields: capability_version: str, supported_media_types: tuple[str, ...]. Has 1 method(s): parse."
+  },
+  {
+    "id": "F0325",
+    "category": "python_class",
+    "statement": "Class `EvidenceInterpreterPort` is defined in `src/oeydesign/ports.py` inheriting from Protocol. Fields: capability_version: str. Has 1 method(s): interpret."
+  },
+  {
+    "id": "F0327",
+    "category": "python_class",
+    "statement": "Class `EvidenceConfirmationPort` is defined in `src/oeydesign/ports.py` inheriting from Protocol. Fields: capability_version: str. Has 1 method(s): confirm."
+  },
+  {
+    "id": "F0329",
+    "category": "python_class",
+    "statement": "Class `SourceResolverPort` is defined in `src/oeydesign/ports.py` inheriting from Protocol. Has 1 method(s): resolve."
+  },
+  {
+    "id": "F0338",
+    "category": "python_class",
+    "statement": "Class `EvidenceRepositoryPort` is defined in `src/oeydesign/ports.py` inheriting from Protocol. Has 8 method(s): add_source, get_source, list_sources, add_evidence, get_evidence, list_evidence, save_context, latest_context."
+  },
+  {
+    "id": "F0340",
+    "category": "python_class",
+    "statement": "Class `ContextAssemblerPort` is defined in `src/oeydesign/ports.py` inheriting from Protocol. Fields: capability_version: str. Has 1 method(s): assemble."
+  },
+  {
+    "id": "F0349",
+    "category": "python_class",
+    "statement": "Class `WorkflowRuntimePort` is defined in `src/oeydesign/ports.py` inheriting from Protocol. Has 8 method(s): start, resume, pause, cancel, query, complete, checkpoint, get_checkpoint."
+  },
+  {
+    "id": "F0354",
+    "category": "python_class",
+    "statement": "Class `DesignIntelligencePort` is defined in `src/oeydesign/ports.py` inheriting from Protocol. Fields: capability_version: str. Has 4 method(s): plan_design, create_candidates, revise_candidate, commit_direction."
+  },
+  {
+    "id": "F0359",
+    "category": "python_class",
+    "statement": "Class `ArtifactProductionPort` is defined in `src/oeydesign/ports.py` inheriting from Protocol. Fields: capability_version: str. Has 4 method(s): materialize, apply_artifact_change, render_artifact, export_artifact."
+  },
+  {
+    "id": "F0364",
+    "category": "python_class",
+    "statement": "Class `QualityGovernancePort` is defined in `src/oeydesign/ports.py` inheriting from Protocol. Fields: capability_version: str. Has 4 method(s): assess_candidate, assess_artifact, plan_remediation, authorize_transition."
+  },
+  {
+    "id": "F0367",
+    "category": "python_class",
+    "statement": "Class `DeliveryPort` is defined in `src/oeydesign/ports.py` inheriting from Protocol. Fields: capability_version: str. Has 2 method(s): release, reconcile."
+  },
+  {
+    "id": "F0368",
+    "category": "python_module",
+    "statement": "Module `src/oeydesign/product_shell.py` has 733 lines. Module docstring: \"Dependency-free HTTP adapter for the recoverable Phase 4 product shell.\""
+  },
+  {
+    "id": "F0369",
+    "category": "python_function",
+    "statement": "Top-level function `def _safe(value: Any) -> Any` is defined in `src/oeydesign/product_shell.py`."
+  },
+  {
+    "id": "F0370",
+    "category": "python_function",
+    "statement": "Top-level function `def _constraints(p: Project) -> dict[str, Any]` is defined in `src/oeydesign/product_shell.py`."
+  },
+  {
+    "id": "F0384",
+    "category": "python_class",
+    "statement": "Class `ProductShellService` is defined in `src/oeydesign/product_shell.py`. Has 13 method(s): __init__, _cid, _revision, _positive, _text, _enum, create_demo, projects, _actions, project, events, command, _profile."
+  },
+  {
+    "id": "F0385",
+    "category": "python_function",
+    "statement": "Top-level function `def _not_found(error: ContractError) -> bool` is defined in `src/oeydesign/product_shell.py`."
+  },
+  {
+    "id": "F0386",
+    "category": "python_function",
+    "statement": "Top-level function `def _default_static_dir() -> Path` is defined in `src/oeydesign/product_shell.py`."
+  },
+  {
+    "id": "F0387",
+    "category": "python_function",
+    "statement": "Top-level function `def make_handler(service: ProductShellService, static_dir: str | Path | None = None) -> type[BaseHTTPRequestHandler]` is defined in `src/oeydesign/product_shell.py`."
+  },
+  {
+    "id": "F0388",
+    "category": "python_function",
+    "statement": "Top-level function `def make_server(app: Any, host: str = '127.0.0.1', port: int = 0, static_dir: str | Path | None = None) -> ThreadingHTTPServer` is defined in `src/oeydesign/product_shell.py`."
+  },
+  {
+    "id": "F0389",
+    "category": "python_function",
+    "statement": "Top-level function `def main(argv: list[str] | None = None) -> int` is defined in `src/oeydesign/product_shell.py`."
+  },
+  {
+    "id": "F0390",
+    "category": "python_module",
+    "statement": "Module `src/oeydesign/recovery.py` has 180 lines. Module docstring: \"Recovery-safe adapters for external effects.\""
+  },
+  {
+    "id": "F0396",
+    "category": "python_class",
+    "statement": "Class `DurableDeliveryPort` is defined in `src/oeydesign/recovery.py`. Has 5 method(s): __init__, release, reconcile, _reconcile, _audit."
+  },
+  {
+    "id": "F0397",
+    "category": "python_module",
+    "statement": "Module `src/oeydesign/runtime.py` has 809 lines. Module docstring: \"SQLite-backed workflow runtime and deterministic failure injection.\""
+  },
+  {
+    "id": "F0418",
+    "category": "python_class",
+    "statement": "Class `SQLiteWorkflowRuntime` is defined in `src/oeydesign/runtime.py`. Has 20 method(s): __init__, close, start, resume, pause, cancel, query, complete, checkpoint, get_checkpoint, list_checkpoints, record_failure, _migrate, _append_event, _run_row, _run_from_row, _event_from_row, _checkpoint_row, _checkpoint_from_row, _transaction."
+  },
+  {
+    "id": "F0419",
+    "category": "python_class",
+    "statement": "Class `InjectedFailure` is defined in `src/oeydesign/runtime.py` decorated with dataclass(frozen=True, slots=True). Fields: category: ErrorCategory, message: str, remaining: int, timeout: bool. Has no methods."
+  },
+  {
+    "id": "F0421",
+    "category": "python_class",
+    "statement": "Class `WorkflowStageError` is defined in `src/oeydesign/runtime.py` inheriting from Exception. Has 1 method(s): __init__."
+  },
+  {
+    "id": "F0426",
+    "category": "python_class",
+    "statement": "Class `FailureInjector` is defined in `src/oeydesign/runtime.py`. Has 4 method(s): __init__, inject, inject_timeout, maybe_raise."
+  },
+  {
+    "id": "F0427",
+    "category": "python_class",
+    "statement": "Class `StageExecution` is defined in `src/oeydesign/runtime.py` decorated with dataclass(frozen=True, slots=True). Fields: run: WorkflowRun, checkpoint: StageCheckpoint, reused: bool. Has no methods."
+  },
+  {
+    "id": "F0431",
+    "category": "python_class",
+    "statement": "Class `RecoverableStageRunner` is defined in `src/oeydesign/runtime.py`. Has 3 method(s): __init__, run_stage, _failure_status."
+  },
+  {
+    "id": "F0432",
+    "category": "python_module",
+    "statement": "Module `src/oeydesign/serialization.py` has 103 lines. Module docstring: \"Versioned, dependency-free JSON serialization for OEYdesign domain values.\""
+  },
+  {
+    "id": "F0433",
+    "category": "python_function",
+    "statement": "Top-level function `def _name(value: type[object]) -> str` is defined in `src/oeydesign/serialization.py`."
+  },
+  {
+    "id": "F0434",
+    "category": "python_function",
+    "statement": "Top-level function `def _resolve(name: str) -> type[object]` is defined in `src/oeydesign/serialization.py`."
+  },
+  {
+    "id": "F0435",
+    "category": "python_function",
+    "statement": "Top-level function `def _encode(value: Any) -> Any` is defined in `src/oeydesign/serialization.py`."
+  },
+  {
+    "id": "F0436",
+    "category": "python_function",
+    "statement": "Top-level function `def _decode(value: Any) -> Any` is defined in `src/oeydesign/serialization.py`."
+  },
+  {
+    "id": "F0437",
+    "category": "python_function",
+    "statement": "Top-level function `def dumps(value: Any) -> str` is defined in `src/oeydesign/serialization.py`. Docstring: \"Encode a domain value in a schema-versioned JSON envelope.\""
+  },
+  {
+    "id": "F0438",
+    "category": "python_function",
+    "statement": "Top-level function `def loads(payload: str) -> Any` is defined in `src/oeydesign/serialization.py`. Docstring: \"Decode a payload produced by :func:`dumps`.\""
+  },
+  {
+    "id": "F0439",
+    "category": "python_module",
+    "statement": "Module `src/oeydesign/stubs.py` has 528 lines. Module docstring: \"Deterministic, side-effect-free implementations of the system ports.\""
+  },
+  {
+    "id": "F0445",
+    "category": "python_class",
+    "statement": "Class `DeterministicDesignPort` is defined in `src/oeydesign/stubs.py`. Has 5 method(s): plan_design, create_candidates, revise_candidate, commit_direction, _preview."
+  },
+  {
+    "id": "F0450",
+    "category": "python_class",
+    "statement": "Class `DeterministicArtifactPort` is defined in `src/oeydesign/stubs.py`. Has 4 method(s): materialize, apply_artifact_change, render_artifact, export_artifact."
+  },
+  {
+    "id": "F0457",
+    "category": "python_class",
+    "statement": "Class `DeterministicQualityPort` is defined in `src/oeydesign/stubs.py`. Has 6 method(s): assess_candidate, assess_artifact, plan_remediation, authorize_transition, _decision, _hard_errors."
+  },
+  {
+    "id": "F0462",
+    "category": "python_class",
+    "statement": "Class `DeterministicDeliveryPort` is defined in `src/oeydesign/stubs.py`. Has 4 method(s): __init__, release, reconcile, _build_bundle."
+  },
+  {
+    "id": "F0463",
+    "category": "python_module",
+    "statement": "Module `lab30min/01_p1_tour.py` has 186 lines. Module docstring: \"Lab 1 — 理解 Phase 1：契约骨架\""
+  },
+  {
+    "id": "F0464",
+    "category": "python_function",
+    "statement": "Top-level function `def show(title: str, value: object) -> None` is defined in `lab30min/01_p1_tour.py`."
+  },
+  {
+    "id": "F0465",
+    "category": "python_function",
+    "statement": "Top-level function `def main() -> None` is defined in `lab30min/01_p1_tour.py`."
+  },
+  {
+    "id": "F0466",
+    "category": "file_syntax_error",
+    "statement": "File `lab30min/handwrite.py` failed to parse as Python: invalid non-printable character U+FEFF (handwrite.py, line 1)."
+  },
+  {
+    "id": "F0467",
+    "category": "python_module",
+    "statement": "Module `lab30min/my_main.py` has 67 lines. Module docstring: \"============================================================\""
+  },
+  {
+    "id": "F0468",
+    "category": "python_function",
+    "statement": "Top-level function `def main() -> None` is defined in `lab30min/my_main.py`."
+  },
+  {
+    "id": "F0469",
+    "category": "python_module",
+    "statement": "Module `lab30min/my_main_blank.py` has 32 lines. Module docstring: \"空白卷：自己默写流程。不会就看 my_main.py。\""
+  },
+  {
+    "id": "F0470",
+    "category": "python_function",
+    "statement": "Top-level function `def main() -> None` is defined in `lab30min/my_main_blank.py`."
+  },
+  {
+    "id": "F0471",
+    "category": "python_module",
+    "statement": "Module `lab30min/simple_lab.py` has 137 lines. Module docstring: \"给实验用的极简外壳：把 ControlPlane 藏起来，你只记「下一步叫什么」。\""
+  },
+  {
+    "id": "F0484",
+    "category": "python_class",
+    "statement": "Class `Lab` is defined in `lab30min/simple_lab.py`. Has 12 method(s): __init__, _send, create, prepare, generate, approve_direction, produce, validate, approve_export, deliver, state_path, summary."
+  },
+  {
+    "id": "F0498",
+    "category": "test_file_count",
+    "statement": "File `tests/test_phase1_harness.py` contains 13 test function(s) (596 lines total)."
+  },
+  {
+    "id": "F0504",
+    "category": "test_file_count",
+    "statement": "File `tests/test_phase2_integration.py` contains 5 test function(s) (438 lines total)."
+  },
+  {
+    "id": "F0509",
+    "category": "test_file_count",
+    "statement": "File `tests/test_phase2_persistence.py` contains 4 test function(s) (183 lines total)."
+  },
+  {
+    "id": "F0513",
+    "category": "test_file_count",
+    "statement": "File `tests/test_phase2_runtime.py` contains 3 test function(s) (65 lines total)."
+  },
+  {
+    "id": "F0519",
+    "category": "test_file_count",
+    "statement": "File `tests/test_phase3_context.py` contains 5 test function(s) (313 lines total)."
+  },
+  {
+    "id": "F0523",
+    "category": "test_file_count",
+    "statement": "File `tests/test_phase3_evidence_persistence.py` contains 3 test function(s) (151 lines total)."
+  },
+  {
+    "id": "F0525",
+    "category": "test_file_count",
+    "statement": "File `tests/test_phase3_integration.py` contains 1 test function(s) (170 lines total)."
+  },
+  {
+    "id": "F0534",
+    "category": "test_file_count",
+    "statement": "File `tests/test_phase4_product_shell.py` contains 8 test function(s) (426 lines total)."
+  },
+  {
+    "id": "F0535",
+    "category": "test_count_aggregate",
+    "statement": "Repository has 8 test files under tests/ containing 42 test function(s) in total (statically counted via ast, tests not executed)."
+  },
+  {
+    "id": "F0536",
+    "category": "dependency",
+    "statement": "pyproject.toml declares 0 runtime dependencies (dependencies = [])."
+  },
+  {
+    "id": "F0537",
+    "category": "build_dependency",
+    "statement": "pyproject.toml [build-system] requires: setuptools>=68."
+  },
+  {
+    "id": "F0538",
+    "category": "config",
+    "statement": "pyproject.toml requires-python = \">=3.11\"."
+  },
+  {
+    "id": "F0539",
+    "category": "config",
+    "statement": "pyproject.toml [project].name = \"oeydesign\"."
+  },
+  {
+    "id": "F0540",
+    "category": "config",
+    "statement": "pyproject.toml [project].version = \"9.9.9\"."
+  },
+  {
+    "id": "F0541",
+    "category": "config",
+    "statement": "pyproject.toml [project].description = \"Contract-first reference implementation for OEYdesign\"."
+  },
+  {
+    "id": "F0542",
+    "category": "config",
+    "statement": "pyproject.toml [tool.pytest.ini_options] = {\"pythonpath\": [\"src\"], \"testpaths\": [\"tests\"], \"addopts\": \"-p no:cacheprovider\"}."
+  },
+  {
+    "id": "F0543",
+    "category": "config",
+    "statement": "pyproject.toml [tool.ruff] target-version='py311', line-length=88."
+  }
+]

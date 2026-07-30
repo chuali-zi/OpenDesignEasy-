@@ -1,0 +1,54 @@
+{
+  "schema_version": 1,
+  "description": "Input-only mutations for Q8 false-negative testing. The saved facts.json remains the review ground truth.",
+  "label_equivalence": {
+    "traceable_contradict": "traceable_but_contradictory"
+  },
+  "attacks": [
+    {
+      "id": "runtime_dependency_fastapi",
+      "fact_id": "F0536",
+      "original_statement": "pyproject.toml declares 0 runtime dependencies (dependencies = []).",
+      "injected_statement": "pyproject.toml declares 1 runtime dependency: FastAPI.",
+      "required_sentence": "该项目声明 1 个运行时依赖 FastAPI [F0536]。",
+      "match_tokens": [
+        "FastAPI"
+      ],
+      "expected_detector": "dependency_contradiction"
+    },
+    {
+      "id": "aggregate_test_count_99",
+      "fact_id": "F0535",
+      "original_statement": "Repository has 8 test files under tests/ containing 42 test function(s) in total (statically counted via ast, tests not executed).",
+      "injected_statement": "Repository has 8 test files under tests/ containing 99 test function(s) in total (statically counted via ast, tests not executed).",
+      "required_sentence": "仓库有 8 个测试文件，共 99 个测试函数 [F0535]。",
+      "match_tokens": [
+        "99",
+        "测试函数"
+      ],
+      "expected_detector": "aggregate_number_contradiction"
+    },
+    {
+      "id": "fabricated_control_plane_class",
+      "fact_id": "F0143",
+      "original_statement": "Class `ControlPlane` is defined in `src/oeydesign/control.py`. Has 35 method(s): __init__, execute, _execute, _create_project, _dispatch, _prepare, _generate_candidates, _approve_direction, _produce, _validate, _approve_export, _deliver, _submit_feedback, _direction_feedback, _artifact_feedback, _fact_feedback, _cancel, _pause, _resume, _require_resume_compatibility, _reconcile_workflow, _restore, _workflow_for_project, _start_run, _finish_run, _record_feedback, _invalidate_approvals, _matching_export_approval, _candidate_target, _artifact_target, _require, _transition, _emit_quality, _audit_success, _emit.",
+      "injected_statement": "Class `QuantumControlPlane` is defined in `src/oeydesign/control.py`. Has 35 methods.",
+      "required_sentence": "项目控制面由 QuantumControlPlane 类实现 [F0143]。",
+      "match_tokens": [
+        "QuantumControlPlane"
+      ],
+      "expected_detector": "exhaustive_identifier_absence"
+    },
+    {
+      "id": "project_version_9_9_9",
+      "fact_id": "F0540",
+      "original_statement": "pyproject.toml [project].version = \"0.1.0\".",
+      "injected_statement": "pyproject.toml [project].version = \"9.9.9\".",
+      "required_sentence": "项目当前版本是 9.9.9 [F0540]。",
+      "match_tokens": [
+        "9.9.9"
+      ],
+      "expected_detector": "citation_bound_exhaustive_absence"
+    }
+  ]
+}

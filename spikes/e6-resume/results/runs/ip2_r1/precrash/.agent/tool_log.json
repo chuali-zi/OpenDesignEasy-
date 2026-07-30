@@ -1,0 +1,14 @@
+[
+  {
+    "step": 1,
+    "tool": "write_file",
+    "path": "index.html",
+    "ok": true
+  },
+  {
+    "step": 2,
+    "tool": "read_file",
+    "path": "index.html",
+    "ok": true
+  }
+]

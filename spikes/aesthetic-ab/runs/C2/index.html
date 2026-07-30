@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>OEYdesign Studio · 山野咖啡落地页</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: {
+          brand: {
+            50: '#f5f3ff', 100: '#ede9fe', 200: '#ddd6fe', 300: '#c4b5fd',
+            500: '#8b5cf6', 600: '#7c3aed', 700: '#6d28d9'
+          }
+        },
+        fontFamily: {
+          sans: ['-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'sans-serif']
+        }
+      }
+    }
+  }
+</script>
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body class="h-screen overflow-hidden bg-neutral-100 text-neutral-900 antialiased">
+
+<div class="flex h-full flex-col">
+
+  <!-- ===================== 顶栏 ===================== -->
+  <header data-oey-section="topbar" class="h-14 shrink-0 border-b border-neutral-200 bg-white flex items-center gap-3 px-4 z-20">
+    <div class="flex items-center gap-2.5">
+      <div class="h-8 w-8 rounded-lg bg-gradient-to-br from-brand-500 to-brand-700 grid place-items-center shadow-sm">
+        <svg class="h-4.5 w-4.5 h-[18px] w-[18px] text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9L12 3z"/><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8L19 15z"/></svg>
+      </div>
+      <div class="leading-tight">
+        <div class="text-sm font-semibold tracking-tight">OEYdesign</div>
+        <div class="text-[10px] text-neutral-400 -mt-0.5">多模态设计 Agent · Beta</div>
+      </div>
+    </div>
+
+    <div class="h-5 w-px bg-neutral-200 mx-1"></div>
+
+    <button class="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-sm text-neutral-600 hover:bg-neutral-100 transition">
+      <span class="font-medium text-neutral-800">山野咖啡 · 品牌落地页</span>
+      <svg class="h-3.5 w-3.5 text-neutral-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+    </button>
+
+    <div class="ml-auto flex items-center gap-2">
+      <span class="hidden md:inline-flex items-center gap-1.5 rounded-full bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200 px-2.5 py-1 text-xs font-medium">
+        <span class="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>Agent 在线
+      </span>
+      <button id="help-btn" class="h-8 w-8 grid place-items-center rounded-lg text-neutral-500 hover:bg-neutral-100 hover:text-neutral-800 transition" title="帮助">
+        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg>
+      </button>
+      <div class="h-8 w-8 rounded-full bg-gradient-to-br from-amber-400 to-rose-500 ring-2 ring-white shadow-sm grid place-items-center text-[11px] font-semibold text-white">林</div>
+    </div>
+  </header>
+
+  <!-- ===================== 主区域：左对话 / 右预览 ===================== -->
+  <main class="flex flex-1 min-h-0">
+
+    <!-- ========== 左侧：对话栏（窄） ========== -->
+    <aside data-oey-section="chat" class="w-[360px] xl:w-[400px] shrink-0 border-r border-neutral-200 bg-neutral-50 flex flex-col min-h-0">
+
+      <div class="h-12 shrink-0 border-b border-neutral-200 bg-white flex items-center justify-between px-4">
+        <div class="flex items-center gap-2 text-sm font-medium">
+          <svg class="h-4 w-4 text-neutral-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          设计对话
+          <span class="rounded-md bg-neutral-100 px-1.5 py-0.5 text-[10px] font-medium text-neutral-500">6 条</span>
+        </div>
+        <div class="flex items-center gap-1">
+          <button id="history-btn" class="h-7 w-7 grid place-items-center rounded-md text-neutral-400 hover:bg-neutral-100 hover:text-neutral-700 transition" title="历史会话">
+            <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></svg>
+          </button>
+          <button id="new-chat-btn" class="h-7 w-7 grid place-items-center rounded-md text-neutral-400 hover:bg-neutral-100 hover:text-neutral-700 transition" title="新对话">
+            <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- 消息流 -->
+      <div id="messages" data-oey-section="messages" class="scroll-thin flex-1 overflow-y-auto px-4 py-4 space-y-5">
+
+        <!-- 用户 1 -->
+        <div data-oey-object="message" class="flex flex-col items-end">
+          <div class="max-w-[90%] rounded-2xl rounded-br-md bg-neutral-900 px-3.5 py-2.5 text-sm leading-relaxed text-white shadow-sm">
+            帮我给「山野咖啡」做一个品牌落地页。主打精品冷萃，目标用户是 25–35 岁的一线城市白领，风格要自然、克制，不要太花哨。
+          </div>
+          <span class="mt-1 text-[10px] text-neutral-400">10:24</span>
+        </div>
+
+        <!-- Agent 1 -->
+        <div data-oey-object="message" class="flex gap-2.5">
+          <div class="mt-0.5 h-6 w-6 shrink-0 rounded-md bg-gradient-to-br from-brand-500 to-brand-700 grid place-items-center">
+            <svg class="h-3 w-3 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9L12 3z"/></svg>
+          </div>
+          <div class="min-w-0 flex-1">
+            <div class="rounded-2xl rounded-tl-md border border-neutral-200 bg-white px-3.5 py-3 text-sm leading-relaxed shadow-sm">
+              <p>已理解需求。核心判断：</p>
+              <ul class="mt-1.5 space-y-1 text-neutral-600">
+                <li class="flex gap-1.5"><span class="text-brand-500">·</span>受众偏理性，首屏直接给「产地 + 工艺」信任背书</li>
+                <li class="flex gap-1.5"><span class="text-brand-500">·</span>冷萃是差异化卖点，单独成区，不塞进 banner</li>
+                <li class="flex gap-1.5"><span class="text-brand-500">·</span>配色用低饱和自然色系，字重克制</li>
+              </ul>
+              <p class="mt-2">已生成 <b>落地页 v1</b>，共 5 个区块。右侧可真实预览，点击任意区块即可对它单独提反馈。</p>
+              <div class="mt-2.5 flex items-center gap-3 rounded-lg border border-neutral-200 bg-neutral-50 p-2.5">
+                <div class="h-9 w-9 shrink-0 rounded-lg bg-brand-100 text-brand-600 grid place-items-center">
+                  <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
+                </div>
+                <div class="min-w-0 flex-1">
+                  <div class="truncate text-[13px] font-medium">山野咖啡 · 品牌落地页</div>
+                  <div class="text-[11px] text-neutral-500">网页 · 5 个区块 · v1 初稿</div>
+                </div>
+                <button data-goto-version="1" class="shrink-0 rounded-md border border-neutral-200 bg-white px-2.5 py-1 text-xs font-medium text-neutral-600 shadow-sm hover:bg-neutral-50 transition">查看</button>
+              </div>
+            </div>
+            <span class="mt-1 block text-[10px] text-neutral-400">10:24 · 耗时 8s</span>
+          </div>
+        </div>
+
+        <!-- 用户 2 -->
+        <div data-oey-object="message" class="flex flex-col items-end">
+          <div class="max-w-[90%] rounded-2xl rounded-br-md bg-neutral-900 px-3.5 py-2.5 text-sm leading-relaxed text-white shadow-sm">
+            首屏有点素，想要更有质感一些。另外把冷萃工艺讲得更具体。
+          </div>
+          <span class="mt-1 text-[10px] text-neutral-400">10:27</span>
+        </div>
+
+        <!-- Agent 2 -->
+        <div data-oey-object="message" class="flex gap-2.5">
+          <div class="mt-0.5 h-6 w-6 shrink-0 rounded-md bg-gradient-to-br from-brand-500 to-brand-700 grid place-items-center">
+            <svg class="h-3 w-3 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9L12 3z"/></svg>
+          </div>
+          <div class="min-w-0 flex-1">
+            <div class="rounded-2xl rounded-tl-md border border-neutral-200 bg-white px-3.5 py-3 text-sm leading-relaxed shadow-sm">
+              <p>已生成 <b>v2 · 视觉深化</b>：</p>
+              <ul class="mt-1.5 space-y-1 text-neutral-600">
+                <li class="flex gap-1.5"><span class="text-brand-500">·</span>首屏改为深烘焙色调 + 大字标题，质感更强</li>
+                <li class="flex gap-1.5"><span class="text-brand-500">·</span>新增「72 小时冷萃工艺」数据条，工艺可视化</li>
+              </ul>
+              <p class="mt-2 text-neutral-600">右侧已切换，可用 v1 / v2 版本键对比。</p>
+              <div class="mt-2.5 flex items-center gap-3 rounded-lg border border-neutral-200 bg-neutral-50 p-2.5">
+                <div class="h-9 w-9 shrink-0 rounded-lg bg-brand-100 text-brand-600 grid place-items-center">
+                  <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
+                </div>
+                <div class="min-w-0 flex-1">
+                  <div class="truncate text-[13px] font-medium">山野咖啡 · 品牌落地页</div>
+                  <div class="text-[11px] text-neutral-500">网页 · 5 个区块 · v2 视觉深化</div>
+                </div>
+                <button data-goto-version="2" class="shrink-0 rounded-md border border-neutral-200 bg-white px-2.5 py-1 text-xs font-medium text-neutral-600 shadow-sm hover:bg-neutral-50 transition">查看</button>
+              </div>
+            </div>
+            <span class="mt-1 block text-[10px] text-neutral-400">10:28 · 耗时 11s</span>
+          </div>
+        </div>
+
+        <!-- 用户 3 -->
+        <div data-oey-object="message" class="flex flex-col items-end">
+          <div class="max-w-[90%] rounded-2xl rounded-br-md bg-neutral-900 px-3.5 py-2.5 text-sm leading-relaxed text-white shadow-sm">
+            深色方向对。但卖点区位置太靠下，往上提；价格锚点也加上。
+          </div>
+          <span class="mt-1 text-[10px] text-neutral-400">10:31</span>
+        </div>
+
+        <!-- Agent 3 -->
+        <div data-oey-object="message" class="flex gap-2.5">
+          <div class="mt-0.5 h-6 w-6 shrink-0 rounded-md bg-gradient-to-br from-brand-500 to-brand-700 grid place-items-center">
+            <svg class="h-3 w-3 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9L12 3z"/></svg>
+          </div>
+          <div class="min-w-0 flex-1">
+            <div class="rounded-2xl rounded-tl-md border border-neutral-200 bg-white px-3.5 py-3 text-sm leading-relaxed shadow-sm">
+              <p>已生成 <b>v3（当前版本）</b>：</p>
+              <ul class="mt-1.5 space-y-1 text-neutral-600">
+                <li class="flex gap-1.5"><span class="text-brand-500">·</span>卖点区上移至首屏正下方，首屏一屏半内可见</li>
+                <li class="flex gap-1.5"><span class="text-brand-500">·</span>新增价格锚点 <b>¥89/盒</b> 与「首单立减 20」标签</li>
+              </ul>
+              <p class="mt-2">状态已标记为「待确认」。确认后可直接导出上线代码或 PDF 提案。</p>
+              <div class="mt-2.5 flex items-center gap-3 rounded-lg border border-brand-200 bg-brand-50 p-2.5">
+                <div class="h-9 w-9 shrink-0 rounded-lg bg-brand-600 text-white grid place-items-center">
+                  <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
+                </div>
+                <div class="min-w-0 flex-1">
+                  <div class="truncate text-[13px] font-medium">山野咖啡 · 品牌落地页</div>
+                  <div class="text-[11px] text-brand-700">网页 · 5 个区块 · v3 当前版本</div>
+                </div>
+                <button data-goto-version="3" class="shrink-0 rounded-md bg-brand-600 px-2.5 py-1 text-xs font-medium text-white shadow-sm hover:bg-brand-700 transition">查看</button>
+              </div>
+            </div>
+            <span class="mt-1 block text-[10px] text-neutral-400">10:32 · 耗时 9s</span>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- 输入区 -->
+      <div data-oey-section="composer" class="shrink-0 border-t border-neutral-200 bg-white p-3">
+        <div id="sel-chip" class="hidden mb-2">
+          <span class="inline-flex items-center gap-1.5 rounded-md bg-brand-50 px-2 py-1 text-xs font-medium text-brand-700 ring-1 ring-brand-200">
+            <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+            正在向「<span id="sel-chip-label"></span>」提反馈
+            <button id="sel-chip-x" class="ml-0.5 rounded text-brand-400 hover:text-brand-700 transition">
+              <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+            </button>
+          </span>
+        </div>
+
+        <div class="rounded-xl border border-neutral-200 bg-white shadow-sm transition focus-within:border-brand-300 focus-within:ring-2 focus-within:ring-brand-100">
+          <textarea id="composer-input" rows="2" placeholder="描述想要的修改，或在右侧点选某个区块…"
+            class="block w-full resize-none rounded-t-xl bg-transparent px-3 pt-2.5 text-sm leading-relaxed placeholder:text-neutral-400 focus:outline-none"></textarea>
+          <div class="flex items-center justify-between px-2 pb-2">
+            <div class="flex items-center gap-0.5">
+              <button class="h-7 w-7 grid place-items-center rounded-md text-neutral-400 hover:bg-neutral-100 hover:text-neutral-700 transition" title="上传参考图" onclick="toast('已打开素材选择（mock）')">
+                <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+              </button>
+              <button class="h-7 w-7 grid place-items-center rounded-md text-neutral-400 hover:bg-neutral-100 hover:text-neutral-700 transition" title="引用品牌资产" onclick="toast('品牌资产库（mock）')">
+                <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
+              </button>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="hidden sm:block text-[10px] text-neutral-400">Enter 发送 · Shift+Enter 换行</span>
+              <button id="send-btn" class="inline-flex h-8 items-center gap-1.5 rounded-lg bg-neutral-900 px-3 text-xs font-medium text-white shadow-sm hover:bg-neutral-700 active:scale-95 transition">
+                发送
+                <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-2 flex flex-wrap gap-1.5">
+          <button class="suggest-chip rounded-full border border-neutral-200 bg-neutral-50 px-2.5 py-1 text-[11px] text-neutral-600 hover:border-brand-300 hover:text-brand-700 hover:bg-brand-50 transition">把首屏标题再短一点</button>
+          <button class="suggest-chip rounded-full border border-neutral-200 bg-neutral-50 px-2.5 py-1 text-[11px] text-neutral-600 hover:border-brand-300 hover:text-brand-700 hover:bg-brand-50 transition">生成配套路演 PPT</button>
+          <button class="suggest-chip rounded-full border border-neutral-200 bg-neutral-50 px-2.5 py-1 text-[11px] text-neutral-600 hover:border-brand-300 hover:text-brand-700 hover:bg-brand-50 transition">整理成品牌 DOCX 文档</button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ========== 右侧：设计成果预览区（大） ========== -->
+    <section data-oey-section="preview" class="flex-1 min-w-0 flex flex-col min-h-0 bg-white">
+
+      <!-- 预览工具栏 -->
+      <div data-oey-section="preview-toolbar" class="h-12 shrink-0 border-b border-neutral-200 bg-white flex items-center gap-3 px-4">
+        <!-- 产物类型切换 -->
+        <div id="mode-tabs" class="flex items-center rounded-lg bg-neutral-100 p-0.5">
+          <button data-mode="web" class="flex h-7 items-center gap-1.5 rounded-md px-3 text-xs font-medium transition">
+            <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/></svg>网页
+          </button>
+          <button data-mode="ppt" class="flex h-7 items-center gap-1.5 rounded-md px-3 text-xs font-medium transition">
+            <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h20"/><path d="M21 3v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V3"/><path d="m9 21 3-3 3 3"/><path d="M12 16v2"/></svg>演示文稿
+          </button>
+          <button data-mode="docx" class="flex h-7 items-center gap-1.5 rounded-md px-3 text-xs font-medium transition">
+            <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M8 13h8M8 17h5"/></svg>文档
+          </button>
+        </div>
+
+        <div class="h-5 w-px bg-neutral-200"></div>
+
+        <!-- 版本切换 -->
+        <div class="flex items-center gap-1.5">
+          <span class="text-xs text-neutral-400">版本</span>
+          <div id="version-pills" class="flex items-center gap-0.5 rounded-lg bg-neutral-100 p-0.5"></div>
+        </div>
+
+        <span id="status-pill" class="inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-2.5 py-1 text-xs font-medium text-amber-700 ring-1 ring-amber-200"></span>
+
+        <div class="ml-auto flex items-center gap-2">
+          <button id="share-btn" class="inline-flex h-8 items-center gap-1.5 rounded-lg border border-neutral-200 bg-white px-3 text-xs font-medium text-neutral-700 shadow-sm hover:bg-neutral-50 transition">
+            <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><path d="m16 6-4-4-4 4"/><path d="M12 2v13"/></svg>
+            分享
+          </button>
+          <div class="relative">
+            <button id="export-btn" class="inline-flex h-8 items-center gap-1.5 rounded-lg bg-brand-600 px-3 text-xs font-medium text-white shadow-sm hover:bg-brand-700 transition">
+              <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/><path d="M12 15V3"/></svg>
+              导出
+              <svg class="h-3 w-3 opacity-70" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+            </button>
+            <div id="export-menu" class="hidden absolute right-0 top-full z-30 mt-2 w-60 rounded-xl border border-neutral-200 bg-white p-1.5 shadow-xl">
+              <div class="px-2.5 pb-1.5 pt-2 text-[10px] font-semibold uppercase tracking-wider text-neutral-400">导出当前产物</div>
+              <button data-export="PNG 图片" class="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left text-sm hover:bg-neutral-100 transition">
+                <svg class="h-4 w-4 text-neutral-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
+                PNG 图片<span class="ml-auto text-[10px] text-neutral-400">2x</span>
+              </button>
+              <button data-export="PDF 提案" class="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left text-sm hover:bg-neutral-100 transition">
+                <svg class="h-4 w-4 text-neutral-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/></svg>
+                PDF 提案<span class="ml-auto text-[10px] text-neutral-400">A4</span>
+              </button>
+              <button data-export="HTML 代码" class="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left text-sm hover:bg-neutral-100 transition">
+                <svg class="h-4 w-4 text-neutral-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m16 18 6-6-6-6"/><path d="m8 6-6 6 6 6"/></svg>
+                HTML 代码<span class="ml-auto text-[10px] text-neutral-400">可部署</span>
+              </button>
+              <div class="my-1 h-px bg-neutral-100"></div>
+              <button data-export="PPTX 演示文稿" class="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left text-sm hover:bg-neutral-100 transition">
+                <svg class="h-4 w-4 text-neutral-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h20"/><path d="M21 3v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V3"/><path d="m9 21 3-3 3 3"/></svg>
+                PPTX 演示文稿
+              </button>
+              <button data-export="DOCX 文档" class="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left text-sm hover:bg-neutral-100 transition">
+                <svg class="h-4 w-4 text-neutral-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M8 13h8M8 17h5"/></svg>
+                DOCX 文档
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 画布 -->
+      <div id="canvas" data-oey-section="canvas" class="dot-grid scroll-thin flex-1 overflow-auto bg-neutral-100 p-8">
+
+        <!-- ========== 网页产物 ========== -->
+        <div id="artifact-web" class="mx-auto w-full max-w-4xl">
+          <div id="artifact-wrap" class="overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-xl">
+            <!-- 浏览器外壳 -->
+            <div class="flex h-10 items-center gap-3 border-b border-neutral-200 bg-neutral-50 px-4">
+              <div class="flex gap-1.5">
+                <span class="h-2.5 w-2.5 rounded-full bg-red-400"></span>
+                <span class="h-2.5 w-2.5 rounded-full bg-amber-400"></span>
+                <span class="h-2.5 w-2.5 rounded-full bg-emerald-400"></span>
+              </div>
+              <div class="flex h-6 flex-1 items-center gap-1.5 rounded-md bg-white px-2.5 text-[11px] text-neutral-500 ring-1 ring-neutral-200">
+                <svg class="h-3 w-3 text-emerald-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                shanyecoffee.com
+              </div>
+              <span class="rounded bg-emerald-100 px-1.5 py-0.5 text-[10px] font-medium text-emerald-700">实时预览</span>
+            </div>
+
+            <div data-oey-section="artifact-web-body">
+              <!-- 导航 -->
+              <div data-oey-object="nav" data-oey-label="顶部导航" class="flex items-center justify-between border-b border-neutral-100 bg-white px-8 py-4">
+                <div class="flex items-center gap-2">
+                  <div class="grid h-7 w-7 place-items-center rounded-lg bg-amber-900 text-xs font-bold text-amber-100">山</div>
+                  <span class="text-sm font-semibold tracking-wide">山野咖啡 <span class="ml-1 text-[10px] font-normal tracking-widest text-neutral-400">SHANYE</span></span>
+                </div>
+                <div class="flex items-center gap-6 text-xs text-neutral-500">
+                  <span class="cursor-pointer hover:text-neutral-900 transition">产地</span>
+                  <span class="cursor-pointer hover:text-neutral-900 transition">工艺</span>
+                  <span class="cursor-pointer hover:text-neutral-900 transition">价格</span>
+                  <span class="cursor-pointer rounded-lg bg-neutral-900 px-3 py-1.5 font-medium text-white">立即购买</span>
+                </div>
+              </div>
+
+              <!-- Hero -->
+              <div id="web-hero" data-oey-object="hero" data-oey-label="首屏 Hero"
+                   data-base="px-10 py-14 text-center"
+                   class="px-10 py-14 text-center">
+                <span id="hero-badge" data-base="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[11px] font-medium"
+                      class="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[11px] font-medium">
+                  精品冷萃 · 产地直采
+                </span>
+                <h1 id="hero-title" data-base="mt-4 text-4xl font-bold leading-tight tracking-tight" class="mt-4 text-4xl font-bold leading-tight tracking-tight"></h1>
+                <p id="hero-sub" data-base="mx-auto mt-3 max-w-md text-sm leading-relaxed" class="mx-auto mt-3 max-w-md text-sm leading-relaxed"></p>
+                <div class="mt-6 flex items-center justify-center gap-3">
+                  <button id="hero-cta" data-base="rounded-lg px-5 py-2.5 text-sm font-medium shadow-sm transition" class="rounded-lg px-5 py-2.5 text-sm font-medium shadow-sm transition">立即尝鲜</button>
+                  <button id="hero-ghost" data-base="rounded-lg px-5 py-2.5 text-sm font-medium transition" class="rounded-lg px-5 py-2.5 text-sm font-medium transition">了解工艺 →</button>
+                </div>
+                <div id="hero-stats" data-base="mx-auto mt-10 grid max-w-lg grid-cols-3 gap-4" class="mx-auto mt-10 grid max-w-lg grid-cols-3 gap-4">
+                  <div><div class="text-xl font-bold">72h</div><div class="mt-0.5 text-[11px] opacity-70">低温慢萃</div></div>
+                  <div><div class="text-xl font-bold">0</div><div class="mt-0.5 text-[11px] opacity-70">添加蔗糖</div></div>
+                  <div><div class="text-xl font-bold">4.9</div><div class="mt-0.5 text-[11px] opacity-70">用户评分</div></div>
+                </div>
+              </div>
+
+              <!-- 卖点区 -->
+              <div data-oey-object="features" data-oey-label="卖点区" class="border-t border-neutral-100 bg-white px-10 py-10">
+                <div class="mb-6 flex items-end justify-between">
+                  <div>
+                    <div class="text-[11px] font-semibold uppercase tracking-widest text-amber-700">WHY SHANYE</div>
+                    <h2 class="mt-1 text-lg font-bold">三个值得信任的理由</h2>
+                  </div>
+                  <span class="text-[11px] text-neutral-400">卖点区 · 已按 v3 前置</span>
+                </div>
+                <div class="grid grid-cols-3 gap-4">
+                  <div class="rounded-xl border border-neutral-200 bg-neutral-50 p-4">
+                    <div class="grid h-8 w-8 place-items-center rounded-lg bg-emerald-100 text-emerald-700">
+                      <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m8 3 4 8 5-5 5 15H2L8 3z"/></svg>
+                    </div>
+                    <div class="mt-3 text-sm font-semibold">产地直采</div>
+                    <p class="mt-1 text-xs leading-relaxed text-neutral-500">云南保山 1600m 高海拔庄园，当季鲜果 48 小时内完成处理。</p>
+                  </div>
+                  <div class="rounded-xl border border-amber-200 bg-amber-50 p-4 ring-1 ring-amber-100">
+                    <div class="grid h-8 w-8 place-items-center rounded-lg bg-amber-200 text-amber-800">
+                      <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+                    </div>
+                    <div class="mt-3 text-sm font-semibold">72 小时冷萃 <span class="ml-1 rounded bg-amber-600 px-1 py-0.5 text-[9px] font-medium text-white">核心</span></div>
+                    <p class="mt-1 text-xs leading-relaxed text-neutral-600">4°C 低温慢滴萃取，苦感降低 40%，回甘更长，花果香完整保留。</p>
+                  </div>
+                  <div class="rounded-xl border border-neutral-200 bg-neutral-50 p-4">
+                    <div class="grid h-8 w-8 place-items-center rounded-lg bg-sky-100 text-sky-700">
+                      <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22a7 7 0 0 0 7-7c0-2-1-3.9-3-5.5s-3.5-4-4-6.5c-.5 2.5-2 4.9-4 6.5C6 11.1 5 13 5 15a7 7 0 0 0 7 7z"/></svg>
+                    </div>
+                    <div class="mt-3 text-sm font-semibold">低因可选</div>
+                    <p class="mt-1 text-xs leading-relaxed text-neutral-500">瑞士水脱因工艺，保留风味，下午喝也不影响睡眠。</p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 价格锚点 -->
+              <div data-oey-object="pricing" data-oey-label="价格锚点" class="border-t border-neutral-100 bg-neutral-50 px-10 py-10">
+                <div class="flex items-stretch gap-5">
+                  <div class="relative flex-1 rounded-xl border border-neutral-200 bg-white p-5 shadow-sm">
+                    <span class="absolute -top-2.5 left-4 rounded-full bg-rose-500 px-2 py-0.5 text-[10px] font-semibold text-white shadow-sm">首单立减 ¥20</span>
+                    <div class="text-[11px] font-semibold uppercase tracking-widest text-neutral-400">冷萃尝鲜装</div>
+                    <div class="mt-2 flex items-baseline gap-1.5">
+                      <span class="text-3xl font-bold tracking-tight">¥89</span>
+                      <span class="text-xs text-neutral-400">/ 盒 · 10 条</span>
+                      <span class="ml-1 text-xs text-neutral-300 line-through">¥109</span>
+                    </div>
+                    <ul class="mt-3 space-y-1.5 text-xs text-neutral-500">
+                      <li class="flex items-center gap-1.5"><svg class="h-3 w-3 text-emerald-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>3 种产地风味各 3 条 + 隐藏款 1 条</li>
+                      <li class="flex items-center gap-1.5"><svg class="h-3 w-3 text-emerald-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>冷水 3 秒即溶，通勤友好</li>
+                      <li class="flex items-center gap-1.5"><svg class="h-3 w-3 text-emerald-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>不满意 30 天无理由退</li>
+                    </ul>
+                  </div>
+                  <div class="flex w-64 flex-col justify-between rounded-xl border border-neutral-200 bg-white p-5 shadow-sm">
+                    <p class="text-xs leading-relaxed text-neutral-600">"第一次喝到不酸的冷萃，开会是真的能续命。已经回购第三次。"</p>
+                    <div class="mt-3 flex items-center gap-2">
+                      <div class="grid h-7 w-7 place-items-center rounded-full bg-gradient-to-br from-sky-400 to-indigo-500 text-[10px] font-semibold text-white">陈</div>
+                      <div>
+                        <div class="text-xs font-medium">陈女士 · 产品经理</div>
+                        <div class="text-[10px] text-amber-500">★★★★★ <span class="text-neutral-400">已购 3 盒</span></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 页尾 CTA -->
+              <div data-oey-object="footer-cta" data-oey-label="页尾 CTA" class="bg-neutral-900 px-10 py-12 text-center">
+                <h2 class="text-2xl font-bold tracking-tight text-white">把清晨，还给自己</h2>
+                <p class="mt-2 text-sm text-neutral-400">新用户首单立减 ¥20 · 顺丰包邮 · 今晚 24:00 截止</p>
+                <button class="mt-5 rounded-lg bg-amber-500 px-6 py-2.5 text-sm font-semibold text-neutral-900 shadow-sm transition hover:bg-amber-400" onclick="event.stopPropagation();toast('已跳转下单（mock）')">立即尝鲜 ¥89</button>
+                <div class="mt-8 border-t border-white/10 pt-4 text-[10px] text-neutral-500">© 2024 山野咖啡 SHANYE COFFEE · 由 OEYdesign 生成</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ========== PPT 产物 ========== -->
+        <div id="artifact-ppt" class="mx-auto hidden w-full max-w-4xl">
+          <div class="overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-xl">
+            <div class="flex h-10 items-center justify-between border-b border-neutral-200 bg-neutral-50 px-4">
+              <span class="text-xs font-medium text-neutral-600">山野咖啡 · 品牌路演.pptx</span>
+              <span class="rounded bg-brand-100 px-1.5 py-0.5 text-[10px] font-medium text-brand-700">第 3 / 8 页</span>
+            </div>
+            <div class="aspect-video bg-gradient-to-br from-neutral-900 via-neutral-800 to-amber-950 p-12 flex flex-col" data-oey-section="artifact-ppt-body">
+              <div data-oey-object="slide-title" data-oey-label="幻灯片标题区">
+                <span class="rounded-full bg-white/10 px-3 py-1 text-[11px] font-medium text-amber-300 ring-1 ring-white/20">03 · 产品工艺</span>
+                <h1 class="mt-5 text-4xl font-bold tracking-tight text-white">从产地到杯中，<span class="text-amber-400">72 小时</span></h1>
+                <p class="mt-3 max-w-md text-sm text-neutral-300">低温慢萃如何改变一杯咖啡的风味曲线</p>
+              </div>
+              <div data-oey-object="slide-points" data-oey-label="幻灯片要点区" class="mt-auto grid grid-cols-3 gap-6">
+                <div class="rounded-xl bg-white/5 p-4 ring-1 ring-white/10">
+                  <div class="text-2xl font-bold text-amber-400">48h</div>
+                  <div class="mt-1 text-xs text-neutral-300">鲜果采摘到处理完成</div>
+                </div>
+                <div class="rounded-xl bg-white/5 p-4 ring-1 ring-white/10">
+                  <div class="text-2xl font-bold text-amber-400">4°C</div>
+                  <div class="mt-1 text-xs text-neutral-300">低温慢滴萃取环境</div>
+                </div>
+                <div class="rounded-xl bg-white/5 p-4 ring-1 ring-white/10">
+                  <div class="text-2xl font-bold text-amber-400">-40%</div>
+                  <div class="mt-1 text-xs text-neutral-300">苦感物质析出降低</div>
+                </div>
+              </div>
+              <div data-oey-object="slide-footer" data-oey-label="幻灯片页脚" class="mt-6 flex items-center justify-between border-t border-white/10 pt-3 text-[10px] text-neutral-400">
+                <span>山野咖啡 · 品牌路演</span><span>03 / 08</span>
+              </div>
+            </div>
+          </div>
+          <div class="mt-3 flex justify-center gap-1.5">
+            <span class="h-1.5 w-6 rounded-full bg-neutral-300"></span>
+            <span class="h-1.5 w-6 rounded-full bg-neutral-300"></span>
+            <span class="h-1.5 w-6 rounded-full bg-brand-500"></span>
+            <span class="h-1.5 w-6 rounded-full bg-neutral-300"></span>
+            <span class="h-1.5 w-6 rounded-full bg-neutral-300"></span>
+          </div>
+        </div>
+
+        <!-- ========== DOCX 产物 ========== -->
+        <div id="artifact-docx" class="mx-auto hidden w-full max-w-3xl">
+          <div class="overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-xl">
+            <div class="flex h-10 items-center justify-between border-b border-neutral-200 bg-neutral-50 px-4">
+              <span class="text-xs font-medium text-neutral-600">山野咖啡品牌方案.docx</span>
+              <span class="rounded bg-sky-100 px-1.5 py-0.5 text-[10px] font-medium text-sky-700">共 6 页</span>
+            </div>
+            <div class="px-14 py-12" data-oey-section="artifact-docx-body">
+              <div data-oey-object="doc-title" data-oey-label="文档标题区">
+                <h1 class="text-3xl font-bold tracking-tight">山野咖啡品牌方案</h1>
+                <p class="mt-2 text-xs text-neutral-400">版本 v3 · 由 OEYdesign 生成 · 最后编辑 10:32</p>
+                <div class="mt-4 h-px bg-neutral-200"></div>
+              </div>
+              <div data-oey-object="doc-body" data-oey-label="文档正文" class="mt-6 space-y-6 text-sm leading-relaxed text-neutral-700">
+                <div>
+                  <h2 class="mb-2 text-base font-bold text-neutral-900">1. 项目背景</h2>
+                  <p>山野咖啡定位精品冷萃赛道，目标用户为 25–35 岁一线城市白领。该人群注重成分与工艺透明度，对"功能性 + 情绪价值"双重要求高。落地页需在一屏半内建立信任，并给出明确价格锚点。</p>
+                </div>
+                <div>
+                  <h2 class="mb-2 text-base font-bold text-neutral-900">2. 视觉规范</h2>
+                  <p>主色采用深烘焙色系，辅以琥珀金作为行动色；字重克制，标题 700 / 正文 400；圆角统一 8–12px。</p>
+                  <div class="mt-3 flex gap-2">
+                    <span class="h-8 w-16 rounded-md bg-neutral-900 ring-1 ring-neutral-200"></span>
+                    <span class="h-8 w-16 rounded-md bg-amber-500 ring-1 ring-neutral-200"></span>
+                    <span class="h-8 w-16 rounded-md bg-amber-50 ring-1 ring-neutral-200"></span>
+                    <span class="h-8 w-16 rounded-md bg-emerald-700 ring-1 ring-neutral-200"></span>
+                    <span class="h-8 w-16 rounded-md bg-white ring-1 ring-neutral-200"></span>
+                  </div>
+                </div>
+                <div>
+                  <h2 class="mb-2 text-base font-bold text-neutral-900">3. 页面结构</h2>
+                  <ol class="list-decimal space-y-1 pl-5 text-neutral-600">
+                    <li>顶部导航：品牌 + 锚点 + 购买入口</li>
+                    <li>首屏 Hero：深色调大字标题 + 工艺数据条</li>
+                    <li>卖点区（v3 前置）：产地 / 冷萃工艺 / 低因</li>
+                    <li>价格锚点：¥89/盒 + 首单立减标签 + 用户证言</li>
+                    <li>页尾 CTA：紧迫感文案 + 下单按钮</li>
+                  </ol>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- 对象检查条 -->
+      <div data-oey-section="inspector" id="inspector" class="flex h-10 shrink-0 items-center gap-3 border-t border-neutral-200 bg-white px-4 text-xs">
+        <!-- JS 渲染 -->
+      </div>
+    </section>
+  </main>
+</div>
+
+<!-- Toast 容器 -->
+<div id="toast-root" class="pointer-events-none fixed bottom-5 right-5 z-50 flex flex-col items-end gap-2"></div>
+
+<script src="app.js"></script>
+</body>
+</html>

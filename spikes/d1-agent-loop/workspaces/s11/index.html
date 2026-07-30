@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LumaBrew — Smart Pour-Over Coffee Maker</title>
+  <style>
+    :root {
+      --bg: #faf6f0;
+      --ink: #2b2118;
+      --accent: #b0713a;
+      --card: #ffffff;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: Georgia, 'Times New Roman', serif;
+      background: var(--bg);
+      color: var(--ink);
+      line-height: 1.6;
+    }
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 2rem;
+      background: var(--card);
+      border-bottom: 1px solid #e6ddd0;
+    }
+    .logo { font-size: 1.4rem; font-weight: bold; color: var(--accent); }
+    nav ul { list-style: none; display: flex; gap: 1.5rem; }
+    nav a { color: var(--ink); text-decoration: none; }
+    nav a:hover { color: var(--accent); }
+    main {
+      max-width: 720px;
+      margin: 3rem auto;
+      padding: 0 1.5rem;
+    }
+    h1 { font-size: 2.2rem; margin-bottom: 0.5rem; }
+    h2 { margin: 2rem 0 0.5rem; color: var(--accent); }
+    p { margin-bottom: 1rem; }
+    .tagline { font-style: italic; color: #6d5b48; margin-bottom: 1.5rem; }
+    .cta {
+      display: inline-block;
+      margin-top: 1rem;
+      padding: 0.75rem 1.5rem;
+      background: var(--accent);
+      color: #fff;
+      text-decoration: none;
+      border-radius: 6px;
+    }
+    .cta:hover { background: #93591f; }
+    footer {
+      text-align: center;
+      padding: 1.5rem;
+      font-size: 0.85rem;
+      color: #8a7a66;
+      border-top: 1px solid #e6ddd0;
+      margin-top: 3rem;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo">LumaBrew</div>
+    <nav>
+      <ul>
+        <li><a href="#features">Features</a></li>
+        <li><a href="#how">How It Works</a></li>
+        <li><a href="#buy">Buy</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main>
+    <h1>LumaBrew One</h1>
+    <p class="tagline">Café-quality pour-over, without the 6 a.m. learning curve.</p>
+
+    <p>
+      LumaBrew One is a countertop pour-over coffee maker that heats water to the
+      exact temperature your beans need and pulses it over the grounds in a slow,
+      spiral pattern — the same motion a skilled barista makes by hand. The result
+      is a clean, sweet cup every single morning, whether you're half-awake or
+      hosting brunch.
+    </p>
+
+    <h2 id="features">Features</h2>
+    <p>
+      A precision thermostat holds temperature within half a degree between 195°F
+      and 205°F, while a built-in scale weighs your grounds and water in real time
+      to keep the brew ratio consistent. Three saved profiles let you switch between
+      a light Ethiopian roast and a dark Sumatran blend with one tap.
+    </p>
+
+    <h2 id="how">How It Works</h2>
+    <p>
+      Fill the reservoir, add a paper filter and your grounds, then press the single
+      dial on the front. LumaBrew blooms the coffee for 30 seconds, then completes
+      the pour in about three minutes. Cleanup is a rinse of the carafe and a toss
+      of the filter.
+    </p>
+
+    <h2 id="buy">Get Yours</h2>
+    <p>
+      LumaBrew One ships in matte charcoal or cream, includes a reusable mesh filter,
+      and comes with a two-year warranty. Pre-orders open this spring at $149.
+    </p>
+    <a class="cta" href="#buy">Reserve Yours Today</a>
+  </main>
+
+  <footer>
+    <p>&copy; 2025 LumaBrew Co. Brewed with care in Portland, Oregon.</p>
+  </footer>
+</body>
+</html>

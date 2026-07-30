@@ -1,0 +1,242 @@
+{
+  "cand_id": 3,
+  "axis_label": "色彩温度与基调 / color temperature & mood",
+  "screenshot": "spikes\\d2-aesthetic\\shots\\cand3_round2.png",
+  "repeats": 5,
+  "anchor_count": 3,
+  "runs": [
+    {
+      "run": 1,
+      "finding_count": 4,
+      "dimensions": [
+        "对比",
+        "意图契合",
+        "排版一致性",
+        "视觉层级"
+      ],
+      "target_refs": [
+        "projects.item.name",
+        "projects.item.status"
+      ],
+      "valid_target_ref_count": 2,
+      "parse_error": null,
+      "findings": [
+        {
+          "dimension": "视觉层级",
+          "target_ref": "projects.item.status",
+          "issue": "选中卡片里项目名称与状态「方向待确认」使用了同样的琥珀色高亮，两处焦点并列，状态作为辅助信息抢走了名称应有的第一层级；未选中卡片的状态又是低饱和灰，同一组件跨状态的色彩权重跳变较大。",
+          "suggestion": "可以考虑让名称保持最亮的暖色，状态戳降低饱和度或缩小字号半档，使「名称→状态→meta」形成稳定的三级衰减。"
+        },
+        {
+          "dimension": "对比",
+          "target_ref": "projects.item.status",
+          "issue": "未选中卡片的状态文字（如「质量复核中」「方向生成中」）为小号灰色，压在暖黑卡片底色上，明度对比偏弱，快速扫视时几乎隐没，而这类状态恰恰承载流程语义。",
+          "suggestion": "可以考虑在不引入冷色的前提下把灰调向暖白方向提亮一到两阶，或给状态文字加极浅的暖色底衬，让次要信息保持可读但仍退居名称之后。"
+        },
+        {
+          "dimension": "排版一致性",
+          "target_ref": "projects.item.name",
+          "issue": "「独立刊物《慢递》·创刊号网页」因过长折成两行，且折行后第二行与下方状态文字间距很紧，而其余项目均为一行，导致卡片高度与内部节奏不一致，列表出现随机的疏密跳变。",
+          "suggestion": "可以考虑统一处理长名称：要么固定两行高度的卡片骨架，要么用截断加省略号保持单行，让列表的行高与间距阶保持稳定。"
+        },
+        {
+          "dimension": "意图契合",
+          "target_ref": "projects.item.status",
+          "issue": "INTENT.md 自述状态戳要做成「微微倾斜的印章样式」以带出手工温度，但底片夹列表中的状态只是普通文本标签，没有任何印章化处理，暗房隐喻在这一处缺席，只有顶栏的「方向待确认」pill 隐约接近该意图。",
+          "suggestion": "可以考虑把列表状态也纳入印章体系——轻微倾斜、细描边或朱印式底色，让自述的「状态戳」从顶栏贯彻到项目列表，强化基调的一致性。"
+        }
+      ]
+    },
+    {
+      "run": 2,
+      "finding_count": 3,
+      "dimensions": [
+        "对比",
+        "意图契合",
+        "排版一致性"
+      ],
+      "target_refs": [
+        "projects.item.name",
+        "projects.item.status"
+      ],
+      "valid_target_ref_count": 2,
+      "parse_error": null,
+      "findings": [
+        {
+          "dimension": "排版一致性",
+          "target_ref": "projects.item.name",
+          "issue": "四个项目卡片中，「独立刊物《慢递》·创刊号」因名称过长折成两行且行距偏紧，其余三项为单行，导致卡片高度与内部节奏不一致，列表的间距阶在此处被打断。",
+          "suggestion": "可以考虑对项目名做统一的行数约束（如单行截断或固定两行 clamp），让卡片高度和行距节奏在列表内保持一致。"
+        },
+        {
+          "dimension": "对比",
+          "target_ref": "projects.item.status",
+          "issue": "「方向待确认」「质量复核中」「已批准·可交付」「方向生成中」四种状态在字号、粗细、明度上几乎一致，阻挡交付的关键状态（如已批准·可交付）与中间过程状态之间没有形成可一眼区分的色彩或字重对比。",
+          "suggestion": "可以考虑让可交付/待确认这类关键状态获得更强的色彩或字重对比（例如暗金与苔绿的明确区分），过程态则退到更弱的明度层级。"
+        },
+        {
+          "dimension": "意图契合",
+          "target_ref": "projects.item.status",
+          "issue": "意图自述中「状态戳做成微微倾斜的印章样式」「可交付用苔绿」，但项目列表内的状态是纯平铺小字，没有印章式处理，「已批准·可交付」也未呈现苔绿倾向，暗房隐喻与暖调功能色在列表层没有贯彻，仅停留在 topbar 一处。",
+          "suggestion": "可以考虑把印章式的微倾斜样式与苔绿/暗金的功能色同样应用到列表项状态上，让自述的差异轴在底片夹这一核心区域也能被感知。"
+        }
+      ]
+    },
+    {
+      "run": 3,
+      "finding_count": 5,
+      "dimensions": [
+        "对比",
+        "意图契合",
+        "排版一致性",
+        "留白节奏",
+        "视觉层级"
+      ],
+      "target_refs": [
+        "preview.empty",
+        "projects.item.name",
+        "projects.item.status"
+      ],
+      "valid_target_ref_count": 3,
+      "parse_error": null,
+      "findings": [
+        {
+          "dimension": "视觉层级",
+          "target_ref": "preview.empty",
+          "issue": "大面积高饱和琥珀色占位块是预览区最醒目的元素，视觉重量超过下方的主标题与行动按钮，容易让用户先注意到占位区域而非页面内容。",
+          "suggestion": "可以考虑降低占位块的亮度与饱和度，或同步增强主标题、按钮的字重与色彩层级，让内容焦点先于占位区域出现。"
+        },
+        {
+          "dimension": "留白节奏",
+          "target_ref": "projects.item.name",
+          "issue": "「独立刊物《慢递》·创刊号网页」换行为两行，而其他项目名称均为一行，使第三个项目卡片的高度与左侧列表节奏突然变化。",
+          "suggestion": "可以考虑为项目名称统一预留两行高度，或使用两行截断规则，让长标题造成的卡片高度变化更稳定。"
+        },
+        {
+          "dimension": "对比",
+          "target_ref": "projects.item.status",
+          "issue": "状态文字字号较小，其中「方向生成中」等低亮度状态与深色卡片背景的区分偏弱，扫读项目列表时不容易快速识别。",
+          "suggestion": "可以考虑适度提高状态文字亮度，或为状态增加低透明度的暖色底衬，在不引入冷色的前提下增强可读性。"
+        },
+        {
+          "dimension": "排版一致性",
+          "target_ref": "projects.item.name",
+          "issue": "长项目名称在「创刊号」与「网页」之间换行，媒介词被单独留在第二行，语义分组显得偶然，也与下方重复的「网页 · R7」元信息形成断裂。",
+          "suggestion": "可以考虑将项目名称与媒介类型拆成固定的信息层级，或调整换行规则，避免媒介词孤立换行。"
+        },
+        {
+          "dimension": "意图契合",
+          "target_ref": "preview.empty",
+          "issue": "占位块呈现为较平坦的大面积琥珀色填充，更接近普通警示色块，与自述中依靠细腻光源和径向微光建立「暗房安全灯」氛围的意图略有距离。",
+          "suggestion": "可以考虑加入由中心向外衰减的暖色渐变、柔和边缘或细微颗粒，让占位块更像暗房中的受光区域，而非纯色面。"
+        }
+      ]
+    },
+    {
+      "run": 4,
+      "finding_count": 4,
+      "dimensions": [
+        "对比",
+        "意图契合",
+        "排版一致性",
+        "视觉层级"
+      ],
+      "target_refs": [
+        "projects.item.name",
+        "projects.item.status"
+      ],
+      "valid_target_ref_count": 2,
+      "parse_error": null,
+      "findings": [
+        {
+          "dimension": "对比",
+          "target_ref": "projects.item.status",
+          "issue": "项目列表中的状态文字（如「质量复核中」「方向生成中」）字号很小且用的是低饱和的暗金/苔绿，与卡片暖黑底色的明度差偏小，扫读列表时状态信息几乎隐没在项目名之下，而状态恰恰是列表里区分各项目进度的关键信息。",
+          "suggestion": "可以考虑适当提高状态文字的字号或明度，或给状态加一层与意图中「印章」呼应的描边/底色块，让状态轨道与项目名形成更清晰的两级对比。"
+        },
+        {
+          "dimension": "排版一致性",
+          "target_ref": "projects.item.name",
+          "issue": "项目名长度不一导致换行行为不统一（如「独立刊物《慢递》·创刊号网页」折成两行），各行卡片高度与「项目名—状态」两行的间距节奏随之被打乱，右侧 R3/R5/R7/R8 编号虽对齐，但左列文本基线参差。",
+          "suggestion": "可以考虑对项目名做固定行数截断（如单行省略或统一两行高度），让列表卡片的高度与内部行距遵循同一间距阶。"
+        },
+        {
+          "dimension": "意图契合",
+          "target_ref": "projects.item.status",
+          "issue": "INTENT 自述状态戳采用「微微倾斜的印章样式」，截图中只有 topbar 的「方向待确认」呈现了印章式处理，而项目列表里的各项状态仍是普通小字文本，印章语言没有贯彻到状态信息密度最高的列表区，自述的记忆点在最能体现它的位置缺席。",
+          "suggestion": "可以考虑将印章式状态戳延伸到列表项状态上（哪怕是缩小版的倾斜描边章），或反向在自述中收敛承诺，避免意图与渲染之间出现落差。"
+        },
+        {
+          "dimension": "视觉层级",
+          "target_ref": "projects.item.name",
+          "issue": "选中项「霓虹茶室·品牌官网」的项目名用了琥珀强调色，但该颜色与顶部主标题、「候选 A」按钮、时间线事件点共用同一强调色，列表内选中态的识别依赖一个被全站广泛占用的颜色，选中项目这一当前上下文的锚点不够突出。",
+          "suggestion": "可以考虑为选中项增加色之外的定位手段，如左侧指示条、卡面描边加亮或底衬微光，让「当前项目」在琥珀色被多处复用的情况下仍能被一眼锁定。"
+        }
+      ]
+    },
+    {
+      "run": 5,
+      "finding_count": 4,
+      "dimensions": [
+        "对比",
+        "意图契合",
+        "排版一致性",
+        "视觉层级"
+      ],
+      "target_refs": [
+        "projects.item.name",
+        "projects.item.status"
+      ],
+      "valid_target_ref_count": 2,
+      "parse_error": null,
+      "findings": [
+        {
+          "dimension": "视觉层级",
+          "target_ref": "projects.item.name",
+          "issue": "底片夹列表中项目名是最重要的识别信息，但与卡片内的次要元信息（状态、网页·R3）在字号和粗细上拉不开差距；未选中项的名称亮度也与说明文字接近，选中态仅靠琥珀描边和文字变色区分，扫读列表时焦点不够先落到项目名上。",
+          "suggestion": "可以考虑加大项目名与元信息之间的字号/字重对比，或让未选中项的元信息进一步降亮度，使名称在列表扫读中始终是第一层级。"
+        },
+        {
+          "dimension": "对比",
+          "target_ref": "projects.item.status",
+          "issue": "列表中「方向待确认」「质量复核中」「已批准·可交付」「方向生成中」四种状态全部使用同一颜色、同一字号的普通小字，状态语义之间没有任何视觉区分，用户无法快速分辨哪些项目待决策、哪些已可交付。",
+          "suggestion": "可以考虑让不同状态借用已有的暖色功能色体系（如琥珀表待确认、苔绿表可交付）做小面积区分，或用文字外的微型标记承载状态差异，而不必改动文字本身。"
+        },
+        {
+          "dimension": "排版一致性",
+          "target_ref": "projects.item.name",
+          "issue": "「独立刊物《慢递》·创刊号网页」因名称过长折成两行，其余项目名均为单行，导致各项目卡片的高度和内部节奏不一致，列表的纵向间距阶被打乱。",
+          "suggestion": "可以考虑对项目名单行截断（省略号）或为卡片设定以两行为准的统一最小高度，让列表节奏不随名称长度波动。"
+        },
+        {
+          "dimension": "意图契合",
+          "target_ref": "projects.item.status",
+          "issue": "INTENT 自述状态戳要做成「微微倾斜的印章样式」，这一处理在顶栏的「方向待确认」上有体现，但底片夹列表内的状态文字仍是常规无样式小字，印章语言没有贯彻到状态出现频率最高的列表位置，与自述的手工温度意图存在落差。",
+          "suggestion": "可以考虑将印章式状态戳的样式（描边、微倾斜、衬线感）以轻量版本延伸到列表状态上，或明确说明列表状态有意保持朴素，避免同一语义在站内出现两套视觉语言。"
+        }
+      ]
+    }
+  ],
+  "dimension_union": [
+    "对比",
+    "意图契合",
+    "排版一致性",
+    "留白节奏",
+    "视觉层级"
+  ],
+  "dimension_union_count": 5,
+  "dimension_intersection": [
+    "对比",
+    "意图契合",
+    "排版一致性"
+  ],
+  "dimension_intersection_count": 3,
+  "dimension_mean_pairwise_jaccard": 0.825,
+  "target_ref_union_count": 3,
+  "target_ref_intersection": [
+    "projects.item.name",
+    "projects.item.status"
+  ],
+  "target_ref_intersection_count": 2,
+  "target_ref_mean_pairwise_jaccard": 0.8666666666666666
+}

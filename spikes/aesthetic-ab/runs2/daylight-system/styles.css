@@ -1,0 +1,177 @@
+/* ================= 工作台外壳（艺术方向 token） ================= */
+html, body { margin: 0; }
+body { -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
+button { font-family: inherit; background: none; border: none; padding: 0; cursor: pointer; }
+a { cursor: pointer; }
+
+.sh      { box-shadow: 0 1px 2px rgba(25,29,34,0.06); }
+.sh-lift { box-shadow: 0 1px 2px rgba(25,29,34,0.06), 0 16px 40px rgba(25,29,34,0.10); }
+
+/* 滚动条（中性灰） */
+#msgs::-webkit-scrollbar, #bench::-webkit-scrollbar { width: 10px; height: 10px; }
+#msgs::-webkit-scrollbar-thumb, #bench::-webkit-scrollbar-thumb {
+  background: #DFE3E7; border-radius: 5px; border: 2px solid transparent; background-clip: padding-box;
+}
+#msgs::-webkit-scrollbar-track, #bench::-webkit-scrollbar-track { background: transparent; }
+
+/* 版本 chip（mono；当前版本用 accent 标记） */
+.ver {
+  display: inline-flex; align-items: center; height: 22px; padding: 0 6px;
+  font-family: "IBM Plex Mono", "Noto Sans SC", monospace; font-size: 12px;
+  color: #4E5764; background: #FFFFFF; border: 1px solid #DFE3E7; border-radius: 4px;
+}
+.ver.cur { color: #0A5C43; border-color: #0A5C43; }
+
+/* 对象引用 chip（signature：对话内嵌 mono 对象锚点） */
+.obj-chip {
+  display: inline-flex; align-items: center; height: 22px; padding: 0 6px; margin: 0 2px;
+  font-family: "IBM Plex Mono", "Noto Sans SC", monospace; font-size: 12px;
+  color: #0A5C43; background: #FFFFFF; border: 1px solid #0A5C43; border-radius: 4px;
+  cursor: pointer; vertical-align: -5px; transition: background .12s ease, color .12s ease;
+}
+.obj-chip:hover, .obj-chip.pinned { background: #0A5C43; color: #FFFFFF; }
+
+/* agent 消息：2px 竖向引出线 → 版本 chip，构成时间脊线 */
+.msg-agent { display: flex; gap: 12px; }
+.msg-agent .lead { flex: none; width: 2px; margin: 4px 0 2px; background: #DFE3E7; border-radius: 1px; }
+
+/* 工具条按钮 */
+.tb-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  height: 32px; padding: 0 8px; border-radius: 4px; font-size: 14px; color: #4E5764;
+  transition: background .12s ease, color .12s ease;
+}
+.tb-btn:hover { background: #F4F5F6; color: #191D22; }
+.tb-btn.active { background: #F4F5F6; color: #191D22; }
+
+/* 版本列表行 */
+.ver-row {
+  display: flex; width: 100%; align-items: center; gap: 12px;
+  min-height: 40px; padding: 8px 12px;
+}
+.ver-row:hover { background: #F4F5F6; }
+
+/* 导出菜单项 */
+.exp-item {
+  display: flex; width: 100%; align-items: center; justify-content: space-between;
+  height: 36px; padding: 0 12px; font-size: 14px; color: #191D22;
+}
+.exp-item:hover { background: #F4F5F6; }
+
+/* 套准角标覆盖层：1.5px 角线，不填充、不遮罩产物本体 */
+.reg { position: absolute; display: none; pointer-events: none; z-index: 40; }
+.reg.on { display: block; }
+.reg .c { position: absolute; width: 12px; height: 12px; border-style: solid; border-color: #0A5C43; border-width: 0; }
+.reg .tl { top: 0; left: 0; border-top-width: 1.5px; border-left-width: 1.5px; }
+.reg .tr { top: 0; right: 0; border-top-width: 1.5px; border-right-width: 1.5px; }
+.reg .bl { bottom: 0; left: 0; border-bottom-width: 1.5px; border-left-width: 1.5px; }
+.reg .br { bottom: 0; right: 0; border-bottom-width: 1.5px; border-right-width: 1.5px; }
+.reg-label {
+  position: absolute; top: -26px; left: -8px; white-space: nowrap;
+  font-family: "IBM Plex Mono", monospace; font-size: 12px; line-height: 1;
+  background: #0A5C43; color: #FFFFFF; padding: 4px 6px; border-radius: 4px;
+}
+
+/* 画板内对象的可点提示（外壳交互层，中性发丝线，不污染产物） */
+.prod [data-oey-object] { cursor: pointer; }
+.prod [data-oey-object]:hover { outline: 1px dashed #DFE3E7; outline-offset: 3px; }
+
+/* 正在输入指示 */
+.typing { display: inline-flex; gap: 4px; align-items: center; height: 22px; }
+.typing i { width: 6px; height: 6px; border-radius: 3px; background: #DFE3E7; animation: blink 1s infinite; }
+.typing i:nth-child(2) { animation-delay: .2s; }
+.typing i:nth-child(3) { animation-delay: .4s; }
+@keyframes blink { 0%, 100% { opacity: .35; } 50% { opacity: 1; } }
+
+/* 全局提示条 */
+.toast {
+  position: fixed; right: 24px; bottom: 24px; z-index: 60;
+  background: #FFFFFF; border: 1px solid #DFE3E7; border-radius: 6px;
+  box-shadow: 0 1px 2px rgba(25,29,34,0.06), 0 8px 24px rgba(25,29,34,0.08);
+  padding: 0 16px; height: 40px; display: flex; align-items: center;
+  font-size: 14px; color: #191D22;
+  opacity: 0; transform: translateY(8px); pointer-events: none; transition: opacity .2s ease, transform .2s ease;
+}
+.toast.show { opacity: 1; transform: none; }
+
+/* ============================================================
+   内层产物：琥珀烘焙落地页
+   独立视觉语言（暖橙 + 深墨 + 米白纸感），与外壳零共享色值
+   ============================================================ */
+.prod {
+  --pbg: #FAF0E1; --pcard: #FFFBF2; --pink: #241A0E; --pmut: #7D6B54;
+  --por: #E4571E; --pord: #B23E0C; --pline: #EBDAC0;
+  width: 920px; background: var(--pbg); color: var(--pink);
+  font-family: "Helvetica Neue", Arial, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  border-radius: 6px; overflow: hidden;
+  container-type: inline-size; transition: width .25s ease;
+}
+.prod .p-serif { font-family: Georgia, "Times New Roman", "Songti SC", "SimSun", serif; }
+.prod .p-brand-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--por); flex: none; }
+
+/* 导航 */
+.p-nav { display: flex; align-items: center; gap: 28px; flex-wrap: wrap; padding: 18px 40px; background: var(--pcard); border-bottom: 1px solid var(--pline); }
+.p-brand { display: flex; align-items: center; gap: 10px; font-size: 17px; font-weight: 700; }
+.p-brand-en { font-family: "Courier New", ui-monospace, monospace; font-size: 12px; letter-spacing: .14em; color: var(--pmut); font-weight: 400; }
+.p-nav-links { display: flex; gap: 22px; margin-left: auto; }
+.p-nav-links a { font-size: 14px; padding: 8px 2px; border-bottom: 2px solid transparent; transition: border-color .12s ease; }
+.p-nav-links a:hover { border-bottom-color: var(--por); }
+.p-nav-cta { font-size: 14px; font-weight: 600; border: 1px solid var(--pink); border-radius: 999px; padding: 8px 16px; }
+
+/* 首屏 */
+.p-hero { display: grid; grid-template-columns: 1.15fr .85fr; gap: 40px; align-items: center; padding: 48px 40px 32px; }
+.p-eyebrow { font-size: 12px; font-weight: 600; letter-spacing: .18em; color: var(--pord); margin: 0 0 14px; }
+.p-title { font-size: 26px; line-height: 1.35; font-weight: 700; margin: 0; letter-spacing: .01em; }
+.p-sub { font-size: 15px; line-height: 1.7; color: var(--pmut); margin: 12px 0 0; max-width: 52ch; }
+.p-cta-row { display: flex; gap: 12px; margin-top: 20px; flex-wrap: wrap; }
+.p-btn { display: inline-flex; align-items: center; height: 40px; padding: 0 20px; border-radius: 999px; font-size: 14px; font-weight: 600; }
+.p-btn-primary { background: var(--por); color: #FFFFFF; }
+.p-btn-ghost { border: 1px solid var(--pink); color: var(--pink); }
+
+/* 豆卡（纯 CSS 造的视觉物） */
+.p-pack { background: var(--pcard); border: 1px solid var(--pline); border-radius: 14px; padding: 24px; position: relative; }
+.p-tag { position: absolute; top: 16px; right: 16px; font-family: "Courier New", ui-monospace, monospace; font-size: 12px; letter-spacing: .1em; background: var(--pink); color: var(--pcard); padding: 4px 10px; border-radius: 999px; }
+.p-band { height: 8px; border-radius: 4px; background: var(--por); margin-bottom: 20px; }
+.p-pack h3 { font-size: 20px; margin: 0 0 16px; }
+.p-spec { display: flex; justify-content: space-between; gap: 16px; padding: 8px 0; border-top: 1px solid var(--pline); font-family: "Courier New", ui-monospace, monospace; font-size: 12px; letter-spacing: .04em; }
+.p-spec span:first-child { color: var(--pmut); }
+
+/* 数据条 */
+.p-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; padding: 0 40px 36px; }
+.p-stat { border-top: 2px solid var(--pink); padding-top: 12px; display: flex; flex-direction: column; gap: 4px; }
+.p-num { font-size: 20px; font-weight: 700; }
+.p-lab { font-size: 14px; color: var(--pmut); }
+
+/* 订阅 */
+.p-pricing { padding: 8px 40px 48px; }
+.p-h2 { font-size: 20px; margin: 0; }
+.p-h2-sub { font-size: 14px; color: var(--pmut); margin: 8px 0 0; }
+.p-plans { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 24px; }
+.p-plan { position: relative; background: var(--pcard); border: 1px solid var(--pline); border-radius: 12px; padding: 20px; display: flex; flex-direction: column; }
+.p-plan.hot { border: 2px solid var(--por); padding: 19px; }
+.p-badge { position: absolute; top: -11px; right: 16px; background: var(--por); color: #FFFFFF; font-size: 12px; letter-spacing: .12em; padding: 4px 10px; border-radius: 999px; }
+.p-plan-name { font-size: 15px; font-weight: 600; margin: 0; }
+.p-price { margin: 10px 0 0; }
+.p-price .p-num { font-size: 26px; }
+.p-unit { font-size: 14px; color: var(--pmut); }
+.p-feats { list-style: none; margin: 16px 0 20px; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.p-feats li { display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--pmut); }
+.p-feats li::before { content: ""; width: 6px; height: 6px; border-radius: 2px; background: var(--por); flex: none; }
+.p-plan-btn { margin-top: auto; height: 36px; display: flex; align-items: center; justify-content: center; border: 1px solid var(--pink); border-radius: 8px; font-size: 14px; font-weight: 600; color: var(--pink); }
+.p-plan.hot .p-plan-btn { background: var(--por); border-color: var(--por); color: #FFFFFF; }
+
+/* 页脚 */
+.p-foot { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; padding: 20px 40px 24px; background: var(--pcard); border-top: 1px solid var(--pline); }
+.p-foot-brand { display: flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 700; }
+.p-legal { font-size: 14px; color: var(--pmut); margin: 0; }
+
+/* 画板宽度响应（容器查询，跟随画板而非窗口） */
+@container (max-width: 740px) {
+  .p-hero { grid-template-columns: 1fr; padding: 32px 24px; gap: 24px; }
+  .p-stats { grid-template-columns: 1fr; padding: 0 24px 28px; }
+  .p-pricing { padding: 8px 24px 40px; }
+  .p-plans { grid-template-columns: 1fr; }
+  .p-nav { padding: 14px 24px; gap: 16px; }
+  .p-nav-links { margin-left: 0; gap: 16px; flex-wrap: wrap; }
+  .p-foot { padding: 18px 24px; flex-direction: column; align-items: flex-start; }
+}

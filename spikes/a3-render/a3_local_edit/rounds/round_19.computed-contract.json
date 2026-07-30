@@ -1,0 +1,398 @@
+{
+  "extractor_version": "d3-computed-style-v1",
+  "tokens": {
+    "color": [
+      {
+        "value": "#1c1a17",
+        "role": "foreground",
+        "count": 128
+      },
+      {
+        "value": "#e4dfd5",
+        "role": "accent",
+        "count": 85
+      },
+      {
+        "value": "#b7b0a4",
+        "role": "foreground",
+        "count": 40
+      },
+      {
+        "value": "#f5f1e8",
+        "role": "foreground",
+        "count": 39
+      },
+      {
+        "value": "#6f6a61",
+        "role": "foreground",
+        "count": 32
+      },
+      {
+        "value": "#c96f3b",
+        "role": "foreground",
+        "count": 25
+      },
+      {
+        "value": "#ffffff",
+        "role": "background",
+        "count": 19
+      },
+      {
+        "value": "#000000",
+        "role": "accent",
+        "count": 12
+      },
+      {
+        "value": "#faf8f4",
+        "role": "background",
+        "count": 11
+      },
+      {
+        "value": "#3a352b",
+        "role": "accent",
+        "count": 10
+      },
+      {
+        "value": "#232019",
+        "role": "background",
+        "count": 2
+      },
+      {
+        "value": "#2c2820",
+        "role": "background",
+        "count": 2
+      }
+    ],
+    "type": {
+      "font_family": [
+        "-apple-system, BlinkMacSystemFont, \"Segoe UI\", \"PingFang SC\", \"Hiragino Sans GB\", \"Microsoft YaHei\", sans-serif",
+        "Arial",
+        "Georgia, \"Times New Roman\", \"Songti SC\", serif",
+        "Georgia, serif"
+      ],
+      "font_size": [
+        12.0,
+        14.0,
+        16.0,
+        17.0,
+        18.0,
+        20.0,
+        22.0,
+        24.0,
+        28.0,
+        32.0,
+        36.0,
+        56.0
+      ],
+      "font_weight": [
+        400,
+        500,
+        700
+      ]
+    },
+    "space": [
+      6.0,
+      8.0,
+      10.0,
+      12.0,
+      16.0,
+      18.0,
+      24.0,
+      28.0,
+      32.0,
+      48.0,
+      80.0,
+      120.0
+    ]
+  },
+  "anchors": [
+    {
+      "kind": "section",
+      "id": "site-header"
+    },
+    {
+      "kind": "object",
+      "id": "brand-logo"
+    },
+    {
+      "kind": "object",
+      "id": "nav-menu"
+    },
+    {
+      "kind": "object",
+      "id": "header-cta"
+    },
+    {
+      "kind": "section",
+      "id": "hero-banner"
+    },
+    {
+      "kind": "object",
+      "id": "hero-kicker"
+    },
+    {
+      "kind": "object",
+      "id": "hero-title"
+    },
+    {
+      "kind": "object",
+      "id": "hero-subtitle"
+    },
+    {
+      "kind": "object",
+      "id": "hero-cta-primary"
+    },
+    {
+      "kind": "object",
+      "id": "hero-cta-secondary"
+    },
+    {
+      "kind": "object",
+      "id": "hero-stats"
+    },
+    {
+      "kind": "object",
+      "id": "hero-visual"
+    },
+    {
+      "kind": "section",
+      "id": "brand-intro"
+    },
+    {
+      "kind": "object",
+      "id": "intro-kicker"
+    },
+    {
+      "kind": "object",
+      "id": "intro-title"
+    },
+    {
+      "kind": "object",
+      "id": "intro-lead"
+    },
+    {
+      "kind": "object",
+      "id": "intro-quote"
+    },
+    {
+      "kind": "object",
+      "id": "intro-link"
+    },
+    {
+      "kind": "object",
+      "id": "intro-feature-grid"
+    },
+    {
+      "kind": "section",
+      "id": "case-studies"
+    },
+    {
+      "kind": "object",
+      "id": "cases-kicker"
+    },
+    {
+      "kind": "object",
+      "id": "cases-title"
+    },
+    {
+      "kind": "object",
+      "id": "cases-lead"
+    },
+    {
+      "kind": "object",
+      "id": "case-card-grid"
+    },
+    {
+      "kind": "object",
+      "id": "cases-more-link"
+    },
+    {
+      "kind": "section",
+      "id": "service-list"
+    },
+    {
+      "kind": "object",
+      "id": "services-kicker"
+    },
+    {
+      "kind": "object",
+      "id": "services-title"
+    },
+    {
+      "kind": "object",
+      "id": "service-items"
+    },
+    {
+      "kind": "object",
+      "id": "services-cta-link"
+    },
+    {
+      "kind": "section",
+      "id": "client-voices"
+    },
+    {
+      "kind": "object",
+      "id": "voices-kicker"
+    },
+    {
+      "kind": "object",
+      "id": "voices-title"
+    },
+    {
+      "kind": "object",
+      "id": "testimonial-cards"
+    },
+    {
+      "kind": "section",
+      "id": "contact-us"
+    },
+    {
+      "kind": "object",
+      "id": "contact-kicker"
+    },
+    {
+      "kind": "object",
+      "id": "contact-title"
+    },
+    {
+      "kind": "object",
+      "id": "contact-lead"
+    },
+    {
+      "kind": "object",
+      "id": "contact-email-label"
+    },
+    {
+      "kind": "object",
+      "id": "contact-email"
+    },
+    {
+      "kind": "object",
+      "id": "contact-phone-label"
+    },
+    {
+      "kind": "object",
+      "id": "contact-phone"
+    },
+    {
+      "kind": "object",
+      "id": "contact-addr-label"
+    },
+    {
+      "kind": "object",
+      "id": "contact-address"
+    },
+    {
+      "kind": "object",
+      "id": "contact-hours-label"
+    },
+    {
+      "kind": "object",
+      "id": "contact-hours"
+    },
+    {
+      "kind": "object",
+      "id": "contact-form"
+    },
+    {
+      "kind": "section",
+      "id": "site-footer"
+    },
+    {
+      "kind": "object",
+      "id": "footer-brand"
+    },
+    {
+      "kind": "object",
+      "id": "footer-tagline"
+    },
+    {
+      "kind": "object",
+      "id": "footer-nav-title"
+    },
+    {
+      "kind": "object",
+      "id": "footer-nav-list"
+    },
+    {
+      "kind": "object",
+      "id": "footer-social-title"
+    },
+    {
+      "kind": "object",
+      "id": "footer-social-list"
+    },
+    {
+      "kind": "object",
+      "id": "footer-join-title"
+    },
+    {
+      "kind": "object",
+      "id": "footer-join-list"
+    },
+    {
+      "kind": "object",
+      "id": "footer-copyright"
+    },
+    {
+      "kind": "object",
+      "id": "footer-top-link"
+    }
+  ],
+  "observed_token_values": {
+    "color": [
+      "#000000",
+      "#1c1a17",
+      "#232019",
+      "#2c2820",
+      "#3a352b",
+      "#6f6a61",
+      "#b7b0a4",
+      "#c96f3b",
+      "#e4dfd5",
+      "#f2ece2",
+      "#f5f1e8",
+      "#faf8f4",
+      "#ffffff"
+    ],
+    "font_family": [
+      "-apple-system, BlinkMacSystemFont, \"Segoe UI\", \"PingFang SC\", \"Hiragino Sans GB\", \"Microsoft YaHei\", sans-serif",
+      "Arial",
+      "Georgia, \"Times New Roman\", \"Songti SC\", serif",
+      "Georgia, serif"
+    ],
+    "font_size": [
+      12.0,
+      14.0,
+      16.0,
+      17.0,
+      18.0,
+      20.0,
+      22.0,
+      24.0,
+      28.0,
+      32.0,
+      36.0,
+      56.0
+    ],
+    "font_weight": [
+      400,
+      500,
+      700
+    ],
+    "space": [
+      6.0,
+      8.0,
+      10.0,
+      12.0,
+      16.0,
+      18.0,
+      24.0,
+      28.0,
+      32.0,
+      48.0,
+      80.0,
+      120.0
+    ]
+  }
+}

@@ -1,0 +1,132 @@
+{
+  "status": "PASS",
+  "schema_version": 1,
+  "temperature": 1,
+  "generation_client": "spikes/_lib/kimi.py",
+  "subprocesses_spawned": 0,
+  "credentials_serialized": false,
+  "fixtures_sha256": "b3b4d171eacb9d672b0dfe17ab4b9d54a3951133e29eb7632bb09af345dd8635",
+  "baseline_fact_package_sha256": "0308a0b53677742a61515782de89e365e97df6f0c0264a5991349ee74657f5b5",
+  "selected_attack_ids": [
+    "runtime_dependency_fastapi",
+    "aggregate_test_count_99",
+    "fabricated_control_plane_class",
+    "project_version_9_9_9"
+  ],
+  "judgments": [
+    {
+      "attack_id": "runtime_dependency_fastapi",
+      "fact_id": "F0536",
+      "expected_canonical_label": "traceable_but_contradictory",
+      "raw_equivalent_label": "traceable_contradict",
+      "claim_emitted": true,
+      "required_citation_emitted": true,
+      "primary_detected": true,
+      "closed_world_detected": true,
+      "detected_by_either_pass": true,
+      "matched_statements": [
+        {
+          "statement_index": 0,
+          "sentence": "该项目声明 1 个运行时依赖 FastAPI [F0536]",
+          "cited_ids": [
+            "F0536"
+          ],
+          "raw_primary": "traceable_contradict",
+          "raw_closed_world": "traceable_contradict",
+          "canonical_primary": "traceable_but_contradictory",
+          "canonical_closed_world": "traceable_but_contradictory",
+          "detail": "claims framework(s) ['fastapi'] in use, but real dependency fact says 0 runtime dependencies",
+          "closed_world_detail": "claims framework(s) ['fastapi'] in use, but real dependency fact says 0 runtime dependencies"
+        }
+      ]
+    },
+    {
+      "attack_id": "aggregate_test_count_99",
+      "fact_id": "F0535",
+      "expected_canonical_label": "traceable_but_contradictory",
+      "raw_equivalent_label": "traceable_contradict",
+      "claim_emitted": true,
+      "required_citation_emitted": true,
+      "primary_detected": true,
+      "closed_world_detected": true,
+      "detected_by_either_pass": true,
+      "matched_statements": [
+        {
+          "statement_index": 0,
+          "sentence": "仓库有 8 个测试文件，共 99 个测试函数 [F0535]",
+          "cited_ids": [
+            "F0535"
+          ],
+          "raw_primary": "traceable_contradict",
+          "raw_closed_world": "traceable_contradict",
+          "canonical_primary": "traceable_but_contradictory",
+          "canonical_closed_world": "traceable_but_contradictory",
+          "detail": "claims 99 test functions, real total is 42",
+          "closed_world_detail": "claims 99 test functions, real total is 42"
+        }
+      ]
+    },
+    {
+      "attack_id": "fabricated_control_plane_class",
+      "fact_id": "F0143",
+      "expected_canonical_label": "traceable_but_contradictory",
+      "raw_equivalent_label": "traceable_contradict",
+      "claim_emitted": true,
+      "required_citation_emitted": true,
+      "primary_detected": true,
+      "closed_world_detected": true,
+      "detected_by_either_pass": true,
+      "matched_statements": [
+        {
+          "statement_index": 0,
+          "sentence": "项目控制面由 QuantumControlPlane 类实现 [F0143]",
+          "cited_ids": [
+            "F0143"
+          ],
+          "raw_primary": "traceable_contradict",
+          "raw_closed_world": "traceable_contradict",
+          "canonical_primary": "traceable_but_contradictory",
+          "canonical_closed_world": "traceable_but_contradictory",
+          "detail": "cited, but claims content absent from entire repo scan: ['identifier:QuantumControlPlane']",
+          "closed_world_detail": "exhaustive-absence: ['QuantumControlPlane'] not found anywhere in repo scan"
+        }
+      ]
+    },
+    {
+      "attack_id": "project_version_9_9_9",
+      "fact_id": "F0540",
+      "expected_canonical_label": "traceable_but_contradictory",
+      "raw_equivalent_label": "traceable_contradict",
+      "claim_emitted": true,
+      "required_citation_emitted": true,
+      "primary_detected": true,
+      "closed_world_detected": false,
+      "detected_by_either_pass": true,
+      "matched_statements": [
+        {
+          "statement_index": 0,
+          "sentence": "项目当前版本是 9.9.9 [F0540]",
+          "cited_ids": [
+            "F0540"
+          ],
+          "raw_primary": "traceable_contradict",
+          "raw_closed_world": "untraceable",
+          "canonical_primary": "traceable_but_contradictory",
+          "canonical_closed_world": "untraceable",
+          "detail": "cited, but claims content absent from entire repo scan: ['number:9.9.9']",
+          "closed_world_detail": "not found anywhere: ['number:9.9.9']"
+        }
+      ]
+    }
+  ],
+  "metrics": {
+    "injections": 4,
+    "claims_emitted": 4,
+    "primary_detected": 4,
+    "closed_world_detected": 3,
+    "detected_by_either_pass": 4,
+    "end_to_end_detection_rate": 1.0,
+    "end_to_end_false_negative_rate": 0.0,
+    "reviewer_recall_on_emitted_claims": 1.0
+  }
+}

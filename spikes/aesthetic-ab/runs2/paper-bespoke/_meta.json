@@ -1,0 +1,101 @@
+{
+  "run": "paper-bespoke",
+  "mood": "paper",
+  "route": "bespoke",
+  "direction": {
+    "direction_name": "红笔校样台（Red-Pen Proofing Table）",
+    "rationale": "OEYdesign 的本质是「人与 agent 反复改稿」，这和编辑桌上纸稿被红笔层层批注的工作流完全同构。用暖纸底 + 衬线标题 + 红笔批注语言，让「迭代」成为界面的一等视觉对象，而不是藏在聊天记录里。秩序全部靠基线、字重和留白建立，不用卡片和边框，让外壳退后、产物突出——这同时解决了内外层必须严格分离的硬性要求：纸桌是纸桌，稿子归稿子。",
+    "palette": {
+      "bg": "#F3EDE0",
+      "surface": "#FBF7EE",
+      "ink": "#231D13",
+      "ink_muted": "#6B604F",
+      "line": "#DDD2BE",
+      "accent": "#B93A22",
+      "accent_role": "accent 是「红笔」：只用于三处——①预览区产物上的对象级批注标记（数字圆点与圈线），②对话中 agent 确认改动的关键动词行首标记，③当前版本号与主导出按钮。其余位置一律禁色。红=「人的判断介入过的痕迹」，这是它唯一的语义，不摊薄到链接、图标、装饰上。",
+      "contrast_check": "ink #231D13 对 bg #F3EDE0 约 14.5:1（≥7:1 达标）；ink_muted #6B604F 对 surface #FBF7EE 约 5.4:1（≥4.5:1 达标）；accent #B93A22 对 surface 约 5.8:1，可用于 ≥14px 加粗文字与图形标记。"
+    },
+    "type": {
+      "display_family": "Fraunces",
+      "body_family": "IBM Plex Sans",
+      "cjk_family": "Noto Serif SC",
+      "mono_family": "IBM Plex Mono",
+      "pairing_rationale": "标题用 Fraunces + Noto Serif SC：Fraunces 的光学尺寸感和宋体的衬线在中文标题上能接得住，构成「编辑部」气质；正文与对话用 IBM Plex Sans 承中文回退到无衬线保证 ≥14px 连续阅读的清晰度，衬线只留在标题与产物名，不让长对话变累；IBM Plex Mono 只出现在版本号 v3.2、时间戳 14:02、对象 ID 这类纯数值/编码位置，绝不进正文。",
+      "scale_px": [
+        12,
+        14,
+        15,
+        17,
+        21,
+        27,
+        36
+      ]
+    },
+    "space_scale_px": [
+      4,
+      8,
+      12,
+      16,
+      24,
+      40,
+      64
+    ],
+    "layout_archetype": "校样桌两栏：左栏 340px 定宽对话栏（margin notes 心智），右栏弹性占满，预览产物以一张「稿纸」悬浮于纸桌之上，稿纸四周留出 40-64px 的桌边作为红笔批注的落点区。全外壳无卡片无边框，分区只靠 1px 发丝线（#DDD2BE）+ 字重层级 + 基线网格；顶栏高度 48px，版本、状态、导出以一排基线对齐的文字级控件呈现，不做按钮墙。",
+    "signature_move": {
+      "what": "「红笔批注层」：预览稿纸的边缘和对象上钉着带序号的红色标记（①-⑥，对应对话栏里每一轮修改），圈线手绘感地圈住被改过的对象（如主标题）；点击或悬停某个红色序号，对话栏自动滚动到对应那一轮对话并高亮，反向也成立——点对话里某轮，预览上对应的红圈闪烁。",
+      "serves": "它让「第几轮反馈改了产物上的哪个对象」这条信息从线性聊天记录里被提取成空间索引——用户一眼看到产物上有 6 处被改过、各自源自哪句话，而不是翻 6 屏对话去对。",
+      "why_not_decoration": "每个红圈都是一个 data-oey-object 锚点的可视化，承载双向导航功能；删掉它，用户就失去了「反馈→对象」的映射，只能靠记忆对稿。它是这个产品的核心功能（对象级反馈）的界面形态，不是皮肤。"
+    },
+    "anti_patterns": [
+      "禁止在外壳使用卡片、圆角盒子、投影分区——任何切块必须靠留白与发丝线完成，卡片感会破坏纸桌的整版感",
+      "禁止蓝紫渐变、毛玻璃、霓虹强调色——红笔 #B93A22 是唯一强调色，出现第二种强调色即视为失控",
+      "禁止外壳的纸色、衬线、红色蔓延进内层产物——预览稿纸内的产物用产物自己的视觉语言（示例产物为独立品牌风格），外壳与产物之间以稿纸白边物理隔开",
+      "禁止等宽字体出现在正文与对话，禁止全大写句子——mono 只许出现在版本号/时间戳/对象 ID，大写只许 ≤2 词标签并加字距"
+    ]
+  },
+  "fonts_requested": [
+    "Fraunces",
+    "IBM Plex Sans",
+    "Noto Serif SC",
+    "IBM Plex Mono"
+  ],
+  "fonts_installed": [
+    "Fraunces",
+    "IBM Plex Sans",
+    "Noto Serif SC",
+    "IBM Plex Mono"
+  ],
+  "files": [
+    "index.html",
+    "styles.css"
+  ],
+  "stages": [
+    {
+      "stage": "direction",
+      "usage": {
+        "prompt_tokens": 1528,
+        "completion_tokens": 1868,
+        "total_tokens": 3396,
+        "completion_tokens_details": {
+          "reasoning_tokens": 706
+        }
+      },
+      "elapsed_s": 77.54659605026245
+    },
+    {
+      "stage": "implement",
+      "usage": {
+        "prompt_tokens": 2228,
+        "completion_tokens": 21557,
+        "total_tokens": 23785,
+        "completion_tokens_details": {
+          "reasoning_tokens": 12672
+        },
+        "_finish_reason": "stop"
+      },
+      "elapsed_s": 722.0746824741364
+    }
+  ],
+  "truncated": false,
+  "total_elapsed_s": 722.2
+}

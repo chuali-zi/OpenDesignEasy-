@@ -1,0 +1,104 @@
+{
+  "run_id": "ip6_r3",
+  "interrupt_step_target": 6,
+  "finished_before_interrupt": false,
+  "precrash": {
+    "termination_reason": "simulated_crash",
+    "budget": {
+      "steps": 6,
+      "prompt_tokens": 8183,
+      "completion_tokens": 1077,
+      "reasoning_tokens": 48,
+      "total_tokens": 9260,
+      "api_elapsed_s": 41.873,
+      "wall_clock_s": 41.896
+    },
+    "written_paths": [
+      "index.html",
+      "script.js",
+      "styles.css"
+    ]
+  },
+  "path_a_resume": {
+    "termination_reason": "self_terminated",
+    "total_budget": {
+      "steps": 9,
+      "prompt_tokens": 16337,
+      "completion_tokens": 1429,
+      "reasoning_tokens": 51,
+      "total_tokens": 17766,
+      "api_elapsed_s": 62.182,
+      "wall_clock_s": 62.224
+    },
+    "post_resume_tool_calls": 2,
+    "duplicate_writes": [],
+    "duplicate_reads": [],
+    "validate": {
+      "ok": true,
+      "files": {
+        "index.html": {
+          "exists": true,
+          "structurally_ok": true,
+          "bytes": 730
+        },
+        "styles.css": {
+          "exists": true,
+          "structurally_ok": true,
+          "bytes": 567
+        },
+        "script.js": {
+          "exists": true,
+          "structurally_ok": true,
+          "bytes": 734
+        }
+      }
+    },
+    "final_message_preview": "All three files are created and self-checked. Here's a summary of what I built:\n\n**PebbleDock \u2014 a tiny 3-file static website**\n\n- **index.html** \u2014 A valid HTML5 page for a fictional product called PebbleDock, a palm-sized wireless charger shaped like a smooth river stone. It includes a title, an `<h"
+  },
+  "path_b_rerun": {
+    "termination_reason": "self_terminated",
+    "fresh_only_budget": {
+      "steps": 9,
+      "prompt_tokens": 16328,
+      "completion_tokens": 1334,
+      "reasoning_tokens": 87,
+      "total_tokens": 17662,
+      "api_elapsed_s": 54.062,
+      "wall_clock_s": 54.11
+    },
+    "total_budget": {
+      "steps": 15,
+      "prompt_tokens": 24511,
+      "completion_tokens": 2411,
+      "reasoning_tokens": 135,
+      "total_tokens": 26922,
+      "api_elapsed_s": 95.935,
+      "wall_clock_s": 96.006
+    },
+    "validate": {
+      "ok": true,
+      "files": {
+        "index.html": {
+          "exists": true,
+          "structurally_ok": true,
+          "bytes": 860
+        },
+        "styles.css": {
+          "exists": true,
+          "structurally_ok": true,
+          "bytes": 578
+        },
+        "script.js": {
+          "exists": true,
+          "structurally_ok": true,
+          "bytes": 428
+        }
+      }
+    }
+  },
+  "savings_pct_resume_vs_rerun": {
+    "steps": 40.0,
+    "total_tokens": 34.0,
+    "wall_clock_s": 35.2
+  }
+}

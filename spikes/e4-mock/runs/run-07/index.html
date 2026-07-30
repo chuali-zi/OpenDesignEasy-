@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nexus 工作台 · Agent 构建台</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<header class="topbar" data-oey-section="topbar">
+  <div class="topbar-left">
+    <div class="logo-mark">N</div>
+    <span class="logo-text" data-oey-object="topbar.productName">Nexus 工作台</span>
+  </div>
+  <div class="topbar-right">
+    <span class="mode-badge" data-oey-object="topbar.modeBadge" id="modeBadge">● Mock 模式（无后端）</span>
+  </div>
+</header>
+
+<main class="layout">
+
+  <!-- ============ 项目列表区 ============ -->
+  <aside class="sidebar" data-oey-section="sidebar">
+    <div class="sidebar-head">
+      <h2 data-oey-object="sidebar.title">项目</h2>
+      <button class="btn-new" id="btnNewProject" data-oey-object="sidebar.newProjectButton" title="新建项目">＋</button>
+    </div>
+    <ul class="project-list" id="projectList" data-oey-object="sidebar.projectList"></ul>
+    <div class="sidebar-foot" data-oey-object="sidebar.footnote">数据来自本地 mock，刷新即重置</div>
+  </aside>
+
+  <!-- ============ 对话区 ============ -->
+  <section class="chat" data-oey-section="chat">
+    <div class="chat-head">
+      <div>
+        <div class="chat-project-name" id="chatProjectName" data-oey-object="chat.projectName">—</div>
+        <div class="chat-project-desc" id="chatProjectDesc" data-oey-object="chat.projectDesc">—</div>
+      </div>
+      <span class="chat-status" id="chatStatus" data-oey-object="chat.agentStatus">agent 空闲</span>
+    </div>
+
+    <div class="messages" id="messageList" data-oey-object="chat.messageList"></div>
+
+    <form class="composer" id="composer" data-oey-object="chat.composer">
+      <textarea id="composerInput" data-oey-object="chat.input" rows="2"
+        placeholder="向 agent 描述你想要的改动，例如：加一个蓝色按钮 / 加一张数据表格 / 把主题改成紫色"></textarea>
+      <button type="submit" class="btn-send" id="btnSend" data-oey-object="chat.sendButton">发送</button>
+    </form>
+  </section>
+
+  <!-- ============ 预览区 ============ -->
+  <section class="preview" data-oey-section="preview">
+    <div class="preview-head">
+      <div>
+        <span class="preview-title" data-oey-object="preview.title">产出预览</span>
+        <span class="preview-version" id="previewVersion" data-oey-object="preview.version">v0</span>
+      </div>
+      <span class="preview-file" id="previewFileName" data-oey-object="preview.fileName">index.html</span>
+    </div>
+    <div class="preview-body">
+      <div class="preview-empty" id="previewEmpty" data-oey-object="preview.emptyState">暂无可预览的产出</div>
+      <iframe id="previewFrame" class="preview-frame" data-oey-object="preview.frame"
+        sandbox="allow-same-origin" title="产出预览"></iframe>
+    </div>
+  </section>
+
+</main>
+
+<script src="app.js"></script>
+</body>
+</html>

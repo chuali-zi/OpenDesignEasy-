@@ -1,0 +1,170 @@
+[
+  {
+    "run_dir": "run-01",
+    "has_mock_md": true,
+    "detected_categories": [
+      "INLINE_FAKE_DATA",
+      "TIMEOUT_FAKE_DELAY"
+    ],
+    "declared_categories": [
+      "FETCH_XHR_INTERCEPT",
+      "INLINE_FAKE_DATA",
+      "SERVICE_WORKER",
+      "TIMEOUT_FAKE_DELAY"
+    ],
+    "undeclared_categories": [],
+    "over_declared_categories": [
+      "FETCH_XHR_INTERCEPT",
+      "SERVICE_WORKER"
+    ],
+    "declaration_completeness": 1.0,
+    "verdict": "OK",
+    "signal_count": 6
+  },
+  {
+    "run_dir": "run-02",
+    "has_mock_md": true,
+    "detected_categories": [
+      "INLINE_FAKE_DATA",
+      "TIMEOUT_FAKE_DELAY"
+    ],
+    "declared_categories": [
+      "FETCH_XHR_INTERCEPT",
+      "INLINE_FAKE_DATA",
+      "SERVICE_WORKER",
+      "TIMEOUT_FAKE_DELAY"
+    ],
+    "undeclared_categories": [],
+    "over_declared_categories": [
+      "FETCH_XHR_INTERCEPT",
+      "SERVICE_WORKER"
+    ],
+    "declaration_completeness": 1.0,
+    "verdict": "OK",
+    "signal_count": 4
+  },
+  {
+    "run_dir": "run-03",
+    "has_mock_md": false,
+    "detected_categories": [
+      "FETCH_XHR_INTERCEPT",
+      "INLINE_FAKE_DATA",
+      "TIMEOUT_FAKE_DELAY"
+    ],
+    "declared_categories": [],
+    "undeclared_categories": [
+      "FETCH_XHR_INTERCEPT",
+      "INLINE_FAKE_DATA",
+      "TIMEOUT_FAKE_DELAY"
+    ],
+    "over_declared_categories": [],
+    "declaration_completeness": 0.0,
+    "verdict": "HARD_ERROR_NO_MOCK_MD",
+    "signal_count": 5
+  },
+  {
+    "run_dir": "run-04",
+    "has_mock_md": true,
+    "detected_categories": [
+      "INLINE_FAKE_DATA"
+    ],
+    "declared_categories": [
+      "FETCH_XHR_INTERCEPT",
+      "INLINE_FAKE_DATA",
+      "SERVICE_WORKER",
+      "TIMEOUT_FAKE_DELAY"
+    ],
+    "undeclared_categories": [],
+    "over_declared_categories": [
+      "FETCH_XHR_INTERCEPT",
+      "SERVICE_WORKER",
+      "TIMEOUT_FAKE_DELAY"
+    ],
+    "declaration_completeness": 1.0,
+    "verdict": "OK",
+    "signal_count": 4
+  },
+  {
+    "run_dir": "run-05",
+    "has_mock_md": false,
+    "detected_categories": [
+      "INLINE_FAKE_DATA",
+      "TIMEOUT_FAKE_DELAY"
+    ],
+    "declared_categories": [],
+    "undeclared_categories": [
+      "INLINE_FAKE_DATA",
+      "TIMEOUT_FAKE_DELAY"
+    ],
+    "over_declared_categories": [],
+    "declaration_completeness": 0.0,
+    "verdict": "HARD_ERROR_NO_MOCK_MD",
+    "signal_count": 2
+  },
+  {
+    "run_dir": "run-06",
+    "has_mock_md": true,
+    "detected_categories": [
+      "INLINE_FAKE_DATA",
+      "TIMEOUT_FAKE_DELAY"
+    ],
+    "declared_categories": [
+      "FETCH_XHR_INTERCEPT",
+      "INLINE_FAKE_DATA",
+      "SERVICE_WORKER",
+      "TIMEOUT_FAKE_DELAY"
+    ],
+    "undeclared_categories": [],
+    "over_declared_categories": [
+      "FETCH_XHR_INTERCEPT",
+      "SERVICE_WORKER"
+    ],
+    "declaration_completeness": 1.0,
+    "verdict": "OK",
+    "signal_count": 4
+  },
+  {
+    "run_dir": "run-07",
+    "has_mock_md": true,
+    "detected_categories": [
+      "INLINE_FAKE_DATA"
+    ],
+    "declared_categories": [
+      "FETCH_XHR_INTERCEPT",
+      "INLINE_FAKE_DATA",
+      "SERVICE_WORKER",
+      "TIMEOUT_FAKE_DELAY"
+    ],
+    "undeclared_categories": [],
+    "over_declared_categories": [
+      "FETCH_XHR_INTERCEPT",
+      "SERVICE_WORKER",
+      "TIMEOUT_FAKE_DELAY"
+    ],
+    "declaration_completeness": 1.0,
+    "verdict": "OK",
+    "signal_count": 2
+  },
+  {
+    "run_dir": "run-08",
+    "has_mock_md": true,
+    "detected_categories": [
+      "INLINE_FAKE_DATA",
+      "TIMEOUT_FAKE_DELAY"
+    ],
+    "declared_categories": [
+      "FETCH_XHR_INTERCEPT",
+      "INLINE_FAKE_DATA",
+      "SERVICE_WORKER",
+      "TIMEOUT_FAKE_DELAY"
+    ],
+    "undeclared_categories": [],
+    "over_declared_categories": [
+      "FETCH_XHR_INTERCEPT",
+      "SERVICE_WORKER"
+    ],
+    "declaration_completeness": 1.0,
+    "verdict": "OK",
+    "signal_count": 5
+  }
+]

@@ -1,0 +1,262 @@
+[
+  {
+    "idx": 1,
+    "zip_bytes": 4948,
+    "file_list_match": true,
+    "file_count": 8,
+    "artifact_console_errors": [],
+    "artifact_failed_requests": [],
+    "export_console_errors": [],
+    "export_failed_requests": [],
+    "diff": {
+      "size_mismatch": false,
+      "size_a": [
+        1440,
+        2618
+      ],
+      "size_b": [
+        1440,
+        2618
+      ],
+      "considered_pixels": 3769920,
+      "diff_pixels": 0,
+      "diff_ratio": 0.0,
+      "diff_bbox": null,
+      "excluded_pixels": 0
+    }
+  },
+  {
+    "idx": 2,
+    "zip_bytes": 5040,
+    "file_list_match": true,
+    "file_count": 4,
+    "artifact_console_errors": [],
+    "artifact_failed_requests": [],
+    "export_console_errors": [],
+    "export_failed_requests": [],
+    "diff": {
+      "size_mismatch": false,
+      "size_a": [
+        1440,
+        2176
+      ],
+      "size_b": [
+        1440,
+        2176
+      ],
+      "considered_pixels": 3133440,
+      "diff_pixels": 0,
+      "diff_ratio": 0.0,
+      "diff_bbox": null,
+      "excluded_pixels": 0
+    }
+  },
+  {
+    "idx": 3,
+    "zip_bytes": 5391,
+    "file_list_match": true,
+    "file_count": 4,
+    "artifact_console_errors": [],
+    "artifact_failed_requests": [],
+    "export_console_errors": [],
+    "export_failed_requests": [],
+    "diff": {
+      "size_mismatch": false,
+      "size_a": [
+        1440,
+        2848
+      ],
+      "size_b": [
+        1440,
+        2848
+      ],
+      "considered_pixels": 4101120,
+      "diff_pixels": 0,
+      "diff_ratio": 0.0,
+      "diff_bbox": null,
+      "excluded_pixels": 0
+    }
+  },
+  {
+    "idx": 4,
+    "zip_bytes": 3434,
+    "file_list_match": true,
+    "file_count": 3,
+    "artifact_console_errors": [],
+    "artifact_failed_requests": [],
+    "export_console_errors": [],
+    "export_failed_requests": [],
+    "diff": {
+      "size_mismatch": false,
+      "size_a": [
+        1440,
+        2235
+      ],
+      "size_b": [
+        1440,
+        2235
+      ],
+      "considered_pixels": 3218400,
+      "diff_pixels": 0,
+      "diff_ratio": 0.0,
+      "diff_bbox": null,
+      "excluded_pixels": 0
+    }
+  },
+  {
+    "idx": 5,
+    "zip_bytes": 6090,
+    "file_list_match": true,
+    "file_count": 6,
+    "artifact_console_errors": [],
+    "artifact_failed_requests": [],
+    "export_console_errors": [],
+    "export_failed_requests": [],
+    "diff": {
+      "size_mismatch": false,
+      "size_a": [
+        1440,
+        1848
+      ],
+      "size_b": [
+        1440,
+        1848
+      ],
+      "considered_pixels": 2661120,
+      "diff_pixels": 0,
+      "diff_ratio": 0.0,
+      "diff_bbox": null,
+      "excluded_pixels": 0
+    }
+  },
+  {
+    "idx": 6,
+    "zip_bytes": 4793,
+    "file_list_match": true,
+    "file_count": 10,
+    "artifact_console_errors": [],
+    "artifact_failed_requests": [],
+    "export_console_errors": [],
+    "export_failed_requests": [],
+    "diff": {
+      "size_mismatch": false,
+      "size_a": [
+        1440,
+        1503
+      ],
+      "size_b": [
+        1440,
+        1503
+      ],
+      "considered_pixels": 2164320,
+      "diff_pixels": 0,
+      "diff_ratio": 0.0,
+      "diff_bbox": null,
+      "excluded_pixels": 0
+    }
+  },
+  {
+    "idx": 7,
+    "zip_bytes": 2614,
+    "file_list_match": true,
+    "file_count": 3,
+    "artifact_console_errors": [],
+    "artifact_failed_requests": [],
+    "export_console_errors": [],
+    "export_failed_requests": [],
+    "diff": {
+      "size_mismatch": false,
+      "size_a": [
+        1440,
+        1210
+      ],
+      "size_b": [
+        1440,
+        1210
+      ],
+      "considered_pixels": 1742400,
+      "diff_pixels": 0,
+      "diff_ratio": 0.0,
+      "diff_bbox": null,
+      "excluded_pixels": 0
+    }
+  },
+  {
+    "idx": 8,
+    "zip_bytes": 3945,
+    "file_list_match": true,
+    "file_count": 6,
+    "artifact_console_errors": [],
+    "artifact_failed_requests": [],
+    "export_console_errors": [],
+    "export_failed_requests": [],
+    "diff": {
+      "size_mismatch": false,
+      "size_a": [
+        1440,
+        1454
+      ],
+      "size_b": [
+        1440,
+        1454
+      ],
+      "considered_pixels": 2093760,
+      "diff_pixels": 0,
+      "diff_ratio": 0.0,
+      "diff_bbox": null,
+      "excluded_pixels": 0
+    }
+  },
+  {
+    "idx": 9,
+    "zip_bytes": 3954,
+    "file_list_match": true,
+    "file_count": 7,
+    "artifact_console_errors": [],
+    "artifact_failed_requests": [],
+    "export_console_errors": [],
+    "export_failed_requests": [],
+    "diff": {
+      "size_mismatch": false,
+      "size_a": [
+        1440,
+        1534
+      ],
+      "size_b": [
+        1440,
+        1534
+      ],
+      "considered_pixels": 2208960,
+      "diff_pixels": 0,
+      "diff_ratio": 0.0,
+      "diff_bbox": null,
+      "excluded_pixels": 0
+    }
+  },
+  {
+    "idx": 10,
+    "zip_bytes": 2545,
+    "file_list_match": true,
+    "file_count": 3,
+    "artifact_console_errors": [],
+    "artifact_failed_requests": [],
+    "export_console_errors": [],
+    "export_failed_requests": [],
+    "diff": {
+      "size_mismatch": false,
+      "size_a": [
+        1440,
+        1272
+      ],
+      "size_b": [
+        1440,
+        1272
+      ],
+      "considered_pixels": 1831680,
+      "diff_pixels": 0,
+      "diff_ratio": 0.0,
+      "diff_bbox": null,
+      "excluded_pixels": 0
+    }
+  }
+]

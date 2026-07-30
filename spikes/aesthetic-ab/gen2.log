@@ -1,0 +1,35 @@
+﻿    [direction] graphite: 灯箱校样台（Light Table）
+    [direction] daylight: 套准工作台（Registration Bench）
+    [direction] paper: 红笔校样台（Red-Pen Proofing Table）
+    [reuse direction] daylight: 套准工作台（Registration Bench）
+    [reuse direction] graphite: 灯箱校样台（Light Table）    [reuse direction] graphite: 灯箱校样台（Light Table）
+
+    ... streamed 8000 chars (207s)
+    ... streamed 16001 chars (271s)
+    ... streamed 8002 chars (339s)
+    ... streamed 24007 chars (342s)
+    ... streamed 16003 chars (402s)
+    ... streamed 32007 chars (418s)
+[graphite-system] files=['index.html', 'styles.css'] fonts=['Space Grotesk', 'IBM Plex Sans', 'Noto Sans SC', 'IBM Plex Mono']  truncated=False 419.6s
+    [reuse direction] daylight: 套准工作台（Registration Bench）
+    ... streamed 24003 chars (466s)
+    ... streamed 32003 chars (535s)
+[daylight-bespoke] files=['app.js', 'index.html', 'styles.css'] fonts=['IBM Plex Sans', 'Noto Sans SC', 'IBM Plex Mono']  truncated=False 582.3s
+    [reuse direction] paper: 红笔校样台（Red-Pen Proofing Table）
+[graphite-bespoke] files=['index.html'] fonts=['Space Grotesk', 'IBM Plex Sans', 'Noto Sans SC', 'IBM Plex Mono']  truncated=False 657.2s
+    [reuse direction] paper: 红笔校样台（Red-Pen Proofing Table）
+    ... streamed 8000 chars (703s)
+    ... streamed 8000 chars (478s)
+    ... streamed 8000 chars (554s)
+    ... streamed 16003 chars (757s)
+    ... streamed 16004 chars (549s)
+    ... streamed 16000 chars (633s)
+    ... streamed 24004 chars (819s)
+    ... streamed 24004 chars (620s)
+    ... streamed 24000 chars (698s)
+    ... streamed 32005 chars (879s)
+[paper-bespoke] files=['index.html', 'styles.css'] fonts=['Fraunces', 'IBM Plex Sans', 'Noto Serif SC', 'IBM Plex Mono']  truncated=False 722.2s
+[paper-system] files=['index.html', 'styles.css'] fonts=['Fraunces', 'IBM Plex Sans', 'Noto Serif SC', 'IBM Plex Mono']  truncated=False 655.5s
+[daylight-system] files=['app.js', 'index.html', 'styles.css'] fonts=['IBM Plex Sans', 'Noto Sans SC', 'IBM Plex Mono']  truncated=False 913.5s
+
+wrote D:\projects2\OEYdesign\spikes\aesthetic-ab\runs2\_all.json

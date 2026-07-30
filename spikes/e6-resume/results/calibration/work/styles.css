@@ -1,0 +1,39 @@
+body {
+  font-family: Georgia, "Times New Roman", serif;
+  background-color: #f4f8f2;
+  color: #2e3d2b;
+  margin: 0;
+  padding: 2rem 1rem;
+  line-height: 1.6;
+}
+
+h1 {
+  color: #3c7a3c;
+  text-align: center;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.5rem;
+}
+
+#intro {
+  max-width: 38rem;
+  margin: 0 auto 1.5rem auto;
+  background-color: #ffffff;
+  border: 1px solid #d7e6d4;
+  border-radius: 8px;
+  padding: 1.25rem;
+}
+
+button {
+  display: block;
+  margin: 0 auto;
+  padding: 0.6rem 1.2rem;
+  background-color: #3c7a3c;
+  color: #ffffff;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+button:hover {
+  background-color: #2f5f2f;
+}

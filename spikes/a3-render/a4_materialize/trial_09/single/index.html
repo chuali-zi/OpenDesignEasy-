@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>暖窝宠物寄养 · 让爱宠安心度假</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:-apple-system,"Segoe UI","Helvetica Neue",Arial,sans-serif; color:#3a2e26; background:#fdf9f4; line-height:1.6; }
+  .wrap { max-width:960px; margin:0 auto; padding:0 24px; }
+  /* header */
+  .site-header { background:#fff; border-bottom:1px solid #f0e6da; }
+  .site-header .wrap { display:flex; align-items:center; justify-content:space-between; height:64px; }
+  .logo { display:flex; align-items:center; gap:10px; font-weight:700; font-size:18px; color:#e2711d; }
+  .logo img { width:32px; height:32px; }
+  .nav a { margin-left:24px; color:#6b5d4f; text-decoration:none; font-size:14px; }
+  /* hero */
+  .hero { background:linear-gradient(135deg,#fff3e4 0%,#ffe4c9 100%); padding:72px 0; }
+  .hero .wrap { display:flex; align-items:center; gap:48px; }
+  .hero-text { flex:1.2; }
+  .hero-text .tag { display:inline-block; background:#e2711d; color:#fff; font-size:12px; padding:4px 12px; border-radius:20px; margin-bottom:16px; }
+  .hero-text h1 { font-size:38px; line-height:1.3; margin-bottom:16px; }
+  .hero-text p { color:#7a6a5a; margin-bottom:28px; font-size:16px; }
+  .btn { display:inline-block; background:#e2711d; color:#fff; text-decoration:none; padding:12px 32px; border-radius:8px; font-weight:600; font-size:15px; }
+  .btn.ghost { background:transparent; color:#e2711d; border:2px solid #e2711d; margin-left:12px; }
+  .hero-img { flex:1; text-align:center; }
+  .hero-img img { width:220px; height:220px; }
+  /* services */
+  .services { padding:64px 0; }
+  .section-title { text-align:center; font-size:28px; margin-bottom:8px; }
+  .section-sub { text-align:center; color:#8a7a68; margin-bottom:40px; font-size:15px; }
+  .cards { display:flex; gap:24px; }
+  .card { flex:1; background:#fff; border:1px solid #f0e6da; border-radius:14px; padding:28px 24px; text-align:center; }
+  .card .icon { width:52px; height:52px; margin:0 auto 16px; background:#fff1e2; border-radius:50%; display:flex; align-items:center; justify-content:center; }
+  .card .icon img { width:28px; height:28px; }
+  .card h3 { font-size:17px; margin-bottom:8px; }
+  .card p { font-size:13px; color:#8a7a68; }
+  /* pricing */
+  .pricing { background:#fff8f0; padding:64px 0; }
+  .price-row { display:flex; gap:24px; }
+  .price { flex:1; background:#fff; border-radius:14px; padding:28px 24px; text-align:center; border:1px solid #f0e6da; }
+  .price.featured { border:2px solid #e2711d; }
+  .price h3 { font-size:16px; color:#8a7a68; }
+  .price .num { font-size:34px; font-weight:700; color:#e2711d; margin:8px 0 4px; }
+  .price .num small { font-size:13px; color:#8a7a68; font-weight:400; }
+  .price p { font-size:13px; color:#8a7a68; margin-bottom:18px; }
+  /* footer */
+  .site-footer { background:#3a2e26; color:#cbb9a6; padding:36px 0; text-align:center; font-size:13px; }
+  .site-footer strong { color:#fff; font-size:16px; display:block; margin-bottom:6px; }
+</style>
+</head>
+<body>
+
+<header class="site-header" data-oey-section="header">
+  <div class="wrap">
+    <div class="logo" data-oey-object="header.logo">
+      <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+PGVsbGlwc2UgY3g9IjMyIiBjeT0iNDAiIHJ4PSIxNCIgcnk9IjEyIiBmaWxsPSIjZTI3MTFkIi8+PGVsbGlwc2UgY3g9IjE4IiBjeT0iMjQiIHJ4PSI2IiByeT0iOCIgZmlsbD0iI2UyNzExZCIvPjxlbGxpcHNlIGN4PSIzMiIgY3k9IjE4IiByeD0iNiIgcnk9IjgiIGZpbGw9IiNlMjcxMWQiLz48ZWxsaXBzZSBjeD0iNDYiIGN5PSIyNCIgcng9IjYiIHJ5PSI4IiBmaWxsPSIjZTI3MTFkIi8+PC9zdmc+" alt="爪印">
+      暖窝宠物寄养
+    </div>
+    <nav class="nav" data-oey-object="header.nav">
+      <a href="#services">服务</a><a href="#pricing">价格</a><a href="#contact">联系我们</a>
+    </nav>
+  </div>
+</header>
+
+<section class="hero" data-oey-section="hero">
+  <div class="wrap">
+    <div class="hero-text">
+      <span class="tag" data-oey-object="hero.tag">持证照护 · 24小时看护</span>
+      <h1 data-oey-object="hero.title">您放心远行，<br>毛孩子在这里安第二个家</h1>
+      <p data-oey-object="hero.desc">独立恒温房间、每日三次遛弯、实时视频播报。开业八年，已为 12000+ 只猫狗提供安心寄养。</p>
+      <a class="btn" href="#contact" data-oey-object="hero.cta">立即预约</a>
+      <a class="btn ghost" href="#services" data-oey-object="hero.cta-secondary">了解服务</a>
+    </div>
+    <div class="hero-img" data-oey-object="hero.image">
+      <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyMDAgMjAwIj48Y2lyY2xlIGN4PSIxMDAiIGN5PSIxMDAiIHJ5PSI5MCIgcng9IjkwIiBmaWxsPSIjZmZkZWU0Ii8+PGVsbGlwc2UgY3g9IjEwMCIgY3k9IjEyMCIgcng9IjQyIiByeT0iMzYiIGZpbGw9IiNlMjcxMWQiLz48ZWxsaXBzZSBjeD0iNTgiIGN5PSI3NCIgcng9IjE4IiByeT0iMjQiIGZpbGw9IiNlMjcxMWQiLz48ZWxsaXBzZSBjeD0iMTAwIiBjeT0iNTgiIHJ4PSIxOCIgcnk9IjI0IiBmaWxsPSIjZTI3MTFkIi8+PGVsbGlwc2UgY3g9IjE0MiIgY3k9Ijc0IiByeD0iMTgiIHJ5PSIyNCIgZmlsbD0iI2UyNzExZCIvPjwvc3ZnPg==" alt="宠物爪印插画">
+    </div>
+  </div>
+</section>
+
+<section class="services" id="services" data-oey-section="services">
+  <div class="wrap">
+    <h2 class="section-title" data-oey-object="services.title">我们提供什么</h2>
+    <p class="section-sub" data-oey-object="services.subtitle">从住宿到美容，一站式照护</p>
+    <div class="cards">
+      <div class="card" data-oey-object="services.card-boarding">
+        <div class="icon"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+PHBhdGggZD0iTTggMzIgTDMyIDEyIEw1NiAzMiIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjZTI3MTFkIiBzdHJva2Utd2lkdGg9IjUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPjxyZWN0IHg9IjE2IiB5PSIzMiIgd2lkdGg9IjMyIiBoZWlnaHQ9IjIyIiByeD0iMyIgZmlsbD0iI2UyNzExZCIvPjwvc3ZnPg==" alt="住宿"></div>
+        <h3>独立房间住宿</h3>
+        <p>恒温空调、软垫小床，猫狗分区互不打扰</p>
+      </div>
+      <div class="card" data-oey-object="services.card-walk">
+        <div class="icon"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+PGNpcmNsZSBjeD0iMzIiIGN5PSIxNCIgcj0iOCIgZmlsbD0iI2UyNzExZCIvPjxwYXRoIGQ9Ik0zMiAyNCBMMjIgNTAgTTMyIDI0IEw0MiA1MCBNMjQgMzQgTDQwIDM0IiBzdHJva2U9IiNlMjcxMWQiIHN0cm9rZS13aWR0aD0iNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBmaWxsPSJub25lIi8+PC9zdmc+" alt="遛弯"></div>
+        <h3>每日遛弯陪玩</h3>
+        <p>每天三次户外活动，专属草坪自由奔跑</p>
+      </div>
+      <div class="card" data-oey-object="services.card-camera">
+        <div class="icon"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+PHJlY3QgeD0iOCIgeT0iMTgiIHdpZHRoPSIzNiIgaGVpZ2h0PSIyOCIgcng9IjUiIGZpbGw9IiNlMjcxMWQiLz48cGF0aCBkPSJNNDQgMjYgTDU4IDE4IEw1OCA0NiBMNDQgMzggWiIgZmlsbD0iI2UyNzExZCIvPjwvc3ZnPg==" alt="视频"></div>
+        <h3>实时视频播报</h3>
+        <p>手机随时查看动态，每日推送照片与报告</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="pricing" id="pricing" data-oey-section="pricing">
+  <div class="wrap">
+    <h2 class="section-title" data-oey-object="pricing.title">透明价格</h2>
+    <p class="section-sub" data-oey-object="pricing.subtitle">按天计费，节假日不涨价</p>
+    <div class="price-row">
+      <div class="price" data-oey-object="pricing.cat">
+        <h3>猫咪寄养</h3>
+        <div class="num">¥68<small>/天</small></div>
+        <p>独立猫别墅 · 猫砂每日更换</p>
+        <a class="btn" href="#contact" data-oey-object="pricing.cat-btn">预订</a>
+      </div>
+      <div class="price featured" data-oey-object="pricing.dog">
+        <h3>狗狗寄养</h3>
+        <div class="num">¥98<small>/天</small></div>
+        <p>标准间 · 含每日三次遛弯</p>
+        <a class="btn" href="#contact" data-oey-object="pricing.dog-btn">预订</a>
+      </div>
+      <div class="price" data-oey-object="pricing.vip">
+        <h3>豪华套房</h3>
+        <div class="num">¥168<small>/天</small></div>
+        <p>大空间 · 专属摄像头 · 加餐</p>
+        <a class="btn" href="#contact" data-oey-object="pricing.vip-btn">预订</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer class="site-footer" id="contact" data-oey-section="footer">
+  <div class="wrap">
+    <strong data-oey-object="footer.brand">暖窝宠物寄养</strong>
+    <p data-oey-object="footer.contact">预约热线：400-888-0000 · 地址：幸福路 66 号 · 营业时间 8:00 - 21:00</p>
+  </div>
+</footer>
+
+</body>
+</html>

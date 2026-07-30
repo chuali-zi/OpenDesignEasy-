@@ -1,0 +1,110 @@
+* { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: #f6f3ee;
+    color: #3d3a34;
+    line-height: 1.6;
+  }
+  .container { max-width: 1080px; margin: 0 auto; padding: 0 24px; }
+
+  /* Hero */
+  .hero {
+    background: #2f4f43;
+    color: #fdfbf7;
+    padding: 72px 0 88px;
+    text-align: center;
+  }
+  .hero .logo-img { width: 72px; height: 72px; margin-bottom: 20px; }
+  .hero h1 { font-size: 40px; font-weight: 700; letter-spacing: 2px; margin-bottom: 14px; }
+  .hero p { font-size: 17px; color: #cfd9d3; max-width: 560px; margin: 0 auto 30px; }
+  .btn {
+    display: inline-block;
+    background: #e8b64c;
+    color: #2f4f43;
+    font-weight: 700;
+    font-size: 16px;
+    padding: 14px 42px;
+    border-radius: 999px;
+    text-decoration: none;
+    border: none;
+    cursor: pointer;
+  }
+  .hero-meta { margin-top: 26px; font-size: 14px; color: #9fb3aa; }
+
+  /* Courses */
+  .courses { padding: 72px 0; }
+  .section-title { font-size: 30px; font-weight: 700; text-align: center; margin-bottom: 8px; color: #2f4f43; }
+  .section-sub { text-align: center; color: #8a857a; font-size: 15px; margin-bottom: 44px; }
+  .course-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+  .course-card {
+    background: #ffffff;
+    border-radius: 16px;
+    padding: 30px 26px;
+    border: 1px solid #e8e2d6;
+    box-shadow: 0 4px 14px rgba(60, 50, 30, 0.05);
+  }
+  .course-tag {
+    display: inline-block;
+    font-size: 12px;
+    font-weight: 600;
+    color: #2f4f43;
+    background: #e4ede8;
+    padding: 4px 12px;
+    border-radius: 999px;
+    margin-bottom: 14px;
+  }
+  .course-card h3 { font-size: 21px; margin-bottom: 10px; color: #2f4f43; }
+  .course-card p { font-size: 14px; color: #7a7468; margin-bottom: 18px; min-height: 66px; }
+  .course-info { font-size: 13px; color: #a09a8d; margin-bottom: 18px; }
+  .course-info span { margin-right: 14px; }
+  .course-price { font-size: 22px; font-weight: 700; color: #c98a2d; margin-bottom: 16px; }
+  .course-price small { font-size: 13px; font-weight: 400; color: #a09a8d; }
+  .btn-outline {
+    display: inline-block;
+    width: 100%;
+    text-align: center;
+    background: transparent;
+    color: #2f4f43;
+    font-weight: 600;
+    font-size: 15px;
+    padding: 11px 0;
+    border: 2px solid #2f4f43;
+    border-radius: 10px;
+    cursor: pointer;
+  }
+
+  /* Booking form */
+  .booking { background: #efe9dd; padding: 72px 0; }
+  .booking-box {
+    max-width: 640px;
+    margin: 0 auto;
+    background: #ffffff;
+    border-radius: 18px;
+    padding: 44px 40px;
+    border: 1px solid #e8e2d6;
+  }
+  .form-row { margin-bottom: 20px; }
+  .form-row label { display: block; font-size: 14px; font-weight: 600; margin-bottom: 8px; color: #4a463d; }
+  .form-row input, .form-row select, .form-row textarea {
+    width: 100%;
+    padding: 12px 14px;
+    font-size: 15px;
+    font-family: inherit;
+    border: 1px solid #d8d2c4;
+    border-radius: 10px;
+    background: #fbfaf7;
+    color: #3d3a34;
+  }
+  .form-row textarea { resize: none; height: 88px; }
+  .form-note { font-size: 13px; color: #a09a8d; margin-top: 16px; text-align: center; }
+  .btn-submit { width: 100%; text-align: center; }
+
+  /* Footer */
+  .footer { background: #2f4f43; color: #cfd9d3; padding: 40px 0; text-align: center; }
+  .footer h4 { color: #fdfbf7; font-size: 17px; margin-bottom: 10px; }
+  .footer p { font-size: 14px; margin-bottom: 4px; }
+
+  @media (max-width: 860px) {
+    .course-grid { grid-template-columns: 1fr; }
+    .hero h1 { font-size: 30px; }
+  }

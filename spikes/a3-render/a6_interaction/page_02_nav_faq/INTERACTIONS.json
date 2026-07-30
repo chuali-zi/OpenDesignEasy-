@@ -1,0 +1,20 @@
+[
+  {
+    "name": "mobile_nav_toggle",
+    "trigger_selector": "[data-oey-object=\"nav.toggle\"]",
+    "action": "click",
+    "expect_selector": "[data-oey-object=\"nav.menu\"]",
+    "expect_property": "class",
+    "expect_mode": "contains",
+    "expect_value": "open"
+  },
+  {
+    "name": "faq_accordion_item_1",
+    "trigger_selector": "[data-oey-object=\"faq.question-1\"]",
+    "action": "click",
+    "expect_selector": "[data-oey-object=\"faq.answer-1\"]",
+    "expect_property": "aria-hidden",
+    "expect_mode": "changed",
+    "expect_value": null
+  }
+]

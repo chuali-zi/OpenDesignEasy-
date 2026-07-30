@@ -1,0 +1,58 @@
+{
+  "n_sessions": 20,
+  "completed_self_terminated": 20,
+  "step_limited": 0,
+  "api_errors": 0,
+  "artifact_valid_count": 20,
+  "completion_rate": 1.0,
+  "artifact_valid_rate": 1.0,
+  "tool_calls_total_all_sessions": 120,
+  "format_errors_total": 0,
+  "format_error_rate": 0.0,
+  "steps": {
+    "min": 4,
+    "median": 6.0,
+    "max": 8
+  },
+  "total_tokens": {
+    "min": 10145,
+    "median": 13520.0,
+    "max": 23745
+  },
+  "prompt_tokens": {
+    "min": 8404,
+    "median": 11771.5,
+    "max": 20869
+  },
+  "completion_tokens": {
+    "min": 1277,
+    "median": 1749.0,
+    "max": 2876
+  },
+  "reasoning_tokens": {
+    "min": 64,
+    "median": 148.5,
+    "max": 284
+  },
+  "wall_clock_s": {
+    "min": 54.72,
+    "median": 70.0,
+    "max": 110.14
+  },
+  "tool_calls_per_session": {
+    "min": 4,
+    "median": 6.0,
+    "max": 8
+  },
+  "read_file_fault_recovery": {
+    "triggered_count": 20,
+    "recovered_count": 20,
+    "rate": 1.0
+  },
+  "run_command_fault_recovery": {
+    "triggered_count": 18,
+    "recovered_count": 18,
+    "rate": 1.0
+  },
+  "sandbox_violations_total": 0
+}

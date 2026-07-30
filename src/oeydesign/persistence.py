@@ -164,6 +164,16 @@ class SQLiteProjectRepository:
             "Project does not exist",
         )
 
+    def list_projects(self) -> tuple[Project, ...]:
+        with self.store._lock:
+            rows = self.store.connection.execute(
+                "SELECT snapshot FROM projects ORDER BY id"
+            ).fetchall()
+        projects = tuple(loads(row["snapshot"]) for row in rows)
+        if not all(isinstance(project, Project) for project in projects):
+            raise TypeError("Project snapshot decoded to unexpected type")
+        return projects
+
     def get_revision(self, project_id: str, revision: int) -> Project:
         return self._read(
             "SELECT snapshot FROM project_revisions "

@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>2024 城市马拉松报名</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;color:#1e293b;background:#f1f5f9;line-height:1.6}
+.wrap{max-width:960px;margin:0 auto;padding:0 20px}
+h2{font-size:26px;margin-bottom:14px;color:#0f172a}
+.hero{background:linear-gradient(135deg,#0f766e,#134e4a);color:#fff;padding:64px 0;text-align:center}
+.hero .logo{width:72px;height:72px;margin-bottom:12px}
+.hero h1{font-size:36px;letter-spacing:2px;margin-bottom:8px}
+.hero .sub{font-size:17px;opacity:.9;margin-bottom:24px}
+.btn{display:inline-block;background:#f97316;color:#fff;padding:12px 34px;border-radius:999px;text-decoration:none;font-size:16px;font-weight:600;border:none;cursor:pointer}
+.btn.secondary{background:#0f766e}
+.info{padding:48px 0}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px}
+.card{background:#fff;border-radius:12px;padding:20px;box-shadow:0 1px 4px rgba(15,23,42,.08)}
+.card h3{font-size:17px;margin-bottom:6px;color:#0f766e}
+.card p{font-size:14px;color:#475569}
+.card .num{font-size:28px;font-weight:700;color:#f97316}
+.signup{background:#fff;padding:48px 0;border-top:1px solid #e2e8f0}
+.form{max-width:560px;margin:0 auto}
+.field{margin-bottom:16px}
+label{display:block;font-size:14px;font-weight:600;margin-bottom:6px;color:#334155}
+input,select{width:100%;padding:10px 12px;border:1px solid #cbd5e1;border-radius:8px;font-size:14px;font-family:inherit;background:#f8fafc}
+.notice{font-size:13px;color:#64748b;margin-bottom:18px}
+.footer{background:#0f172a;color:#94a3b8;padding:28px 0;text-align:center;font-size:14px}
+.footer strong{color:#fff}
+</style>
+</head>
+<body>
+
+<header class="hero" data-oey-section="hero">
+  <div class="wrap">
+    <img class="logo" data-oey-object="hero.logo" alt="赛事标志" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+PGNpcmNsZSBjeD0iMzIiIGN5PSIzMiIgcj0iMzAiIGZpbGw9IiNmOTczMTYiLz48cGF0aCBkPSJNMjAgNDJsNi0xOCA0IDggNC0xMiA2IDIyIiBzdHJva2U9IiNmZmYiIHN0cm9rZS13aWR0aD0iNCIgZmlsbD0ibm9uZSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+PGNpcmNsZSBjeD0iNDQiIGN5PSIxNiIgcj0iNSIgZmlsbD0iI2ZmZiIvPjwvc3ZnPg==">
+    <h1 data-oey-object="hero.title">2024 滨江城市马拉松</h1>
+    <p class="sub" data-oey-object="hero.subtitle">10月20日 · 沿江赛道 · 全程42.195公里 · 限额8000人</p>
+    <a href="#signup" class="btn" data-oey-object="hero.cta">立即报名</a>
+  </div>
+</header>
+
+<section class="info" data-oey-section="race-info">
+  <div class="wrap">
+    <h2 data-oey-object="race-info.heading">赛事信息</h2>
+    <div class="grid">
+      <div class="card">
+        <h3 data-oey-object="race-info.date-label">比赛日期</h3>
+        <p class="num" data-oey-object="race-info.date-value">10月20日</p>
+        <p data-oey-object="race-info.date-desc">上午 7:30 鸣枪起跑</p>
+      </div>
+      <div class="card">
+        <h3 data-oey-object="race-info.distance-label">比赛项目</h3>
+        <p class="num" data-oey-object="race-info.distance-value">全马 / 半马</p>
+        <p data-oey-object="race-info.distance-desc">42.195km 与 21.0975km 两个组别</p>
+      </div>
+      <div class="card">
+        <h3 data-oey-object="race-info.fee-label">报名费用</h3>
+        <p class="num" data-oey-object="race-info.fee-value">¥180 起</p>
+        <p data-oey-object="race-info.fee-desc">含参赛包、计时芯片与完赛奖牌</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="signup" id="signup" data-oey-section="signup-form">
+  <div class="wrap">
+    <h2 style="text-align:center" data-oey-object="signup-form.heading">报名表单</h2>
+    <form class="form" action="#" method="post">
+      <div class="field">
+        <label for="name" data-oey-object="signup-form.name-label">姓名</label>
+        <input id="name" name="name" type="text" placeholder="请输入真实姓名" data-oey-object="signup-form.name-input">
+      </div>
+      <div class="field">
+        <label for="phone" data-oey-object="signup-form.phone-label">联系电话</label>
+        <input id="phone" name="phone" type="tel" placeholder="用于接收赛事通知" data-oey-object="signup-form.phone-input">
+      </div>
+      <div class="field">
+        <label for="group" data-oey-object="signup-form.group-label">参赛组别</label>
+        <select id="group" name="group" data-oey-object="signup-form.group-select">
+          <option>全程马拉松（42.195km）</option>
+          <option>半程马拉松（21.0975km）</option>
+        </select>
+      </div>
+      <p class="notice" data-oey-object="signup-form.notice">提交即表示您已阅读并同意《参赛声明》与《安全须知》。</p>
+      <button type="submit" class="btn secondary" style="width:100%" data-oey-object="signup-form.submit">提交报名</button>
+    </form>
+  </div>
+</section>
+
+<footer class="footer" data-oey-section="footer">
+  <div class="wrap">
+    <p><strong data-oey-object="footer.org">滨江马拉松组委会</strong></p>
+    <p data-oey-object="footer.contact">咨询电话：0000-1234567 · 邮箱：race@example.local</p>
+  </div>
+</footer>
+
+</body>
+</html>

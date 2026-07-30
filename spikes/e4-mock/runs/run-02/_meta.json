@@ -1,0 +1,26 @@
+{
+  "idx": 2,
+  "elapsed_s": 367.6,
+  "usage": {
+    "prompt_tokens": 809,
+    "completion_tokens": 11976,
+    "total_tokens": 12785,
+    "cached_tokens": 768,
+    "completion_tokens_details": {
+      "reasoning_tokens": 821
+    },
+    "prompt_tokens_details": {
+      "cached_tokens": 768
+    }
+  },
+  "file_count": 4,
+  "files": [
+    "index.html",
+    "styles.css",
+    "app.js",
+    "MOCK.md"
+  ],
+  "has_index_html": true,
+  "has_mock_md": true,
+  "raw_response_chars": 35775
+}

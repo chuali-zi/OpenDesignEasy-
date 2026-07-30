@@ -1,0 +1,11 @@
+[
+  {
+    "name": "load-reviews",
+    "trigger_selector": "[data-oey-object=\"reviews.load-button\"]",
+    "action": "click",
+    "expect_selector": "[data-oey-object=\"reviews.list\"]",
+    "expect_property": "textContent",
+    "expect_mode": "changed",
+    "expect_value": null
+  }
+]

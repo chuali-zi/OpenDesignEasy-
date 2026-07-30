@@ -1,0 +1,21 @@
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,"Segoe UI","Helvetica Neue",Arial,sans-serif;background:#f7f4ee;color:#33322e;line-height:1.7}
+.wrap{max-width:880px;margin:0 auto;padding:0 24px}
+header{background:#2e3d33;color:#f5f1e8;padding:64px 0 56px;text-align:center}
+.badge{display:inline-block;border:1px solid #b9a77a;color:#d8c795;font-size:13px;letter-spacing:2px;padding:4px 14px;border-radius:999px;margin-bottom:18px}
+h1{font-size:34px;font-weight:700;letter-spacing:1px}
+.sub{margin-top:12px;font-size:15px;color:#c9c4b4}
+.btn{display:inline-block;margin-top:26px;background:#c8a24e;color:#222;text-decoration:none;font-weight:600;font-size:15px;padding:12px 34px;border-radius:6px}
+section{padding:56px 0}
+h2{font-size:22px;color:#2e3d33;margin-bottom:18px;padding-left:12px;border-left:4px solid #c8a24e}
+.card{background:#fff;border:1px solid #e7e1d4;border-radius:10px;padding:24px;display:flex;gap:22px;align-items:flex-start}
+.book{width:96px;flex-shrink:0;border-radius:6px;box-shadow:0 4px 10px rgba(0,0,0,.12)}
+.meta{font-size:14px;color:#6b675c;margin:6px 0 10px}
+.quote{font-size:14px;color:#8a7a4f;background:#faf6ea;border-radius:6px;padding:10px 14px;margin-top:12px}
+ul.flow{list-style:none}
+ul.flow li{display:flex;gap:16px;padding:14px 0;border-bottom:1px dashed #ddd6c6}
+ul.flow li:last-child{border-bottom:none}
+.time{flex-shrink:0;width:88px;font-weight:600;color:#2e3d33;font-size:14px}
+.desc{font-size:14px;color:#55524a}
+footer{background:#2e3d33;color:#b9b4a4;text-align:center;padding:28px 0;font-size:13px}
+.tag{display:inline-block;background:#efe9d8;color:#7a6a3a;font-size:12px;padding:2px 10px;border-radius:4px;margin-right:8px}

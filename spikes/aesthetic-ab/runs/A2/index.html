@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OEYdesign · 工作台</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+SC:wght@400;500;700;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<div class="app" id="app">
+
+  <!-- ══════════ 顶栏 ══════════ -->
+  <header class="topbar" data-oey-section="topbar">
+    <div class="tb-left">
+      <div class="logo">
+        <span class="logo-mark">Œ</span>
+        <span class="logo-name">OEY<em>design</em></span>
+      </div>
+      <span class="tb-divider"></span>
+      <div class="proj-meta">
+        <span class="proj-name" id="projName">山雾咖啡 · 品牌落地页</span>
+        <span class="proj-type" id="projType">WEB / 单页</span>
+      </div>
+    </div>
+
+    <div class="tb-right">
+      <!-- 版本选择 -->
+      <div class="version-picker" data-oey-section="versions">
+        <button class="ver-btn" id="verBtn" aria-haspopup="true">
+          <svg viewBox="0 0 16 16" width="14" height="14"><path fill="currentColor" d="M8 1a7 7 0 1 1-6.32 4H3.5A4.5 4.5 0 1 0 8 3.5V6L4.5 2.5 8 -1zM8 4.5v3.8l2.6 1.5-.7 1.2L6.5 9V4.5z"/></svg>
+          <span id="verLabel">v4 · 当前</span>
+          <svg class="chev" viewBox="0 0 16 16" width="12" height="12"><path fill="currentColor" d="M4 6l4 4 4-4z"/></svg>
+        </button>
+        <div class="ver-menu" id="verMenu" hidden>
+          <div class="ver-menu-head">版本历史</div>
+          <button class="ver-item is-current" data-ver="4"><b>v4</b><span>暖棕新配色 + 卡片圆角加大</span><i>2 分钟前 · 当前</i></button>
+          <button class="ver-item" data-ver="3"><b>v3</b><span>Hero 文案改为「把山里的雾气，装进杯子」</span><i>26 分钟前</i></button>
+          <button class="ver-item" data-ver="2"><b>v2</b><span>新增三个产品卖点卡片</span><i>1 小时前</i></button>
+          <button class="ver-item" data-ver="1"><b>v1</b><span>初稿 · 冷灰极简风</span><i>昨天 18:42</i></button>
+        </div>
+      </div>
+
+      <span class="status-badge" id="statusBadge" data-status="ready">
+        <span class="dot"></span><span id="statusText">已就绪</span>
+      </span>
+
+      <!-- 导出 -->
+      <div class="export-wrap" data-oey-section="export">
+        <button class="btn-primary" id="exportBtn">
+          <svg viewBox="0 0 16 16" width="14" height="14"><path fill="currentColor" d="M8 1v8.6L5.4 7 4 8.4l4 4 4-4L10.6 7 8 9.6zM2 13h12v2H2z"/></svg>
+          导出
+        </button>
+        <div class="export-menu" id="exportMenu" hidden>
+          <button class="exp-item" data-fmt="web"><b>Web 站点</b><span>静态 HTML + CSS · 可直接部署</span></button>
+          <button class="exp-item" data-fmt="pptx"><b>PPT 演示稿</b><span>把落地页结构转成 6 页幻灯片</span></button>
+          <button class="exp-item" data-fmt="docx"><b>DOCX 设计说明</b><span>品牌规范 + 文案 + 标注文档</span></button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ══════════ 主区：左对话 / 右预览 ══════════ -->
+  <main class="main">
+
+    <!-- ─── 左：对话栏（窄） ─── -->
+    <aside class="chat" data-oey-section="chat">
+      <div class="chat-head">
+        <span class="chat-title">对话</span>
+        <span class="chat-hint">⌘K 聚焦输入</span>
+      </div>
+
+      <div class="chat-scroll" id="chatScroll">
+        <!-- 历史消息由 JS 渲染 -->
+      </div>
+
+      <!-- 选中对象后的反馈条 -->
+      <div class="obj-context" id="objContext" hidden>
+        <span class="obj-chip" id="objChip">@ Hero 主标题</span>
+        <button class="obj-clear" id="objClear" title="取消对象引用">×</button>
+      </div>
+
+      <div class="chat-input-wrap">
+        <textarea id="chatInput" rows="1" placeholder="描述修改意见，或在预览中点击对象后留言…"></textarea>
+        <button class="send-btn" id="sendBtn" title="发送 (Enter)">
+          <svg viewBox="0 0 16 16" width="16" height="16"><path fill="currentColor" d="M1.7 1.3 15 8 1.7 14.7 1.6 9.4 9 8 1.6 6.6z"/></svg>
+        </button>
+      </div>
+      <div class="chat-foot">Enter 发送 · Shift+Enter 换行 · 点击预览对象可引用</div>
+    </aside>
+
+    <!-- ─── 右：预览区（大） ─── -->
+    <section class="preview" data-oey-section="preview">
+
+      <div class="pv-toolbar">
+        <div class="pv-tabs">
+          <button class="pv-tab is-active" data-view="desktop" title="桌面预览">
+            <svg viewBox="0 0 16 16" width="14" height="14"><path fill="currentColor" d="M1 2h14v9H1zm1 1v7h12V3zM5 13h6v1.5H5z"/></svg>
+          </button>
+          <button class="pv-tab" data-view="mobile" title="移动端预览">
+            <svg viewBox="0 0 16 16" width="14" height="14"><path fill="currentColor" d="M5 1h6a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1zm0 2v10h6V3z"/></svg>
+          </button>
+        </div>
+        <div class="pv-url">
+          <span class="lock">🔒</span>
+          <span id="pvUrl">preview.oey.design/mistvale-landing · v4</span>
+        </div>
+        <div class="pv-actions">
+          <button class="pv-tab" id="toggleInspect" title="对象检查器">
+            <svg viewBox="0 0 16 16" width="14" height="14"><path fill="currentColor" d="M2 2h12v12H2zm1.5 1.5v9h9v-9zM5 5h6v1.4H5zm0 2.5h4v1.4H5z"/></svg>
+          </button>
+          <button class="pv-tab" id="refreshPv" title="重新渲染">
+            <svg viewBox="0 0 16 16" width="14" height="14"><path fill="currentColor" d="M8 2a6 6 0 1 1-5.7 4.1l1.5-.5A4.4 4.4 0 1 0 8 3.6V6L4.8 3 8 0z"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="pv-stage" id="pvStage">
+        <!-- ═══ 正在被设计的产物：山雾咖啡落地页 ═══ -->
+        <div class="artifact theme-warm" id="artifact" data-oey-object="page-root" data-oey-name="页面整体">
+
+          <nav class="a-nav" data-oey-object="nav" data-oey-name="顶部导航">
+            <div class="a-logo">山雾<span>MISTVALE</span></div>
+            <div class="a-links">
+              <a>产地</a><a>豆单</a><a>订阅</a><a>门店</a>
+            </div>
+            <button class="a-nav-cta" data-oey-object="nav-cta" data-oey-name="导航按钮">先试后买</button>
+          </nav>
+
+          <header class="a-hero">
+            <div class="a-hero-text">
+              <p class="a-eyebrow" data-oey-object="hero-eyebrow" data-oey-name="眉题">云南 · 高黎贡山 海拔 1800m</p>
+              <h1 class="a-title" data-oey-object="hero-title" data-oey-name="Hero 主标题" id="heroTitle">把山里的雾气，<br>装进杯子。</h1>
+              <p class="a-sub" data-oey-object="hero-sub" data-oey-name="Hero 副标题">当季鲜果处理，48 小时从庄园到烘焙机。每一批豆子都有可溯源的海拔、土壤与降雨记录。</p>
+              <div class="a-cta-row">
+                <button class="a-btn-primary" data-oey-object="hero-cta" data-oey-name="主行动按钮">开始订阅 ¥89/月</button>
+                <button class="a-btn-ghost" data-oey-object="hero-cta2" data-oey-name="次行动按钮">查看豆单 →</button>
+              </div>
+              <div class="a-stats" data-oey-object="hero-stats" data-oey-name="数据条">
+                <div><b>12,400+</b><span>订阅用户</span></div>
+                <div><b>4.9</b><span>风味评分</span></div>
+                <div><b>72h</b><span>极速烘焙</span></div>
+              </div>
+            </div>
+            <div class="a-hero-visual" data-oey-object="hero-image" data-oey-name="Hero 视觉图">
+              <div class="a-cup">
+                <div class="a-cup-steam"><i></i><i></i><i></i></div>
+                <div class="a-cup-body"></div>
+                <div class="a-cup-plate"></div>
+              </div>
+              <div class="a-badge-float">本季新豆 · 铁皮卡</div>
+            </div>
+          </header>
+
+          <section class="a-features" data-oey-object="features" data-oey-name="卖点卡片区">
+            <div class="a-sec-head">
+              <h2>为什么是山雾</h2>
+              <p>从种子到杯子的每一步，我们都较真。</p>
+            </div>
+            <div class="a-cards">
+              <div class="a-card" data-oey-object="card-1" data-oey-name="卖点卡片 1">
+                <div class="a-card-ico">⛰️</div>
+                <h3>单一庄园</h3>
+                <p>只采高黎贡山东坡三个地块，拒绝拼配来路不明的生豆。</p>
+              </div>
+              <div class="a-card" data-oey-object="card-2" data-oey-name="卖点卡片 2">
+                <div class="a-card-ico">🔥</div>
+                <h3>小批量烘焙</h3>
+                <p>每炉不超过 15kg，曲线逐炉校准，批次差异写在豆卡上。</p>
+              </div>
+              <div class="a-card" data-oey-object="card-3" data-oey-name="卖点卡片 3">
+                <div class="a-card-ico">📦</div>
+                <h3>订阅制鲜送</h3>
+                <p>烘焙后 72 小时内发出，养豆期刚好在你拆快递那天结束。</p>
+              </div>
+            </div>
+          </section>
+
+          <footer class="a-footer" data-oey-object="footer" data-oey-name="页脚">
+            <div class="a-footer-cta">
+              <h2>第一杯，我们请。</h2>
+              <button class="a-btn-primary" data-oey-object="footer-cta" data-oey-name="页脚按钮">领取试饮装</button>
+            </div>
+            <div class="a-footer-meta">© 2025 山雾咖啡 MISTVALE · 沪ICP备00000000号</div>
+          </footer>
+
+        </div>
+
+        <!-- 对象选中后的浮动反馈条 -->
+        <div class="obj-pop" id="objPop" hidden>
+          <span class="obj-pop-name" id="objPopName">Hero 主标题</span>
+          <button class="obj-pop-btn" id="objPopComment">💬 留言</button>
+          <button class="obj-pop-btn" id="objPopImprove">✨ 让 agent 优化</button>
+        </div>
+
+        <!-- 渲染遮罩 -->
+        <div class="pv-shimmer" id="pvShimmer" hidden>
+          <div class="shimmer-bar"></div>
+          <span>agent 正在重新渲染…</span>
+        </div>
+      </div>
+
+      <!-- 次级面板：对象检查器（可展开，非独立主栏） -->
+      <aside class="inspector" id="inspector" data-oey-section="inspector" hidden>
+        <div class="insp-head">
+          <span>检查器</span>
+          <button id="inspClose">×</button>
+        </div>
+        <div class="insp-body" id="inspBody">
+          <p class="insp-empty">在预览中点击任意对象查看属性</p>
+        </div>
+      </aside>
+
+    </section>
+  </main>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast" hidden></div>
+
+<script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,855 @@
+<<<FILE: index.html>>>
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nexus 工作台 · Agent 构建台</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<header class="topbar" data-oey-section="topbar">
+  <div class="topbar-left">
+    <div class="logo-mark">N</div>
+    <span class="logo-text" data-oey-object="topbar.productName">Nexus 工作台</span>
+  </div>
+  <div class="topbar-right">
+    <span class="mode-badge" data-oey-object="topbar.modeBadge" id="modeBadge">● Mock 模式（无后端）</span>
+  </div>
+</header>
+
+<main class="layout">
+
+  <!-- ============ 项目列表区 ============ -->
+  <aside class="sidebar" data-oey-section="sidebar">
+    <div class="sidebar-head">
+      <h2 data-oey-object="sidebar.title">项目</h2>
+      <button class="btn-new" id="btnNewProject" data-oey-object="sidebar.newProjectButton" title="新建项目">＋</button>
+    </div>
+    <ul class="project-list" id="projectList" data-oey-object="sidebar.projectList"></ul>
+    <div class="sidebar-foot" data-oey-object="sidebar.footnote">数据来自本地 mock，刷新即重置</div>
+  </aside>
+
+  <!-- ============ 对话区 ============ -->
+  <section class="chat" data-oey-section="chat">
+    <div class="chat-head">
+      <div>
+        <div class="chat-project-name" id="chatProjectName" data-oey-object="chat.projectName">—</div>
+        <div class="chat-project-desc" id="chatProjectDesc" data-oey-object="chat.projectDesc">—</div>
+      </div>
+      <span class="chat-status" id="chatStatus" data-oey-object="chat.agentStatus">agent 空闲</span>
+    </div>
+
+    <div class="messages" id="messageList" data-oey-object="chat.messageList"></div>
+
+    <form class="composer" id="composer" data-oey-object="chat.composer">
+      <textarea id="composerInput" data-oey-object="chat.input" rows="2"
+        placeholder="向 agent 描述你想要的改动，例如：加一个蓝色按钮 / 加一张数据表格 / 把主题改成紫色"></textarea>
+      <button type="submit" class="btn-send" id="btnSend" data-oey-object="chat.sendButton">发送</button>
+    </form>
+  </section>
+
+  <!-- ============ 预览区 ============ -->
+  <section class="preview" data-oey-section="preview">
+    <div class="preview-head">
+      <div>
+        <span class="preview-title" data-oey-object="preview.title">产出预览</span>
+        <span class="preview-version" id="previewVersion" data-oey-object="preview.version">v0</span>
+      </div>
+      <span class="preview-file" id="previewFileName" data-oey-object="preview.fileName">index.html</span>
+    </div>
+    <div class="preview-body">
+      <div class="preview-empty" id="previewEmpty" data-oey-object="preview.emptyState">暂无可预览的产出</div>
+      <iframe id="previewFrame" class="preview-frame" data-oey-object="preview.frame"
+        sandbox="allow-same-origin" title="产出预览"></iframe>
+    </div>
+  </section>
+
+</main>
+
+<script src="app.js"></script>
+</body>
+</html>
+<<<END>>>
+<<<FILE: styles.css>>>
+:root {
+  --bg: #0f1115;
+  --panel: #161a22;
+  --panel-2: #1c212b;
+  --border: #262c38;
+  --text: #e6e9ef;
+  --text-dim: #8b93a3;
+  --accent: #4f7cff;
+  --accent-soft: rgba(79, 124, 255, .15);
+  --user-bubble: #2a3345;
+  --agent-bubble: #1c212b;
+  --radius: 10px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body { height: 100%; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+    "Hiragino Sans GB", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* ---------- 顶栏 ---------- */
+.topbar {
+  height: 52px;
+  flex: 0 0 52px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 18px;
+  background: var(--panel);
+  border-bottom: 1px solid var(--border);
+}
+.topbar-left { display: flex; align-items: center; gap: 10px; }
+.logo-mark {
+  width: 28px; height: 28px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #4f7cff, #8a5cff);
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: 15px; color: #fff;
+}
+.logo-text { font-weight: 600; font-size: 15px; letter-spacing: .5px; }
+.mode-badge {
+  font-size: 12px;
+  color: #ffb454;
+  background: rgba(255, 180, 84, .1);
+  border: 1px solid rgba(255, 180, 84, .35);
+  padding: 4px 10px;
+  border-radius: 999px;
+}
+
+/* ---------- 三栏布局 ---------- */
+.layout {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 240px minmax(0, 1fr) minmax(0, 1.2fr);
+  min-height: 0;
+}
+
+/* ---------- 项目列表区 ---------- */
+.sidebar {
+  background: var(--panel);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+.sidebar-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 14px 10px;
+}
+.sidebar-head h2 { font-size: 13px; color: var(--text-dim); font-weight: 600; letter-spacing: 1px; }
+.btn-new {
+  width: 24px; height: 24px;
+  border: 1px solid var(--border);
+  background: var(--panel-2);
+  color: var(--text);
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1;
+}
+.btn-new:hover { border-color: var(--accent); color: var(--accent); }
+
+.project-list {
+  list-style: none;
+  overflow-y: auto;
+  flex: 1;
+  padding: 0 8px;
+}
+.project-item {
+  padding: 10px 12px;
+  border-radius: var(--radius);
+  cursor: pointer;
+  margin-bottom: 4px;
+  border: 1px solid transparent;
+  transition: background .15s;
+}
+.project-item:hover { background: var(--panel-2); }
+.project-item.active {
+  background: var(--accent-soft);
+  border-color: rgba(79, 124, 255, .4);
+}
+.project-name { font-size: 14px; font-weight: 500; display: block; }
+.project-meta { font-size: 12px; color: var(--text-dim); margin-top: 3px; display: block; }
+.sidebar-foot {
+  padding: 10px 14px;
+  font-size: 11px;
+  color: var(--text-dim);
+  border-top: 1px solid var(--border);
+}
+
+/* ---------- 对话区 ---------- */
+.chat {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  border-right: 1px solid var(--border);
+  background: var(--bg);
+}
+.chat-head {
+  flex: 0 0 auto;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--panel);
+}
+.chat-project-name { font-size: 15px; font-weight: 600; }
+.chat-project-desc { font-size: 12px; color: var(--text-dim); margin-top: 2px; }
+.chat-status {
+  font-size: 12px;
+  color: #6fdc8c;
+  background: rgba(111, 220, 140, .08);
+  border: 1px solid rgba(111, 220, 140, .3);
+  border-radius: 999px;
+  padding: 3px 10px;
+  white-space: nowrap;
+}
+.chat-status.busy { color: #ffb454; border-color: rgba(255,180,84,.35); background: rgba(255,180,84,.08); }
+
+.messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.msg {
+  max-width: 82%;
+  padding: 10px 14px;
+  border-radius: 12px;
+  font-size: 14px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.msg.user {
+  align-self: flex-end;
+  background: var(--user-bubble);
+  border: 1px solid #36415a;
+  border-bottom-right-radius: 4px;
+}
+.msg.agent {
+  align-self: flex-start;
+  background: var(--agent-bubble);
+  border: 1px solid var(--border);
+  border-bottom-left-radius: 4px;
+}
+.msg .msg-tag {
+  display: inline-block;
+  margin-top: 6px;
+  font-size: 11px;
+  color: var(--accent);
+  background: var(--accent-soft);
+  border-radius: 4px;
+  padding: 2px 6px;
+}
+.msg.typing { color: var(--text-dim); font-style: italic; }
+
+.composer {
+  flex: 0 0 auto;
+  display: flex;
+  gap: 10px;
+  padding: 12px 14px;
+  border-top: 1px solid var(--border);
+  background: var(--panel);
+}
+.composer textarea {
+  flex: 1;
+  resize: none;
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text);
+  padding: 10px 12px;
+  font-size: 14px;
+  font-family: inherit;
+  outline: none;
+}
+.composer textarea:focus { border-color: var(--accent); }
+.btn-send {
+  align-self: flex-end;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius);
+  padding: 0 20px;
+  height: 38px;
+  font-size: 14px;
+  cursor: pointer;
+}
+.btn-send:disabled { opacity: .5; cursor: not-allowed; }
+.btn-send:not(:disabled):hover { filter: brightness(1.1); }
+
+/* ---------- 预览区 ---------- */
+.preview {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  background: var(--bg);
+}
+.preview-head {
+  flex: 0 0 auto;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--panel);
+}
+.preview-title { font-size: 15px; font-weight: 600; }
+.preview-version {
+  font-size: 11px;
+  color: var(--accent);
+  background: var(--accent-soft);
+  padding: 2px 8px;
+  border-radius: 999px;
+  margin-left: 8px;
+}
+.preview-file { font-size: 12px; color: var(--text-dim); font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; }
+.preview-body { flex: 1; position: relative; min-height: 0; }
+.preview-frame {
+  width: 100%; height: 100%;
+  border: none;
+  background: #fff;
+  display: block;
+}
+.preview-empty {
+  position: absolute;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-dim);
+  font-size: 14px;
+}
+.preview-empty.visible { display: flex; }
+
+::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar-thumb { background: #2c3342; border-radius: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+<<<END>>>
+<<<FILE: app.js>>>
+/* ============================================================
+ * Nexus 工作台 —— 纯前端 mock 层 + 界面逻辑
+ * 无任何网络请求：所有“接口”都是本地异步函数（setTimeout 模拟延迟）
+ * ============================================================ */
+
+(function () {
+  'use strict';
+
+  /* ---------------- 工具 ---------------- */
+
+  function delay(min, max) {
+    var ms = min + Math.random() * (max - min);
+    return new Promise(function (resolve) { setTimeout(resolve, ms); });
+  }
+
+  function escapeHtml(s) {
+    return String(s)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  }
+
+  /* ---------------- 组件模板（预览产物的拼装素材） ---------------- */
+
+  var COMPONENT_BUILDERS = {
+    hero: function (p) {
+      return '<header class="hero"><h1>' + escapeHtml(p.name) + '</h1>' +
+        '<p>' + escapeHtml(p.desc) + '</p></header>';
+    },
+    card: function () {
+      return '<section class="card"><h3>特性卡片</h3>' +
+        '<p>这是 agent 生成的一张介绍卡片，用来承载任意说明性内容。</p></section>';
+    },
+    button: function () {
+      return '<section class="block"><button class="cta">立即体验</button></section>';
+    },
+    table: function () {
+      return '<section class="card"><h3>数据表格</h3><table>' +
+        '<tr><th>指标</th><th>今日</th><th>环比</th></tr>' +
+        '<tr><td>访问量</td><td>12,480</td><td>+8.2%</td></tr>' +
+        '<tr><td>转化率</td><td>3.6%</td><td>+0.4%</td></tr>' +
+        '<tr><td>跳出率</td><td>41%</td><td>-2.1%</td></tr>' +
+        '</table></section>';
+    },
+    form: function () {
+      return '<section class="card"><h3>报名表单</h3>' +
+        '<div class="field"><label>姓名</label><input placeholder="请输入姓名"></div>' +
+        '<div class="field"><label>邮箱</label><input placeholder="name@example.com"></div>' +
+        '<button class="cta">提交</button></section>';
+    },
+    quote: function (text) {
+      return '<section class="card quote"><p>“' + escapeHtml(text) + '”</p></section>';
+    }
+  };
+
+  /* 把项目当前的组件数组拼装成一份完整 HTML 文档 */
+  function renderArtifact(project) {
+    var body = project.components.map(function (c) {
+      return COMPONENT_BUILDERS[c.type](c.arg !== undefined ? c.arg : project);
+    }).join('\n');
+
+    return '<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><style>' +
+      'body{margin:0;font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;' +
+      'background:#f6f7fb;color:#23262d;padding:32px;display:flex;flex-direction:column;gap:16px;}' +
+      '.hero{background:linear-gradient(135deg,' + project.accent + ',#8a5cff);color:#fff;' +
+      'border-radius:14px;padding:36px 28px;}' +
+      '.hero h1{margin:0 0 8px;font-size:26px;}' +
+      '.hero p{margin:0;opacity:.85;font-size:14px;}' +
+      '.card{background:#fff;border:1px solid #e4e7ee;border-radius:12px;padding:20px 22px;}' +
+      '.card h3{margin:0 0 10px;font-size:16px;}' +
+      '.card p{margin:0;font-size:14px;color:#555b66;line-height:1.7;}' +
+      '.quote p{font-style:italic;color:#333;}' +
+      '.block{text-align:center;padding:8px 0;}' +
+      '.cta{background:' + project.accent + ';color:#fff;border:none;border-radius:8px;' +
+      'padding:10px 26px;font-size:14px;cursor:pointer;}' +
+      'table{width:100%;border-collapse:collapse;font-size:13px;}' +
+      'th,td{text-align:left;padding:8px 10px;border-bottom:1px solid #eceff4;}' +
+      'th{color:#8b93a3;font-weight:600;}' +
+      '.field{margin-bottom:12px;}' +
+      '.field label{display:block;font-size:12px;color:#8b93a3;margin-bottom:4px;}' +
+      '.field input{width:100%;box-sizing:border-box;padding:8px 10px;border:1px solid #dde1e9;' +
+      'border-radius:8px;font-size:13px;}' +
+      '</style></head><body>' + body + '</body></html>';
+  }
+
+  /* ---------------- 回复生成规则（关键词 → 组件 / 主题变更） ---------------- */
+
+  var ACCENT_MAP = [
+    { re: /蓝/, color: '#4f7cff', label: '蓝色' },
+    { re: /红/, color: '#e5534b', label: '红色' },
+    { re: /绿/, color: '#2da86e', label: '绿色' },
+    { re: /紫/, color: '#8a5cff', label: '紫色' },
+    { re: /橙/, color: '#f08a24', label: '橙色' }
+  ];
+
+  /**
+   * 根据用户输入推导 agent 回复与产物变更。
+   * 返回 { replyText, changed, changeLabel }
+   */
+  function generateReply(project, userText) {
+    var text = String(userText);
+    var changes = [];
+
+    // 主题色规则
+    for (var i = 0; i < ACCENT_MAP.length; i++) {
+      if (ACCENT_MAP[i].re.test(text) && /(颜色|主题|色|色调|配色)/.test(text)) {
+        project.accent = ACCENT_MAP[i].color;
+        changes.push('把主题色切换成了' + ACCENT_MAP[i].label);
+        break;
+      }
+    }
+
+    // 组件规则
+    if (/按钮|button/i.test(text)) {
+      project.components.push({ type: 'button' });
+      changes.push('新增了一个行动按钮');
+    }
+    if (/表格|数据|table/i.test(text)) {
+      project.components.push({ type: 'table' });
+      changes.push('插入了一张数据表格');
+    }
+    if (/表单|报名|输入框|form/i.test(text)) {
+      project.components.push({ type: 'form' });
+      changes.push('生成了一个报名表单');
+    }
+    if (/卡片|介绍|特性|card/i.test(text)) {
+      project.components.push({ type: 'card' });
+      changes.push('补充了一张介绍卡片');
+    }
+    if (/引用|一句话|标语|slogan/i.test(text)) {
+      var slogan = text.replace(/引用|一句话|标语|slogan|加|写|个|一条|：|:/gi, '').trim() || '让想法自己长成产品';
+      project.components.push({ type: 'quote', arg: slogan });
+      changes.push('加入了一条引用文案');
+    }
+
+    if (changes.length > 0) {
+      project.version += 1;
+      return {
+        replyText: '收到，我已经完成以下调整：\n· ' + changes.join('\n· ') +
+          '\n右侧预览已更新到 v' + project.version + '，你可以继续描述下一步需求。',
+        changed: true,
+        changeLabel: '已更新预览 → v' + project.version
+      };
+    }
+
+    // 无命中规则：纯模板化闲聊回复，不改产物
+    var fallbacks = [
+      '明白了。不过这个需求我还没法直接落成页面改动——试试让我「加一个按钮」「插入数据表格」「生成报名表单」或「把主题改成紫色」。',
+      '已记录你的想法。目前我支持的改动包括：按钮、卡片、数据表格、表单、引用文案，以及蓝/红/绿/紫/橙五种主题色。',
+      '收到。这条消息没有触发任何页面变更，预览保持 v' + project.version + ' 不变。你可以换个更具体的说法试试。'
+    ];
+    return {
+      replyText: fallbacks[Math.floor(Math.random() * fallbacks.length)],
+      changed: false,
+      changeLabel: null
+    };
+  }
+
+  /* ---------------- 种子数据（纯虚构） ---------------- */
+
+  function seedProject(id, name, desc, accent, convo, components) {
+    return {
+      id: id,
+      name: name,
+      desc: desc,
+      accent: accent,
+      version: 1,
+      updatedAt: Date.now() - Math.floor(Math.random() * 86400000),
+      conversation: convo,
+      components: components
+    };
+  }
+
+  var projects = [
+    seedProject('p1', '官网落地页', '产品官网首屏与转化区块', '#4f7cff',
+      [
+        { role: 'user', text: '帮我搭一个产品官网的落地页骨架。' },
+        { role: 'user', text: '帮我搭一个产品官网的落地页骨架。'.replace('帮我', '先帮我') }
+      ].slice(0, 1).concat([
+        { role: 'agent', text: '已生成首屏 Hero 与一张介绍卡片（v1）。可以继续让我加按钮、表格或调整主题色。', tag: '已更新预览 → v1' }
+      ]),
+      [{ type: 'hero' }, { type: 'card' }]),
+
+    seedProject('p2', '数据看板', '运营指标一览页面', '#2da86e',
+      [
+        { role: 'user', text: '我需要一个展示运营数据的看板页。' },
+        { role: 'agent', text: '看板骨架已就绪（v1）：绿色主题 Hero + 介绍卡片。对我说「加数据表格」即可填入指标。', tag: '已更新预览 → v1' }
+      ],
+      [{ type: 'hero' }, { type: 'card' }]),
+
+    seedProject('p3', '活动报名页', '线下活动报名落地页', '#f08a24',
+      [
+        { role: 'user', text: '做一页活动报名页，主题用橙色。' },
+        { role: 'agent', text: '已按橙色主题生成首屏（v1）。对我说「生成报名表单」即可加入姓名/邮箱填写区。', tag: '已更新预览 → v1' }
+      ],
+      [{ type: 'hero' }]),
+
+    seedProject('p4', '个人博客', '极简风格的博客首页', '#8a5cff',
+      [
+        { role: 'user', text: '给我的博客首页打个底。' },
+        { role: 'agent', text: '紫色主题的博客首屏已生成（v1）。想加引用标语或介绍卡片随时说。', tag: '已更新预览 → v1' }
+      ],
+      [{ type: 'hero' }, { type: 'quote', arg: '写作是把模糊的想法钉在纸上。' }])
+  ];
+
+  var newProjectCounter = 0;
+
+  /* ---------------- Mock API（暴露到 window.__mockApi__） ---------------- */
+
+  var MockAPI = {
+    /** 拉取项目列表（模拟 200~500ms 网络延迟） */
+    listProjects: function () {
+      return delay(200, 500).then(function () {
+        return projects.map(function (p) {
+          return { id: p.id, name: p.name, desc: p.desc, updatedAt: p.updatedAt };
+        });
+      });
+    },
+
+    /** 拉取某个项目的完整状态：会话 + 产物（模拟 300~700ms） */
+    getProject: function (id) {
+      return delay(300, 700).then(function () {
+        var p = projects.find(function (x) { return x.id === id; });
+        if (!p) throw new Error('project not found: ' + id);
+        return {
+          id: p.id,
+          name: p.name,
+          desc: p.desc,
+          version: p.version,
+          conversation: p.conversation.slice(),
+          artifactHtml: renderArtifact(p)
+        };
+      });
+    },
+
+    /** 发送消息，返回 agent 回复（模拟 700~1600ms "思考" 时间） */
+    sendMessage: function (id, text) {
+      return delay(700, 1600).then(function () {
+        var p = projects.find(function (x) { return x.id === id; });
+        if (!p) throw new Error('project not found: ' + id);
+        p.conversation.push({ role: 'user', text: text });
+        var result = generateReply(p, text);
+        var agentMsg = { role: 'agent', text: result.replyText };
+        if (result.changeLabel) agentMsg.tag = result.changeLabel;
+        p.conversation.push(agentMsg);
+        p.updatedAt = Date.now();
+        return {
+          reply: agentMsg,
+          changed: result.changed,
+          version: p.version,
+          artifactHtml: result.changed ? renderArtifact(p) : null
+        };
+      });
+    },
+
+    /** 新建项目（名称按计数器规则生成） */
+    createProject: function () {
+      return delay(300, 600).then(function () {
+        newProjectCounter += 1;
+        var p = seedProject(
+          'p-new-' + newProjectCounter,
+          '未命名项目 ' + newProjectCounter,
+          '从空白开始的构建会话',
+          '#4f7cff',
+          [{ role: 'agent', text: '新项目已创建，这是一个空白产物。描述你的第一个需求吧，例如「加一张介绍卡片」。' }],
+          [{ type: 'hero' }]
+        );
+        projects.unshift(p);
+        return { id: p.id, name: p.name, desc: p.desc, updatedAt: p.updatedAt };
+      });
+    }
+  };
+
+  window.__mockApi__ = MockAPI;
+
+  /* ---------------- 界面逻辑 ---------------- */
+
+  var els = {
+    projectList: document.getElementById('projectList'),
+    btnNewProject: document.getElementById('btnNewProject'),
+    chatProjectName: document.getElementById('chatProjectName'),
+    chatProjectDesc: document.getElementById('chatProjectDesc'),
+    chatStatus: document.getElementById('chatStatus'),
+    messageList: document.getElementById('messageList'),
+    composer: document.getElementById('composer'),
+    composerInput: document.getElementById('composerInput'),
+    btnSend: document.getElementById('btnSend'),
+    previewVersion: document.getElementById('previewVersion'),
+    previewFileName: document.getElementById('previewFileName'),
+    previewFrame: document.getElementById('previewFrame'),
+    previewEmpty: document.getElementById('previewEmpty')
+  };
+
+  var state = {
+    currentProjectId: null,
+    pending: false
+  };
+
+  function setAgentStatus(text, busy) {
+    els.chatStatus.textContent = text;
+    els.chatStatus.classList.toggle('busy', !!busy);
+  }
+
+  function renderProjectList(list) {
+    els.projectList.innerHTML = '';
+    list.forEach(function (p) {
+      var li = document.createElement('li');
+      li.className = 'project-item' + (p.id === state.currentProjectId ? ' active' : '');
+      li.setAttribute('data-oey-object', 'sidebar.project');
+      li.setAttribute('data-project-id', p.id);
+
+      var name = document.createElement('span');
+      name.className = 'project-name';
+      name.setAttribute('data-oey-object', 'sidebar.project.name');
+      name.textContent = p.name;
+
+      var meta = document.createElement('span');
+      meta.className = 'project-meta';
+      meta.setAttribute('data-oey-object', 'sidebar.project.meta');
+      meta.textContent = p.desc;
+
+      li.appendChild(name);
+      li.appendChild(meta);
+      li.addEventListener('click', function () { selectProject(p.id); });
+      els.projectList.appendChild(li);
+    });
+  }
+
+  function appendMessage(msg) {
+    var div = document.createElement('div');
+    div.className = 'msg ' + msg.role;
+    div.setAttribute('data-oey-object', 'chat.message');
+    div.setAttribute('data-role', msg.role);
+    div.textContent = msg.text;
+    if (msg.tag) {
+      var tag = document.createElement('span');
+      tag.className = 'msg-tag';
+      tag.setAttribute('data-oey-object', 'chat.message.tag');
+      tag.textContent = msg.tag;
+      div.appendChild(document.createElement('br'));
+      div.appendChild(tag);
+    }
+    els.messageList.appendChild(div);
+    els.messageList.scrollTop = els.messageList.scrollHeight;
+    return div;
+  }
+
+  function renderConversation(conversation) {
+    els.messageList.innerHTML = '';
+    conversation.forEach(appendMessage);
+  }
+
+  function renderPreview(artifactHtml, version, projectName) {
+    if (artifactHtml) {
+      els.previewFrame.srcdoc = artifactHtml;
+      els.previewFrame.style.display = 'block';
+      els.previewEmpty.classList.remove('visible');
+    } else {
+      els.previewFrame.style.display = 'none';
+      els.previewEmpty.classList.add('visible');
+    }
+    els.previewVersion.textContent = 'v' + version;
+    els.previewFileName.textContent = (projectName || 'artifact') + '/index.html';
+  }
+
+  function refreshListActive() {
+    var items = els.projectList.querySelectorAll('.project-item');
+    items.forEach(function (li) {
+      li.classList.toggle('active', li.getAttribute('data-project-id') === state.currentProjectId);
+    });
+  }
+
+  /** 切换当前项目：重新拉取会话与产物 */
+  function selectProject(id) {
+    if (state.pending || id === state.currentProjectId) return;
+    state.currentProjectId = id;
+    refreshListActive();
+    setAgentStatus('加载中…', true);
+    MockAPI.getProject(id).then(function (data) {
+      if (state.currentProjectId !== id) return; // 防止快速点击串台
+      els.chatProjectName.textContent = data.name;
+      els.chatProjectDesc.textContent = data.desc;
+      renderConversation(data.conversation);
+      renderPreview(data.artifactHtml, data.version, data.name);
+      setAgentStatus('agent 空闲', false);
+    });
+  }
+
+  /** 发送消息 */
+  els.composer.addEventListener('submit', function (e) {
+    e.preventDefault();
+    var text = els.composerInput.value.trim();
+    if (!text || state.pending || !state.currentProjectId) return;
+
+    state.pending = true;
+    els.btnSend.disabled = true;
+    els.composerInput.value = '';
+
+    appendMessage({ role: 'user', text: text });
+    var typingEl = document.createElement('div');
+    typingEl.className = 'msg agent typing';
+    typingEl.setAttribute('data-oey-object', 'chat.message.typing');
+    typingEl.textContent = 'agent 正在思考…';
+    els.messageList.appendChild(typingEl);
+    els.messageList.scrollTop = els.messageList.scrollHeight;
+    setAgentStatus('agent 生成中…', true);
+
+    MockAPI.sendMessage(state.currentProjectId, text).then(function (res) {
+      typingEl.remove();
+      appendMessage(res.reply);
+      if (res.changed && res.artifactHtml) {
+        renderPreview(res.artifactHtml, res.version, els.chatProjectName.textContent);
+      } else {
+        els.previewVersion.textContent = 'v' + res.version;
+      }
+    }).finally(function () {
+      state.pending = false;
+      els.btnSend.disabled = false;
+      setAgentStatus('agent 空闲', false);
+      els.composerInput.focus();
+    });
+  });
+
+  /** 新建项目 */
+  els.btnNewProject.addEventListener('click', function () {
+    if (state.pending) return;
+    setAgentStatus('创建项目中…', true);
+    MockAPI.createProject().then(function () {
+      return MockAPI.listProjects();
+    }).then(function (list) {
+      renderProjectList(list);
+      state.currentProjectId = null; // 强制 selectProject 生效
+      selectProject(list[0].id);
+    });
+  });
+
+  /** 启动：加载列表并选中第一个项目 */
+  MockAPI.listProjects().then(function (list) {
+    renderProjectList(list);
+    if (list.length > 0) selectProject(list[0].id);
+  });
+
+})();
+<<<END>>>
+<<<FILE: MOCK.md>>>
+# MOCK.md —— Nexus 工作台 mock 行为声明
+
+本项目为纯静态前端原型，**没有任何真实后端，也不发起任何网络请求**（无 CDN、无外部字体/图标/图片）。以下如实列出代码中所有 mock 行为。
+
+## 一、技术手段总览
+
+| 手段 | 是否使用 | 说明 |
+|---|---|---|
+| 内联假数据（JS 数组/对象） | ✅ | 项目种子数据、初始会话、组件模板均硬编码在 `app.js` |
+| `setTimeout` 模拟网络延迟 | ✅ | 统一封装为 `delay(min, max)`，所有 mock 接口都经它返回 Promise |
+| 规则/模板推导生成内容 | ✅ | agent 回复与预览产物由关键词规则 + HTML 模板拼装生成（见下文） |
+| 暴露 `window.__mockApi__` 假客户端 | ✅ | 界面代码只通过该客户端取数，模拟真实 API 分层 |
+| fetch / XMLHttpRequest 拦截 | ❌ | 未使用 |
+| Service Worker | ❌ | 未使用 |
+| localStorage / 任何持久化 | ❌ | 未使用，**刷新页面后所有状态重置为种子数据** |
+
+## 二、被 mock 的接口 / 交互点
+
+均挂在 `window.__mockApi__` 上，位于 `app.js`：
+
+### 1. 项目列表 —— `MockAPI.listProjects()`
+- **行为**：返回项目摘要数组（id / 名称 / 描述 / 更新时间），延迟 200~500ms。
+- **数据来源**：**纯虚构**。4 个种子项目（官网落地页 / 数据看板 / 活动报名页 / 个人博客）由 `seedProject()` 硬编码构造，与任何真实产品无关。
+
+### 2. 项目详情（切换项目）—— `MockAPI.getProject(id)`
+- **行为**：返回该项目的完整会话记录 + 当前产物 HTML + 版本号，延迟 300~700ms。点击侧边栏项目项即触发，对话区与预览区随之整体替换。
+- **数据来源**：会话为**虚构的**预置对话（每项目 1 条用户消息 + 1 条 agent 消息）；产物 HTML 为**规则推导**（见第 4 点）。
+
+### 3. 发送消息后的 agent 回复 —— `MockAPI.sendMessage(id, text)`
+- **行为**：延迟 700~1600ms（模拟"思考"），期间界面显示"agent 正在思考…"占位气泡；返回回复文本、是否变更产物、新版本号与（如有变更的）新产物 HTML。
+- **数据来源**：**规则推导**，不是真模型。规则如下（按用户输入的关键词命中，见 `generateReply()`）：
+
+  | 输入命中关键词 | 推导结果 |
+  |---|---|
+  | 蓝/红/绿/紫/橙 + “颜色/主题/配色”等 | 修改产物主题色（accent），版本 +1 |
+  | “按钮 / button” | 追加按钮组件，版本 +1 |
+  | “表格 / 数据 / table” | 追加数据表格组件，版本 +1 |
+  | “表单 / 报名 / 输入框 / form” | 追加报名表单组件，版本 +1 |
+  | “卡片 / 介绍 / 特性 / card” | 追加介绍卡片组件，版本 +1 |
+  | “引用 / 标语 / slogan” | 追加引用文案组件（文案取用户消息去除指令词后的剩余文本，做 HTML 转义后嵌入），版本 +1 |
+  | 全部未命中 | 从 3 条预置"闲聊/引导"回复模板中**随机选 1 条**，产物不变 |
+
+  回复正文本身也是**模板拼装**：列出本次变更项 + 当前版本号。
+
+### 4. 预览产物 —— `renderArtifact(project)`
+- **行为**：预览区用 `<iframe srcdoc="...">` 渲染一份完整 HTML 文档；切换项目或产物版本更新时重新生成并替换。
+- **数据来源**：**规则推导**。产物 = 基础 HTML/CSS 模板（内联样式，硬编码于 `renderArtifact`）+ 项目当前的组件数组（`project.components`）按序拼装 + 主题色变量。组件的 HTML 片段来自硬编码的 `COMPONENT_BUILDERS` 模板（hero / card / button / table / form / quote）。表格里的数字、表单字段、按钮文案均为**虚构**。
+- **注意**：iframe 设置了 `sandbox` 且内容完全由本地字符串生成，不加载任何外部资源。
+
+### 5. 新建项目 —— `MockAPI.createProject()`
+- **行为**：延迟 300~600ms，向项目列表头部插入一个新项目并自动选中。
+- **数据来源**：**规则推导**。名称按计数器生成（"未命名项目 N"），产物为仅含 hero 的空白模板，会话含 1 条固定的 agent 欢迎语（模板文案）。
+
+### 6. 界面中的"加载/生成中"状态
+- 项目切换时的"加载中…"、发消息时的"agent 生成中…"与打字占位气泡，均对应上述 `setTimeout` 延迟窗口，属于模拟体验的一部分，不代表真实计算。
+
+## 三、遗漏自查
+
+- 代码中**没有**任何 `fetch` / `XMLHttpRequest` / `WebSocket` / `EventSource` 调用。
+- 代码中**没有**任何外部 URL（http/https 协议资源引用为零）。
+- 所有会变化的内容（列表、会话、预览、版本号）均由上文第 1~5 点覆盖，无其他隐藏 mock 行为。
+<<<END>>>

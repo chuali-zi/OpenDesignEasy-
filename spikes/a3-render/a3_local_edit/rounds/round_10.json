@@ -1,0 +1,1810 @@
+{
+  "round": 10,
+  "kind": "add-element",
+  "ref": "case-card-grid",
+  "baseline_tag": "div",
+  "instruction": "仅在该作用域容器末尾新增一个直接子元素，沿用现有直接子元素的标签和已有 class，简短文字为“新增项目 10”；不得添加 data-oey-*、id、style 或新 class。",
+  "html": "round_10.html",
+  "usage": {
+    "prompt_tokens": 7612,
+    "completion_tokens": 7299,
+    "total_tokens": 14911,
+    "completion_tokens_details": {
+      "reasoning_tokens": 284
+    }
+  },
+  "elapsed_s": 221.59,
+  "render": {
+    "health": {
+      "console_errors": [],
+      "console_warnings": [],
+      "failed_requests": [],
+      "page_errors": []
+    },
+    "geometry": [
+      {
+        "key": "section:site-header",
+        "dom_index": 0,
+        "box": {
+          "x0": 0,
+          "y0": 0,
+          "x1": 1440,
+          "y1": 86.59375
+        }
+      },
+      {
+        "key": "object:brand-logo",
+        "dom_index": 1,
+        "box": {
+          "x0": 144,
+          "y0": 23.59375,
+          "x1": 266.34375,
+          "y1": 61.984375
+        }
+      },
+      {
+        "key": "object:nav-menu",
+        "dom_index": 2,
+        "box": {
+          "x0": 573.171875,
+          "y0": 30,
+          "x1": 869.171875,
+          "y1": 55.59375
+        }
+      },
+      {
+        "key": "object:header-cta",
+        "dom_index": 3,
+        "box": {
+          "x0": 1176,
+          "y0": 18,
+          "x1": 1296,
+          "y1": 67.59375
+        }
+      },
+      {
+        "key": "section:hero-banner",
+        "dom_index": 4,
+        "box": {
+          "x0": 0,
+          "y0": 86.59375,
+          "x1": 1440,
+          "y1": 796.828125
+        }
+      },
+      {
+        "key": "object:hero-kicker",
+        "dom_index": 5,
+        "box": {
+          "x0": 144,
+          "y0": 223.84375,
+          "x1": 664,
+          "y1": 243.03125
+        }
+      },
+      {
+        "key": "object:hero-title",
+        "dom_index": 6,
+        "box": {
+          "x0": 144,
+          "y0": 267.03125,
+          "x1": 746.171875,
+          "y1": 395.8125
+        }
+      },
+      {
+        "key": "object:hero-subtitle",
+        "dom_index": 7,
+        "box": {
+          "x0": 144,
+          "y0": 411.8125,
+          "x1": 664,
+          "y1": 437.40625
+        }
+      },
+      {
+        "key": "object:hero-cta-primary",
+        "dom_index": 8,
+        "box": {
+          "x0": 144,
+          "y0": 461.40625,
+          "x1": 264,
+          "y1": 513
+        }
+      },
+      {
+        "key": "object:hero-cta-secondary",
+        "dom_index": 9,
+        "box": {
+          "x0": 280,
+          "y0": 461.40625,
+          "x1": 402,
+          "y1": 513
+        }
+      },
+      {
+        "key": "object:hero-stats",
+        "dom_index": 10,
+        "box": {
+          "x0": 144,
+          "y0": 561,
+          "x1": 746.171875,
+          "y1": 659.578125
+        }
+      },
+      {
+        "key": "object:hero-visual",
+        "dom_index": 11,
+        "box": {
+          "x0": 794.171875,
+          "y0": 166.59375,
+          "x1": 1296,
+          "y1": 710.234375
+        }
+      },
+      {
+        "key": "section:brand-intro",
+        "dom_index": 12,
+        "box": {
+          "x0": 0,
+          "y0": 796.828125,
+          "x1": 1440,
+          "y1": 1389.546875
+        }
+      },
+      {
+        "key": "object:intro-kicker",
+        "dom_index": 13,
+        "box": {
+          "x0": 144,
+          "y0": 876.828125,
+          "x1": 1296,
+          "y1": 896.015625
+        }
+      },
+      {
+        "key": "object:intro-title",
+        "dom_index": 14,
+        "box": {
+          "x0": 144,
+          "y0": 904.015625,
+          "x1": 1296,
+          "y1": 961.609375
+        }
+      },
+      {
+        "key": "object:intro-lead",
+        "dom_index": 15,
+        "box": {
+          "x0": 144,
+          "y0": 1009.609375,
+          "x1": 696,
+          "y1": 1086.390625
+        }
+      },
+      {
+        "key": "object:intro-quote",
+        "dom_index": 16,
+        "box": {
+          "x0": 144,
+          "y0": 1110.390625,
+          "x1": 696,
+          "y1": 1142.390625
+        }
+      },
+      {
+        "key": "object:intro-link",
+        "dom_index": 17,
+        "box": {
+          "x0": 144,
+          "y0": 1160.390625,
+          "x1": 306.1875,
+          "y1": 1181.390625
+        }
+      },
+      {
+        "key": "object:intro-feature-grid",
+        "dom_index": 18,
+        "box": {
+          "x0": 744,
+          "y0": 1009.609375,
+          "x1": 1296,
+          "y1": 1309.546875
+        }
+      },
+      {
+        "key": "section:case-studies",
+        "dom_index": 19,
+        "box": {
+          "x0": 0,
+          "y0": 1389.546875,
+          "x1": 1440,
+          "y1": 2733
+        }
+      },
+      {
+        "key": "object:cases-kicker",
+        "dom_index": 20,
+        "box": {
+          "x0": 144,
+          "y0": 1469.546875,
+          "x1": 1296,
+          "y1": 1488.734375
+        }
+      },
+      {
+        "key": "object:cases-title",
+        "dom_index": 21,
+        "box": {
+          "x0": 144,
+          "y0": 1496.734375,
+          "x1": 1296,
+          "y1": 1554.328125
+        }
+      },
+      {
+        "key": "object:cases-lead",
+        "dom_index": 22,
+        "box": {
+          "x0": 144,
+          "y0": 1570.328125,
+          "x1": 784,
+          "y1": 1595.921875
+        }
+      },
+      {
+        "key": "object:case-card-grid",
+        "dom_index": 23,
+        "box": {
+          "x0": 144,
+          "y0": 1643.921875,
+          "x1": 1296,
+          "y1": 2553.40625
+        }
+      },
+      {
+        "key": "object:cases-more-link",
+        "dom_index": 24,
+        "box": {
+          "x0": 635,
+          "y0": 2601.40625,
+          "x1": 805,
+          "y1": 2653
+        }
+      },
+      {
+        "key": "section:service-list",
+        "dom_index": 25,
+        "box": {
+          "x0": 0,
+          "y0": 2733,
+          "x1": 1440,
+          "y1": 3395.3125
+        }
+      },
+      {
+        "key": "object:services-kicker",
+        "dom_index": 26,
+        "box": {
+          "x0": 144,
+          "y0": 2813,
+          "x1": 1296,
+          "y1": 2832.1875
+        }
+      },
+      {
+        "key": "object:services-title",
+        "dom_index": 27,
+        "box": {
+          "x0": 144,
+          "y0": 2840.1875,
+          "x1": 1296,
+          "y1": 2897.78125
+        }
+      },
+      {
+        "key": "object:service-items",
+        "dom_index": 28,
+        "box": {
+          "x0": 144,
+          "y0": 2945.78125,
+          "x1": 1296,
+          "y1": 3257.71875
+        }
+      },
+      {
+        "key": "object:services-cta-link",
+        "dom_index": 29,
+        "box": {
+          "x0": 144,
+          "y0": 3291.71875,
+          "x1": 322.1875,
+          "y1": 3312.71875
+        }
+      },
+      {
+        "key": "section:client-voices",
+        "dom_index": 30,
+        "box": {
+          "x0": 0,
+          "y0": 3395.3125,
+          "x1": 1440,
+          "y1": 3884.765625
+        }
+      },
+      {
+        "key": "object:voices-kicker",
+        "dom_index": 31,
+        "box": {
+          "x0": 144,
+          "y0": 3475.3125,
+          "x1": 1296,
+          "y1": 3494.5
+        }
+      },
+      {
+        "key": "object:voices-title",
+        "dom_index": 32,
+        "box": {
+          "x0": 144,
+          "y0": 3502.5,
+          "x1": 1296,
+          "y1": 3560.09375
+        }
+      },
+      {
+        "key": "object:testimonial-cards",
+        "dom_index": 33,
+        "box": {
+          "x0": 144,
+          "y0": 3608.09375,
+          "x1": 1296,
+          "y1": 3804.765625
+        }
+      },
+      {
+        "key": "section:contact-us",
+        "dom_index": 34,
+        "box": {
+          "x0": 0,
+          "y0": 3884.765625,
+          "x1": 1440,
+          "y1": 4676.3125
+        }
+      },
+      {
+        "key": "object:contact-kicker",
+        "dom_index": 35,
+        "box": {
+          "x0": 144,
+          "y0": 3964.765625,
+          "x1": 1296,
+          "y1": 3983.953125
+        }
+      },
+      {
+        "key": "object:contact-title",
+        "dom_index": 36,
+        "box": {
+          "x0": 144,
+          "y0": 3991.953125,
+          "x1": 1296,
+          "y1": 4049.546875
+        }
+      },
+      {
+        "key": "object:contact-lead",
+        "dom_index": 37,
+        "box": {
+          "x0": 144,
+          "y0": 4097.546875,
+          "x1": 645.8125,
+          "y1": 4148.734375
+        }
+      },
+      {
+        "key": "object:contact-email-label",
+        "dom_index": 38,
+        "box": {
+          "x0": 144,
+          "y0": 4177.734375,
+          "x1": 216,
+          "y1": 4196.921875
+        }
+      },
+      {
+        "key": "object:contact-email",
+        "dom_index": 39,
+        "box": {
+          "x0": 232,
+          "y0": 4172.734375,
+          "x1": 371.96875,
+          "y1": 4198.328125
+        }
+      },
+      {
+        "key": "object:contact-phone-label",
+        "dom_index": 40,
+        "box": {
+          "x0": 144,
+          "y0": 4219.328125,
+          "x1": 216,
+          "y1": 4238.515625
+        }
+      },
+      {
+        "key": "object:contact-phone",
+        "dom_index": 41,
+        "box": {
+          "x0": 232,
+          "y0": 4214.328125,
+          "x1": 382.21875,
+          "y1": 4239.921875
+        }
+      },
+      {
+        "key": "object:contact-addr-label",
+        "dom_index": 42,
+        "box": {
+          "x0": 144,
+          "y0": 4260.921875,
+          "x1": 216,
+          "y1": 4280.109375
+        }
+      },
+      {
+        "key": "object:contact-address",
+        "dom_index": 43,
+        "box": {
+          "x0": 232,
+          "y0": 4255.921875,
+          "x1": 514.765625,
+          "y1": 4281.515625
+        }
+      },
+      {
+        "key": "object:contact-hours-label",
+        "dom_index": 44,
+        "box": {
+          "x0": 144,
+          "y0": 4302.515625,
+          "x1": 216,
+          "y1": 4321.703125
+        }
+      },
+      {
+        "key": "object:contact-hours",
+        "dom_index": 45,
+        "box": {
+          "x0": 232,
+          "y0": 4297.515625,
+          "x1": 407.140625,
+          "y1": 4323.109375
+        }
+      },
+      {
+        "key": "object:contact-form",
+        "dom_index": 46,
+        "box": {
+          "x0": 693.8125,
+          "y0": 4097.546875,
+          "x1": 1296,
+          "y1": 4596.3125
+        }
+      },
+      {
+        "key": "section:site-footer",
+        "dom_index": 47,
+        "box": {
+          "x0": 0,
+          "y0": 4676.3125,
+          "x1": 1440,
+          "y1": 4997.265625
+        }
+      },
+      {
+        "key": "object:footer-brand",
+        "dom_index": 48,
+        "box": {
+          "x0": 144,
+          "y0": 4724.3125,
+          "x1": 547.1875,
+          "y1": 4762.703125
+        }
+      },
+      {
+        "key": "object:footer-tagline",
+        "dom_index": 49,
+        "box": {
+          "x0": 144,
+          "y0": 4778.703125,
+          "x1": 547.1875,
+          "y1": 4804.296875
+        }
+      },
+      {
+        "key": "object:footer-nav-title",
+        "dom_index": 50,
+        "box": {
+          "x0": 595.1875,
+          "y0": 4724.3125,
+          "x1": 796.796875,
+          "y1": 4746.703125
+        }
+      },
+      {
+        "key": "object:footer-nav-list",
+        "dom_index": 51,
+        "box": {
+          "x0": 595.1875,
+          "y0": 4762.703125,
+          "x1": 796.796875,
+          "y1": 4889.078125
+        }
+      },
+      {
+        "key": "object:footer-social-title",
+        "dom_index": 52,
+        "box": {
+          "x0": 844.796875,
+          "y0": 4724.3125,
+          "x1": 1046.390625,
+          "y1": 4746.703125
+        }
+      },
+      {
+        "key": "object:footer-social-list",
+        "dom_index": 53,
+        "box": {
+          "x0": 844.796875,
+          "y0": 4762.703125,
+          "x1": 1046.390625,
+          "y1": 4889.078125
+        }
+      },
+      {
+        "key": "object:footer-join-title",
+        "dom_index": 54,
+        "box": {
+          "x0": 1094.390625,
+          "y0": 4724.3125,
+          "x1": 1296,
+          "y1": 4746.703125
+        }
+      },
+      {
+        "key": "object:footer-join-list",
+        "dom_index": 55,
+        "box": {
+          "x0": 1094.390625,
+          "y0": 4762.703125,
+          "x1": 1296,
+          "y1": 4855.484375
+        }
+      },
+      {
+        "key": "object:footer-copyright",
+        "dom_index": 56,
+        "box": {
+          "x0": 144,
+          "y0": 4954.078125,
+          "x1": 405.609375,
+          "y1": 4973.265625
+        }
+      },
+      {
+        "key": "object:footer-top-link",
+        "dom_index": 57,
+        "box": {
+          "x0": 1239.046875,
+          "y0": 4954.078125,
+          "x1": 1296,
+          "y1": 4973.265625
+        }
+      }
+    ],
+    "computed_contract": {
+      "extractor_version": "d3-computed-style-v1",
+      "tokens": {
+        "color": [
+          {
+            "value": "#1c1a17",
+            "role": "foreground",
+            "count": 127
+          },
+          {
+            "value": "#e4dfd5",
+            "role": "accent",
+            "count": 85
+          },
+          {
+            "value": "#b7b0a4",
+            "role": "foreground",
+            "count": 43
+          },
+          {
+            "value": "#f5f1e8",
+            "role": "foreground",
+            "count": 43
+          },
+          {
+            "value": "#6f6a61",
+            "role": "foreground",
+            "count": 32
+          },
+          {
+            "value": "#c96f3b",
+            "role": "foreground",
+            "count": 25
+          },
+          {
+            "value": "#ffffff",
+            "role": "background",
+            "count": 19
+          },
+          {
+            "value": "#3a352b",
+            "role": "accent",
+            "count": 14
+          },
+          {
+            "value": "#faf8f4",
+            "role": "background",
+            "count": 11
+          },
+          {
+            "value": "#000000",
+            "role": "foreground",
+            "count": 8
+          },
+          {
+            "value": "#2c2820",
+            "role": "background",
+            "count": 3
+          },
+          {
+            "value": "#232019",
+            "role": "background",
+            "count": 2
+          }
+        ],
+        "type": {
+          "font_family": [
+            "-apple-system, BlinkMacSystemFont, \"Segoe UI\", \"PingFang SC\", \"Hiragino Sans GB\", \"Microsoft YaHei\", sans-serif",
+            "Arial",
+            "Georgia, \"Times New Roman\", \"Songti SC\", serif",
+            "Georgia, serif"
+          ],
+          "font_size": [
+            12.0,
+            14.0,
+            16.0,
+            17.0,
+            18.0,
+            20.0,
+            22.0,
+            24.0,
+            28.0,
+            32.0,
+            36.0,
+            56.0
+          ],
+          "font_weight": [
+            400,
+            500,
+            700
+          ]
+        },
+        "space": [
+          6.0,
+          8.0,
+          10.0,
+          12.0,
+          16.0,
+          18.0,
+          24.0,
+          28.0,
+          32.0,
+          48.0,
+          80.0,
+          120.0
+        ]
+      },
+      "anchors": [
+        {
+          "kind": "section",
+          "id": "site-header"
+        },
+        {
+          "kind": "object",
+          "id": "brand-logo"
+        },
+        {
+          "kind": "object",
+          "id": "nav-menu"
+        },
+        {
+          "kind": "object",
+          "id": "header-cta"
+        },
+        {
+          "kind": "section",
+          "id": "hero-banner"
+        },
+        {
+          "kind": "object",
+          "id": "hero-kicker"
+        },
+        {
+          "kind": "object",
+          "id": "hero-title"
+        },
+        {
+          "kind": "object",
+          "id": "hero-subtitle"
+        },
+        {
+          "kind": "object",
+          "id": "hero-cta-primary"
+        },
+        {
+          "kind": "object",
+          "id": "hero-cta-secondary"
+        },
+        {
+          "kind": "object",
+          "id": "hero-stats"
+        },
+        {
+          "kind": "object",
+          "id": "hero-visual"
+        },
+        {
+          "kind": "section",
+          "id": "brand-intro"
+        },
+        {
+          "kind": "object",
+          "id": "intro-kicker"
+        },
+        {
+          "kind": "object",
+          "id": "intro-title"
+        },
+        {
+          "kind": "object",
+          "id": "intro-lead"
+        },
+        {
+          "kind": "object",
+          "id": "intro-quote"
+        },
+        {
+          "kind": "object",
+          "id": "intro-link"
+        },
+        {
+          "kind": "object",
+          "id": "intro-feature-grid"
+        },
+        {
+          "kind": "section",
+          "id": "case-studies"
+        },
+        {
+          "kind": "object",
+          "id": "cases-kicker"
+        },
+        {
+          "kind": "object",
+          "id": "cases-title"
+        },
+        {
+          "kind": "object",
+          "id": "cases-lead"
+        },
+        {
+          "kind": "object",
+          "id": "case-card-grid"
+        },
+        {
+          "kind": "object",
+          "id": "cases-more-link"
+        },
+        {
+          "kind": "section",
+          "id": "service-list"
+        },
+        {
+          "kind": "object",
+          "id": "services-kicker"
+        },
+        {
+          "kind": "object",
+          "id": "services-title"
+        },
+        {
+          "kind": "object",
+          "id": "service-items"
+        },
+        {
+          "kind": "object",
+          "id": "services-cta-link"
+        },
+        {
+          "kind": "section",
+          "id": "client-voices"
+        },
+        {
+          "kind": "object",
+          "id": "voices-kicker"
+        },
+        {
+          "kind": "object",
+          "id": "voices-title"
+        },
+        {
+          "kind": "object",
+          "id": "testimonial-cards"
+        },
+        {
+          "kind": "section",
+          "id": "contact-us"
+        },
+        {
+          "kind": "object",
+          "id": "contact-kicker"
+        },
+        {
+          "kind": "object",
+          "id": "contact-title"
+        },
+        {
+          "kind": "object",
+          "id": "contact-lead"
+        },
+        {
+          "kind": "object",
+          "id": "contact-email-label"
+        },
+        {
+          "kind": "object",
+          "id": "contact-email"
+        },
+        {
+          "kind": "object",
+          "id": "contact-phone-label"
+        },
+        {
+          "kind": "object",
+          "id": "contact-phone"
+        },
+        {
+          "kind": "object",
+          "id": "contact-addr-label"
+        },
+        {
+          "kind": "object",
+          "id": "contact-address"
+        },
+        {
+          "kind": "object",
+          "id": "contact-hours-label"
+        },
+        {
+          "kind": "object",
+          "id": "contact-hours"
+        },
+        {
+          "kind": "object",
+          "id": "contact-form"
+        },
+        {
+          "kind": "section",
+          "id": "site-footer"
+        },
+        {
+          "kind": "object",
+          "id": "footer-brand"
+        },
+        {
+          "kind": "object",
+          "id": "footer-tagline"
+        },
+        {
+          "kind": "object",
+          "id": "footer-nav-title"
+        },
+        {
+          "kind": "object",
+          "id": "footer-nav-list"
+        },
+        {
+          "kind": "object",
+          "id": "footer-social-title"
+        },
+        {
+          "kind": "object",
+          "id": "footer-social-list"
+        },
+        {
+          "kind": "object",
+          "id": "footer-join-title"
+        },
+        {
+          "kind": "object",
+          "id": "footer-join-list"
+        },
+        {
+          "kind": "object",
+          "id": "footer-copyright"
+        },
+        {
+          "kind": "object",
+          "id": "footer-top-link"
+        }
+      ],
+      "observed_token_values": {
+        "color": [
+          "#000000",
+          "#1c1a17",
+          "#232019",
+          "#2c2820",
+          "#3a352b",
+          "#6f6a61",
+          "#b7b0a4",
+          "#c96f3b",
+          "#e4dfd5",
+          "#f2ece2",
+          "#f5f1e8",
+          "#faf8f4",
+          "#ffffff"
+        ],
+        "font_family": [
+          "-apple-system, BlinkMacSystemFont, \"Segoe UI\", \"PingFang SC\", \"Hiragino Sans GB\", \"Microsoft YaHei\", sans-serif",
+          "Arial",
+          "Georgia, \"Times New Roman\", \"Songti SC\", serif",
+          "Georgia, serif"
+        ],
+        "font_size": [
+          12.0,
+          14.0,
+          16.0,
+          17.0,
+          18.0,
+          20.0,
+          22.0,
+          24.0,
+          28.0,
+          32.0,
+          36.0,
+          56.0
+        ],
+        "font_weight": [
+          400,
+          500,
+          700
+        ],
+        "space": [
+          6.0,
+          8.0,
+          10.0,
+          12.0,
+          16.0,
+          18.0,
+          24.0,
+          28.0,
+          32.0,
+          48.0,
+          80.0,
+          120.0
+        ]
+      }
+    },
+    "computed_contract_file": "round_10.computed-contract.json",
+    "viewport_screenshot": "round_10.viewport.png",
+    "full_screenshot": "round_10.full.png"
+  },
+  "checks": {
+    "anchor_preservation": {
+      "pass": true,
+      "missing": [],
+      "added": [],
+      "changed_out_of_scope": [],
+      "ancestors_checked_by_own_signature": [
+        "section:case-studies"
+      ]
+    },
+    "contract_preservation": {
+      "pass": true,
+      "extractor_version": "d3-computed-style-v1",
+      "comparison_basis": "rendered computed-style value sets plus DOM anchors; counts ignored",
+      "new_tokens": {
+        "color": [],
+        "font_family": [],
+        "font_size": [],
+        "font_weight": [],
+        "space": []
+      },
+      "missing_baseline_anchors": [],
+      "added_anchors_diagnostic": [],
+      "absent_baseline_tokens_diagnostic": {
+        "color": [],
+        "font_family": [],
+        "font_size": [],
+        "font_weight": [],
+        "space": []
+      }
+    },
+    "visual_isolation": {
+      "pass": true,
+      "scope_key": "object:case-card-grid",
+      "layer1_geometry_relationships": {
+        "pass": true,
+        "applicable": true,
+        "outside_anchor_count": 57,
+        "total_pair_count": 1596,
+        "compared_pair_count": 1311,
+        "same_row_relation_count": 88,
+        "same_column_relation_count": 1272,
+        "reflow_immune_skipped_pair_count": 285,
+        "spatial_selection_rule": "compare horizontal order only when the pair overlaps vertically before and after; compare vertical order only when it overlaps horizontally before and after",
+        "missing": [],
+        "added": [],
+        "relative_order_changed": false,
+        "changed_relative_position_pairs": [],
+        "before_geometry": {
+          "section:site-header": {
+            "x0": 0,
+            "y0": 0,
+            "x1": 1440,
+            "y1": 86.59375
+          },
+          "object:brand-logo": {
+            "x0": 144,
+            "y0": 23.59375,
+            "x1": 266.34375,
+            "y1": 61.984375
+          },
+          "object:nav-menu": {
+            "x0": 573.171875,
+            "y0": 30,
+            "x1": 869.171875,
+            "y1": 55.59375
+          },
+          "object:header-cta": {
+            "x0": 1176,
+            "y0": 18,
+            "x1": 1296,
+            "y1": 67.59375
+          },
+          "section:hero-banner": {
+            "x0": 0,
+            "y0": 86.59375,
+            "x1": 1440,
+            "y1": 796.828125
+          },
+          "object:hero-kicker": {
+            "x0": 144,
+            "y0": 223.84375,
+            "x1": 664,
+            "y1": 243.03125
+          },
+          "object:hero-title": {
+            "x0": 144,
+            "y0": 267.03125,
+            "x1": 746.171875,
+            "y1": 395.8125
+          },
+          "object:hero-subtitle": {
+            "x0": 144,
+            "y0": 411.8125,
+            "x1": 664,
+            "y1": 437.40625
+          },
+          "object:hero-cta-primary": {
+            "x0": 144,
+            "y0": 461.40625,
+            "x1": 264,
+            "y1": 513
+          },
+          "object:hero-cta-secondary": {
+            "x0": 280,
+            "y0": 461.40625,
+            "x1": 402,
+            "y1": 513
+          },
+          "object:hero-stats": {
+            "x0": 144,
+            "y0": 561,
+            "x1": 746.171875,
+            "y1": 659.578125
+          },
+          "object:hero-visual": {
+            "x0": 794.171875,
+            "y0": 166.59375,
+            "x1": 1296,
+            "y1": 710.234375
+          },
+          "section:brand-intro": {
+            "x0": 0,
+            "y0": 796.828125,
+            "x1": 1440,
+            "y1": 1389.546875
+          },
+          "object:intro-kicker": {
+            "x0": 144,
+            "y0": 876.828125,
+            "x1": 1296,
+            "y1": 896.015625
+          },
+          "object:intro-title": {
+            "x0": 144,
+            "y0": 904.015625,
+            "x1": 1296,
+            "y1": 961.609375
+          },
+          "object:intro-lead": {
+            "x0": 144,
+            "y0": 1009.609375,
+            "x1": 696,
+            "y1": 1086.390625
+          },
+          "object:intro-quote": {
+            "x0": 144,
+            "y0": 1110.390625,
+            "x1": 696,
+            "y1": 1142.390625
+          },
+          "object:intro-link": {
+            "x0": 144,
+            "y0": 1160.390625,
+            "x1": 306.1875,
+            "y1": 1181.390625
+          },
+          "object:intro-feature-grid": {
+            "x0": 744,
+            "y0": 1009.609375,
+            "x1": 1296,
+            "y1": 1309.546875
+          },
+          "section:case-studies": {
+            "x0": 0,
+            "y0": 1389.546875,
+            "x1": 1440,
+            "y1": 2567.03125
+          },
+          "object:cases-kicker": {
+            "x0": 144,
+            "y0": 1469.546875,
+            "x1": 1296,
+            "y1": 1488.734375
+          },
+          "object:cases-title": {
+            "x0": 144,
+            "y0": 1496.734375,
+            "x1": 1296,
+            "y1": 1554.328125
+          },
+          "object:cases-lead": {
+            "x0": 144,
+            "y0": 1570.328125,
+            "x1": 784,
+            "y1": 1595.921875
+          },
+          "object:cases-more-link": {
+            "x0": 635,
+            "y0": 2435.4375,
+            "x1": 805,
+            "y1": 2487.03125
+          },
+          "section:service-list": {
+            "x0": 0,
+            "y0": 2567.03125,
+            "x1": 1440,
+            "y1": 3229.34375
+          },
+          "object:services-kicker": {
+            "x0": 144,
+            "y0": 2647.03125,
+            "x1": 1296,
+            "y1": 2666.21875
+          },
+          "object:services-title": {
+            "x0": 144,
+            "y0": 2674.21875,
+            "x1": 1296,
+            "y1": 2731.8125
+          },
+          "object:service-items": {
+            "x0": 144,
+            "y0": 2779.8125,
+            "x1": 1296,
+            "y1": 3091.75
+          },
+          "object:services-cta-link": {
+            "x0": 144,
+            "y0": 3125.75,
+            "x1": 322.1875,
+            "y1": 3146.75
+          },
+          "section:client-voices": {
+            "x0": 0,
+            "y0": 3229.34375,
+            "x1": 1440,
+            "y1": 3718.796875
+          },
+          "object:voices-kicker": {
+            "x0": 144,
+            "y0": 3309.34375,
+            "x1": 1296,
+            "y1": 3328.53125
+          },
+          "object:voices-title": {
+            "x0": 144,
+            "y0": 3336.53125,
+            "x1": 1296,
+            "y1": 3394.125
+          },
+          "object:testimonial-cards": {
+            "x0": 144,
+            "y0": 3442.125,
+            "x1": 1296,
+            "y1": 3638.796875
+          },
+          "section:contact-us": {
+            "x0": 0,
+            "y0": 3718.796875,
+            "x1": 1440,
+            "y1": 4510.34375
+          },
+          "object:contact-kicker": {
+            "x0": 144,
+            "y0": 3798.796875,
+            "x1": 1296,
+            "y1": 3817.984375
+          },
+          "object:contact-title": {
+            "x0": 144,
+            "y0": 3825.984375,
+            "x1": 1296,
+            "y1": 3883.578125
+          },
+          "object:contact-lead": {
+            "x0": 144,
+            "y0": 3931.578125,
+            "x1": 645.8125,
+            "y1": 3982.765625
+          },
+          "object:contact-email-label": {
+            "x0": 144,
+            "y0": 4011.765625,
+            "x1": 216,
+            "y1": 4030.953125
+          },
+          "object:contact-email": {
+            "x0": 232,
+            "y0": 4006.765625,
+            "x1": 371.96875,
+            "y1": 4032.359375
+          },
+          "object:contact-phone-label": {
+            "x0": 144,
+            "y0": 4053.359375,
+            "x1": 216,
+            "y1": 4072.546875
+          },
+          "object:contact-phone": {
+            "x0": 232,
+            "y0": 4048.359375,
+            "x1": 382.21875,
+            "y1": 4073.953125
+          },
+          "object:contact-addr-label": {
+            "x0": 144,
+            "y0": 4094.953125,
+            "x1": 216,
+            "y1": 4114.140625
+          },
+          "object:contact-address": {
+            "x0": 232,
+            "y0": 4089.953125,
+            "x1": 514.765625,
+            "y1": 4115.546875
+          },
+          "object:contact-hours-label": {
+            "x0": 144,
+            "y0": 4136.546875,
+            "x1": 216,
+            "y1": 4155.734375
+          },
+          "object:contact-hours": {
+            "x0": 232,
+            "y0": 4131.546875,
+            "x1": 407.140625,
+            "y1": 4157.140625
+          },
+          "object:contact-form": {
+            "x0": 693.8125,
+            "y0": 3931.578125,
+            "x1": 1296,
+            "y1": 4430.34375
+          },
+          "section:site-footer": {
+            "x0": 0,
+            "y0": 4510.34375,
+            "x1": 1440,
+            "y1": 4831.296875
+          },
+          "object:footer-brand": {
+            "x0": 144,
+            "y0": 4558.34375,
+            "x1": 547.1875,
+            "y1": 4596.734375
+          },
+          "object:footer-tagline": {
+            "x0": 144,
+            "y0": 4612.734375,
+            "x1": 547.1875,
+            "y1": 4638.328125
+          },
+          "object:footer-nav-title": {
+            "x0": 595.1875,
+            "y0": 4558.34375,
+            "x1": 796.796875,
+            "y1": 4580.734375
+          },
+          "object:footer-nav-list": {
+            "x0": 595.1875,
+            "y0": 4596.734375,
+            "x1": 796.796875,
+            "y1": 4723.109375
+          },
+          "object:footer-social-title": {
+            "x0": 844.796875,
+            "y0": 4558.34375,
+            "x1": 1046.390625,
+            "y1": 4580.734375
+          },
+          "object:footer-social-list": {
+            "x0": 844.796875,
+            "y0": 4596.734375,
+            "x1": 1046.390625,
+            "y1": 4723.109375
+          },
+          "object:footer-join-title": {
+            "x0": 1094.390625,
+            "y0": 4558.34375,
+            "x1": 1296,
+            "y1": 4580.734375
+          },
+          "object:footer-join-list": {
+            "x0": 1094.390625,
+            "y0": 4596.734375,
+            "x1": 1296,
+            "y1": 4689.515625
+          },
+          "object:footer-copyright": {
+            "x0": 144,
+            "y0": 4788.109375,
+            "x1": 405.609375,
+            "y1": 4807.296875
+          },
+          "object:footer-top-link": {
+            "x0": 1239.046875,
+            "y0": 4788.109375,
+            "x1": 1296,
+            "y1": 4807.296875
+          }
+        },
+        "after_geometry": {
+          "section:site-header": {
+            "x0": 0,
+            "y0": 0,
+            "x1": 1440,
+            "y1": 86.59375
+          },
+          "object:brand-logo": {
+            "x0": 144,
+            "y0": 23.59375,
+            "x1": 266.34375,
+            "y1": 61.984375
+          },
+          "object:nav-menu": {
+            "x0": 573.171875,
+            "y0": 30,
+            "x1": 869.171875,
+            "y1": 55.59375
+          },
+          "object:header-cta": {
+            "x0": 1176,
+            "y0": 18,
+            "x1": 1296,
+            "y1": 67.59375
+          },
+          "section:hero-banner": {
+            "x0": 0,
+            "y0": 86.59375,
+            "x1": 1440,
+            "y1": 796.828125
+          },
+          "object:hero-kicker": {
+            "x0": 144,
+            "y0": 223.84375,
+            "x1": 664,
+            "y1": 243.03125
+          },
+          "object:hero-title": {
+            "x0": 144,
+            "y0": 267.03125,
+            "x1": 746.171875,
+            "y1": 395.8125
+          },
+          "object:hero-subtitle": {
+            "x0": 144,
+            "y0": 411.8125,
+            "x1": 664,
+            "y1": 437.40625
+          },
+          "object:hero-cta-primary": {
+            "x0": 144,
+            "y0": 461.40625,
+            "x1": 264,
+            "y1": 513
+          },
+          "object:hero-cta-secondary": {
+            "x0": 280,
+            "y0": 461.40625,
+            "x1": 402,
+            "y1": 513
+          },
+          "object:hero-stats": {
+            "x0": 144,
+            "y0": 561,
+            "x1": 746.171875,
+            "y1": 659.578125
+          },
+          "object:hero-visual": {
+            "x0": 794.171875,
+            "y0": 166.59375,
+            "x1": 1296,
+            "y1": 710.234375
+          },
+          "section:brand-intro": {
+            "x0": 0,
+            "y0": 796.828125,
+            "x1": 1440,
+            "y1": 1389.546875
+          },
+          "object:intro-kicker": {
+            "x0": 144,
+            "y0": 876.828125,
+            "x1": 1296,
+            "y1": 896.015625
+          },
+          "object:intro-title": {
+            "x0": 144,
+            "y0": 904.015625,
+            "x1": 1296,
+            "y1": 961.609375
+          },
+          "object:intro-lead": {
+            "x0": 144,
+            "y0": 1009.609375,
+            "x1": 696,
+            "y1": 1086.390625
+          },
+          "object:intro-quote": {
+            "x0": 144,
+            "y0": 1110.390625,
+            "x1": 696,
+            "y1": 1142.390625
+          },
+          "object:intro-link": {
+            "x0": 144,
+            "y0": 1160.390625,
+            "x1": 306.1875,
+            "y1": 1181.390625
+          },
+          "object:intro-feature-grid": {
+            "x0": 744,
+            "y0": 1009.609375,
+            "x1": 1296,
+            "y1": 1309.546875
+          },
+          "section:case-studies": {
+            "x0": 0,
+            "y0": 1389.546875,
+            "x1": 1440,
+            "y1": 2733
+          },
+          "object:cases-kicker": {
+            "x0": 144,
+            "y0": 1469.546875,
+            "x1": 1296,
+            "y1": 1488.734375
+          },
+          "object:cases-title": {
+            "x0": 144,
+            "y0": 1496.734375,
+            "x1": 1296,
+            "y1": 1554.328125
+          },
+          "object:cases-lead": {
+            "x0": 144,
+            "y0": 1570.328125,
+            "x1": 784,
+            "y1": 1595.921875
+          },
+          "object:cases-more-link": {
+            "x0": 635,
+            "y0": 2601.40625,
+            "x1": 805,
+            "y1": 2653
+          },
+          "section:service-list": {
+            "x0": 0,
+            "y0": 2733,
+            "x1": 1440,
+            "y1": 3395.3125
+          },
+          "object:services-kicker": {
+            "x0": 144,
+            "y0": 2813,
+            "x1": 1296,
+            "y1": 2832.1875
+          },
+          "object:services-title": {
+            "x0": 144,
+            "y0": 2840.1875,
+            "x1": 1296,
+            "y1": 2897.78125
+          },
+          "object:service-items": {
+            "x0": 144,
+            "y0": 2945.78125,
+            "x1": 1296,
+            "y1": 3257.71875
+          },
+          "object:services-cta-link": {
+            "x0": 144,
+            "y0": 3291.71875,
+            "x1": 322.1875,
+            "y1": 3312.71875
+          },
+          "section:client-voices": {
+            "x0": 0,
+            "y0": 3395.3125,
+            "x1": 1440,
+            "y1": 3884.765625
+          },
+          "object:voices-kicker": {
+            "x0": 144,
+            "y0": 3475.3125,
+            "x1": 1296,
+            "y1": 3494.5
+          },
+          "object:voices-title": {
+            "x0": 144,
+            "y0": 3502.5,
+            "x1": 1296,
+            "y1": 3560.09375
+          },
+          "object:testimonial-cards": {
+            "x0": 144,
+            "y0": 3608.09375,
+            "x1": 1296,
+            "y1": 3804.765625
+          },
+          "section:contact-us": {
+            "x0": 0,
+            "y0": 3884.765625,
+            "x1": 1440,
+            "y1": 4676.3125
+          },
+          "object:contact-kicker": {
+            "x0": 144,
+            "y0": 3964.765625,
+            "x1": 1296,
+            "y1": 3983.953125
+          },
+          "object:contact-title": {
+            "x0": 144,
+            "y0": 3991.953125,
+            "x1": 1296,
+            "y1": 4049.546875
+          },
+          "object:contact-lead": {
+            "x0": 144,
+            "y0": 4097.546875,
+            "x1": 645.8125,
+            "y1": 4148.734375
+          },
+          "object:contact-email-label": {
+            "x0": 144,
+            "y0": 4177.734375,
+            "x1": 216,
+            "y1": 4196.921875
+          },
+          "object:contact-email": {
+            "x0": 232,
+            "y0": 4172.734375,
+            "x1": 371.96875,
+            "y1": 4198.328125
+          },
+          "object:contact-phone-label": {
+            "x0": 144,
+            "y0": 4219.328125,
+            "x1": 216,
+            "y1": 4238.515625
+          },
+          "object:contact-phone": {
+            "x0": 232,
+            "y0": 4214.328125,
+            "x1": 382.21875,
+            "y1": 4239.921875
+          },
+          "object:contact-addr-label": {
+            "x0": 144,
+            "y0": 4260.921875,
+            "x1": 216,
+            "y1": 4280.109375
+          },
+          "object:contact-address": {
+            "x0": 232,
+            "y0": 4255.921875,
+            "x1": 514.765625,
+            "y1": 4281.515625
+          },
+          "object:contact-hours-label": {
+            "x0": 144,
+            "y0": 4302.515625,
+            "x1": 216,
+            "y1": 4321.703125
+          },
+          "object:contact-hours": {
+            "x0": 232,
+            "y0": 4297.515625,
+            "x1": 407.140625,
+            "y1": 4323.109375
+          },
+          "object:contact-form": {
+            "x0": 693.8125,
+            "y0": 4097.546875,
+            "x1": 1296,
+            "y1": 4596.3125
+          },
+          "section:site-footer": {
+            "x0": 0,
+            "y0": 4676.3125,
+            "x1": 1440,
+            "y1": 4997.265625
+          },
+          "object:footer-brand": {
+            "x0": 144,
+            "y0": 4724.3125,
+            "x1": 547.1875,
+            "y1": 4762.703125
+          },
+          "object:footer-tagline": {
+            "x0": 144,
+            "y0": 4778.703125,
+            "x1": 547.1875,
+            "y1": 4804.296875
+          },
+          "object:footer-nav-title": {
+            "x0": 595.1875,
+            "y0": 4724.3125,
+            "x1": 796.796875,
+            "y1": 4746.703125
+          },
+          "object:footer-nav-list": {
+            "x0": 595.1875,
+            "y0": 4762.703125,
+            "x1": 796.796875,
+            "y1": 4889.078125
+          },
+          "object:footer-social-title": {
+            "x0": 844.796875,
+            "y0": 4724.3125,
+            "x1": 1046.390625,
+            "y1": 4746.703125
+          },
+          "object:footer-social-list": {
+            "x0": 844.796875,
+            "y0": 4762.703125,
+            "x1": 1046.390625,
+            "y1": 4889.078125
+          },
+          "object:footer-join-title": {
+            "x0": 1094.390625,
+            "y0": 4724.3125,
+            "x1": 1296,
+            "y1": 4746.703125
+          },
+          "object:footer-join-list": {
+            "x0": 1094.390625,
+            "y0": 4762.703125,
+            "x1": 1296,
+            "y1": 4855.484375
+          },
+          "object:footer-copyright": {
+            "x0": 144,
+            "y0": 4954.078125,
+            "x1": 405.609375,
+            "y1": 4973.265625
+          },
+          "object:footer-top-link": {
+            "x0": 1239.046875,
+            "y0": 4954.078125,
+            "x1": 1296,
+            "y1": 4973.265625
+          }
+        }
+      },
+      "layer2_pixels_above_scope": {
+        "pass": true,
+        "applicable": true,
+        "region": [
+          0,
+          0,
+          1440,
+          900
+        ],
+        "threshold": 0.002,
+        "size_mismatch": false,
+        "size_a": [
+          1440,
+          900
+        ],
+        "size_b": [
+          1440,
+          900
+        ],
+        "considered_pixels": 1296000,
+        "diff_pixels": 0,
+        "diff_ratio": 0.0,
+        "diff_bbox": null,
+        "excluded_pixels": 0
+      },
+      "layer3_full_page": {
+        "pass": true,
+        "applicable": false,
+        "status": "reflow_skipped",
+        "threshold": 0.002,
+        "size_mismatch": true,
+        "size_a": [
+          1440,
+          4831
+        ],
+        "size_b": [
+          1440,
+          4997
+        ],
+        "considered_pixels": 0,
+        "diff_pixels": 0,
+        "diff_ratio": null,
+        "diff_bbox": null,
+        "excluded_pixels": 0
+      }
+    },
+    "render_health": {
+      "pass": true,
+      "previous_counts": {
+        "console_errors": 0,
+        "failed_requests": 0,
+        "page_errors": 0
+      },
+      "current_counts": {
+        "console_errors": 0,
+        "failed_requests": 0,
+        "page_errors": 0
+      },
+      "console_errors": [],
+      "console_warnings": [],
+      "failed_requests": [],
+      "page_errors": []
+    }
+  },
+  "all_pass": true
+}

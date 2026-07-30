@@ -1,0 +1,41 @@
+/* Ember Mug Co. — The Little Warmer */
+
+body {
+  margin: 0;
+  font-family: Georgia, "Times New Roman", serif;
+  background-color: #faf6f0;
+  color: #2e2a26;
+  line-height: 1.6;
+}
+
+main {
+  max-width: 640px;
+  margin: 4rem auto;
+  padding: 0 1.5rem;
+}
+
+h1 {
+  color: #b3541e;
+  font-size: 2rem;
+  border-bottom: 3px solid #e8d9c8;
+  padding-bottom: 0.5rem;
+}
+
+p {
+  font-size: 1.1rem;
+  margin: 1.5rem 0;
+}
+
+button {
+  background-color: #b3541e;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 0.6rem 1.2rem;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+button:hover {
+  background-color: #93430f;
+}

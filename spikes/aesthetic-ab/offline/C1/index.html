@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>OEYdesign · 工作台</title>
+<script src="assets/tailwind.js"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        fontFamily: {
+          sans: ['"Inter"', '"PingFang SC"', '"Microsoft YaHei"', 'system-ui', 'sans-serif'],
+          mono: ['"JetBrains Mono"', 'ui-monospace', 'monospace'],
+        },
+        boxShadow: {
+          card: '0 1px 2px 0 rgb(0 0 0 / 0.04), 0 1px 3px 0 rgb(0 0 0 / 0.06)',
+          pop: '0 8px 30px -6px rgb(0 0 0 / 0.12), 0 2px 8px -2px rgb(0 0 0 / 0.08)',
+        },
+      },
+    },
+  };
+</script>
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body class="h-screen overflow-hidden bg-white font-sans text-zinc-900 antialiased">
+
+<div class="flex h-screen flex-col">
+
+  <!-- ============ 顶部栏 ============ -->
+  <header class="flex h-14 shrink-0 items-center gap-3 border-b border-zinc-200 bg-white px-4">
+    <div class="flex items-center gap-2.5">
+      <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-violet-500 to-indigo-600 text-white shadow-sm">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/></svg>
+      </div>
+      <div class="leading-tight">
+        <div class="text-sm font-semibold tracking-tight">OEYdesign</div>
+        <div class="text-[11px] text-zinc-400">多模态设计 Agent</div>
+      </div>
+    </div>
+
+    <div class="mx-2 h-5 w-px bg-zinc-200"></div>
+
+    <nav class="flex items-center gap-1.5 text-sm text-zinc-500">
+      <span class="rounded-md px-2 py-1 hover:bg-zinc-100 cursor-pointer">我的项目</span>
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+      <span class="rounded-md bg-zinc-100 px-2 py-1 font-medium text-zinc-800">FlowDock 官网落地页</span>
+    </nav>
+
+    <div class="ml-auto flex items-center gap-2.5">
+      <span id="statusBadge" class="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700 ring-1 ring-inset ring-emerald-200">
+        <span class="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>已同步 · v3
+      </span>
+      <button class="rounded-lg px-3 py-1.5 text-sm text-zinc-600 ring-1 ring-inset ring-zinc-200 hover:bg-zinc-50">分享</button>
+      <div class="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-amber-400 to-orange-500 text-xs font-semibold text-white">林</div>
+    </div>
+  </header>
+
+  <!-- ============ 主区域：左对话 / 右预览 ============ -->
+  <main class="flex flex-1 overflow-hidden">
+
+    <!-- ====== 左侧：对话栏（窄） ====== -->
+    <aside id="chatPanel" data-oey-section="chat" class="flex w-[380px] shrink-0 flex-col border-r border-zinc-200 bg-white">
+      <div class="flex h-11 shrink-0 items-center justify-between border-b border-zinc-100 px-4">
+        <div class="flex items-center gap-2">
+          <span class="text-sm font-medium">设计对话</span>
+          <span class="rounded-md bg-violet-50 px-1.5 py-0.5 text-[10px] font-medium text-violet-600 ring-1 ring-inset ring-violet-200">oey-agent-1</span>
+        </div>
+        <button id="collapseChat" title="收起对话栏" class="rounded-md p-1.5 text-zinc-400 hover:bg-zinc-100 hover:text-zinc-600">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M11 17l-5-5 5-5M18 17l-5-5 5-5"/></svg>
+        </button>
+      </div>
+
+      <!-- 消息流 -->
+      <div id="chatScroll" class="flex-1 space-y-5 overflow-y-auto px-4 py-5"></div>
+
+      <!-- 快捷指令 -->
+      <div class="flex shrink-0 flex-wrap gap-1.5 px-4 pb-2">
+        <button class="chip rounded-full bg-zinc-100 px-2.5 py-1 text-xs text-zinc-600 hover:bg-zinc-200" data-prompt="把主标题改得更有冲击力">✏️ 改主标题</button>
+        <button class="chip rounded-full bg-zinc-100 px-2.5 py-1 text-xs text-zinc-600 hover:bg-zinc-200" data-prompt="整体配色换成暖色系">🎨 换暖色系</button>
+        <button class="chip rounded-full bg-zinc-100 px-2.5 py-1 text-xs text-zinc-600 hover:bg-zinc-200" data-prompt="切换到 PPT 视图看看">📽️ PPT 视图</button>
+        <button class="chip rounded-full bg-zinc-100 px-2.5 py-1 text-xs text-zinc-600 hover:bg-zinc-200" data-prompt="导出当前版本">📦 导出</button>
+      </div>
+
+      <!-- 输入区 -->
+      <div class="shrink-0 border-t border-zinc-100 p-3">
+        <div class="rounded-xl ring-1 ring-inset ring-zinc-200 focus-within:ring-2 focus-within:ring-indigo-500">
+          <textarea id="composer" rows="2" placeholder="描述你的修改意见，例如：把 hero 主标题换成……"
+            class="w-full resize-none rounded-t-xl bg-white px-3 py-2.5 text-sm outline-none placeholder:text-zinc-400"></textarea>
+          <div class="flex items-center justify-between rounded-b-xl bg-zinc-50 px-2.5 py-1.5">
+            <div class="flex items-center gap-1 text-zinc-400">
+              <button class="rounded-md p-1.5 hover:bg-zinc-200 hover:text-zinc-600" title="上传参考图">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l8.57-8.57A4 4 0 1118 8.84l-8.59 8.57a2 2 0 01-2.83-2.83l8.49-8.48"/></svg>
+              </button>
+              <button class="rounded-md p-1.5 hover:bg-zinc-200 hover:text-zinc-600" title="语音输入">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2M12 19v4"/></svg>
+              </button>
+            </div>
+            <button id="sendBtn" class="inline-flex items-center gap-1.5 rounded-lg bg-zinc-900 px-3 py-1.5 text-xs font-medium text-white shadow-sm hover:bg-zinc-700 active:scale-95 transition">
+              发送
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4z"/></svg>
+            </button>
+          </div>
+        </div>
+        <p class="mt-1.5 text-center text-[10px] text-zinc-400">Enter 发送 · Shift + Enter 换行 · 点击画布对象可给对象级反馈</p>
+      </div>
+    </aside>
+
+    <!-- ====== 右侧：设计成果预览区（大） ====== -->
+    <section data-oey-section="preview" class="flex min-w-0 flex-1 flex-col bg-zinc-50">
+
+      <!-- 预览工具栏 -->
+      <div class="flex h-12 shrink-0 items-center gap-3 border-b border-zinc-200 bg-white px-4">
+        <!-- 产物类型切换 -->
+        <div class="flex rounded-lg bg-zinc-100 p-0.5" role="tablist">
+          <button class="art-tab rounded-md px-3 py-1 text-xs font-medium text-zinc-500 transition" data-art="web">Web</button>
+          <button class="art-tab rounded-md px-3 py-1 text-xs font-medium text-zinc-500 transition" data-art="ppt">PPT</button>
+          <button class="art-tab rounded-md px-3 py-1 text-xs font-medium text-zinc-500 transition" data-art="docx">DOCX</button>
+        </div>
+
+        <!-- 版本选择 -->
+        <div class="relative">
+          <button id="versionBtn" class="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium text-zinc-700 ring-1 ring-inset ring-zinc-200 hover:bg-zinc-50">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>
+            <span id="versionLabel">v3 · 加入客户评价</span>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg>
+          </button>
+          <div id="versionMenu" class="absolute left-0 top-full z-40 mt-1.5 hidden w-72 overflow-hidden rounded-xl bg-white shadow-pop ring-1 ring-zinc-200"></div>
+        </div>
+
+        <div class="ml-auto flex items-center gap-2">
+          <!-- 设备切换 -->
+          <div id="deviceGroup" class="flex rounded-lg bg-zinc-100 p-0.5">
+            <button class="dev-tab rounded-md p-1.5 text-zinc-500" data-dev="desktop" title="桌面预览">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+            </button>
+            <button class="dev-tab rounded-md p-1.5 text-zinc-500" data-dev="mobile" title="移动端预览">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="7" y="2" width="10" height="20" rx="2"/><path d="M11 18h2"/></svg>
+            </button>
+          </div>
+          <!-- 缩放 -->
+          <div class="flex items-center rounded-lg ring-1 ring-inset ring-zinc-200">
+            <button id="zoomOut" class="rounded-l-lg px-2 py-1.5 text-xs text-zinc-500 hover:bg-zinc-50">−</button>
+            <span id="zoomLabel" class="w-11 text-center text-xs tabular-nums text-zinc-600">100%</span>
+            <button id="zoomIn" class="rounded-r-lg px-2 py-1.5 text-xs text-zinc-500 hover:bg-zinc-50">+</button>
+          </div>
+          <!-- 导出 -->
+          <div class="relative">
+            <button id="exportBtn" class="inline-flex items-center gap-1.5 rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-medium text-white shadow-sm hover:bg-indigo-500 active:scale-95 transition">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+              导出
+            </button>
+            <div id="exportMenu" class="absolute right-0 top-full z-40 mt-1.5 hidden w-52 overflow-hidden rounded-xl bg-white py-1 shadow-pop ring-1 ring-zinc-200">
+              <button class="export-item flex w-full items-center gap-2.5 px-3 py-2 text-left text-sm text-zinc-700 hover:bg-zinc-50" data-fmt="PNG 图片">🖼️ 导出为 PNG</button>
+              <button class="export-item flex w-full items-center gap-2.5 px-3 py-2 text-left text-sm text-zinc-700 hover:bg-zinc-50" data-fmt="PDF 文档">📄 导出为 PDF</button>
+              <button class="export-item flex w-full items-center gap-2.5 px-3 py-2 text-left text-sm text-zinc-700 hover:bg-zinc-50" data-fmt="PPTX 演示文稿">📽️ 导出为 PPTX</button>
+              <button class="export-item flex w-full items-center gap-2.5 px-3 py-2 text-left text-sm text-zinc-700 hover:bg-zinc-50" data-fmt="DOCX 文档">📝 导出为 DOCX</button>
+              <div class="my-1 h-px bg-zinc-100"></div>
+              <button class="export-item flex w-full items-center gap-2.5 px-3 py-2 text-left text-sm text-zinc-700 hover:bg-zinc-50" data-fmt="分享链接">🔗 复制分享链接</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 画布 -->
+      <div id="canvasScroll" class="oey-canvas-bg relative flex-1 overflow-auto">
+        <button id="reopenChat" class="absolute left-4 top-4 z-30 hidden items-center gap-1.5 rounded-lg bg-white px-2.5 py-1.5 text-xs font-medium text-zinc-600 shadow-card ring-1 ring-zinc-200 hover:bg-zinc-50">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M13 17l5-5-5-5M6 17l5-5-5-5"/></svg>
+          对话
+        </button>
+
+        <div class="flex min-h-full justify-center px-10 py-10">
+          <div id="artifactScaler" style="transform-origin: top center;">
+            <div id="artifactWrap" class="w-[1024px] transition-all duration-300"></div>
+          </div>
+        </div>
+
+        <!-- 对象检查器（预览区内次级面板） -->
+        <div id="inspector" class="absolute bottom-5 right-5 z-30 hidden w-72 rounded-xl bg-white shadow-pop ring-1 ring-zinc-200">
+          <div class="flex items-center justify-between border-b border-zinc-100 px-3.5 py-2.5">
+            <div class="flex items-center gap-2">
+              <span class="h-2 w-2 rounded-full bg-indigo-500"></span>
+              <span id="inspLabel" class="text-sm font-medium">对象</span>
+            </div>
+            <button id="inspClose" class="rounded-md p-1 text-zinc-400 hover:bg-zinc-100 hover:text-zinc-600">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+            </button>
+          </div>
+          <div class="space-y-3 px-3.5 py-3">
+            <code id="inspPath" class="block rounded-md bg-zinc-50 px-2 py-1 font-mono text-[11px] text-zinc-500 ring-1 ring-inset ring-zinc-200">hero.title</code>
+            <div class="flex flex-wrap gap-1.5">
+              <button class="qa rounded-md bg-zinc-100 px-2 py-1 text-xs text-zinc-600 hover:bg-zinc-200" data-qa="rewrite">改写文案</button>
+              <button class="qa rounded-md bg-zinc-100 px-2 py-1 text-xs text-zinc-600 hover:bg-zinc-200" data-qa="accent">换强调色</button>
+              <button class="qa rounded-md bg-zinc-100 px-2 py-1 text-xs text-zinc-600 hover:bg-zinc-200" data-qa="bigger">放大标题</button>
+            </div>
+            <div class="flex gap-1.5">
+              <input id="inspInput" type="text" placeholder="对该对象的反馈…"
+                class="min-w-0 flex-1 rounded-lg px-2.5 py-1.5 text-xs ring-1 ring-inset ring-zinc-200 outline-none focus:ring-2 focus:ring-indigo-500" />
+              <button id="inspSend" class="rounded-lg bg-zinc-900 px-2.5 py-1.5 text-xs font-medium text-white hover:bg-zinc-700">发送</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 预览状态栏 -->
+      <div class="flex h-8 shrink-0 items-center gap-4 border-t border-zinc-200 bg-white px-4 text-[11px] text-zinc-500">
+        <span id="statSections">6 个版块</span>
+        <span id="statObjects">14 个可反馈对象</span>
+        <span class="ml-auto" id="statUpdated">更新于 10:18</span>
+        <span class="inline-flex items-center gap-1 rounded-full bg-zinc-100 px-2 py-0.5 font-medium text-zinc-500">
+          <span class="h-1 w-1 rounded-full bg-zinc-400"></span>Mock 环境 · 无后端
+        </span>
+      </div>
+    </section>
+  </main>
+</div>
+
+<!-- Toast -->
+<div id="toastBox" class="pointer-events-none fixed bottom-6 left-1/2 z-50 -translate-x-1/2 space-y-2"></div>
+
+<script src="app.js"></script>
+</body>
+</html>

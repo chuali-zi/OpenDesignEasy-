@@ -1,0 +1,247 @@
+/* ================= 外壳补充（灯箱校样台） ================= */
+
+html, body { margin: 0; }
+
+/* 滚动条：只走灰阶 */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: #141311; }
+::-webkit-scrollbar-thumb { background: #33302B; border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: #A8A29A; }
+
+/* ---- 对话消息 ---- */
+.msg { display: flex; flex-direction: column; gap: 4px; max-width: 100%; }
+.msg-meta {
+  display: flex; justify-content: space-between; align-items: baseline;
+  font-size: 14px; line-height: 22px; color: #A8A29A; padding: 0 2px;
+}
+.msg-bubble {
+  font-size: 15px; line-height: 24px; padding: 12px;
+  border-radius: 6px; border: 1px solid #33302B;
+}
+.msg-user { align-items: flex-end; }
+.msg-user .msg-meta { flex-direction: row-reverse; }
+.bubble-user { background: #1E1C19; color: #EDEAE3; border-color: #33302B; max-width: 92%; }
+.bubble-agent { background: #141311; color: #EDEAE3; max-width: 100%; }
+.obj-chip {
+  display: inline-block; font-size: 14px; line-height: 20px;
+  border: 1px solid #33302B; border-radius: 4px;
+  padding: 0 6px; color: #EDEAE3; background: #1E1C19;
+}
+
+/* 打字指示 */
+.typing-dot {
+  width: 6px; height: 6px; border-radius: 50%; background: #A8A29A;
+  animation: blink 1.2s infinite;
+}
+.typing-dot:nth-child(2) { animation-delay: .2s; }
+.typing-dot:nth-child(3) { animation-delay: .4s; }
+@keyframes blink { 0%, 60%, 100% { opacity: .25; } 30% { opacity: 1; } }
+
+/* ---- 版本菜单 ---- */
+.ver-item {
+  display: flex; align-items: center; justify-content: space-between;
+  width: 100%; height: 32px; padding: 0 12px;
+  font-size: 14px; color: #EDEAE3; background: transparent; border: 0;
+  cursor: pointer; text-align: left;
+}
+.ver-item:hover { background: #141311; }
+.ver-note { font-size: 14px; color: #A8A29A; }
+
+/* ---- 四角尺寸标注（灯箱规格常驻显示） ---- */
+.dim {
+  position: absolute; font-size: 14px; line-height: 20px;
+  color: #A8A29A; letter-spacing: 0.04em; white-space: nowrap;
+  pointer-events: none;
+}
+.dim-tl { top: -28px; left: 0; }
+.dim-tr { top: -28px; right: 0; }
+.dim-bl { bottom: -28px; left: 0; }
+.dim-br { bottom: -28px; right: 0; }
+
+/* ---- 白页（产物样张）：1px 深色描边 + 极浅投影 ---- */
+#artifact {
+  width: 1440px; height: 900px;
+  transform-origin: top left;
+  border: 1px solid #33302B;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.35);
+  overflow: hidden;
+}
+
+/* ---- 对象选中（外壳层覆盖，中性灰，不用暖色） ---- */
+[data-oey-object] { position: relative; cursor: pointer; }
+[data-oey-object]:hover { outline: 1px dashed rgba(20, 19, 17, 0.35); outline-offset: 2px; }
+.obj-selected { outline: 2px solid #A8A29A !important; outline-offset: 2px; }
+.sel-tag {
+  position: absolute; top: -26px; left: -2px; z-index: 5;
+  font-size: 14px; line-height: 20px; letter-spacing: 0.02em;
+  background: #1E1C19; color: #EDEAE3;
+  border: 1px solid #33302B; border-radius: 4px; padding: 0 8px;
+  white-space: nowrap;
+}
+
+/* ---- 检查器抽屉 ---- */
+.drawer {
+  position: absolute; top: 0; right: 0; bottom: 0; width: 288px;
+  background: #1E1C19; border-left: 1px solid #33302B;
+  transform: translateX(100%); transition: transform .25s ease;
+  display: flex; flex-direction: column; z-index: 30;
+}
+.drawer.open { transform: translateX(0); }
+.insp-label {
+  font-size: 14px; line-height: 20px; color: #A8A29A;
+  letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 4px;
+}
+
+/* ---- Toast ---- */
+.toast {
+  position: absolute; bottom: 24px; left: 50%; transform: translateX(-50%);
+  background: #1E1C19; border: 1px solid #33302B; border-radius: 6px;
+  color: #EDEAE3; font-size: 14px; line-height: 22px;
+  padding: 8px 16px; z-index: 50; white-space: nowrap;
+}
+
+/* ================= 内层产物：KILN Coffee 落地页 ================= */
+/* 注意：以下是「别人的产品」的自有视觉语言 —— 米白底、陶土橙、深棕、衬线标题。
+   与工作台外壳完全隔离，不得相互蔓延。 */
+
+.art {
+  background: #FAF5EC;
+  color: #2B1D14;
+  font-family: "Helvetica Neue", Arial, "PingFang SC", "Microsoft YaHei", sans-serif;
+  display: flex; flex-direction: column;
+}
+
+/* -- 导航 -- */
+.art-nav {
+  height: 64px; flex-shrink: 0;
+  display: flex; align-items: center; padding: 0 56px; gap: 40px;
+  border-bottom: 1px solid #E4D9C8;
+}
+.art-logo {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 26px; font-weight: 700; letter-spacing: 0.14em; color: #2B1D14;
+}
+.art-nav-links { display: flex; gap: 28px; flex: 1; }
+.art-nav-links a {
+  font-size: 15px; color: #5C4634; text-decoration: none;
+}
+.art-nav-links a:hover { color: #B4552D; }
+.art-nav-cta {
+  font-size: 15px; color: #FAF5EC; background: #B4552D;
+  padding: 9px 20px; border-radius: 999px; text-decoration: none;
+}
+
+/* -- 主视觉 -- */
+.art-hero {
+  flex: 1; display: flex; align-items: center;
+  padding: 0 56px; gap: 48px; min-height: 0;
+}
+.art-hero-text { flex: 1.2; display: flex; flex-direction: column; gap: 18px; }
+.art-eyebrow {
+  font-size: 14px; letter-spacing: 0.22em; text-transform: uppercase;
+  color: #B4552D; font-weight: 600;
+}
+.art-h1 {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 58px; line-height: 1.08; font-weight: 700;
+  color: #2B1D14; margin: 0;
+}
+.art-sub {
+  font-size: 17px; line-height: 1.7; color: #5C4634;
+  max-width: 440px; margin: 0;
+}
+.art-hero-actions { display: flex; gap: 14px; margin-top: 6px; }
+.art-btn-primary {
+  font-size: 16px; color: #FAF5EC; background: #2B1D14;
+  padding: 13px 26px; border-radius: 8px; text-decoration: none;
+}
+.art-btn-ghost {
+  font-size: 16px; color: #2B1D14; border: 1.5px solid #2B1D14;
+  padding: 13px 26px; border-radius: 8px; text-decoration: none;
+}
+.art-hero-visual {
+  flex: 1; height: 100%; max-height: 320px;
+  background: #F0E4D2; border-radius: 16px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 14px;
+}
+.art-kiln { display: flex; flex-direction: column; align-items: center; }
+.art-kiln-arch {
+  width: 130px; height: 100px; background: #B4552D;
+  border-radius: 65px 65px 0 0;
+}
+.art-kiln-fire {
+  width: 46px; height: 34px; background: #E8A04C;
+  border-radius: 23px 23px 0 0; margin-top: -34px;
+}
+.art-kiln-base { width: 170px; height: 16px; background: #2B1D14; border-radius: 4px; margin-top: 34px; }
+.art-kiln-caption { font-size: 14px; letter-spacing: 0.3em; color: #8A6F57; }
+
+/* -- 豆子卡片 -- */
+.art-beans { padding: 26px 56px 30px; }
+.art-beans-head {
+  display: flex; align-items: baseline; justify-content: space-between;
+  margin-bottom: 18px;
+}
+.art-beans-head h2 {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 28px; color: #2B1D14; margin: 0;
+}
+.art-beans-head span { font-size: 14px; color: #8A6F57; }
+.art-bean-row { display: flex; gap: 20px; }
+.art-card {
+  flex: 1; background: #FFFFFF; border: 1px solid #E4D9C8; border-radius: 12px;
+  padding: 20px; display: flex; flex-direction: column; gap: 10px;
+}
+.art-card-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.art-card-top h3 { font-size: 17px; color: #2B1D14; margin: 0; font-weight: 600; }
+.art-roast {
+  font-size: 13px; color: #B4552D; border: 1px solid #B4552D;
+  border-radius: 999px; padding: 2px 10px; flex-shrink: 0;
+}
+.art-card-notes {
+  font-size: 14px; line-height: 1.6; color: #5C4634; margin: 0;
+  min-height: 44px;
+}
+.art-card-foot {
+  margin-top: auto; display: flex; align-items: center; justify-content: space-between;
+  border-top: 1px solid #F0E4D2; padding-top: 12px;
+}
+.art-price { font-size: 19px; font-weight: 700; color: #2B1D14; }
+.art-price em { font-style: normal; font-size: 13px; font-weight: 400; color: #8A6F57; }
+.art-card-buy { font-size: 14px; color: #B4552D; text-decoration: none; font-weight: 600; }
+
+/* -- 引用带 -- */
+.art-quote {
+  background: #2B1D14; padding: 30px 56px;
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+}
+.art-quote blockquote {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 24px; font-style: italic; color: #FAF5EC; margin: 0;
+}
+.art-quote cite { font-size: 14px; color: #C8A87E; font-style: normal; }
+
+/* -- 底栏 -- */
+.art-footer {
+  display: flex; padding: 26px 56px 30px; gap: 56px;
+  border-top: 1px solid #E4D9C8; background: #FAF5EC;
+}
+.art-footer h3 {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 18px; color: #2B1D14; margin: 0 0 8px;
+}
+.art-footer p { font-size: 14px; line-height: 1.7; color: #5C4634; margin: 0; }
+.art-visit { flex: 1; }
+.art-news { flex: 1.4; }
+.art-news-form { display: flex; gap: 12px; margin-top: 12px; }
+.art-news-form input {
+  flex: 1; height: 42px; border: 1px solid #E4D9C8; border-radius: 8px;
+  padding: 0 14px; font-size: 15px; color: #2B1D14; background: #FFFFFF;
+  outline: none;
+}
+.art-news-form input:focus { border-color: #B4552D; }
+.art-news-form button {
+  height: 42px; padding: 0 22px; border: 0; border-radius: 8px;
+  background: #B4552D; color: #FAF5EC; font-size: 15px; cursor: pointer;
+}

@@ -1,0 +1,38 @@
+body {
+  font-family: Georgia, serif;
+  background-color: #1b1f2a;
+  color: #f2ead8;
+  max-width: 640px;
+  margin: 3rem auto;
+  padding: 0 1.5rem;
+  line-height: 1.6;
+}
+
+h1 {
+  color: #f4b942;
+  font-size: 2.5rem;
+  letter-spacing: 0.05em;
+  border-bottom: 3px solid #f4b942;
+  padding-bottom: 0.5rem;
+}
+
+p {
+  font-size: 1.1rem;
+  background-color: #262c3b;
+  padding: 1.25rem;
+  border-radius: 10px;
+}
+
+button {
+  background-color: #f4b942;
+  color: #1b1f2a;
+  border: none;
+  border-radius: 6px;
+  padding: 0.6rem 1.2rem;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+button:hover {
+  background-color: #ffd066;
+}

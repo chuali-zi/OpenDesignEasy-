@@ -7,11 +7,27 @@
 - [Contract skeleton](./contract-skeleton.md)：Phase 1 的生命周期、端口、命令、事件、错误和 stub 验收契约。
 - [Runtime recovery](./runtime-recovery.md)：Phase 2 的持久状态、workflow checkpoint、重连与副作用契约。
 - [Context & Evidence baseline](./context-evidence-baseline.md)：Phase 3 的原件接入、证据分层、来源定位、权利与 Context Package 契约。
+- [Product Shell stub flow](./product-shell-stub-flow.md)：Phase 4 的可恢复工作台、产品动作、stub 闭环与界面验收契约。
 
-后续计划补充：
+Phase 5 的内部规范：
 
-- `design-intelligence-spec.md`：智能设计层内部架构与技术选择；
-- `artifact-production-spec.md`：Artifact 生产层及 Web/PPT/DOCX 实现架构；
-- `quality-governance-spec.md`：质量、修复、策略和治理内部架构。
+- [Agent Engine](./agent-engine-spec.md)（v0.2 草案，待审核）：工作区、工具目录、agent 循环、自验证闭环、session 续跑、沙箱与预算。**另外三份的基础**；
+- [Design Intelligence](./design-intelligence-spec.md)（v0.4 🔒 已冻结）：候选表示、design contract、艺术方向阶段与视觉领地库、模型能力平面与创作 loop；
+- [Artifact Production](./artifact-production-spec.md)（v0.4 🔒 已冻结）：Web 可运行产物、对象标识、真实渲染、离线 vendor 供给、导出与取舍语义；
+- [Quality & Governance](./quality-governance-spec.md)（v0.3 🔒 已冻结）：双轨评估、硬检查清单、审美 rubric、修复边界与交付门。
 
-以上三个模块当前只受 `system-spec.md` 的宏观接口约束，内部实现仍为 TODO。
+四份规范的首个垂直媒介为 Web，首个真实场景为「本仓库 → agent 前端页（含自造 mock 后端）」。
+它们不改变 `ports.py` 中三个 Protocol 的方法签名。已冻结的三份，其变更必须通过版本化 Spec
+或 ADR；仍被凭据阻塞的假设（Design Intelligence 的 D4/D5 生图）例外，变更范围限于对应小节。
+
+审美方向已裁决：首批视觉领地为 **`graphite` 深色工作台**与 **`paper` 暖纸编辑台**，
+入库判据（分离度 ≥ 25）与标定见 `design-intelligence-spec.md` §4.2.3 和
+`spikes/aesthetic-ab/convergence.py`。
+
+核心原则：**沙箱内最大自由，边界上严格纪律**。agent 在阶段内部拥有工作区与工具，自主创作、
+运行与自修，不被逐步监督；进入项目真源的只有经端口返回并由 Control Plane 验证的产出，外部副作用
+仍需审批。
+
+配套的既有规范升版（v0.2 草案，待审核）：`system-spec.md`（§5 增加 Agent Workspace 与 Agent
+Session 概念身份）、`context-evidence-baseline.md`（仓库只读接入与授权根路径规则）、
+`implementation-plan.md`（Phase 5 范围与场景变更）。

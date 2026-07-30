@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OEYdesign · 工作台</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<!-- ═══════════ 顶栏 ═══════════ -->
+<header class="topbar" data-oey-section="topbar">
+  <div class="tb-left">
+    <div class="brand">
+      <span class="brand-mark">◈</span>
+      <span class="brand-name">OEY<em>design</em></span>
+    </div>
+    <span class="tb-divider"></span>
+    <div class="project-meta">
+      <span class="project-name" id="projectName" title="点击重命名">Lumen 品牌落地页</span>
+      <span class="project-path">我的项目 / 2024 发布季</span>
+    </div>
+  </div>
+  <div class="tb-right">
+    <span class="sync-badge" id="syncBadge"><i class="dot ok"></i>已同步 · v1.2</span>
+    <button class="tb-btn" id="shareBtn">↗ 分享</button>
+    <div class="menu-anchor">
+      <button class="tb-btn primary" id="exportBtn">⤓ 导出 ▾</button>
+      <div class="menu" id="exportMenu" hidden>
+        <div class="menu-title">导出为</div>
+        <button class="menu-item" data-export="web"><span class="mi-icon">▦</span><span>Web 站点包<small>.html + assets</small></span></button>
+        <button class="menu-item" data-export="ppt"><span class="mi-icon">▤</span><span>演示文稿<small>deck.pptx · 8 页</small></span></button>
+        <button class="menu-item" data-export="docx"><span class="mi-icon">▥</span><span>设计说明文档<small>brief.docx</small></span></button>
+        <button class="menu-item" data-export="png"><span class="mi-icon">▨</span><span>PNG 长图<small>1440 × 3200</small></span></button>
+      </div>
+    </div>
+    <div class="avatar" title="Ou Eryan">OE</div>
+  </div>
+</header>
+
+<main class="layout">
+
+  <!-- ═══════════ 左：对话栏 ═══════════ -->
+  <aside class="chat-panel" data-oey-section="chat-panel">
+    <div class="chat-head">
+      <div>
+        <div class="chat-title">设计对话</div>
+        <div class="chat-sub">用自然语言描述，我来产出成品</div>
+      </div>
+      <button class="icon-btn" id="collapseBtn" title="收起对话栏">⟨</button>
+    </div>
+
+    <div class="messages" id="messages" data-oey-section="message-list">
+
+      <div class="msg user">
+        <div class="msg-body">
+          <div class="msg-text">我想给新产品「Lumen」做一个发布用的品牌落地页。它是一个知识整理工具，风格要简洁、有科技感，主色先偏冷一点。</div>
+          <div class="msg-time">14:02</div>
+        </div>
+      </div>
+
+      <div class="msg agent">
+        <div class="msg-avatar">◈</div>
+        <div class="msg-body">
+          <div class="msg-text">明白了。我拆解出三个意图：<b>科技感冷色调</b>、<b>突出"整理"心智</b>、<b>发布会场景需要强 CTA</b>。已生成首版落地页，包含导航、Hero、特性、证言和转化区块，共 6 个可编辑对象。</div>
+          <div class="art-card" data-goto-version="v1.0" data-goto-file="web">
+            <span class="art-card-icon">▦</span>
+            <span class="art-card-info">
+              <b>Web 落地页 · index.html</b>
+              <small>v1.0 · 6 个区块 · 冷蓝主色 · 已就绪</small>
+            </span>
+            <span class="art-card-act">查看 →</span>
+          </div>
+          <div class="msg-time">14:02 · 耗时 8s</div>
+        </div>
+      </div>
+
+      <div class="msg user">
+        <div class="msg-body">
+          <div class="msg-text">Hero 的标题不够有力，改成突出「把碎片信息变成清晰结构」这个意思。</div>
+          <div class="msg-time">14:05</div>
+        </div>
+      </div>
+
+      <div class="msg agent">
+        <div class="msg-avatar">◈</div>
+        <div class="msg-body">
+          <div class="msg-text">已重写主标题为「把碎片信息，变成清晰结构」，副标题同步调整为对「收集 → 结构化 → 复用」流程的描述，并收紧了标题字距以提升力量感。</div>
+          <div class="art-card" data-goto-version="v1.1" data-goto-file="web">
+            <span class="art-card-icon">▦</span>
+            <span class="art-card-info">
+              <b>Web 落地页 · index.html</b>
+              <small>v1.1 · 文案迭代 · 已就绪</small>
+            </span>
+            <span class="art-card-act">查看 →</span>
+          </div>
+          <div class="msg-time">14:05 · 耗时 4s</div>
+        </div>
+      </div>
+
+      <div class="msg user">
+        <div class="msg-body">
+          <div class="msg-text">整体太冷了，加一点暖色，让 CTA 按钮更醒目。</div>
+          <div class="msg-time">14:09</div>
+        </div>
+      </div>
+
+      <div class="msg agent">
+        <div class="msg-avatar">◈</div>
+        <div class="msg-body">
+          <div class="msg-text">已把主色从冷蓝切换为暖橙 <code>#FF7A45</code>，CTA 加大了尺寸并增加柔和投影；背景保留冷灰以维持科技感，形成冷暖对比。右侧已是最新效果。</div>
+          <div class="art-card current" data-goto-version="v1.2" data-goto-file="web">
+            <span class="art-card-icon">▦</span>
+            <span class="art-card-info">
+              <b>Web 落地页 · index.html</b>
+              <small>v1.2 · 主色调整 · 当前版本</small>
+            </span>
+            <span class="art-card-act">查看 →</span>
+          </div>
+          <div class="msg-time">14:09 · 耗时 5s</div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="quick-chips" data-oey-section="quick-actions">
+      <button class="chip" data-prompt="把主色换成冷蓝，科技感再强一点">🎨 换成冷蓝</button>
+      <button class="chip" data-prompt="把标题改为「让想法，各就其位」">✏️ 改标题</button>
+      <button class="chip" data-prompt="基于这版生成一个 PPT 演示稿">▤ 生成 PPT</button>
+      <button class="chip" data-prompt="生成一份设计说明 DOCX 文档">▥ 设计说明</button>
+    </div>
+
+    <form class="composer" id="composer" data-oey-section="composer">
+      <input type="text" id="composerInput" placeholder="描述你的修改，如：把主色换成森绿…" autocomplete="off">
+      <button type="submit" class="send-btn" id="sendBtn" title="发送">➤</button>
+    </form>
+  </aside>
+
+  <!-- ═══════════ 右：预览区 ═══════════ -->
+  <section class="preview" data-oey-section="preview">
+
+    <div class="preview-toolbar" data-oey-section="preview-toolbar">
+      <div class="pt-left">
+        <div class="menu-anchor">
+          <button class="pt-btn version-btn" id="versionBtn">
+            <span class="ver-id" id="verLabel">v1.2</span>
+            <span class="ver-tag">当前</span> ▾
+          </button>
+          <div class="menu ver-menu" id="versionMenu" hidden></div>
+        </div>
+        <span class="status-pill" id="statusPill"><i class="dot ok"></i>已就绪</span>
+        <div class="file-tabs" data-oey-section="file-tabs">
+          <button class="ftab active" data-file="web">▦ index.html</button>
+          <button class="ftab" data-file="deck">▤ deck.pptx</button>
+          <button class="ftab" data-file="doc">▥ brief.docx</button>
+        </div>
+      </div>
+      <div class="pt-right">
+        <div class="device-toggle" id="deviceToggle">
+          <button class="dev active" data-device="desktop" title="桌面">🖥</button>
+          <button class="dev" data-device="tablet" title="平板">▯</button>
+          <button class="dev" data-device="mobile" title="手机">▮</button>
+        </div>
+        <button class="pt-btn" id="refreshBtn" title="重新渲染">⟳</button>
+      </div>
+    </div>
+
+    <div class="canvas-wrap" id="canvasWrap" data-oey-section="canvas">
+      <div class="canvas device-desktop" id="canvas">
+        <!-- 产物由 JS 渲染 -->
+      </div>
+
+      <!-- 对象检查器（次级面板，非主栏） -->
+      <aside class="inspector" id="inspector" data-oey-section="inspector" hidden>
+        <div class="insp-head">
+          <div>
+            <div class="insp-title" id="inspName">对象</div>
+            <div class="insp-path" id="inspPath">—</div>
+          </div>
+          <button class="icon-btn" id="inspClose">✕</button>
+        </div>
+        <div class="insp-props" id="inspProps"></div>
+        <div class="insp-feedback">
+          <div class="insp-sec-title">对象级反馈</div>
+          <div class="fb-list" id="fbList"></div>
+          <form class="fb-form" id="fbForm">
+            <input type="text" id="fbInput" placeholder="针对该对象提意见…">
+            <button type="submit" class="send-btn small">➤</button>
+          </form>
+        </div>
+      </aside>
+    </div>
+
+    <div class="preview-foot">
+      <span id="footInfo">index.html · 桌面 1280 · 6 个对象</span>
+      <span class="foot-hint">点击画布中的任意区块，可进行对象级反馈</span>
+    </div>
+  </section>
+
+</main>
+
+<div class="toasts" id="toasts"></div>
+
+<script src="app.js"></script>
+</body>
+</html>

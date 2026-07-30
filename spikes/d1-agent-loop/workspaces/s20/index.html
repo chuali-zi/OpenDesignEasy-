@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NimbusBrew — The Self-Heating Travel Mug</title>
+  <style>
+    :root {
+      --bg: #fdf8f2;
+      --ink: #2b2118;
+      --accent: #c96f2f;
+      --accent-dark: #9c5020;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: Georgia, 'Times New Roman', serif;
+      background: var(--bg);
+      color: var(--ink);
+      line-height: 1.6;
+    }
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 2rem;
+      border-bottom: 1px solid #e5d9c8;
+    }
+    .logo {
+      font-size: 1.4rem;
+      font-weight: bold;
+      color: var(--accent-dark);
+      letter-spacing: 0.05em;
+    }
+    nav a {
+      margin-left: 1.5rem;
+      color: var(--ink);
+      text-decoration: none;
+      font-size: 0.95rem;
+    }
+    nav a:hover { color: var(--accent); }
+    main {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 3rem 1.5rem;
+    }
+    h1 {
+      font-size: 2.4rem;
+      line-height: 1.2;
+      margin-bottom: 1rem;
+    }
+    h2 { margin: 2rem 0 0.75rem; font-size: 1.5rem; }
+    p { margin-bottom: 1rem; }
+    .tagline {
+      font-style: italic;
+      color: var(--accent-dark);
+      font-size: 1.1rem;
+    }
+    ul { margin: 0 0 1rem 1.5rem; }
+    li { margin-bottom: 0.4rem; }
+    .cta {
+      display: inline-block;
+      margin-top: 1.5rem;
+      padding: 0.8rem 1.8rem;
+      background: var(--accent);
+      color: #fff;
+      text-decoration: none;
+      border-radius: 4px;
+      font-weight: bold;
+    }
+    .cta:hover { background: var(--accent-dark); }
+    footer {
+      border-top: 1px solid #e5d9c8;
+      text-align: center;
+      padding: 1.5rem;
+      font-size: 0.85rem;
+      color: #8a7a68;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo">NimbusBrew</div>
+    <nav>
+      <a href="#features">Features</a>
+      <a href="#about">About</a>
+      <a href="#preorder">Pre-order</a>
+    </nav>
+  </header>
+
+  <main>
+    <h1>Your coffee, exactly 62&deg;C. For six straight hours.</h1>
+    <p class="tagline">The self-heating travel mug that finally ends the era of lukewarm disappointment.</p>
+
+    <p id="about">NimbusBrew is a 400&nbsp;ml insulated travel mug with a hidden trick: a
+    whisper-thin heating element wrapped around the inner steel wall, powered by a
+    removable battery puck in the base. Set your preferred temperature once on the
+    dial at the bottom of the mug, and NimbusBrew holds it there — through your
+    commute, your meetings, and that long walk you keep promising yourself. No app,
+    no Bluetooth, no subscription. Just hot coffee that stays hot.</p>
+
+    <h2 id="features">Why people love it</h2>
+    <ul>
+      <li><strong>Precision hold:</strong> keeps any drink between 50&deg;C and 75&deg;C, accurate to one degree.</li>
+      <li><strong>Six-hour battery:</strong> the puck charges over USB-C in 45 minutes and snaps off for washing.</li>
+      <li><strong>Dishwasher-safe body:</strong> every part except the battery puck goes straight in the rack.</li>
+      <li><strong>Spill-proof lid:</strong> a two-stage seal survives being tossed sideways into a bag.</li>
+    </ul>
+
+    <p>We built NimbusBrew after one too many thermoses of coffee gone cold by 10
+    a.m. Three years and forty-one prototypes later, the first production run ships
+    this autumn in Charcoal, Oat, and Ember Red.</p>
+
+    <a id="preorder" class="cta" href="#preorder">Pre-order for $79 — ships October</a>
+  </main>
+
+  <footer>
+    <p>&copy; 2025 NimbusBrew Co. Brewed with patience in Portland, Oregon.</p>
+  </footer>
+</body>
+</html>

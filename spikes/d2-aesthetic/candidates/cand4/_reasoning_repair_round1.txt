@@ -1,0 +1,201 @@
+Let me analyze the screenshot for issues.
+
+Observations from the screenshot:
+1. Preview area shows "暂无可预览的候选" but the mock canvas below shows random rectangles (placeholder shapes) — actually the empty state says no candidates yet there are candidate cards below (方向 A/B/C 待审). Inconsistency: candidates exist (待审) but preview says none. This seems like a functional mismatch — the mock shows random rectangles as decoration which looks like a bug.
+
+2. Left column: 反馈台 is very long, two forms stacked; the B form's 意见 textarea is cut off at bottom (page scrolls presumably fine). The screenshot bottom cuts at 意见 textarea — likely page scrolls, okay.
+
+3. Top bar: right side shows "澜庭地产 · 品牌落地页 · REVISION 3" and a string "— · — : — · —" that looks like a broken clock/time display, cut off at right edge.
+
+4. Quality panel: 硬错误 badge shows "—" and 审美发现 shows "—"; export locked. Fine.
+
+5. The mock canvas placeholder rectangles look odd — gray/blue rectangles overlapping, seems like a placeholder preview even though text says no preview available. Possibly intentional mock but inconsistent.
+
+6. console error: 1 × 404 resource — some asset failed to load (maybe favicon or font).
+
+7. Top-right truncated time display "— · — : — · —" cut off.
+
+Since I only have the screenshot and need to output files that changed — I need to reconstruct the original file? The instructions say output complete new content of changed files. I don't have the original code. As a self-verification, I'm continuing my own workspace, so I should produce the full file. This is tricky — I need to write a complete index.html (presumably) implementing the workbench with fixes.
+
+Issues to list:
+- 顶部状态栏右侧时间显示 "— · — : — · —" 被视口右缘截断，且为占位符未渲染真实时间。
+- 预览区文字提示"暂无可预览的候选"，但画布仍渲染了占位矩形，且下方候选条显示方向 A/B 待审，状态自相矛盾（待审候选应可预览）。
+- 一个资源 404（console error）。
+- 审美发现区域显示"—"但下方有"◦ —"条目，视觉残缺。
+
+Then output fixed file. I need to write a full self-contained HTML file implementing the design. That's a large output but required. Let me write a complete index.html with:
+
+- Three-column grid: left 300px, center flex, right 320px.
+- Top bar with project selector, status, live clock (JS updating), no truncation.
+- Left: 项目队列 (4 items, 4 lines each), 反馈台 with two forms.
+- Center: preview canvas + candidate strip, timeline at bottom.
+- Right: 约束档案, 质量复核 (two tracks), 导出锁, 交付记录.
+- data-oey-section attributes: projects, feedback, preview, candidates, timeline, constraints, quality, delivery.
+- Mock JS: project switching with 200-500ms delay, clock, candidate click to preview, feedback submission appends to timeline.
+- No external resources (avoid 404) — use inline everything.
+
+Key fixes:
+1. Clock renders real time via JS and has enough width (no truncation).
+2. Preview logic: if candidates exist with 待审 status, show selected candidate preview; empty state only when no candidates. Candidate click updates canvas.
+3. No external resource → no 404.
+4. Quality panel aesthetic track consistent placeholder.
+
+Let me write the HTML carefully but compactly. Dark theme broadcast console. Fonts: system.
+
+Design details:
+
+Colors: bg #0d1117-ish, panels #141a22, borders #232c38, accent amber #f0a832, blue #5aa9ff, red #ff5f56.
+
+Layout: header 48px; main grid: 300px 1fr 320px; gap 10px; padding 10px; height calc(100vh - 48px). Left column: projects (flex) + feedback (scrollable). Center: preview (flex 1) + candidates strip + timeline (fixed height ~180px). Right: constraints, quality, export, delivery; scrollable.
+
+Canvas preview: render mock wireframe per candidate (different arrangements of colored blocks). Empty state centered text when project has no candidates (e.g., project 3 已交付? Actually project 1 has candidates).
+
+Mock data: projects array with id, name, type, status, revision, constraints, candidates, timeline, quality, deliveries.
+
+Interactions: click project → loading delay 200-500ms → re-render panels. Click candidate card → select → render preview wireframe. Feedback forms: submit appends timeline event, prevents default.
+
+Clock: setInterval update HH:MM:SS.
+
+Also, quality export button disabled unless quality passed.
+
+Let me write the code. Keep it maybe ~400 lines. Ensure data-oey-section anchors: projects, feedback, preview, candidates, timeline, constraints, quality, export, delivery.
+
+Candidate wireframes: each candidate has blocks defined; render absolutely positioned divs in canvas.
+
+Ensure no overflow: use min-width:0 on grid children, overflow hidden where needed.
+
+Feedback forms: A 整体方向退回 (red accent), B 局部微调意见 (blue accent), with selects and textareas; buttons append to timeline and show a small note.
+
+Write it.
+
+For timeline: monospace time, role tag colored, content. 11.5px.
+
+Now produce ISSUES list and the file.
+
+Issues (Chinese, one sentence each):
+1. 顶栏右侧的时间/状态串渲染为 "— · — : — · —" 占位符且被视口右缘截断，未显示真实时间。
+2. 预览画布显示"暂无可预览的候选"的同时仍渲染一组无意义的灰蓝占位矩形，且下方候选条已有方向 A/B 处于待审，前后状态矛盾。
+3. 页面存在 1 个 404 资源加载失败（console error），说明引用了不存在的资源。
+4. 质量复核"审美发现"轨道内容渲染为孤立的 "◦ —"，占位数据残缺、视觉上像渲染错误。
+
+Then FILE: index.html complete.
+
+Let me write the full HTML now.
+
+Key structural code:
+
+```html
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AIRROOM · OEY 设计播控台</title>
+<style> ... </style>
+</head>
+<body>
+<header>...</header>
+<main>
+  <aside class="col-left">
+    <section data-oey-section="projects">...</section>
+    <section data-oey-section="feedback">...</section>
+  </aside>
+  <div class="col-center">
+    <section data-oey-section="preview">...</section>
+    <section data-oey-section="candidates">...</section>
+    <section data-oey-section="timeline">...</section>
+  </div>
+  <aside class="col-right">
+    <section data-oey-section="constraints">...</section>
+    <section data-oey-section="quality">...</section>
+    <section data-oey-section="export">...</section>
+    <section data-oey-section="delivery">...</section>
+  </aside>
+</main>
+<script>...</script>
+</body>
+</html>
+```
+
+JS mock data with candidates having wireframe blocks.
+
+Preview render: canvas area with absolutely positioned blocks; scale by percentage.
+
+Let me write blocks like: candidate A: [{x:8,y:10,w:60,h:14,c:'#5aa9ff'}, ...]. Render as divs with left/top/width/height %.
+
+Candidate data:
+
+directions for project p-lanting REVISION 3:
+- A 极简编辑部: 待审, blocks
+- B 都会霓虹: 待审
+- C 私邸画册: 已退回, 微调×1
+
+Selected candidate default: A (待审) → canvas shows A's wireframe. Header above canvas: "方向 A · 极简编辑部 · 待审". If project has no candidates → empty state text.
+
+Timeline events per project.
+
+Quality: hard errors list, aesthetic list; export enabled if both resolved — for mock, project 3 (已交付) has export done; project 1 locked.
+
+I'll implement: quality = {hard: {count, items[]}, aes: {count, items[]}}. Export button disabled with text "导出交付" when locked, shows lock reason.
+
+Project switching: on click, set loading state, setTimeout(random 200-500) then render.
+
+Clock: function updateClock sets #clock textContent to HH:MM:SS.
+
+Now CSS. Keep dense: 11.5px timeline, 12px body.
+
+I'll write it all out. Ensure the header right side has fixed layout with flex and gap, clock width fixed 70px, no truncation: give header padding and items flex-shrink:0 but ensure total fits 1440. Fine.
+
+Also make feedback column scroll: left column display flex column; projects flex none max-height 45%; feedback flex 1 overflow auto.
+
+Center column: grid rows: 1fr auto 170px.
+
+Candidate strip: horizontal flex, cards 190px wide, overflow-x auto.
+
+OK writing final output. Also handle feedback submit: append event to timeline of current project and re-render timeline, reset textarea.
+
+Also candidate click: mark selected, update preview, update card highlight.
+
+Write code now, being careful with syntax.
+
+For quality panel in screenshot there was "两条独立轨道" label. Keep.
+
+Empty deliveries: "尚无交付记录".
+
+Constraint profile: preset name, role, bullet list.
+
+Let me draft JS:
+
+```js
+const PROJECTS = [
+ {id:'p-lanting', name:'澜庭地产 · 品牌落地页', type:'网页', status:'候选待审', rev:3,
+  constraints:{preset:'设计引导', role:'起始脚手架', rules:['主色限定品牌蓝系','单页长度 ≤ 5 屏','允许生图配图，须标注来源']},
+  candidates:[
+   {id:'A', title:'方向 A · 极简编辑部', desc:'大留白、衬线标题、单栏叙事', status:'待审', tweaks:0,
+    blocks:[[8,12,55,10,'#5aa9ff'],[8,30,38,34,'#2a3a4d'],[50,30,42,18,'#5aa9ff'],[50,52,26,26,'#3b6ea5'],[8,70,84,8,'#22303f']]},
+   {id:'B', title:'方向 B · 都会霓虹', desc:'深色底、高对比、数据可视化开场', status:'待审', tweaks:0,
+    blocks:[[6,10,88,22,'#111826'],[6,38,28,44,'#5aa9ff'],[38,38,28,44,'#7c5aff'],[70,38,24,44,'#22303f'],[6,86,88,6,'#f0a832']]},
+   {id:'C', title:'方向 C · 私邸画册', desc:'横向翻阅、大图满屏、弱文字', status:'已退回', tweaks:1,
+    blocks:[[10,14,80,50,'#2a3a4d'],[10,68,36,18,'#5aa9ff'],[54,68,36,18,'#3b6ea5']]}
+  ],
+  quality:{hard:{items:['尚无质量结论：需先批准方向、产出正式 Artifact 后进入复核。']}, aes:{items:['尚未进入复核，无审美发现。']}},
+  deliveries:[],
+  timeline:[...]
+ },
+ ...
+];
+```
+
+Other projects can reuse simpler data. Project 2 质量复核中, project 3 已交付 with quality passed and export enabled, deliveries one entry. Project 4 maybe none — the queue shows 4 items but screenshot shows 3 + note. I'll do 4 projects: add one more "星河公寓 · 招商 H5".
+
+Rendering functions: renderProjects, renderFeedbackTarget? feedback B select lists current candidates.
+
+OK, write final. Must be complete and valid. Length fine.
+
+Also status colors: 候选待审 amber, 质量复核中 blue, 已交付 green.
+
+Header: logo ◉ AIRROOM, sub "OEY 设计播控台 · design_agent 前端", project select, status pill, right: project name · REVISION n, clock.
+
+Make sure select works to switch project too (sync with list). I'll wire both.
+
+Now write everything.

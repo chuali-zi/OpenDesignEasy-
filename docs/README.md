@@ -9,6 +9,17 @@
 - [Phase 1 contract skeleton](./spec/contract-skeleton.md)：代码中立的生命周期、端口与 stub 验收契约。
 - [Phase 2 runtime recovery](./spec/runtime-recovery.md)：持久状态、checkpoint、重连、幂等与失败恢复契约。
 - [Phase 3 Context & Evidence](./spec/context-evidence-baseline.md)：原件、证据分层、来源、权利与 Context Package 契约。
+- [Phase 4 Product Shell](./spec/product-shell-stub-flow.md)：Project 驱动的工作台、stub 产品闭环、反馈、质量门与交付契约。
+
+## Phase 5 内部规范（草案，待审核）
+
+- [Agent Engine](./spec/agent-engine-spec.md)：工作区、工具目录、agent 循环、自验证闭环、沙箱与预算。另外三份的基础。
+- [Design Intelligence](./spec/design-intelligence-spec.md)：候选表示、design contract、模型能力平面与创作 loop。
+- [Artifact Production](./spec/artifact-production-spec.md)：Web 可运行产物、对象标识、真实渲染、导出与取舍语义。
+- [Quality & Governance](./spec/quality-governance-spec.md)：双轨评估、硬检查、审美 rubric、修复边界与交付门。
+
+`system-spec.md`、`context-evidence-baseline.md` 与 `implementation-plan.md` 已升至 v0.2 草案以
+配合上述规范，变更说明见各文档开头。
 
 ## 决策与归档
 
