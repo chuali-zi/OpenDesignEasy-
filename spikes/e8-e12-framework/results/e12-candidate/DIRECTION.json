@@ -1,0 +1,31 @@
+{
+  "name": "OEYdesign — workspace art direction",
+  "shellColorTokens": [
+    { "token": "ink",   "hex": "#131519", "role": "app canvas / deepest surface" },
+    { "token": "panel", "hex": "#1C1F24", "role": "rails, bars, raised chrome" },
+    { "token": "line",  "hex": "#32363E", "role": "1px borders and dividers" },
+    { "token": "text",  "hex": "#ECE9E2", "role": "primary text, 13.9:1 on ink" },
+    { "token": "muted", "hex": "#9AA1AB", "role": "secondary text, 6.3:1 on panel" },
+    { "token": "amber", "hex": "#D9A441", "role": "sole accent — pins, active states, agent mark" }
+  ],
+  "typeScale": {
+    "stepsPx": [14, 15, 16, 18, 22, 28],
+    "floor": "no shell text below 14px",
+    "family": "system sans stack only; no webfonts, no network"
+  },
+  "spacingScale": {
+    "stepsPx": [4, 8, 12, 16, 24, 40, 64],
+    "note": "4px base unit; rails pad at 20px; regions separate by 1px line, never by shadow"
+  },
+  "layout": "Two-column desktop workspace under a 56px top bar: a 384px conversation rail on the left (panel) and a dominant flexible artifact canvas on the right (ink). Rail and canvas scroll independently. The deliverable renders inside the canvas as a framed, self-contained page with its own light printed-matter palette, visibly not workspace chrome.",
+  "signatureMove": "Margin pins: numbered amber squares (01–04) docked on the artifact's left edge over feedback targets, cross-referenced inline in the conversation by matching amber reference chips. One numbering system spans talk and artifact.",
+  "antiPatterns": [
+    "chat bubbles; turns are flat full-width rows with role marks",
+    "gradients, glassmorphism, neon, glow, or soft drop shadows — 1px lines only",
+    "emoji or icon fonts as content; all marks are inline SVG",
+    "empty panels, lorem ipsum, or decorative placeholder blocks",
+    "a seventh shell color; MUI semantic channels re-point at the six tokens",
+    "text under 14px, body contrast under 7:1, secondary contrast under 4.5:1, targets under 32px tall"
+  ],
+  "artifactNote": "The inner deliverable (Kiln & Co seasonal landing) owns a separate palette — cream, espresso, rust, oat — and a serif/sans mix so it reads as an independent printed artifact, not an extension of the shell."
+}

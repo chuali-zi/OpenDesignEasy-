@@ -1,6 +1,6 @@
 # OEYdesign 架构实施计划
 
-> 状态：v0.2 草案，待审核。v0.1 于 2026-07-24 审核通过并冻结。
+> 状态：**v0.2，已于 2026-08-03 审核通过并冻结。** v0.1 于 2026-07-24 冻结。
 > 依据：`docs/architecture.md`、`docs/spec/system-spec.md`。
 > 目标：确定总体架构如何分阶段落地，不在本计划中提前选择核心模块的内部技术栈。
 > 冻结规则：阶段范围和退出条件的变更必须通过版本化 Spec 或 ADR；实施进度只更新状态，不改写已冻结要求。
@@ -238,7 +238,7 @@ Phase 4 的目的不是评估设计美观，而是证明总体架构和产品心
 
 ## Phase 5：核心模块内部 Spec 与 Agent 引擎
 
-状态：进行中。四份 Spec 已产出草案，待审核；spike 与 ADR 未执行。
+状态：**已完成并冻结。** 四份 Spec、关键 spike 与 ADR-0002～0005 均已接受。
 
 目标：在系统接缝已验证后，完成内部架构和技术选型。
 
@@ -272,14 +272,14 @@ Phase 4 的目的不是评估设计美观，而是证明总体架构和产品心
 - 相关 ADR 已接受；
 - 总体端口无需为某项内部技术破坏性改动。
 
-进展记录（2026-07-26）：
+进展记录（更新至 2026-08-03）：
 
 | 退出条件 | 当前状态 |
 |---|---|
-| 四份 Spec 分别审核通过 | 草案已产出，**未审核**（engine v0.1；另三份 v0.2） |
+| 四份 Spec 分别审核通过 | **已通过并冻结**：engine v0.6、Design v0.4、Artifact v0.4、Quality v0.3 |
 | 首个垂直媒介与真实场景已选择 | 已选：Web + 「本仓库 → agent 前端页（含自造 mock 后端）」 |
-| 关键技术通过 spike | **未执行**，假设清单见各 Spec 末尾（E1–E7 / D1–D7 / A1–A7 / Q1–Q8） |
-| 相关 ADR 已接受 | **未撰写**：ADR-0002 Web 渲染验证、ADR-0003 能力平面与 provider 绑定、ADR-0004 Agent 工作区与沙箱边界 |
+| 关键技术通过 spike | **已执行并回填规范**；agent engine E1–E13 已终结，其中 E12 为已知风险接受 |
+| 相关 ADR 已接受 | **已完成**：ADR-0002/0003/0004/0005 于 2026-08-03 接受；`framework` 仅启用受限 P6 profile |
 | 总体端口无需破坏性改动 | 已确认：`ports.py` 三个 Protocol 签名不变，domain 只新增可选字段 |
 
 其他已作出的内部选择：
@@ -288,11 +288,17 @@ Phase 4 的目的不是评估设计美观，而是证明总体架构和产品心
 - 创作与局部修改由 agent 会话完成，作用域约束采用**事后验证**而非事前限制；
 - 模型编排为自建 vendor-neutral capability harness，首批绑定 Kimi（设计推理与代码理解）与
   Seedream（生图）；`design.critique` 需要图像输入能力，为本场景阻塞项；
-- 仓库**只读**接入；写用户仓库与启动用户真实后端本轮不实现，门控在用户显式批准 + 沙箱 spike 之后。
+- 仓库**只读**接入；写用户仓库本轮不实现。真实后端安全方案已由 E5 冻结为用户批准后通过
+  trusted loopback broker 驱动 zero-capability AppContainer 后端，产品功能仍待实现。
 
-在用户再次确认前，本阶段不提前展开详细布局。
+Phase 5 至此关闭；后续变更遵循各冻结 Spec 与 ADR 的替换条件。
 
 ## Phase 6：首个真实垂直切片
+
+状态：**已于 2026-08-03 启动；P6.0/P6.1 完成，P6.2 workspace/session/action loop 边界、P6.3
+capability registry/broker 与 P6.4 framework artifact/renderer/builder 契约已完成，P6.5 已有
+确定性 hard-check 与 delivery gate 边界。** 真实 agent、
+框架前端和端到端证据尚未完成，不得据此宣称 P6 退出条件通过。接力计划见 `docs/phase6/README.md`。
 
 目标：使用真实模块替换 stub，验证设计质量与交付可靠性。
 
@@ -380,8 +386,8 @@ conformance-tests/       跨实现契约测试
 | G1 系统 Spec | 组件、状态、接口、控制流 | 已完成 |
 | G2 Contract Skeleton | 接口可被 stub 验证 | 已完成 |
 | G3 Runtime Foundation | 工作流、状态、存储与隔离方向 | 已完成（ADR-0001） |
-| G4 Module Specs | 三个模块内部架构 + Agent 引擎 | 进行中：四份草案待审核，spike 与 ADR 未完成 |
-| G5 Vertical Slice | 首个媒介、场景和质量门 | 媒介与场景已选（Web / 本仓库 → agent 前端页），质量门待 G4 |
+| G4 Module Specs | 三个模块内部架构 + Agent 引擎 | **已完成**：四份 Spec 冻结，ADR-0002～0005 已接受 |
+| G5 Vertical Slice | 首个媒介、场景和质量门 | **进行中**：P6 已启动；Web / 本仓库 → agent 前端页；P6.0 骨架已完成 |
 | G6 Expansion | 第二媒介和产品化范围 | 待真实数据 |
 
 任何决策门未通过时，可以继续做不依赖该决策的实验，但不能把实验选择固化为跨模块契约。
@@ -406,13 +412,10 @@ Phase 4 已通过可恢复 Project 投影、三栏 Product Shell、三类反馈�
 四种模板角色、Quality hard gate、实际 export 复验、幂等 Delivery、HTTP 安全边界
 和静态工作台契约验收。P1–P4 范围至此完成。
 
-Phase 5 已产出四份内部 Spec 草案并选定首个媒介与场景。下一步按顺序为：
+Phase 5、三份配套 v0.2 与 ADR-0002～0005 已冻结，P6 已获准启动。当前按
+`docs/phase6/README.md` 只完成 P6.0：
 
-1. 四份 Spec 与三份升版规范（system-spec v0.2、context-evidence-baseline v0.2、本计划 v0.2）
-   的人工审核与修订；
-2. 执行各 Spec 末尾列出的 spike（E1–E7、D1–D7、A1–A7、Q1–Q8），以实测结果而非文档结论修订
-   Spec。其中 **E1 沙箱可行性**与 **D6 图像输入能力**是最重的两项：前者决定 agent 能否安全地
-   跑命令，后者决定自验证闭环能否成立；
-3. 依据 spike 结果撰写并接受 ADR-0002（Web 渲染与验证技术）、ADR-0003（能力平面与首批 provider
-   绑定）、ADR-0004（Agent 工作区与沙箱边界）；
-4. 上述三项完成前，内部技术栈不视为已冻结，Phase 6 不启动。
+1. 建立可注入真实 adapter 的 composition root，保持 P1～P4 确定性实现兼容；
+2. 固定首片 profile 与 capability version 槽位；缺少真实实现时 readiness 必须失败；
+3. 为 Luna 留出 P6.1～P6.6 的逐段交付、测试与退出条件；
+4. 在所有真实槽位和端到端证据齐备前，G5 保持进行中，不宣称 P6 完成。

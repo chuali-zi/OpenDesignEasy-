@@ -1,8 +1,9 @@
 # Phase 3：Context & Evidence 最小基线
 
-> 状态：v0.2 草案，待审核。v0.1 于 2026-07-24 采用。
+> 状态：**v0.2，已于 2026-08-03 审核通过并冻结。** v0.1 于 2026-07-24 采用。
 > 上位规范：system-spec、implementation-plan、contract-skeleton、runtime-recovery。
 > 范围：原件接入、最小解析、证据分层、来源、权利、Brief/Constraint 确认与 Context Package。
+> 冻结规则：接入安全边界、证据语义或 locator 契约的变更必须通过版本化 Spec 或 ADR。
 
 ## v0.2 变更说明
 
@@ -29,7 +30,7 @@ Quality 端口。本阶段必须保留原件、项目归属和来源定位，并
 PPTX、DOCX、向量检索或真实模型解释，也不选择这些能力的最终技术。
 
 仓库接入**只读**。写用户仓库与启动用户真实后端不在本规范范围内，见
-`agent-engine-spec.md` §4.3 与 §11。
+`agent-engine-spec.md` §4.3 与 §12。
 
 ## 2. 最小领域对象
 

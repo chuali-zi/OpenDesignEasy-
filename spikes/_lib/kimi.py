@@ -63,7 +63,7 @@ def chat(messages, *, tools=None, model=None, max_tokens=4096,
     return body["choices"][0]["message"], body.get("usage", {}), elapsed
 
 
-def chat_stream(messages, *, model=None, max_tokens=32000, temperature=1,
+def chat_stream(messages, *, tools=None, model=None, max_tokens=32000, temperature=1,
                 timeout=1800, extra=None, progress_every=8000):
     """Streaming variant. Returns (message_dict, usage_dict, elapsed_s).
 
@@ -84,6 +84,8 @@ def chat_stream(messages, *, model=None, max_tokens=32000, temperature=1,
     }
     if extra:
         payload.update(extra)
+    if tools:
+        payload["tools"] = tools
 
     req = urllib.request.Request(
         f"{BASE_URL}/chat/completions",
@@ -97,6 +99,8 @@ def chat_stream(messages, *, model=None, max_tokens=32000, temperature=1,
     )
     start = time.time()
     parts: list[str] = []
+    reasoning_chars = 0
+    tool_parts: dict[int, dict] = {}
     usage: dict = {}
     finish_reason = None
     next_mark = progress_every
@@ -120,9 +124,30 @@ def chat_stream(messages, *, model=None, max_tokens=32000, temperature=1,
                     piece = delta.get("content")
                     if piece:
                         parts.append(piece)
+                    reasoning_piece = delta.get("reasoning_content")
+                    if reasoning_piece:
+                        reasoning_chars += len(reasoning_piece)
+                    for tool_delta in delta.get("tool_calls") or []:
+                        index = int(tool_delta.get("index") or 0)
+                        slot = tool_parts.setdefault(
+                            index,
+                            {"id": None, "type": "function", "name": "", "arguments": []},
+                        )
+                        if tool_delta.get("id"):
+                            slot["id"] = tool_delta["id"]
+                        if tool_delta.get("type"):
+                            slot["type"] = tool_delta["type"]
+                        function = tool_delta.get("function") or {}
+                        if function.get("name"):
+                            slot["name"] += function["name"]
+                        if function.get("arguments"):
+                            slot["arguments"].append(function["arguments"])
                     if ch.get("finish_reason"):
                         finish_reason = ch["finish_reason"]
-                total = sum(len(p) for p in parts)
+                total = reasoning_chars + sum(len(p) for p in parts) + sum(
+                    sum(len(fragment) for fragment in slot["arguments"])
+                    for slot in tool_parts.values()
+                )
                 if total >= next_mark:
                     print(f"    ... streamed {total} chars "
                           f"({time.time() - start:.0f}s)", flush=True)
@@ -132,6 +157,17 @@ def chat_stream(messages, *, model=None, max_tokens=32000, temperature=1,
         raise RuntimeError(f"HTTP {exc.code}: {detail}") from None
 
     content = "".join(parts)
+    tool_calls = [
+        {
+            "id": slot["id"] or f"streamed_call_{index}",
+            "type": slot["type"],
+            "function": {
+                "name": slot["name"],
+                "arguments": "".join(slot["arguments"]),
+            },
+        }
+        for index, slot in sorted(tool_parts.items())
+    ]
     if not usage:
         usage = {"completion_tokens": None, "total_tokens": None,
                  "_note": "endpoint did not send usage in stream"}
@@ -141,10 +177,13 @@ def chat_stream(messages, *, model=None, max_tokens=32000, temperature=1,
     # 既不返回 HTTP 错误也不返回内容。若在这里静默返回空串，调用方会把它当成一次
     # 成功生成并写出一个 0 字节的产物——失败要到看截图时才被发现。
     # 空产出永远不是有效结果，所以在最靠近事实的地方抛出来。
-    if not content.strip():
+    if not content.strip() and not tool_calls:
         raise RuntimeError(
             f"stream returned no content (finish_reason={finish_reason!r}, "
-            f"elapsed={time.time() - start:.0f}s)")
+            f"reasoning_chars={reasoning_chars}, elapsed={time.time() - start:.0f}s)")
 
-    return ({"role": "assistant", "content": content}, usage,
+    message = {"role": "assistant", "content": content}
+    if tool_calls:
+        message["tool_calls"] = tool_calls
+    return (message, usage,
             time.time() - start)

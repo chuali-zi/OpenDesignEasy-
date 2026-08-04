@@ -1,6 +1,6 @@
 # Phase 5 Spike 总结
 
-> 日期：2026-07-26 至 07-28。模型：Kimi `k3`（`api.kimi.com/coding/v1`）；生图：Seedream 5.0（Ark）。
+> 日期：2026-07-26 至 2026-08-03。模型：Kimi `k3`（`api.kimi.com/coding/v1`）；生图：Seedream 5.0（Ark）。
 > 浏览器：Playwright + 系统 Chrome（`channel="chrome"`）。
 > 每项详情见各子目录 `RESULT.md`。**审美类结论一律留给人工审核，见 `review.html`。**
 
@@ -15,15 +15,20 @@
 | **Q7** | mock 可确定性检出 | ✅ **通过** | 检出 4/4；**误报 0**（纯静态对照 0 信号） | `e4-mock/` |
 | **D3** | contract 抽取稳定 | ✅ **通过（有前提）** | 计算后样式 8/8 且 3× 确定性；**源码正则 0/8 全失效** | `q1-checks/` |
 | **A2** | 隔离渲染可行 | ✅ **通过** | 外链阻断可采集；1GB 内存够、150MB 不够 | `e1-sandbox/` |
-| **E4** | mock 把交互跑通 | ⚠️ **部分** | 完全可交互 3/8、至少部分 7/8；声明率 6/8 | `e4-mock/` |
+| **E4** | mock 把交互跑通 | ✅ **通过并冻结（引擎兜底）** | 首轮完全可交互 3/8；40k 流式 6/6 无截断，mock 检出 4/4、0 误报 | `e4-mock/` |
+| **E5** | 真实后端沙箱启动 | ✅ **通过并冻结** | zero-capability 后端经 trusted loopback/spool broker 完成 GET/POST；文件/env/进程边界全通过 | `e5-real-backend/` |
 | **Q8** | 矛盾可自动复核 | ✅ **通过（本次注入范围）** | primary 检出 4/4、漏报 0%；closed_world 3/4；自然样本误报 0/70 | `e3-repo-facts/` |
-| **E7** | 预算够用 | ⚠️ **部分** | 简单页实测充足；真实候选为**外推值**，未实测 | `d1-agent-loop/` |
+| **E7** | 预算够用 | ✅ **预算策略冻结** | 20/20 简单页完成；`60/250k/900s/3 renders` 冻为首版 profile，分布校准后续优化 | `d1-agent-loop/` |
 | **E1** | Windows 沙箱能隔离文件/网络 | ✅ **通过（AppContainer）** | Job Object 路线 6/6 逃逸；**AppContainer 路线全部拦截**，网络含裸 IP 亦被 OS 拒绝，无需管理员 | `e1-sandbox/ADDENDUM-appcontainer.md` |
 | **D4/D5** | Seedream 可控性与权利条款 | ⚠️ **部分** | D4：4/4 尺寸匹配且两种风格可辨；D5：公开条款不足以确认客户交付授权，维持 `ANALYSIS_ONLY` | `d4-seedream/` |
 | **A3** | 局部编辑事后验证成立 | ✅ **通过（有边界，n=20）** | 四项 `all_pass` 19/20；锚点/contract/渲染健康 20/20，视觉隔离 19/20；真实越界影响被正确拦截 | `a3-render/` |
 | **A4/A5/A6** | 交付化/导出/交互一致性 | ✅ **通过** | A4：10/10 diff≤0.002；A5/Q6：54/54 文件 hash、10/10 重渲染一致；A6：声明路径 5/5 | `a3-render/` |
 | **Q1/Q4** | 硬检查检出率 / 漂移误报率 | ✅ **通过（受控 fixture）** | Q1：12/12 检出、0/42 类别误报；Q4：6/6 漂移检出、0/8 control 误报 | `q1-checks/` |
-| **D2/E2/Q2/Q3** | 审美相关 | 🔒 **待人工审核** | 4 个候选、9 轮截图；Q2 15 条发现；Q3 20 次重复评估 | `d2-aesthetic/review.html` |
+| **E2** | 看截图后自主发现并修复视觉问题 | ✅ **人工审核通过并冻结** | 4/4 候选实际修复；9 轮截图，最终均零 console/failed request/page error/overflow | `d2-aesthetic/` |
+| **D2/Q2/Q3** | 候选审美与 critic 稳定性 | 🔒 **候选排序未裁决** | 4 个候选；Q2 15 条发现；Q3 20 次重复评估 | `d2-aesthetic/review.html` |
+| **E12** | 框架候选预算内完成 | 🔒 **已知风险接受并冻结** | Kimi 会话 1,082s 且未完成自验；不再重测，超时如实失败 | `e8-e12-framework/` |
+| **E13** | 门控安装可行且可审计 | ✅ **通过并冻结** | agent 网络拒绝；trusted broker + zero-cap installer 成功，hash/ledger/key 隔离全通过 | `e13-gated-install/` |
+| **P6-C** | 正式 launcher/build/render/session 闭环 | ✅ **通过** | AppContainer+Job；双构建同 hash；Chrome 150 零错误；Kimi `k3` 会话 `COMPLETED` | `phase6-closure/` |
 
 ## 三个最重要的发现
 
@@ -88,7 +93,7 @@ run-03 与 run-05 的 completion token **正好都撞满 16,000 上限**，而�
 ## 待办
 
 1. **D5 权利拍板**——公开条款不足以确认客户交付/再许可，当前保持 `ANALYSIS_ONLY`
-2. **审美人工审核**——打开 `d2-aesthetic/review.html`，机器侧不作审美判断
+2. **候选审美排序**——E2 已审核通过；若要给 D2 候选排序，再打开 `d2-aesthetic/review.html`
 3. **A3 作用域策略拍板**——n=20 的 1 次视觉失败证明合法的作用域内文案可经居中布局影响外部；建议失败后扩大到最近布局容器重试，而非放宽阈值
 4. 全部 spike 已有终态；后续规范与 ADR 由用户另行决定，本轮不写 ADR、不启动 Phase 6
 

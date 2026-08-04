@@ -141,6 +141,7 @@ class SideEffectReconciliationStatus(StrEnum):
 class SourceKind(StrEnum):
     STRUCTURED_FILE = "STRUCTURED_FILE"
     IMAGE = "IMAGE"
+    CODE_REPOSITORY = "CODE_REPOSITORY"
 
 
 class EvidenceLayer(StrEnum):
@@ -542,6 +543,7 @@ class ArtifactRevision:
     content: str
     object_refs: Mapping[str, str]
     tradeoffs: tuple[str, ...] = ()
+    files: Mapping[str, str] | None = None
 
 
 @dataclass(frozen=True, slots=True)

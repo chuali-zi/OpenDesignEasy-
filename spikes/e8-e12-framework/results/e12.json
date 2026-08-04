@@ -1,0 +1,178 @@
+{
+  "hypothesis": "A complete framework candidate fits the proposed budget",
+  "budget": {
+    "steps": 60,
+    "total_tokens": 250000,
+    "wallclock_s": 900,
+    "render_loops": 3
+  },
+  "termination": "wallclock_limit",
+  "fatal_error": null,
+  "steps": 6,
+  "wallclock_s": 1082.25,
+  "diagnostic_wallclock_s": 3.09,
+  "prompt_tokens": 8731,
+  "completion_tokens": 33361,
+  "reasoning_tokens": 22885,
+  "total_tokens": 42092,
+  "build_count_during_agent": 0,
+  "render_count_during_agent": 0,
+  "builds": [],
+  "renders": [],
+  "final_build": {
+    "ok": true,
+    "exit_code": 0,
+    "elapsed_s": 0.15,
+    "stdout": "",
+    "stderr": "\n  dist\\assets\\app.js  353.6kb\n\nDone in 99ms\n"
+  },
+  "final_render": {
+    "ok": true,
+    "elapsed_s": 2.9,
+    "external_requests": [],
+    "console_errors": [],
+    "preview_root_found": true,
+    "shell_color_count": 6,
+    "shell_colors": {
+      "rgb(236, 233, 226)": 125,
+      "rgb(19, 21, 25)": 20,
+      "rgb(28, 31, 36)": 9,
+      "rgb(50, 54, 62)": 73,
+      "rgb(154, 161, 171)": 64,
+      "rgb(217, 164, 65)": 54
+    },
+    "object_anchor_count": 12,
+    "unique_object_anchor_count": 12,
+    "text_length": 3582,
+    "screenshot": ".agent\\shots\\render-01.png",
+    "screenshot_sha256": "92e53ed01c40deb44b8f045052b1ab6e0d5a8b25007de510446d804a6178abf6"
+  },
+  "direction_valid": true,
+  "direction": {
+    "name": "OEYdesign — workspace art direction",
+    "shellColorTokens": [
+      {
+        "token": "ink",
+        "hex": "#131519",
+        "role": "app canvas / deepest surface"
+      },
+      {
+        "token": "panel",
+        "hex": "#1C1F24",
+        "role": "rails, bars, raised chrome"
+      },
+      {
+        "token": "line",
+        "hex": "#32363E",
+        "role": "1px borders and dividers"
+      },
+      {
+        "token": "text",
+        "hex": "#ECE9E2",
+        "role": "primary text, 13.9:1 on ink"
+      },
+      {
+        "token": "muted",
+        "hex": "#9AA1AB",
+        "role": "secondary text, 6.3:1 on panel"
+      },
+      {
+        "token": "amber",
+        "hex": "#D9A441",
+        "role": "sole accent — pins, active states, agent mark"
+      }
+    ],
+    "typeScale": {
+      "stepsPx": [
+        14,
+        15,
+        16,
+        18,
+        22,
+        28
+      ],
+      "floor": "no shell text below 14px",
+      "family": "system sans stack only; no webfonts, no network"
+    },
+    "spacingScale": {
+      "stepsPx": [
+        4,
+        8,
+        12,
+        16,
+        24,
+        40,
+        64
+      ],
+      "note": "4px base unit; rails pad at 20px; regions separate by 1px line, never by shadow"
+    },
+    "layout": "Two-column desktop workspace under a 56px top bar: a 384px conversation rail on the left (panel) and a dominant flexible artifact canvas on the right (ink). Rail and canvas scroll independently. The deliverable renders inside the canvas as a framed, self-contained page with its own light printed-matter palette, visibly not workspace chrome.",
+    "signatureMove": "Margin pins: numbered amber squares (01–04) docked on the artifact's left edge over feedback targets, cross-referenced inline in the conversation by matching amber reference chips. One numbering system spans talk and artifact.",
+    "antiPatterns": [
+      "chat bubbles; turns are flat full-width rows with role marks",
+      "gradients, glassmorphism, neon, glow, or soft drop shadows — 1px lines only",
+      "emoji or icon fonts as content; all marks are inline SVG",
+      "empty panels, lorem ipsum, or decorative placeholder blocks",
+      "a seventh shell color; MUI semantic channels re-point at the six tokens",
+      "text under 14px, body contrast under 7:1, secondary contrast under 4.5:1, targets under 32px tall"
+    ],
+    "artifactNote": "The inner deliverable (Kiln & Co seasonal landing) owns a separate palette — cream, espresso, rust, oat — and a serif/sans mix so it reads as an independent printed artifact, not an extension of the shell."
+  },
+  "mui_used": true,
+  "call_log": [
+    {
+      "step": 1,
+      "api_elapsed_s": 4.55,
+      "prompt_tokens": 826,
+      "completion_tokens": 48,
+      "reasoning_tokens": 12,
+      "tool_names": [
+        "list_files"
+      ]
+    },
+    {
+      "step": 2,
+      "api_elapsed_s": 6.37,
+      "prompt_tokens": 927,
+      "completion_tokens": 149,
+      "reasoning_tokens": 1,
+      "tool_names": [
+        "read_file",
+        "read_file",
+        "read_file",
+        "read_file"
+      ]
+    },
+    {
+      "step": 3,
+      "api_elapsed_s": 767.11,
+      "prompt_tokens": 1489,
+      "completion_tokens": 23154,
+      "reasoning_tokens": 22429,
+      "tool_names": [
+        "write_file"
+      ]
+    },
+    {
+      "step": 4,
+      "api_elapsed_s": 29.62,
+      "prompt_tokens": 2262,
+      "completion_tokens": 918,
+      "reasoning_tokens": 1,
+      "tool_names": [
+        "write_file"
+      ]
+    },
+    {
+      "step": 5,
+      "api_elapsed_s": 274.58,
+      "prompt_tokens": 3227,
+      "completion_tokens": 9092,
+      "reasoning_tokens": 442,
+      "tool_names": [
+        "write_file"
+      ]
+    }
+  ],
+  "passed": false
+}

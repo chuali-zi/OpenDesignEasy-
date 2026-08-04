@@ -1,0 +1,74 @@
+{
+  "hypothesis": "A complete framework candidate fits the proposed budget",
+  "budget": {
+    "steps": 60,
+    "total_tokens": 250000,
+    "wallclock_s": 900,
+    "render_loops": 3
+  },
+  "termination": "api_error",
+  "fatal_error": "model call failed: TimeoutError: The read operation timed out",
+  "steps": 3,
+  "wallclock_s": 376.34,
+  "diagnostic_wallclock_s": 3.17,
+  "prompt_tokens": 1753,
+  "completion_tokens": 195,
+  "reasoning_tokens": 11,
+  "total_tokens": 1948,
+  "build_count_during_agent": 0,
+  "render_count_during_agent": 0,
+  "builds": [],
+  "renders": [],
+  "final_build": {
+    "ok": true,
+    "exit_code": 0,
+    "elapsed_s": 0.3,
+    "stdout": "",
+    "stderr": "\n  dist\\assets\\app.js  270.4kb\n\nDone in 263ms\n"
+  },
+  "final_render": {
+    "ok": true,
+    "elapsed_s": 2.84,
+    "external_requests": [],
+    "console_errors": [],
+    "preview_root_found": false,
+    "shell_color_count": 1,
+    "shell_colors": {
+      "rgb(255, 255, 255)": 4
+    },
+    "object_anchor_count": 0,
+    "unique_object_anchor_count": 0,
+    "text_length": 30,
+    "screenshot": ".agent\\shots\\render-01.png",
+    "screenshot_sha256": "77d3cdcf1e8bc90d7779d870b2348e67acdd2007fbec0f034f4f0e7958cb4042"
+  },
+  "direction_valid": false,
+  "direction": null,
+  "mui_used": false,
+  "call_log": [
+    {
+      "step": 1,
+      "api_elapsed_s": 4.75,
+      "prompt_tokens": 826,
+      "completion_tokens": 46,
+      "reasoning_tokens": 10,
+      "tool_names": [
+        "list_files"
+      ]
+    },
+    {
+      "step": 2,
+      "api_elapsed_s": 8.88,
+      "prompt_tokens": 927,
+      "completion_tokens": 149,
+      "reasoning_tokens": 1,
+      "tool_names": [
+        "read_file",
+        "read_file",
+        "read_file",
+        "read_file"
+      ]
+    }
+  ],
+  "passed": false
+}

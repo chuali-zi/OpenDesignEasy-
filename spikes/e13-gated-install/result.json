@@ -1,0 +1,63 @@
+{
+  "profile": "OEYdesignE13InstallSpike",
+  "sid": "S-1-15-2-2137677-3089799543-2799499491-4075016071-3600337486-4113592428-3058585332",
+  "dependency": "is-number@7.0.0",
+  "agent_run_command": {
+    "pid": 12684,
+    "returncode": 6,
+    "timed_out": false,
+    "elapsed_s": 0.093,
+    "capabilities": [],
+    "network_rc": 6,
+    "download_created": false,
+    "experiment_key_visible": false,
+    "network_log": "curl: (6) Could not resolve host: registry.npmjs.org\n"
+  },
+  "gate": {
+    "session_id": "e13-experiment-session",
+    "tool": "install_dependency",
+    "package": "is-number",
+    "version": "7.0.0",
+    "registry": "https://registry.npmjs.org",
+    "requested_at": "2026-08-03T09:22:53.380616+00:00"
+  },
+  "broker_fetch": {
+    "trusted_process": "engine fetch broker",
+    "approved_url": "https://registry.npmjs.org/is-number/-/is-number-7.0.0.tgz",
+    "elapsed_s": 2.282,
+    "returncode": 0,
+    "error": null,
+    "experiment_key_available_to_broker": true,
+    "experiment_key_persisted": false
+  },
+  "installer": {
+    "pid": 27228,
+    "returncode": 0,
+    "timed_out": false,
+    "elapsed_s": 0.062,
+    "capabilities": [],
+    "extract_rc": 0,
+    "experiment_key_visible": false,
+    "installed_version": "7.0.0"
+  },
+  "evidence": {
+    "lockfile_sha256_before": "8bcf8edbbbeff84df03fed887dbef87b9a57c1daca72dd56ca2bfeb068f01492",
+    "lockfile_sha256_after": "8bcf8edbbbeff84df03fed887dbef87b9a57c1daca72dd56ca2bfeb068f01492",
+    "archive_sha256": "7b75c1057198cf97696909a9bee176c9c5e9bcb5b03bf3ecef2f484defadd51e",
+    "dependency_tree_sha256": "272c9a318964ecb8d9cce474e1359ccbe817389189e9a54e72ab6290d874fd26",
+    "dependency_files": 4,
+    "ledger_entries": 1
+  },
+  "checks": {
+    "agent_zero_capability_network_denied": true,
+    "network_limited_to_trusted_broker": true,
+    "approved_install_succeeded": true,
+    "requested_version_installed": true,
+    "lockfile_unchanged": true,
+    "tree_hash_recorded": true,
+    "audit_ledger_complete": true,
+    "experiment_key_absent_from_children": true,
+    "experiment_key_value_absent_from_workspace": true
+  },
+  "passed": true
+}

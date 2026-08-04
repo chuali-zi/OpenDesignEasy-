@@ -1,5 +1,27 @@
 """OEYdesign contract-first reference implementation."""
 
+from .agent_engine import (
+    AgentBudget,
+    AgentEngineScaffold,
+    AgentLoop,
+    AgentRunResult,
+    AgentSession,
+    AgentSessionManager,
+    AgentTurn,
+    AgentWorkspace,
+    WorkspaceManager,
+    WorkspaceScope,
+)
+from .broker import FetchPolicy, FetchRequest, FetchResult, TrustedFetchBroker
+from .builder import FrameworkBuildResult, NativeEsbuildBuilder
+from .capabilities import (
+    CapabilityBinding,
+    CapabilityClient,
+    CapabilityRegistry,
+    CapabilitySlot,
+    KimiTrustedAdapter,
+    ProviderResponse,
+)
 from .composition import SQLiteApplication
 from .context import (
     CsvEvidenceParser,
@@ -11,6 +33,7 @@ from .context import (
     PngEvidenceParser,
 )
 from .control import ControlPlane
+from .delivery import ValidatedDeliveryPort
 from .domain import (
     Approval,
     ApprovalAction,
@@ -76,10 +99,26 @@ from .domain import (
     stable_id,
 )
 from .evidence_persistence import SQLiteEvidenceRepository
+from .framework_artifact import (
+    AnchorRegistry,
+    FrameworkArtifactContract,
+    FrameworkArtifactPlan,
+    FrameworkProfile,
+    StrictTheme,
+    StrictThemeFactory,
+)
 from .memory import (
     InMemoryCommandLedger,
     InMemoryProjectRepository,
     InMemoryWorkflowRuntime,
+)
+from .phase6 import (
+    P6_REQUIRED_CAPABILITIES,
+    Phase6Application,
+    Phase6Bindings,
+    Phase6Profile,
+    Phase6Readiness,
+    assess_phase6_readiness,
 )
 from .ports import (
     ArtifactProductionPort,
@@ -101,13 +140,29 @@ from .ports import (
     TransactionalProjectWriter,
     WorkflowRuntimePort,
 )
+from .quality import WebCheckSummary, WebQualityPort
 from .recovery import DurableDeliveryPort
+from .renderer import RenderProfile, RenderResult, TrustedWebRenderer
+from .repository import (
+    RepositoryAuthorization,
+    RepositoryFileSummary,
+    RepositoryIngestion,
+    RepositoryIngestionResult,
+)
 from .runtime import (
     FailureInjector,
     RecoverableStageRunner,
     SQLiteWorkflowRuntime,
     StageExecution,
     WorkflowStageError,
+)
+from .sandbox import (
+    SandboxCommand,
+    SandboxLauncher,
+    SandboxLimits,
+    SandboxResult,
+    UnavailableSandboxLauncher,
+    WindowsAppContainerLauncher,
 )
 from .stubs import (
     DeterministicArtifactPort,
@@ -123,6 +178,22 @@ __all__ = [
     "ApproveDirection",
     "ApproveExport",
     "ArtifactProductionPort",
+    "AnchorRegistry",
+    "CapabilityBinding",
+    "CapabilityClient",
+    "CapabilityRegistry",
+    "CapabilitySlot",
+    "FetchPolicy",
+    "FetchRequest",
+    "FetchResult",
+    "AgentBudget",
+    "AgentEngineScaffold",
+    "AgentLoop",
+    "AgentRunResult",
+    "AgentSession",
+    "AgentSessionManager",
+    "AgentTurn",
+    "AgentWorkspace",
     "ArtifactRevision",
     "AuditLogPort",
     "BriefRecord",
@@ -144,6 +215,7 @@ __all__ = [
     "DeliverArtifact",
     "DeliveryBundle",
     "DeliveryReconciliation",
+    "ValidatedDeliveryPort",
     "DeliveryPort",
     "DesignBrief",
     "DesignIntelligencePort",
@@ -170,6 +242,10 @@ __all__ = [
     "FailureInjector",
     "Finding",
     "FindingKind",
+    "FrameworkArtifactContract",
+    "FrameworkArtifactPlan",
+    "FrameworkBuildResult",
+    "FrameworkProfile",
     "GateDecision",
     "GateVerdict",
     "GenerateCandidates",
@@ -180,18 +256,33 @@ __all__ = [
     "Lineage",
     "LocalSourceStore",
     "PauseWorkflow",
+    "P6_REQUIRED_CAPABILITIES",
+    "Phase6Application",
+    "Phase6Bindings",
+    "Phase6Profile",
+    "Phase6Readiness",
     "PrepareProject",
     "ProduceArtifact",
     "Project",
     "ProjectRepository",
+    "ProviderResponse",
     "ProjectState",
     "PngEvidenceParser",
     "QualityDecision",
     "QualityGovernancePort",
+    "WebCheckSummary",
+    "WebQualityPort",
+    "KimiTrustedAdapter",
+    "RepositoryAuthorization",
+    "RepositoryFileSummary",
+    "RepositoryIngestion",
+    "RepositoryIngestionResult",
     "ReconcileWorkflowStatus",
     "RecoverableStageRunner",
     "RemediationRequest",
     "RenderBundle",
+    "RenderProfile",
+    "RenderResult",
     "RightsStatus",
     "RestoreProjectRevision",
     "ResumeWorkflow",
@@ -208,16 +299,30 @@ __all__ = [
     "SourceResolverPort",
     "StageCheckpoint",
     "StageExecution",
+    "StrictTheme",
+    "StrictThemeFactory",
     "SubmitFeedback",
     "TemplateRole",
     "TransactionalProjectWriter",
+    "TrustedFetchBroker",
+    "TrustedWebRenderer",
+    "NativeEsbuildBuilder",
     "ValidateArtifact",
     "WorkflowRun",
     "WorkflowRuntimePort",
     "WorkflowStatus",
     "WorkflowStageError",
+    "WorkspaceManager",
+    "WorkspaceScope",
+    "SandboxCommand",
+    "SandboxLimits",
+    "SandboxResult",
+    "SandboxLauncher",
+    "UnavailableSandboxLauncher",
+    "WindowsAppContainerLauncher",
     "CsvEvidenceParser",
     "canonical_json",
+    "assess_phase6_readiness",
     "constraint_profile",
     "stable_id",
 ]

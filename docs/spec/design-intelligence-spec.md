@@ -13,6 +13,8 @@
 > `implementation-plan.md` Phase 5。
 > 范围：Design Intelligence Port 的内部子模块、候选表示、design contract、模型能力平面与失败语义。
 > 首个垂直媒介：Web。首个真实场景：本仓库 → agent 前端页（含自造 mock 后端）。
+> 规范化扩展：ADR-0005 已于 2026-08-03 接受第三种 `framework` 实现基底；仅限其冻结的
+> React/MUI/native-esbuild P6 profile，不改变 `bespoke` / `system` 的既有语义。
 
 ## 1. 目的与边界
 
@@ -157,7 +159,7 @@ Context Package 没有任何 `source_refs` 是合法状态（纯自然语言输�
 |---|---|
 | 每个候选的差异轴 | 候选之间必须代表**实质不同的产品选择**，不是同一版式换配色 |
 | 每个候选的**视觉领地** | 从策展的领地库中**分配**，不由模型自选，见下 |
-| 每个候选的**实现基底** | `bespoke` 或 `system`，见 §4.2.2 |
+| 每个候选的**实现基底** | `bespoke`、`system`，或 ADR-0005 受限的 `framework`，见 §4.2.2 |
 | 模板角色允许的可变范围 | `ConstraintProfile.template_role`，见 §7 |
 | 是否需要生成配图 | 内容大纲中有无「需要视觉但无素材」的位置 |
 | 每个候选的成本上限 | 单候选的 token 与生图次数上限 |
@@ -226,12 +228,14 @@ Context Package 没有任何 `source_refs` 是合法状态（纯自然语言输�
 |---|---|---|
 | `bespoke` | 手写 CSS，直接按方向实现 | 参考样例 / 起始脚手架 |
 | `system` | 离线 vendor 的设计系统，把方向注册成主题后只用注册进去的 token | **设计系统**（§7） |
+| `framework` | ADR-0005 固定的 React/MUI/native-esbuild profile；只提交六个角色 token，由 trusted theme factory 完成主题 | **设计系统**（§7） |
 
 `system` 基底**必须**禁用所选设计系统的默认调色板与默认字号阶。这是实测的失败点：
 不加这条时，产物的颜色全部来自框架默认调色板，外壳散到 13-23 色；加了之后收到 5-6 色。
 
-**两条基底的 token 纪律实测一致**（三对配对比较，每对共用同一份艺术方向，外壳均为 5-6 色）。
-纪律来自艺术方向阶段而非基底，所以两条都作为用户可选项是安全的：换基底不会让纪律失控。
+原有**两条基底的 token 纪律实测一致**（三对配对比较，每对共用同一份艺术方向，外壳均为
+5-6 色）。ADR-0005 的 `framework` profile 另由 E11 strict-theme 实验约束为六个声明 token；
+该结论不外推到任意组件库或自由主题。
 
 > 样本量诚实说明：三对配对比较，每格 n=1，不足以排除偶然。
 > 依据：`spikes/aesthetic-ab/RESULT2.md` §4.1。
@@ -485,7 +489,7 @@ agent 会话比单次调用更不可复现：同一目标两次运行的工具�
 
 - 参考图风格模仿（无参考图输入），`vision.understand` 留待第二个场景；
 - 结构化文档解析（CSV/PDF/PPTX 等），Phase 3 的 CSV/PNG adapter 不在本路径上；
-- 写用户仓库与启动真实后端（`agent-engine-spec.md` §11 明确本轮不实现）。
+- 写用户仓库与启动真实后端（`agent-engine-spec.md` §12 明确本轮不实现）。
 
 ## 11. 待 spike 验证的技术假设
 
@@ -503,7 +507,7 @@ agent 会话比单次调用更不可复现：同一目标两次运行的工具�
 | D6 | `design.critique` 的图像输入能力可绑定 | ✅ **通过** | `k3`/`k3-256k` 支持；**`kimi-for-coding` 不支持且静默返回空** |
 | D7 | agent 能从只读仓库产出与仓库事实一致的内容 | ✅ **通过** | 0 矛盾；94.3% 严格可回溯（与 E3 共用） |
 
-对应 ADR：**ADR-0003 能力平面与首批 provider 绑定**（未撰写，不具规范效力）。
+对应 ADR：**ADR-0003 能力平面与首批 provider 绑定**（已于 2026-08-03 接受）。
 
 ## 12. 验收条件
 
@@ -514,7 +518,8 @@ agent 会话比单次调用更不可复现：同一目标两次运行的工具�
 3. 候选之间代表实质不同的产品选择，而不是同一版式换配色——且这个差异**可追溯到被分配的
    视觉领地**，不是指望模型自己想出来的；领地库中任意两块的分离度 ≥ 25（§4.2.3）；
 3.1. 每个候选先产出一份可独立审核的 `ArtDirection`，用户能在写代码前否掉方向；
-3.2. 用户可以选择实现基底（`bespoke` / `system`），两条基底产出的外壳 token 阶梯相当；
+3.2. 用户可以选择实现基底（`bespoke` / `system` / 受限 `framework`）；前两条的外壳 token
+阶梯相当，`framework` 必须满足 ADR-0005 的 strict six-token theme；
 3.3. 产物声明 `data-oey-preview-root`，contract 分层抽取，外壳与内层的 token 不混算；
 4. 每个候选带完整 `data-oey-*` 锚点，且锚点能被 Artifact Production 解析为 object registry；
 5. agent 自造的 mock 层能把交互跑通，且 mock 声明如实随候选带到下游；

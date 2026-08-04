@@ -1,0 +1,32 @@
+{
+  "profile": "OEYdesignE5BackendSpike",
+  "sid": "S-1-15-2-3338251179-2077040963-1133254486-171753273-787261106-21070509-601627646",
+  "sandbox": "AppContainer zero capability + Job Object; trusted host loopback-to-spool broker",
+  "bind": "127.0.0.1:19337",
+  "backend_transport": "C:\\Users\\chual\\AppData\\Local\\Packages\\OEYdesignE5BackendSpike\\AC\\Temp\\backend\\broker-spool",
+  "compilation": {
+    "compiler": "C:\\WINDOWS\\Microsoft.NET\\Framework64\\v4.0.30319\\csc.exe",
+    "returncode": 0
+  },
+  "pid": 33724,
+  "health": {
+    "ok": true,
+    "outside_readable": false,
+    "experiment_key_visible": false
+  },
+  "echo": {
+    "echo": "{\"message\":\"real backend round trip\"}"
+  },
+  "backend_alive_during_test": true,
+  "backend_exit_after_job_teardown": true,
+  "broker_port_closed_after_session_teardown": true,
+  "checks": {
+    "real_http_health": true,
+    "real_post_round_trip": true,
+    "outside_file_denied": true,
+    "host_experiment_key_not_in_child": true,
+    "backend_lifetime_bound_to_job": true,
+    "broker_port_closed_after_session_teardown": true
+  },
+  "passed": true
+}

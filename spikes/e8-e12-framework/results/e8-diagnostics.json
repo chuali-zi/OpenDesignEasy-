@@ -1,0 +1,289 @@
+{
+  "profile": "OEYdesignFrameworkSpike",
+  "sid": "S-1-15-2-3548787773-3509876705-904556352-320625095-3060017615-314662350-1863834271",
+  "node": "v25.6.1",
+  "libuv": "1.51.0",
+  "copy": {
+    "elapsed_s": 8.192,
+    "files": 7289,
+    "max_path_length": 205,
+    "max_path": "C:\\Users\\chual\\AppData\\Local\\Packages\\OEYdesignFrameworkSpike\\AC\\Temp\\fw-diag\\w\\node_modules\\@emotion\\use-insertion-effect-with-fallbacks\\dist\\emotion-use-insertion-effect-with-fallbacks.edge-light.cjs.mjs"
+  },
+  "drive": "S:",
+  "map_rc": 0,
+  "map_stderr": "",
+  "unmap_rc": 0,
+  "cases": [
+    {
+      "name": "absolute_main",
+      "command": "\"C:\\Users\\chual\\AppData\\Local\\Packages\\OEYdesignFrameworkSpike\\AC\\Temp\\fw-diag\\w\\runtime\\node.exe\" \"C:\\Users\\chual\\AppData\\Local\\Packages\\OEYdesignFrameworkSpike\\AC\\Temp\\fw-diag\\w\\probe.cjs\"",
+      "launcher_rc": 1,
+      "command_rc": 1,
+      "elapsed_s": 1.806,
+      "launch_cwd": "C:\\Users\\chual\\AppData\\Local\\Packages\\OEYdesignFrameworkSpike\\AC\\Temp\\fw-diag\\w",
+      "timed_out": false,
+      "output": "node:fs:2717\n    const out = binding.lstat(base, false, undefined, true /* throwIfNoEntry */);\n                        ^\n\nError: EPERM: operation not permitted, lstat 'C:\\'\n    at Object.realpathSync (node:fs:2717:25)\n    at toRealPath (node:internal/modules/helpers:62:13)\n    at Module._findPath (node:internal/modules/cjs/loader:780:22)\n    at resolveMainPath (node:internal/modules/run_main:35:21)\n    at Module.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:146:20)\n    at node:internal/main/run_main_module:33:47 {\n  errno: -4048,\n  code: 'EPERM',\n  syscall: 'lstat',\n  path: 'C:\\\\'\n}\n\nNode.js v25.6.1\n"
+    },
+    {
+      "name": "mapped_main",
+      "command": "S:\\runtime\\node.exe S:\\probe.cjs",
+      "launcher_rc": 0,
+      "command_rc": 0,
+      "elapsed_s": 0.161,
+      "launch_cwd": "S:\\",
+      "timed_out": false,
+      "output": "{\"cwd\":\"S:\\\\\",\"main\":\"S:\\\\probe.cjs\",\"packageBytes\":459,\"react\":\"S:\\\\node_modules\\\\react\\\\package.json\",\"joined\":\"S:\\\\src\"}\n"
+    },
+    {
+      "name": "mapped_import_vite",
+      "command": "S:\\runtime\\node.exe S:\\import-vite.mjs",
+      "launcher_rc": 124,
+      "command_rc": null,
+      "elapsed_s": 30.446,
+      "launch_cwd": "S:\\",
+      "timed_out": true,
+      "output": ""
+    },
+    {
+      "name": "mapped_child_pipe",
+      "command": "S:\\runtime\\node.exe S:\\pipe-probe.cjs",
+      "launcher_rc": 124,
+      "command_rc": null,
+      "elapsed_s": 20.402,
+      "launch_cwd": "S:\\",
+      "timed_out": true,
+      "output": ""
+    },
+    {
+      "name": "mapped_child_inherit",
+      "command": "S:\\runtime\\node.exe S:\\inherit-probe.cjs",
+      "launcher_rc": 0,
+      "command_rc": 0,
+      "elapsed_s": 0.183,
+      "launch_cwd": "S:\\",
+      "timed_out": false,
+      "output": "{\"status\":0,\"signal\":null}\n"
+    },
+    {
+      "name": "mapped_vite_default",
+      "command": "S:\\runtime\\node.exe S:\\node_modules\\vite\\bin\\vite.js build --emptyOutDir --outDir S:\\out\\default",
+      "launcher_rc": 124,
+      "command_rc": null,
+      "elapsed_s": 45.358,
+      "launch_cwd": "S:\\",
+      "timed_out": true,
+      "output": ""
+    },
+    {
+      "name": "mapped_vite_no_esbuild",
+      "command": "S:\\runtime\\node.exe S:\\node_modules\\vite\\bin\\vite.js build --config S:\\vite.no-esbuild.config.js --configLoader runner --emptyOutDir --outDir S:\\out\\no-esbuild",
+      "launcher_rc": 124,
+      "command_rc": null,
+      "elapsed_s": 90.472,
+      "launch_cwd": "S:\\",
+      "timed_out": true,
+      "output": ""
+    },
+    {
+      "name": "mapped_esbuild_cli",
+      "command": "S:\\node_modules\\@esbuild\\win32-x64\\esbuild.exe S:\\src\\main.jsx --bundle --outfile=S:\\out\\esbuild-a\\assets\\app.js --format=esm --platform=browser --jsx=automatic --minify && copy /Y S:\\index.esbuild.html S:\\out\\esbuild-a\\index.html",
+      "launcher_rc": 0,
+      "command_rc": 0,
+      "elapsed_s": 0.449,
+      "launch_cwd": "S:\\",
+      "timed_out": false,
+      "output": "        1 file(s) copied.\n"
+    },
+    {
+      "name": "mapped_esbuild_cli_repeat",
+      "command": "S:\\node_modules\\@esbuild\\win32-x64\\esbuild.exe S:\\src\\main.jsx --bundle --outfile=S:\\out\\esbuild-b\\assets\\app.js --format=esm --platform=browser --jsx=automatic --minify && copy /Y S:\\index.esbuild.html S:\\out\\esbuild-b\\index.html",
+      "launcher_rc": 0,
+      "command_rc": 0,
+      "elapsed_s": 0.221,
+      "launch_cwd": "S:\\",
+      "timed_out": false,
+      "output": "        1 file(s) copied.\n"
+    }
+  ],
+  "dependency_image": {
+    "files_before": 7269,
+    "files_after": 7269,
+    "tree_before": "6f6dc0b4b41c6ed5663072a34850a54502a94250bbe2eb93933ee199752243a7",
+    "tree_after": "6f6dc0b4b41c6ed5663072a34850a54502a94250bbe2eb93933ee199752243a7",
+    "unchanged": true
+  },
+  "esbuild_determinism": {
+    "a": {
+      "assets/app.js": "0869bcdfb1249d34736b7aad33047d0ef3aef022a669ed4c8723b5f1267726ca",
+      "index.html": "5964f759f06ef4f8a530a3b6eeb3c9076e5f237a30059f5b37ae86701cca6b67"
+    },
+    "b": {
+      "assets/app.js": "0869bcdfb1249d34736b7aad33047d0ef3aef022a669ed4c8723b5f1267726ca",
+      "index.html": "5964f759f06ef4f8a530a3b6eeb3c9076e5f237a30059f5b37ae86701cca6b67"
+    },
+    "tree_a": "95aa2d950b8a4f20c789776e58d9a103047b4291b523981a4c26f25059e13825",
+    "tree_b": "95aa2d950b8a4f20c789776e58d9a103047b4291b523981a4c26f25059e13825",
+    "byte_identical": true
+  },
+  "esbuild_render_checks": {
+    "e10": {
+      "expected_reused_component_instances": 20,
+      "rendered_card_anchors": [
+        "card-01",
+        "card-02",
+        "card-03",
+        "card-04",
+        "card-05",
+        "card-06",
+        "card-07",
+        "card-08",
+        "card-09",
+        "card-10",
+        "card-11",
+        "card-12",
+        "card-13",
+        "card-14",
+        "card-15",
+        "card-16",
+        "card-17",
+        "card-18",
+        "card-19",
+        "card-20"
+      ],
+      "rendered_card_anchor_count": 20,
+      "unique_card_anchor_count": 20,
+      "missing": [],
+      "unexpected": [],
+      "all_data_oey_attributes": [
+        {
+          "name": "data-oey-section",
+          "value": "workspace"
+        },
+        {
+          "name": "data-oey-section",
+          "value": "conversation"
+        },
+        {
+          "name": "data-oey-object",
+          "value": "message-1"
+        },
+        {
+          "name": "data-oey-object",
+          "value": "message-2"
+        },
+        {
+          "name": "data-oey-object",
+          "value": "message-3"
+        },
+        {
+          "name": "data-oey-section",
+          "value": "preview-area"
+        },
+        {
+          "name": "data-oey-preview-root",
+          "value": "artifact"
+        },
+        {
+          "name": "data-oey-object",
+          "value": "card-01"
+        },
+        {
+          "name": "data-oey-object",
+          "value": "card-02"
+        },
+        {
+          "name": "data-oey-object",
+          "value": "card-03"
+        },
+        {
+          "name": "data-oey-object",
+          "value": "card-04"
+        },
+        {
+          "name": "data-oey-object",
+          "value": "card-05"
+        },
+        {
+          "name": "data-oey-object",
+          "value": "card-06"
+        },
+        {
+          "name": "data-oey-object",
+          "value": "card-07"
+        },
+        {
+          "name": "data-oey-object",
+          "value": "card-08"
+        },
+        {
+          "name": "data-oey-object",
+          "value": "card-09"
+        },
+        {
+          "name": "data-oey-object",
+          "value": "card-10"
+        },
+        {
+          "name": "data-oey-object",
+          "value": "card-11"
+        },
+        {
+          "name": "data-oey-object",
+          "value": "card-12"
+        },
+        {
+          "name": "data-oey-object",
+          "value": "card-13"
+        },
+        {
+          "name": "data-oey-object",
+          "value": "card-14"
+        },
+        {
+          "name": "data-oey-object",
+          "value": "card-15"
+        },
+        {
+          "name": "data-oey-object",
+          "value": "card-16"
+        },
+        {
+          "name": "data-oey-object",
+          "value": "card-17"
+        },
+        {
+          "name": "data-oey-object",
+          "value": "card-18"
+        },
+        {
+          "name": "data-oey-object",
+          "value": "card-19"
+        },
+        {
+          "name": "data-oey-object",
+          "value": "card-20"
+        }
+      ],
+      "external_requests": [],
+      "console_errors": [],
+      "passed": true
+    },
+    "e11": {
+      "measurement": "computed styles outside data-oey-preview-root; repeated >=2",
+      "reference_range": "5-6 colors",
+      "preview_root_found": true,
+      "shell_elements": 29,
+      "shell_colors": {
+        "rgb(237, 234, 227)": 20,
+        "rgb(20, 19, 17)": 2,
+        "rgb(51, 48, 43)": 7,
+        "rgb(168, 162, 154)": 6,
+        "rgb(232, 96, 44)": 6
+      },
+      "shell_color_count": 5,
+      "screenshot": "results\\fixture.png",
+      "screenshot_sha256": "b47e3bd84c9fbc454412d3eed7722fac6e3c5e53b114ffd8eceaa563d3db71b2",
+      "passed": true
+    }
+  }
+}

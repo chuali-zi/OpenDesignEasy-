@@ -9,7 +9,7 @@ import re
 import struct
 from dataclasses import replace
 from pathlib import Path
-from typing import Any
+from typing import Any, Protocol
 
 from .domain import (
     BriefRecord,
@@ -36,6 +36,10 @@ from .ports import (
     EvidenceRepositoryPort,
     ProjectRepository,
 )
+
+
+class RepositoryReader(Protocol):
+    def read_file(self, source: SourceAsset, locator: SourceLocator) -> bytes: ...
 
 
 class LocalSourceStore:
@@ -351,6 +355,7 @@ class EvidenceService:
         parsers: tuple[EvidenceParserPort, ...] | None = None,
         confirmer: EvidenceConfirmationPort | None = None,
         project_repository: ProjectRepository | None = None,
+        repository_reader: RepositoryReader | None = None,
     ) -> None:
         self.repository = repository
         self.store = store
@@ -368,6 +373,7 @@ class EvidenceService:
         }
         self.confirmer = confirmer or HumanEvidenceConfirmer()
         self.project_repository = project_repository
+        self.repository_reader = repository_reader
 
     def ingest(self, project_id, payload, media_type, filename, rights):
         return self.ingest_parse(project_id, payload, media_type, filename, rights)
@@ -381,6 +387,13 @@ class EvidenceService:
                 ErrorCategory.POLICY_BLOCKED,
                 "Source locator belongs to another Project",
             )
+        if source.kind is SourceKind.CODE_REPOSITORY:
+            if self.repository_reader is None:
+                raise ContractError(
+                    ErrorCategory.CAPABILITY_UNAVAILABLE,
+                    "No repository reader is configured",
+                )
+            return source, self.repository_reader.read_file(source, locator)
         return source, self.store.read(source)
 
     def revise_rights(self, source: SourceAsset, rights: RightsStatus) -> SourceAsset:
@@ -571,11 +584,37 @@ class DeterministicContextAssembler:
             record.locator for _, record in sorted(confirmed_records.items())
         )
         source_refs = tuple(_locator_ref(locator) for locator in confirmed_locators)
-        analysis_refs = tuple(
-            SourceLocator(source.id, source.revision, {"region": "whole-source"})
-            for source in sources
-            if source.rights is not RightsStatus.PROHIBITED
-        )
+        analysis_refs_list: list[SourceLocator] = []
+        for source in sources:
+            if source.rights is RightsStatus.PROHIBITED:
+                continue
+            if source.kind is SourceKind.CODE_REPOSITORY:
+                repository_locators = tuple(
+                    record.locator
+                    for record in evidence
+                    if record.locator.source_id == source.id
+                    and record.locator.source_revision == source.revision
+                    and record.layer is EvidenceLayer.NATIVE_OBSERVATION
+                )
+                analysis_refs_list.extend(
+                    repository_locators
+                    or (
+                        SourceLocator(
+                            source.id,
+                            source.revision,
+                            {"path": ".", "line_start": 1, "line_end": 1},
+                        ),
+                    )
+                )
+            else:
+                analysis_refs_list.append(
+                    SourceLocator(
+                        source.id,
+                        source.revision,
+                        {"region": "whole-source"},
+                    )
+                )
+        analysis_refs = tuple(analysis_refs_list)
         delivery_refs = tuple(
             locator for locator in analysis_refs if locator.source_id in delivery
         )

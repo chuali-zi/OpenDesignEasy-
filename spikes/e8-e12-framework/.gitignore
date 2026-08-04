@@ -1,0 +1,7 @@
+node_modules/
+dist/
+out/
+workspaces/
+results/host-build-a/
+results/host-build-b/
+results/e11-strict-build/

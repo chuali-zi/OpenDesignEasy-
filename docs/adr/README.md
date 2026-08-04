@@ -15,28 +15,15 @@
 ## 已接受
 
 - [ADR-0001：Phase 2 runtime 与持久化基础](./0001-runtime-persistence-foundation.md)
+- [ADR-0002：Web 渲染与验证技术](./0002-web-rendering-validation.md) —— Playwright + 系统
+  Chrome、零外链、computed-style 验证、导出物重渲染与 `0.002` 局部修改阈值。
+- [ADR-0003：能力平面与首批 provider 绑定](./0003-capability-provider-bindings.md) —— 保持端口
+  vendor-neutral，首批 Kimi capability adapter；生图在首个 P6 场景中可选且默认关闭。
+- [ADR-0004：Agent 工作区与沙箱边界](./0004-agent-workspace-sandbox.md) —— Windows
+  AppContainer + Job Object + allowlist env，网络与真实后端仅经 trusted broker。
+- [ADR-0005：框架应用基底](./0005-framework-application-base.md) —— 接受受限 P6 profile：
+  React/MUI/Emotion + native esbuild，源码与验证后的 `dist/` 一并交付。
 
-## 预告（未撰写，不具规范效力）
-
-Phase 5 的四份 Spec 依赖以下三项决策。在对应 spike 完成并接受 ADR 之前，相关技术栈不视为
-已冻结：
-
-- **ADR-0002：Web 渲染与验证技术** —— headless 浏览器选择、导出物重渲染的一致性阈值、含 JS 与
-  mock 层产物的交互检查方式、隔离预览方案。依据 `artifact-production-spec.md` §11 的 A1–A7。
-- **ADR-0003：能力平面与首批 provider 绑定** —— capability slot 定义、Kimi 与 Seedream 的 adapter
-  边界、`design.critique` 的图像输入能力归属、生成素材的权利结论、agent 会话的测试确定性方案。
-  依据 `design-intelligence-spec.md` §11 的 D1–D7。
-- **ADR-0004：Agent 工作区与沙箱边界** —— 沙箱技术选择、工具协议、agent 框架选择、
-  session 持久化与续跑机制、预算与网络放行策略。依据 `agent-engine-spec.md` §15 的 E1–E7。
-
-  **spike 已给出明确方向**（`spikes/e1-sandbox/ADDENDUM-appcontainer.md`）：
-  **首选 Windows 原生 AppContainer + Job Object 组合**，WSL2/Docker 降为备选。
-  实测该组合覆盖全部六个隔离维度、无需管理员权限：AppContainer 负责文件与网络
-  （含裸 IP 均被 OS 拒绝），Job Object 负责进程树回收/内存/超时，白名单 env 负责凭据。
-  这也是 Chromium 自身在 Windows 上的沙箱做法。
-
-  ADR 撰写前**必须**补测两项：把真实 Node 运行时装进 AppContainer 包目录跑通；
-  直接 Win32 API 层面（不经 `cmd.exe`）的逃逸尝试。
-
-E1 与 D6 是最重的两项：前者决定 agent 能否安全地跑命令，后者决定自验证闭环能否成立。
-**两项现均已通过**——E1 在换用 AppContainer 后由「部分证伪」转为通过，D6 直接通过。
+ADR-0002～0005 已于 2026-08-03 接受。它们把 Phase 5 冻结能力落实为 P6 技术边界；其中
+ADR-0005 仅在 `framework` profile 范围内扩展 Design v0.4 与 Artifact v0.4，不授权任意
+React/Vue/Vite/npm 工具链。E12 的 provider 超时风险已被显式接受，但超时仍必须如实失败。

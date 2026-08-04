@@ -7,6 +7,11 @@ quality, and delivery adapters while persisting Projects, commands, workflows,
 source metadata, evidence lineage, Context Packages, audits, and side effects in
 SQLite.
 
+Phase 5 specifications and ADR-0002 through ADR-0005 are frozen. Phase 6 has
+started at the scaffold stage: adapter injection and readiness gates are present,
+while real repository, agent, renderer, framework, and provider integrations remain
+explicit follow-up work. See `docs/phase6/README.md`.
+
 Run the contract tests with `python -m pytest`.
 
 Use `oeydesign.ControlPlane` for the in-memory contract harness, or
