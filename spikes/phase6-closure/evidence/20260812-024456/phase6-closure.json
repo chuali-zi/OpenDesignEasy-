@@ -1,0 +1,302 @@
+{
+  "version": 3,
+  "passed": true,
+  "elapsed_seconds": 51.516,
+  "source_control": {
+    "head": "b5493165d723617031be2f525a8571ab8cd94556",
+    "branch": "codex/web-mvp",
+    "tracked_clean": true,
+    "untracked_count": 2
+  },
+  "launcher": {
+    "capability_version": "appcontainer-job-broker/1",
+    "available": true,
+    "profile": "OEYdesign.Phase6",
+    "profile_sid": "S-1-15-2-2716389959-3639986822-1365064899-2452017625-2216200295-742827417-4064774993",
+    "workspace_in_package": true,
+    "zero_capabilities": true,
+    "job_object_before_resume": true,
+    "last_temporary_drive": "Z:"
+  },
+  "build": {
+    "capability_version": "native-esbuild/1",
+    "source_tree_sha256": "88ae23b7886af9c394845e7c4137e97674d9e549bd748ad91a2e13ce6b59c5f4",
+    "lockfile_sha256": "28d660298f43ecb514ae11a9a19b61e041c8625799ee249ef171f83d5d175a43",
+    "dependency_tree_sha256": "11db9b38722feb6ddf14953b37638cc34a33b3788544f4e188ea1a8c75a2e0e0",
+    "first_dist_tree_sha256": "492e5a2e855a95c03fa3ef4a6eee887edb0c36e99e4b0b945fdc7a9d964525df",
+    "second_dist_tree_sha256": "492e5a2e855a95c03fa3ef4a6eee887edb0c36e99e4b0b945fdc7a9d964525df",
+    "byte_identical": true,
+    "output_files": {
+      "assets/app.js": "529f5045fcc4ebb9f0f5db4161f26e15a8548a4dc8c78b08ab4a242c7dfc9026",
+      "index.html": "5964f759f06ef4f8a530a3b6eeb3c9076e5f237a30059f5b37ae86701cca6b67",
+      "artifact-manifest.json": "963960fa0315d9971ef4459f93d29b3a3a67ffd464807d8e7633e06dbf9f6e7c"
+    }
+  },
+  "render": {
+    "capability_version": "playwright-system-chrome/1",
+    "healthy": true,
+    "chrome_version": "151.0.7922.110",
+    "entry": "index.html",
+    "profile": {
+      "channel": "chrome",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "device_scale_factor": 1.0,
+      "timeout_ms": 30000,
+      "motion": "reduce"
+    },
+    "screenshot": "chrome-final.png",
+    "screenshot_sha256": "f8bc34eeab31ebfdbbd0b85422825c289b31cd5e6b7b1acbea7e320fc1c23354",
+    "console_errors": [],
+    "page_errors": [],
+    "failed_requests": [],
+    "dom_metrics": {
+      "object_anchors": [
+        "pin-row-01",
+        "pin-row-02",
+        "pin-row-03",
+        "pin-row-04",
+        "artifact-hero",
+        "artifact-hero-pin",
+        "artifact-trio-ash",
+        "artifact-trio-ash-pin",
+        "artifact-maker",
+        "artifact-maker-pin",
+        "artifact-reserve",
+        "artifact-reserve-pin"
+      ],
+      "unique_object_anchors": 12,
+      "section_anchors": [
+        "conversation"
+      ],
+      "unique_section_anchors": 1,
+      "computed_styles": {
+        "pin-row-01": {
+          "color": "rgb(19, 21, 25)",
+          "backgroundColor": "rgb(217, 164, 65)",
+          "fontFamily": "SFMono-Regular, ui-monospace, Menlo, Consolas, monospace",
+          "fontSize": "12px",
+          "fontWeight": "700",
+          "lineHeight": "18px",
+          "display": "flex"
+        },
+        "pin-row-02": {
+          "color": "rgb(19, 21, 25)",
+          "backgroundColor": "rgb(217, 164, 65)",
+          "fontFamily": "SFMono-Regular, ui-monospace, Menlo, Consolas, monospace",
+          "fontSize": "12px",
+          "fontWeight": "700",
+          "lineHeight": "18px",
+          "display": "flex"
+        },
+        "pin-row-03": {
+          "color": "rgb(19, 21, 25)",
+          "backgroundColor": "rgb(217, 164, 65)",
+          "fontFamily": "SFMono-Regular, ui-monospace, Menlo, Consolas, monospace",
+          "fontSize": "12px",
+          "fontWeight": "700",
+          "lineHeight": "18px",
+          "display": "flex"
+        },
+        "pin-row-04": {
+          "color": "rgb(19, 21, 25)",
+          "backgroundColor": "rgb(217, 164, 65)",
+          "fontFamily": "SFMono-Regular, ui-monospace, Menlo, Consolas, monospace",
+          "fontSize": "12px",
+          "fontWeight": "700",
+          "lineHeight": "18px",
+          "display": "flex"
+        },
+        "artifact-hero": {
+          "color": "rgb(36, 28, 19)",
+          "backgroundColor": "rgba(0, 0, 0, 0)",
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, Arial, sans-serif",
+          "fontSize": "16px",
+          "fontWeight": "400",
+          "lineHeight": "24px",
+          "display": "block"
+        },
+        "artifact-hero-pin": {
+          "color": "rgb(19, 21, 25)",
+          "backgroundColor": "rgb(217, 164, 65)",
+          "fontFamily": "SFMono-Regular, ui-monospace, Menlo, Consolas, monospace",
+          "fontSize": "12px",
+          "fontWeight": "700",
+          "lineHeight": "18px",
+          "display": "flex"
+        },
+        "artifact-trio-ash": {
+          "color": "rgb(36, 28, 19)",
+          "backgroundColor": "rgb(251, 247, 236)",
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, Arial, sans-serif",
+          "fontSize": "16px",
+          "fontWeight": "400",
+          "lineHeight": "24px",
+          "display": "block"
+        },
+        "artifact-trio-ash-pin": {
+          "color": "rgb(19, 21, 25)",
+          "backgroundColor": "rgb(217, 164, 65)",
+          "fontFamily": "SFMono-Regular, ui-monospace, Menlo, Consolas, monospace",
+          "fontSize": "12px",
+          "fontWeight": "700",
+          "lineHeight": "18px",
+          "display": "flex"
+        },
+        "artifact-maker": {
+          "color": "rgb(36, 28, 19)",
+          "backgroundColor": "rgba(0, 0, 0, 0)",
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, Arial, sans-serif",
+          "fontSize": "16px",
+          "fontWeight": "400",
+          "lineHeight": "24px",
+          "display": "grid"
+        },
+        "artifact-maker-pin": {
+          "color": "rgb(19, 21, 25)",
+          "backgroundColor": "rgb(217, 164, 65)",
+          "fontFamily": "SFMono-Regular, ui-monospace, Menlo, Consolas, monospace",
+          "fontSize": "12px",
+          "fontWeight": "700",
+          "lineHeight": "18px",
+          "display": "flex"
+        },
+        "artifact-reserve": {
+          "color": "rgb(244, 238, 223)",
+          "backgroundColor": "rgb(179, 74, 34)",
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, Arial, sans-serif",
+          "fontSize": "16px",
+          "fontWeight": "400",
+          "lineHeight": "24px",
+          "display": "block"
+        },
+        "artifact-reserve-pin": {
+          "color": "rgb(19, 21, 25)",
+          "backgroundColor": "rgb(217, 164, 65)",
+          "fontFamily": "SFMono-Regular, ui-monospace, Menlo, Consolas, monospace",
+          "fontSize": "12px",
+          "fontWeight": "700",
+          "lineHeight": "18px",
+          "display": "flex"
+        }
+      },
+      "focusable_count": 15,
+      "text_length": 3582,
+      "scroll_width": 1440,
+      "client_width": 1440,
+      "scroll_height": 1000
+    },
+    "elapsed_seconds": 2.344
+  },
+  "session": {
+    "id": "phase6-20260812-024456",
+    "status": "COMPLETED",
+    "completed": true,
+    "last_render_healthy": true,
+    "model": "k3",
+    "steps": 3,
+    "prompt_tokens": 4568,
+    "completion_tokens": 126,
+    "reasoning_tokens": 0,
+    "renders": 1,
+    "elapsed_seconds": 14.125,
+    "turns": [
+      {
+        "sequence": 1,
+        "tool": "run_build",
+        "outcome": "ok",
+        "render": false
+      },
+      {
+        "sequence": 2,
+        "tool": "render",
+        "outcome": "ok",
+        "render": true
+      },
+      {
+        "sequence": 3,
+        "tool": "model",
+        "outcome": "complete",
+        "render": false
+      }
+    ]
+  },
+  "vertical_slice": {
+    "readiness": {
+      "ready": true,
+      "versions": {
+        "agent.engine": "agent-engine-appcontainer/1",
+        "artifact.production": "artifact-web-production/1",
+        "context.repository": "repository-ingestion/1",
+        "delivery.release": "delivery-validation/1(durable(delivery-local-immutable/1))",
+        "design.intelligence": "design-territories-web/1",
+        "framework.build": "native-esbuild/1",
+        "quality.governance": "quality-web-governance/1",
+        "render.web": "playwright-system-chrome/1"
+      },
+      "slot_count": 8
+    },
+    "repository": {
+      "source_id": "source_ced39c7c1e72c1405430",
+      "revision": 1,
+      "file_count": 8
+    },
+    "design": {
+      "candidate_count": 2,
+      "candidate_ids": [
+        "candidate_fbd80f1e674bf49ba017",
+        "candidate_e6d8d302115c37d2b201"
+      ],
+      "approved_direction_id": "direction_491094c4d3aa7552347b"
+    },
+    "artifact": {
+      "id": "artifact_fd4e8b8c19007ac27adb",
+      "revision": 1,
+      "object_refs": {
+        "action-card": "[data-oey-object=\"action-card\"]",
+        "content-grid": "[data-oey-object=\"content-grid\"]",
+        "details": "[data-oey-object=\"details\"]",
+        "hero-title": "[data-oey-object=\"hero-title\"]",
+        "section:direction-1": "[data-oey-section=\"direction-1\"]"
+      },
+      "render_quality_id": "quality_55c10df7ac22bfd3f2b8",
+      "artifact_screenshot": "vertical-artifact.png"
+    },
+    "export": {
+      "id": "export_f0cfc2c79985f6347ce2",
+      "revision": 1,
+      "archive_sha256": "29898eca07407973b83853ff437b5e579347962bb5af5052b44f2e1f868c0755",
+      "archive_crc_ok": true,
+      "member_hashes": {
+        "artifact-manifest.json": "4c0232f1560fc5d224d2df42f97117177190a73e5c3e19b654066999e2cdcbc6",
+        "index.html": "e3e195263d5c352f42613257e50fd447ab560be9c322d975fee8c92d19404726"
+      },
+      "rerender_healthy": true,
+      "export_screenshot": "vertical-export.png"
+    },
+    "quality": {
+      "id": "quality_5e6c6081042c6a5d1d8e",
+      "target_kind": "export",
+      "verdict": "PASS",
+      "hard_error_count": 0
+    },
+    "delivery": {
+      "id": "delivery_a469b679d496a811d6c4",
+      "archive_path": "vertical-delivery.zip",
+      "archive_sha256": "29898eca07407973b83853ff437b5e579347962bb5af5052b44f2e1f868c0755",
+      "side_effect_key": "delivery-effect_710beb5a0d4f1f431279"
+    },
+    "state": "DELIVERED",
+    "recovery": {
+      "state": "DELIVERED",
+      "delivery_count": 1,
+      "same_delivery_id": true
+    }
+  },
+  "evidence_files": {
+    "initial_screenshot": "chrome-initial.png",
+    "final_screenshot": "chrome-final.png"
+  }
+}
