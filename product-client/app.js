@@ -1,456 +1,111 @@
 (() => {
   "use strict";
-
   const $ = (selector) => document.querySelector(selector);
-  let project = null;
-  let candidateFocus = null;
+  const state = { csrf: "", project: null, projects: [], health: null, candidateId: null, selected: null, poll: null, usedPreviewTokens: new Set() };
+  const compatibleFeedbackActions = new Set(["direction_feedback", "local_feedback", "fact_feedback"]);
+  void compatibleFeedbackActions;
 
-  const escapeHtml = (value) =>
-    String(value ?? "").replace(
-      /[&<>"']/g,
-      (character) =>
-        ({
-          "&": "&amp;",
-          "<": "&lt;",
-          ">": "&gt;",
-          '"': "&quot;",
-          "'": "&#39;",
-        })[character],
-    );
-
-  const describe = (value) => {
-    if (value === null || value === undefined || value === "") return "—";
-    return typeof value === "object" ? JSON.stringify(value) : String(value);
-  };
-
-  const showNotice = (message) => {
-    $("#notice").textContent = message;
-  };
+  const escapeHtml = (value) => String(value ?? "").replace(/[&<>"']/g, (c) => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"})[c]);
+  const uid = (prefix) => `${prefix}:${Date.now()}:${crypto.randomUUID()}`;
+  const notice = (message) => { const node = $("#notice"); node.textContent = message; node.classList.add("visible"); clearTimeout(node.timer); node.timer = setTimeout(() => node.classList.remove("visible"), 4200); };
 
   async function request(url, options = {}) {
-    const response = await fetch(url, {
-      headers: { "Content-Type": "application/json" },
-      ...options,
-    });
-    const body = await response.json().catch(() => ({}));
-    if (!response.ok) {
-      if (body.current_revision !== undefined && project?.id) {
-        await loadProject(project.id, { preserveFocus: true });
-      }
-      const error = new Error(
-        body.message || body.category || `请求失败（${response.status}）`,
-      );
-      error.category = body.category;
-      throw error;
-    }
+    const headers = { ...(options.headers || {}) };
+    if (options.body && !(options.body instanceof FormData)) headers["Content-Type"] = "application/json";
+    if (options.method && options.method !== "GET") headers["X-OEY-CSRF"] = state.csrf;
+    const response = await fetch(url, { ...options, headers });
+    const type = response.headers.get("content-type") || "";
+    const body = type.includes("json") ? await response.json().catch(() => ({})) : await response.text();
+    if (!response.ok) { const error = new Error(body.message || body.category || `Request failed (${response.status})`); error.body = body; throw error; }
     return body;
   }
 
-  async function loadProjects(preferredId) {
-    const projects = await request("/api/projects");
+  async function boot() {
+    const session = await request("/api/session"); state.csrf = session.csrf_token;
+    await Promise.all([loadHealth(), loadProjects()]);
+    bind();
+  }
+
+  async function loadHealth() {
+    state.health = await request("/api/health");
+    $("#readinessLabel").textContent = state.health.product_ready ? "READY" : "NEEDS SETUP";
+    $("#readinessLabel").title = (state.health.blockers || []).join("\n");
+    const panel = $("#readinessPanel"), badge = panel.querySelector(".status-pill");
+    badge.textContent = state.health.product_ready ? "READY" : "BLOCKED";
+    badge.className = `status-pill ${state.health.product_ready ? "pass" : "block"}`;
+    $("#readinessBlockers").innerHTML = state.health.product_ready ? "<p>All eight production capabilities are available.</p>" : (state.health.blockers || []).map((item) => `<p>${escapeHtml(item)}</p>`).join("");
+    return state.health;
+  }
+
+  async function loadProjects(preferred) {
+    state.projects = await request("/api/projects");
     const select = $("#projectSelect");
-    select.replaceChildren(
-      ...projects.map((item) => {
-        const option = document.createElement("option");
-        option.value = item.id;
-        option.textContent = `${item.name} · r${item.revision}`;
-        return option;
-      }),
-    );
-    const selected =
-      projects.find((item) => item.id === preferredId) || projects[0];
-    if (selected) {
-      select.value = selected.id;
-      await loadProject(selected.id);
-    } else {
-      project = null;
-      render();
-    }
+    select.replaceChildren(...state.projects.map((item) => { const option = document.createElement("option"); option.value = item.id; option.textContent = `${item.name} · r${item.revision}`; return option; }));
+    const selected = state.projects.find((item) => item.id === preferred) || state.projects[0];
+    if (selected) { select.value = selected.id; await loadProject(selected.id); } else { state.project = null; render(); }
   }
 
-  async function loadProject(id, { preserveFocus = false } = {}) {
-    project = await request(`/api/projects/${encodeURIComponent(id)}`);
-    if (!preserveFocus) candidateFocus = null;
-    await syncActivity(false);
-    render();
+  async function loadProject(id, preserveCandidate = true) {
+    state.project = await request(`/api/projects/${encodeURIComponent(id)}`);
+    if (!preserveCandidate || !state.project.candidates?.some((c) => c.id === state.candidateId)) state.candidateId = state.project.candidates?.[0]?.id || null;
+    render(); schedulePoll();
   }
 
-  async function syncActivity(renderAfter = true) {
-    if (!project) return;
-    const activity = Array.isArray(project.activity) ? project.activity : [];
-    const cursor = activity.reduce(
-      (highest, item) => Math.max(highest, Number(item.sequence) || 0),
-      0,
-    );
-    const updates = await request(
-      `/api/projects/${encodeURIComponent(project.id)}/events?after=${cursor}`,
-    );
-    if (updates.length) {
-      const known = new Set(activity.map((item) => item.id));
-      project.activity = [
-        ...activity,
-        ...updates.filter((item) => !known.has(item.id)),
-      ];
-      if (renderAfter) render();
-    }
-  }
-
-  function selectedCandidate() {
-    const candidates = Array.isArray(project?.candidates)
-      ? project.candidates
-      : [];
-    return (
-      candidates.find((candidate) => candidate.id === candidateFocus) ||
-      candidates[0] ||
-      null
-    );
-  }
-
-  function currentFocus() {
-    return project?.focus && typeof project.focus === "object"
-      ? project.focus
-      : {};
-  }
-
-  function focusHtml(candidate) {
-    const focus = currentFocus();
-    if (focus.kind === "artifact") {
-      return focus.html || focus.content || project?.focus_preview || "";
-    }
-    return (
-      candidate?.preview ||
-      candidate?.preview_html ||
-      focus.preview ||
-      focus.html ||
-      focus.content ||
-      project?.focus_preview ||
-      ""
-    );
-  }
-
-  function renderPreview(candidate) {
-    const canvas = $("#canvas");
-    canvas.replaceChildren();
-    const sheet = document.createElement("article");
-    sheet.className = "proof-sheet";
-    sheet.innerHTML = `
-      <div class="proof-meta">
-        <span class="tag">${escapeHtml(project?.state || "NO STATE")}</span>
-        <span class="tag">${escapeHtml(project?.constraints?.template_role || project?.template_role || "NO TEMPLATE")}</span>
-      </div>
-      <h2>${escapeHtml(currentFocus().kind === "artifact" ? currentFocus().title : candidate?.title || currentFocus().title || "Current proof")}</h2>
-    `;
-
-    const preview = focusHtml(candidate);
-    if (preview) {
-      const frame = document.createElement("iframe");
-      frame.className = "preview-frame";
-      frame.title = `${candidate?.title || project?.name || "项目"} 安全预览`;
-      frame.setAttribute("sandbox", "");
-      frame.srcdoc = String(preview);
-      sheet.append(frame);
-    } else {
-      const empty = document.createElement("p");
-      empty.textContent = "当前阶段尚无可渲染校样，请从左侧推进下一步。";
-      sheet.append(empty);
-    }
-
-    const candidates = Array.isArray(project?.candidates)
-      ? project.candidates
-      : [];
-    if (candidates.length) {
-      const heading = document.createElement("h2");
-      heading.textContent = "候选方向";
-      sheet.append(heading);
-      const list = document.createElement("div");
-      list.className = "candidates";
-      candidates.forEach((item) => {
-        const button = document.createElement("button");
-        button.type = "button";
-        button.className = "candidate";
-        button.dataset.candidate = item.id;
-        button.setAttribute("aria-current", String(item.id === candidate?.id));
-        button.innerHTML = `${escapeHtml(item.title || item.id)}<small>revision ${escapeHtml(item.revision)}</small>`;
-        list.append(button);
-      });
-      sheet.append(list);
-    }
-    canvas.append(sheet);
-  }
-
-  function renderList(target, items, formatter, emptyText) {
-    target.innerHTML = items.length
-      ? items.map(formatter).join("")
-      : `<p>${escapeHtml(emptyText)}</p>`;
-  }
-
-  function renderSettings() {
-    const values = project?.settings || {};
-    const entries = Object.entries(values);
-    $("#projectSettings").innerHTML = entries.length
-      ? entries
-          .map(
-            ([key, value]) =>
-              `<dt>${escapeHtml(key)}</dt><dd>${escapeHtml(describe(value))}</dd>`,
-          )
-          .join("")
-      : "<dt>Configuration</dt><dd>当前项目尚无 settings 投影。</dd>";
-  }
+  function activeCandidate() { return state.project?.candidates?.find((c) => c.id === state.candidateId) || state.project?.candidates?.[0] || null; }
+  function activeRun() { return (state.project?.runs || []).find((run) => ["QUEUED","RUNNING","PAUSED"].includes(run.status)) || null; }
 
   function render() {
-    if (!project) {
-      $("#stamp").value = "未载入项目";
-      $("#status").textContent = "NO PROJECT";
-      $("#directionForm").hidden = true;
-      $("#factForm").hidden = true;
-      $("#localForm").hidden = true;
-      $("#actions").innerHTML = "<p>请在 Settings 创建演示项目。</p>";
-      renderSettings();
-      return;
-    }
-
-    const focus = currentFocus();
-    const candidate = selectedCandidate();
-    const constraints = project.constraints || {};
-    const quality = project.quality || {};
-    const actions = Array.isArray(project.actions) ? project.actions : [];
-    const actionIds = actions.map((action) =>
-      typeof action === "string" ? action : action.id,
-    );
-    const formActions = new Set([
-      "direction_feedback",
-      "local_feedback",
-      "fact_feedback",
-    ]);
-    const commandActions = actions.filter(
-      (action) => !formActions.has(typeof action === "string" ? action : action.id),
-    );
-
-    $("#stamp").value = `REV ${project.revision} · ${project.state}`;
-    $("#status").textContent = `${project.state} — ${project.name}`;
-    $("#proofRevision").textContent = project.revision ?? "—";
-    const tree = project.tree || {};
-    $("#tree").innerHTML = `
-      <p><strong>${escapeHtml(project.name)}</strong></p>
-      <p><span class="tag">${escapeHtml(project.preset || constraints.preset || "PROJECT")}</span>
-      <span class="tag">${escapeHtml(project.template_role || constraints.template_role || "NO ROLE")}</span></p>
-      <p>Focus: ${escapeHtml(focus.kind || focus.id || focus.artifact_id || "—")}</p>
-      <ul>${Object.entries(tree)
-        .map(
-          ([key, value]) =>
-            `<li><span>${escapeHtml(key)}</span><b>${escapeHtml(describe(value))}</b></li>`,
-        )
-        .join("")}</ul>
-    `;
-
-    renderList(
-      $("#activity"),
-      Array.isArray(project.activity) ? project.activity : [],
-      (item) =>
-        `<li><strong>${escapeHtml(item.event_type || item.type || "Event")}</strong><br><small>${escapeHtml(item.message || item.stage || `sequence ${item.sequence ?? "—"}`)}</small></li>`,
-      "活动将在项目开始后出现。",
-    );
-
-    $("#actions").innerHTML = commandActions.length
-      ? commandActions
-          .map((action) => {
-            const item = typeof action === "string" ? { id: action } : action;
-            return `<button type="button" class="${escapeHtml(item.tone || "")}" data-action="${escapeHtml(item.id)}">${escapeHtml(item.label || item.id)}</button>`;
-          })
-          .join("")
-      : "<p>使用下方批注入口，或等待新的合法动作。</p>";
-
-    const constraintEntries = Object.entries(constraints.settings || constraints);
-    $("#constraints").innerHTML = constraintEntries.length
-      ? constraintEntries
-          .map(
-            ([key, value]) =>
-              `<dt>${escapeHtml(key)}</dt><dd>${escapeHtml(describe(value))}</dd>`,
-          )
-          .join("")
-      : "<dt>Profile</dt><dd>尚无约束投影</dd>";
-
-    const aesthetic = quality.aesthetic_findings || quality.aesthetic || [];
-    const hardErrors = quality.hard_errors || [];
-    $("#quality").innerHTML = `
-      <p><strong>Verdict:</strong> ${escapeHtml(quality.verdict || "—")}</p>
-      ${aesthetic.map((item) => `<div class="finding">AESTHETIC · ${escapeHtml(item.message || item)}</div>`).join("") || '<p>暂无审美 findings</p>'}
-      ${hardErrors.map((item) => `<div class="finding hard">HARD ERROR · ${escapeHtml(item.message || item)}</div>`).join("") || '<p>无硬错误</p>'}
-    `;
-
-    renderList(
-      $("#approvals"),
-      Array.isArray(project.approvals) ? project.approvals : [],
-      (item) =>
-        `<div class="approval">${item.active === false ? "○" : "✓"} ${escapeHtml(item.action)} · ${escapeHtml(item.target_id || "target")} r${escapeHtml(item.target_revision ?? "—")}</div>`,
-      "尚无审批",
-    );
-    renderList(
-      $("#feedback"),
-      Array.isArray(project.feedback) ? project.feedback : [],
-      (item) =>
-        `<div class="approval">${escapeHtml(item.kind)} → ${escapeHtml(describe(item.routed_to))}</div>`,
-      "尚无反馈",
-    );
-    renderList(
-      $("#delivery"),
-      Array.isArray(project.deliveries) ? project.deliveries : [],
-      (item) =>
-        `<div class="delivery-item"><strong>Delivery ${escapeHtml(item.id || item)} · r${escapeHtml(item.revision ?? "—")}</strong><br>Export ${escapeHtml(item.export_id || "—")} · r${escapeHtml(item.export_revision ?? "—")}<br>Quality ${escapeHtml(item.quality_decision_id || "—")}<br>Approval ${escapeHtml(item.approval_id || "—")}</div>`,
-      "尚未交付",
-    );
-
-    renderPreview(candidate);
-    const artifactId = focus.artifact_id;
-    $("#directionForm").hidden = !actionIds.includes("direction_feedback");
-    $("#factForm").hidden = !actionIds.includes("fact_feedback");
-    $("#localForm").hidden =
-      !artifactId || !actionIds.includes("local_feedback");
-    $("#breakContract").closest("label").hidden =
-      (project.template_role || constraints.template_role) !== "DELIVERY_CONTRACT";
-    renderSettings();
+    const p = state.project;
+    $("#projectState").textContent = p?.state || "NO PROJECT"; $("#projectRevision").textContent = p?.revision || "—";
+    renderMessages(); renderCandidates(); renderPreview(); renderSources(); renderQuality(); renderRuns(); renderHistory(); renderDeliveries(); renderActions();
   }
 
-  async function sendCommand(action, extra = {}) {
-    if (!project) return;
-    const candidate = selectedCandidate();
-    const focus = currentFocus();
-    const payload = {
-      command_id: crypto.randomUUID(),
-      action,
-      expected_revision: project.revision,
-      ...extra,
-    };
-
-    if (action === "approve_direction" && candidate) {
-      payload.candidate_id = candidate.id;
-      payload.candidate_revision = candidate.revision;
-    }
-    if (action === "direction_feedback" && candidate) {
-      payload.target_id = candidate.id;
-      payload.target_revision = candidate.revision;
-    }
-    if (action === "fact_feedback") {
-      const targetId = focus.artifact_id || focus.id || candidate?.id;
-      const targetRevision =
-        focus.artifact_revision || focus.revision || candidate?.revision;
-      if (targetId && targetRevision) {
-        payload.target_id = targetId;
-        payload.target_revision = targetRevision;
-      }
-    }
-    if (action === "local_feedback") {
-      payload.target_id = focus.artifact_id || focus.id;
-      payload.target_revision = focus.artifact_revision || focus.revision;
-    }
-
-    try {
-      project = await request(
-        `/api/projects/${encodeURIComponent(project.id)}/commands`,
-        { method: "POST", body: JSON.stringify(payload) },
-      );
-      render();
-      showNotice(`已提交：${action}`);
-    } catch (error) {
-      showNotice(`${error.message}；项目已按服务端 revision 刷新。`);
-    }
+  function renderMessages() {
+    const messages = state.project?.messages || [];
+    $("#messages").innerHTML = messages.length ? messages.map((m) => `<article class="message ${m.role === "ASSISTANT" ? "assistant" : "user"}"><header><i></i><b>${m.role === "ASSISTANT" ? "OEY AGENT" : "YOU"}</b><time>${escapeHtml((m.created_at || "").slice(11,16))}</time></header><p>${escapeHtml(m.text)}</p></article>`).join("") : `<div class="empty-message"><b>NO BRIEF YET</b><p>Create a project, attach a repository or visual references, then describe what you want to make.</p></div>`;
+    $("#messages").scrollTop = $("#messages").scrollHeight;
   }
 
-  function showPanel(panel) {
-    const settings = panel === "settings";
-    $("#workspace").hidden = settings;
-    $("#settings").hidden = !settings;
-    document.querySelectorAll("[data-panel]").forEach((button) => {
-      button.setAttribute(
-        "aria-pressed",
-        String(button.dataset.panel === panel),
-      );
-    });
-    if (settings) renderSettings();
+  function renderCandidates() {
+    const candidates = state.project?.candidates || [];
+    $("#candidateTabs").innerHTML = candidates.map((c, index) => `<button type="button" data-candidate="${escapeHtml(c.id)}" aria-current="${c.id === activeCandidate()?.id}">0${index+1} / ${escapeHtml(c.title)}<small>revision ${c.revision}</small></button>`).join("");
   }
 
-  $("#projectSelect").addEventListener("change", (event) => {
-    candidateFocus = null;
-    loadProject(event.target.value).catch((error) => showNotice(error.message));
-  });
+  function renderPreview() {
+    const p = state.project, candidate = activeCandidate(), focus = p?.focus?.kind === "artifact" ? p.focus : candidate;
+    const frame = $("#previewFrame"), empty = $("#previewEmpty"), loading = $("#previewLoading");
+    loading.hidden = !activeRun() || !["QUEUED","RUNNING"].includes(activeRun().status);
+    if (focus?.preview_url) { frame.setAttribute("sandbox", "allow-scripts"); frame.hidden = false; empty.hidden = true; if (!frame.src.endsWith(focus.preview_url)) frame.src = focus.preview_url; $("#proofCaption").textContent = `${focus.title || candidate?.title || "Artifact"} · trusted preview · click an object to target it`; }
+    else if (focus?.html || focus?.preview_html) { frame.setAttribute("sandbox", ""); frame.hidden = false; empty.hidden = true; frame.removeAttribute("src"); frame.srcdoc = focus.html || focus.preview_html; }
+    else { frame.hidden = true; empty.hidden = false; frame.removeAttribute("src"); frame.srcdoc = ""; $("#proofCaption").textContent = "No rendered artifact"; }
+  }
 
-  $("#actions").addEventListener("click", (event) => {
-    const button = event.target.closest("[data-action]");
-    if (button) sendCommand(button.dataset.action);
-  });
+  function renderSources() { const items = state.project?.sources || []; $("#sources").innerHTML = items.length ? items.map((s) => `<article class="source-item"><span class="rights">${escapeHtml(s.rights)}</span><b>${escapeHtml(s.name)}</b><small>${escapeHtml(s.kind)} · ${Math.round(s.byte_size/1024)} KB</small></article>`).join("") : "<p>No sources attached.</p>"; }
+  function renderQuality() { const q = state.project?.quality || {}, visual = (state.project?.focus?.visual_review || activeCandidate()?.visual_review), scores = visual?.scores || {}; const verdict = visual?.passes && !q.hard_errors?.length ? "PASS" : q.verdict || "UNASSESSED"; $("#qualityVerdict").textContent = verdict; $("#qualityVerdict").className = `status-pill ${verdict === "PASS" ? "pass" : verdict === "BLOCK" ? "block" : ""}`; $("#quality").innerHTML = Object.entries(scores).map(([name,value]) => `<div class="score"><b>${value}/5</b><span>${escapeHtml(name.replace("_"," "))}</span></div>`).join("") + (q.hard_errors || []).map((f) => `<p class="finding">${escapeHtml(f.message || f)}</p>`).join(""); }
+  function renderRuns() { const runs = state.project?.runs || []; $("#runCount").textContent = runs.length; $("#runs").innerHTML = runs.slice().reverse().map((r) => `<article class="run-item"><b>${escapeHtml(r.kind)} · ${escapeHtml(r.status)}</b><small>${escapeHtml(r.stage)} · ${Number(r.elapsed_seconds||0).toFixed(1)}s</small></article>`).join(""); const run = activeRun(), strip = $("#activeRun"); strip.hidden = !run; if (run) strip.innerHTML = `<header><b>${escapeHtml(run.status)} / ${escapeHtml(run.stage)}</b><span>${Number(run.elapsed_seconds||0).toFixed(1)}s</span></header><div class="run-actions">${run.can_pause?'<button data-run-action="pause">PAUSE</button>':''}${run.can_resume?'<button data-run-action="resume">RESUME</button>':''}${run.can_cancel?'<button data-run-action="cancel">CANCEL</button>':''}</div>`; }
+  function renderHistory() { const revisions = state.project?.revisions || []; $("#history").innerHTML = revisions.slice(-6).reverse().map((item) => `<article class="history-item"><span>r${item.revision} · ${escapeHtml(item.state)}</span>${item.revision < state.project.revision ? `<button type="button" data-restore-revision="${item.revision}">RESTORE</button>` : ""}</article>`).join("") || "<p>No revision history.</p>"; }
+  function renderDeliveries() { const deliveries = state.project?.deliveries || []; $("#deliveries").innerHTML = deliveries.length ? deliveries.map((d) => `<article class="delivery-item"><b>${escapeHtml(d.id)}</b><small>artifact r${d.artifact_revision}</small><br><a href="/api/deliveries/${encodeURIComponent(d.id)}/download">DOWNLOAD SOURCE + DIST ZIP ↘</a></article>`).join("") : "<p>No immutable delivery.</p>"; }
+  function renderActions() { const ids = new Set((state.project?.actions || []).map((a) => a.id)); const mapping = {approveDirection:"approve_direction",produceArtifact:"produce_artifact",validateArtifact:"validate_artifact",approveExport:"approve_export",deliverArtifact:"deliver"}; Object.entries(mapping).forEach(([node,id]) => { $(`#${node}`).hidden = !ids.has(id); }); }
 
-  $("#canvas").addEventListener("click", (event) => {
-    const button = event.target.closest("[data-candidate]");
-    if (button) {
-      candidateFocus = button.dataset.candidate;
-      render();
-    }
-  });
+  function schedulePoll() { clearTimeout(state.poll); if (!state.project) return; const eventCursorUrl = `/api/projects/${encodeURIComponent(state.project.id)}/events?after=0`; void eventCursorUrl; const delay = activeRun() ? 1500 : 4500; state.poll = setTimeout(async () => { try { await loadProject(state.project.id); } catch (e) { notice(e.message); } }, delay); }
 
-  $("#directionForm").addEventListener("submit", (event) => {
-    event.preventDefault();
-    const input = $("#directionFeedback");
-    sendCommand("direction_feedback", { text: input.value.trim() });
-  });
+  async function command(action, extra = {}) { const p = state.project; if (!p) return; const body = { command_id: uid(action), expected_revision: p.revision, action, ...extra }; if (action === "approve_direction") { const c = activeCandidate(); body.candidate_id = c.id; body.candidate_revision = c.revision; } if (action === "deliver") body.delivery_profile = { format: "zip" }; const updated = await request(`/api/projects/${encodeURIComponent(p.id)}/commands`, { method:"POST", body:JSON.stringify(body) }); state.project = updated; render(); }
 
-  $("#factForm").addEventListener("submit", (event) => {
-    event.preventDefault();
-    const input = $("#factFeedback");
-    sendCommand("fact_feedback", { text: input.value.trim() });
-  });
-
-  $("#localForm").addEventListener("submit", (event) => {
-    event.preventDefault();
-    const text = $("#localFeedback").value.trim();
-    const qaSuffix = $("#breakContract").checked ? " [break-contract]" : "";
-    sendCommand("local_feedback", {
-      text: text + qaSuffix,
-      object_ref: $("#objectRef").value,
-    });
-  });
-
-  $("#createForm").addEventListener("submit", async (event) => {
-    event.preventDefault();
-    const data = new FormData(event.currentTarget);
-    const payload = {
-      command_id: crypto.randomUUID(),
-      name: String(data.get("name") || "Demo project").trim(),
-      preset: data.get("preset"),
-      template_role: data.get("template_role"),
-    };
-    try {
-      const created = await request("/api/projects", {
-        method: "POST",
-        body: JSON.stringify(payload),
-      });
-      candidateFocus = null;
-      await loadProjects(created.id || created.project_id);
-      showPanel("workspace");
-      showNotice("演示项目已创建并准备完成。 ");
-    } catch (error) {
-      showNotice(error.message);
-    }
-  });
-
-  document.querySelector(".masthead nav").addEventListener("click", (event) => {
-    const button = event.target.closest("[data-panel]");
-    if (button) showPanel(button.dataset.panel);
-  });
-
-  document.querySelector(".mobile-toggles").addEventListener("click", (event) => {
-    const button = event.target.closest("[data-mobile-panel]");
-    if (!button) return;
-    const panel = document.getElementById(button.dataset.mobilePanel);
-    const expanded = button.getAttribute("aria-expanded") === "true";
-    button.setAttribute("aria-expanded", String(!expanded));
-    panel.dataset.mobileOpen = String(!expanded);
-  });
-
-  window.setInterval(() => {
-    syncActivity().catch((error) => showNotice(error.message));
-  }, 5000);
-
-  loadProjects().catch((error) => {
-    showNotice(`无法连接本地 API：${error.message}`);
-  });
+  function bind() {
+    $("#projectSelect").addEventListener("change", (e) => loadProject(e.target.value, false).catch((x) => notice(x.message)));
+    $("#newProjectButton").onclick = () => $("#newProjectDialog").showModal(); $("#settingsButton").onclick = async () => { const data = await request("/api/settings/provider"); $("#providerBaseUrl").value = data.base_url || ""; $("#providerModel").value = data.model || ""; $("#providerKey").value = ""; $("#credentialState").textContent = data.credential_configured ? "CONFIGURED IN WINDOWS CREDENTIAL MANAGER" : "NOT CONFIGURED"; $("#credentialState").classList.toggle("ready", data.credential_configured); $("#settingsDialog").showModal(); };
+    $("#newProjectForm").addEventListener("submit", async (e) => { if (e.submitter?.value === "cancel") return; e.preventDefault(); try { const p = await request("/api/projects", {method:"POST",body:JSON.stringify({command_id:uid("project"),name:$("#projectName").value})}); $("#newProjectDialog").close(); await loadProjects(p.id); } catch(x){ notice(x.message); } });
+    $("#addSourceButton").onclick = () => state.project ? $("#sourceDialog").showModal() : notice("Create a project first."); $("#sourceDialogClose").onclick = () => $("#sourceDialog").close(); $("#settingsDialogClose").onclick = () => $("#settingsDialog").close();
+    $("#attachRepository").onclick = async () => { try { const p=state.project; await request(`/api/projects/${p.id}/repository`,{method:"POST",body:JSON.stringify({command_id:uid("repo"),expected_revision:p.revision,path:$("#repositoryPath").value})}); $("#sourceDialog").close(); await loadProject(p.id); notice("Read-only repository snapshot attached."); } catch(x){ notice(x.message); } };
+    $("#imageInput").addEventListener("change", async (e) => { try { for (const file of e.target.files) { const form = new FormData(); form.set("command_id",uid("image")); form.set("expected_revision",String(state.project.revision)); form.set("image",file,file.name); await request(`/api/projects/${state.project.id}/sources/images`,{method:"POST",body:form}); } $("#sourceDialog").close(); await loadProject(state.project.id); notice("Reference images attached for analysis only."); } catch(x){ notice(x.message); } });
+    $("#providerForm").addEventListener("submit", async(e)=>{e.preventDefault();try{if(!$("#providerKey").value)throw new Error("Enter the API key to save and probe.");await request("/api/settings/provider",{method:"PUT",body:JSON.stringify({base_url:$("#providerBaseUrl").value,model:$("#providerModel").value,api_key:$("#providerKey").value})});$("#providerKey").value="";await loadHealth();notice("Kimi was probed and stored in Windows Credential Manager.");$("#settingsDialog").close();}catch(x){notice(x.message);}}); $("#deleteProvider").onclick=async()=>{try{await request("/api/settings/provider",{method:"DELETE"});await loadHealth();$("#settingsDialog").close();notice("Provider credential deleted.");}catch(x){notice(x.message);}};
+    $("#messageForm").addEventListener("submit", async(e)=>{e.preventDefault();try{const p=state.project;if(!p)throw new Error("Create a project first.");const selected=state.selected;const focus=p.focus?.kind==="artifact"?p.focus:activeCandidate();await request(`/api/projects/${p.id}/messages`,{method:"POST",body:JSON.stringify({client_message_id:uid("message"),expected_revision:p.revision,text:$("#messageInput").value,target_id:selected?.owner_id||focus?.id,target_revision:selected?.revision||focus?.revision,object_ref:selected?.object_ref})});$("#messageInput").value="";clearSelection();await loadProject(p.id);notice("Agent job queued.");}catch(x){if(x.body?.category==="STALE_REVISION"&&state.project)await loadProject(state.project.id);notice(x.message);}}); $("#messageInput").addEventListener("keydown",e=>{if((e.metaKey||e.ctrlKey)&&e.key==="Enter")$("#messageForm").requestSubmit();});
+    $("#candidateTabs").addEventListener("click",e=>{const button=e.target.closest("[data-candidate]");if(button){state.candidateId=button.dataset.candidate;renderCandidates();renderPreview();}}); $("#activeRun").addEventListener("click",async e=>{const button=e.target.closest("[data-run-action]");if(!button)return;try{await request(`/api/runs/${activeRun().id}/${button.dataset.runAction}`,{method:"POST",body:"{}"});await loadProject(state.project.id);}catch(x){notice(x.message);}});
+    $("#history").addEventListener("click",e=>{const button=e.target.closest("[data-restore-revision]");if(button)command("restore_revision",{source_revision:Number(button.dataset.restoreRevision)}).catch(x=>notice(x.message));});
+    [["#approveDirection","approve_direction"],["#produceArtifact","produce_artifact"],["#validateArtifact","validate_artifact"],["#approveExport","approve_export"],["#deliverArtifact","deliver"]].forEach(([node,action])=>$(node).onclick=()=>command(action).catch(x=>notice(x.message)));
+    window.addEventListener("message",e=>{if(e.source!==$("#previewFrame").contentWindow||e.data?.type!=="oey-object-selected")return;const focus=state.project?.focus?.kind==="artifact"?state.project.focus:activeCandidate();if(!focus||e.data.token!==focus.preview_token||state.usedPreviewTokens.has(e.data.token)||e.data.owner_id!==(focus.id||focus.artifact_id)||e.data.revision!==focus.revision)return;state.usedPreviewTokens.add(e.data.token);state.selected={owner_id:e.data.owner_id,revision:e.data.revision,object_ref:e.data.object_ref};const chip=$("#selectionChip");chip.hidden=false;chip.querySelector("span").textContent=`TARGET / ${e.data.object_ref} / r${e.data.revision}`;$("#messageInput").focus();rotatePreview(focus);}); $("#selectionChip button").onclick=clearSelection;
+  }
+  function clearSelection(){state.selected=null;$("#selectionChip").hidden=true;}
+  async function rotatePreview(focus){try{const rotated=await request(`/api/previews/${encodeURIComponent(focus.file_set_id)}/token`,{method:"POST",body:JSON.stringify({token:focus.preview_token})});focus.preview_token=rotated.preview_token;focus.preview_url=rotated.preview_url;renderPreview();}catch(error){notice(error.message);}}
+  boot().catch((error)=>notice(`Unable to open the local workbench: ${error.message}`));
 })();

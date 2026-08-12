@@ -3,57 +3,63 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>OEYdesign · 编辑部校样台</title>
+    <title>OEYdesign · Production Room</title>
     <link rel="stylesheet" href="styles.css">
   </head>
   <body>
-    <a class="skip" href="#proof">跳至校样画布</a>
-    <header class="masthead">
-      <a class="wordmark" href="/" aria-label="OEYdesign 首页"><b>OEY</b><i>design</i></a>
-      <span class="edition">PROOF DESK / 04</span>
-      <label class="picker"><span>Current project</span><select id="projectSelect" aria-label="切换项目"></select></label>
-      <output id="stamp" class="stamp">未载入项目</output>
-      <nav aria-label="工作台视图">
-        <button type="button" data-panel="workspace" aria-pressed="true">Workspace</button>
-        <button type="button" data-panel="settings" aria-pressed="false">Settings</button>
-      </nav>
+    <div class="grain" aria-hidden="true"></div>
+    <header class="topbar">
+      <a class="brand" href="/" aria-label="OEYdesign home"><strong>OEY</strong><span>design</span></a>
+      <div class="edition"><i></i><span>WEB PRODUCTION ROOM</span><b id="readinessLabel">CHECKING</b></div>
+      <label class="project-picker"><span>ACTIVE PROJECT</span><select id="projectSelect" aria-label="切换项目"></select></label>
+      <button id="newProjectButton" class="quiet-button" type="button">＋ NEW PROJECT</button>
+      <button id="settingsButton" class="quiet-button" type="button">SETTINGS</button>
     </header>
-    <main id="workspace" class="desk">
-      <aside id="activityRail" class="rail" aria-labelledby="activityTitle">
-        <span class="index">01 / LIVE LOG</span>
-        <div class="state"><small>PROJECT STATE</small><strong id="status">NO PROJECT</strong></div>
-        <h1 id="activityTitle">Activity</h1>
-        <ol id="activity" aria-live="polite"></ol>
-        <section><h2>Next move</h2><div id="actions" class="actions"></div></section>
-        <form id="directionForm" class="note-form"><label for="directionFeedback">Ⓐ 整体方向批注</label><textarea id="directionFeedback" required placeholder="换一种叙事、语气或视觉方向"></textarea><button>提交方向批注</button></form>
-        <form id="factForm" class="note-form"><label for="factFeedback">Ⓕ 事实 / 策略纠正</label><textarea id="factFeedback" required placeholder="指出事实、权利或策略问题"></textarea><button>提交事实纠正</button></form>
+
+    <main id="workspace" class="workbench">
+      <aside class="conversation" aria-labelledby="conversationTitle">
+        <div class="panel-heading"><span>01 / BRIEF</span><h1 id="conversationTitle">Conversation</h1><p>Describe the outcome. The project remembers the rest.</p></div>
+        <div id="messages" class="messages" aria-live="polite"><div class="empty-message"><b>NO BRIEF YET</b><p>Create a project, attach a repository or visual references, then describe what you want to make.</p></div></div>
+        <div id="activeRun" class="run-strip" hidden></div>
+        <form id="messageForm" class="composer">
+          <div id="selectionChip" class="selection-chip" hidden><span></span><button type="button" aria-label="清除对象选择">×</button></div>
+          <textarea id="messageInput" required placeholder="Describe the page, audience, story, or the change you want…"></textarea>
+          <div class="composer-actions"><small>⌘ ENTER TO SEND</small><button id="sendButton" type="submit">SEND TO AGENT ↗</button></div>
+        </form>
       </aside>
-      <section id="proof" class="proof" tabindex="-1" aria-labelledby="proofTitle">
-        <header class="proof-head"><div><span class="index">02 / PROOF CANVAS</span><h1 id="proofTitle">校样画布</h1></div><div class="ruler" aria-hidden="true"><span>0</span><span>20</span><span>40</span><span>60</span><span>80</span><span>100</span></div><span class="proof-rev">REV <b id="proofRevision">—</b></span></header>
-        <nav class="mobile-toggles" aria-label="窄屏工作台面板"><button type="button" data-mobile-panel="activityRail" aria-controls="activityRail" aria-expanded="false">Activity</button><button type="button" data-mobile-panel="inspectorPanel" aria-controls="inspectorPanel" aria-expanded="false">Inspector</button></nav>
-        <div id="canvas" class="canvas" aria-live="polite"><div class="empty"><span>NO. 000</span><p>选择或新建一个项目以开始校样。</p></div></div>
-        <form id="localForm" class="local-note" hidden><label for="objectRef">修改对象</label><select id="objectRef"><option value="hero:title">hero:title</option><option value="hero:summary">hero:summary</option><option value="page:1">page:1</option></select><label for="localFeedback">修改说明</label><input id="localFeedback" required placeholder="例如：把 hero 标题改短"><button>应用到当前 revision</button><label class="qa-demo"><input id="breakContract" type="checkbox"> Deterministic QA 演示：注入 [break-contract]（非真实质量）</label></form>
+
+      <section class="stage" aria-labelledby="stageTitle">
+        <header class="stage-header"><div><span>02 / LIVE PROOF</span><h1 id="stageTitle">Current design</h1></div><div class="stage-meta"><span id="projectState">NO PROJECT</span><span>REV <b id="projectRevision">—</b></span></div></header>
+        <nav id="candidateTabs" class="candidate-tabs" aria-label="候选方向"></nav>
+        <div id="previewShell" class="preview-shell">
+          <div id="previewEmpty" class="preview-empty"><span>READY WHEN YOU ARE</span><h2>Nothing is pretending to be finished.</h2><p>A trusted Chrome render will appear here after the Agent builds and reviews the first two directions.</p></div>
+          <iframe id="previewFrame" title="OEYdesign trusted preview" sandbox="allow-scripts" hidden></iframe>
+          <div id="previewLoading" class="preview-loading" hidden><i></i><span>BUILDING / RENDERING / REVIEWING</span></div>
+        </div>
+        <footer class="proof-footer"><span id="proofCaption">No rendered artifact</span><div><button id="approveDirection" type="button" hidden>APPROVE DIRECTION</button><button id="produceArtifact" type="button" hidden>PRODUCE ARTIFACT</button><button id="validateArtifact" type="button" hidden>RUN QUALITY GATE</button><button id="approveExport" type="button" hidden>APPROVE EXPORT</button><button id="deliverArtifact" type="button" hidden>DELIVER ZIP</button></div></footer>
       </section>
-      <aside id="inspectorPanel" class="inspector" aria-labelledby="inspectorTitle">
-        <span class="index">03 / PROJECT FILE</span><h1 id="inspectorTitle">Inspector</h1><div id="tree" class="project-file"></div>
-        <details open><summary>Constraint profile</summary><dl id="constraints"></dl></details>
-        <details open><summary>Quality & approvals</summary><div id="quality"></div><div id="approvals"></div></details>
-        <details><summary>Feedback & delivery</summary><div id="feedback"></div><div id="delivery"></div></details>
+
+      <aside class="inspector" aria-labelledby="inspectorTitle" data-mobile-panel="activityRail">
+        <div class="panel-heading"><span>03 / PROJECT FILE</span><h1 id="inspectorTitle">Inspector</h1><p>Evidence, quality and release truth.</p></div>
+        <section id="readinessPanel" class="inspector-section readiness-panel"><header><h2>Production readiness</h2><span class="status-pill">CHECKING</span></header><div id="readinessBlockers"></div></section>
+        <section class="inspector-section"><header><h2>Sources</h2><button id="addSourceButton" type="button">＋ ADD</button></header><div id="sources" class="source-list"><p>No sources attached.</p></div></section>
+        <section class="inspector-section"><header><h2>Quality</h2><span id="qualityVerdict" class="status-pill">UNASSESSED</span></header><div id="quality" class="quality-grid"></div></section>
+        <section class="inspector-section"><header><h2>Runs</h2><span id="runCount">0</span></header><div id="runs" class="run-list"></div></section>
+        <section class="inspector-section"><header><h2>History</h2></header><div id="history" class="history-list"></div></section>
+        <section class="inspector-section release-section"><header><h2>Release</h2></header><div id="deliveries"><p>No immutable delivery.</p></div></section>
+        <section class="inspector-section privacy"><span>LOCAL TRUST BOUNDARY</span><p>Keys stay in Windows Credential Manager. Repositories remain read-only. Reference images are analysis-only. 供应商 payload 不写入项目记录。</p></section>
+        <label class="sr-only" for="localFeedback">Object-level feedback</label>
+        <textarea id="localFeedback" class="sr-only" tabindex="-1" aria-hidden="true"></textarea>
       </aside>
     </main>
-    <main id="settings" class="settings" hidden>
-      <header><span class="index">CONFIGURATION FOLIO</span><h1>Workspace settings</h1><p>能力、模板、权限与导出配置在这里显影。密钥和供应商 payload 不进入校样台。</p></header>
-      <div class="settings-grid">
-        <section><h2>New demo project</h2><form id="createForm" class="create-form">
-          <label for="projectName">项目名称</label><input id="projectName" name="name" value="Editorial proof demo" required>
-          <label for="preset">Constraint preset</label><select id="preset" name="preset"><option value="OPEN_EXPLORATION">开放探索</option><option value="DESIGN_GUIDED" selected>设计引导</option><option value="GOVERNED_PRODUCTION">规范生产</option></select>
-          <label for="templateRole">Template role</label><select id="templateRole" name="template_role"><option value="REFERENCE_SAMPLE">参考样例</option><option value="STARTER_SCAFFOLD">起始脚手架</option><option value="DESIGN_SYSTEM">设计系统</option><option value="DELIVERY_CONTRACT">交付合同</option></select>
-          <button type="submit" class="primary">创建并准备 Demo</button>
-        </form></section>
-        <section><h2>Current project</h2><dl id="projectSettings"></dl></section>
-      </div>
-    </main>
-    <div id="notice" role="status" aria-live="assertive"></div>
+
+    <dialog id="newProjectDialog" class="folio-dialog"><form id="newProjectForm" method="dialog"><button class="dialog-close" value="cancel" type="submit">×</button><span>NEW PROJECT / 001</span><h2>Start with the outcome.</h2><label>Project name<input id="projectName" required maxlength="200" value="Untitled Web project"></label><button class="primary-action" value="default" type="submit">CREATE EMPTY PROJECT</button></form></dialog>
+
+    <dialog id="sourceDialog" class="folio-dialog"><form id="sourceForm"><button id="sourceDialogClose" class="dialog-close" type="button">×</button><span>PROJECT SOURCES</span><h2>Give the Agent something real.</h2><label>Local repository path<input id="repositoryPath" placeholder="D:\projects\your-repository"></label><button id="attachRepository" class="secondary-action" type="button">ATTACH READ-ONLY REPOSITORY</button><div class="rule"><span>OR</span></div><label class="drop-zone">Reference images<input id="imageInput" type="file" accept="image/png,image/jpeg" multiple><b>Choose PNG / JPEG</b><small>Analysis only · max 12 files · never copied into delivery</small></label></form></dialog>
+
+    <dialog id="settingsDialog" class="folio-dialog settings-dialog"><form id="providerForm"><button id="settingsDialogClose" class="dialog-close" type="button">×</button><span>TRUSTED PROVIDER</span><h2>Kimi configuration</h2><p>The API key is written directly to Windows Credential Manager and never returned by the API.</p><label>Base URL<input id="providerBaseUrl" type="url" required placeholder="Kimi OpenAI-compatible API base URL"></label><label>Model<input id="providerModel" required placeholder="k3"></label><label>API key<input id="providerKey" type="password" autocomplete="new-password" placeholder="Stored in Windows Credential Manager"></label><div id="credentialState" class="credential-state">NOT CONFIGURED</div><button class="primary-action" type="submit">SAVE & PROBE</button><button id="deleteProvider" class="danger-action" type="button">DELETE CREDENTIAL</button></form></dialog>
+
+    <div id="notice" class="notice" role="status" aria-live="assertive"></div>
     <script src="app.js"></script>
   </body>
 </html>
