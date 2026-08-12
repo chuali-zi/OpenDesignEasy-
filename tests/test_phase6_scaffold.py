@@ -1,116 +1,90 @@
 from __future__ import annotations
 
+import os
 from pathlib import Path
 
 import pytest
 
-from oeydesign import (
+from oeydesign import Phase6Application, Phase6Bindings, Phase6Profile
+from oeydesign.phase6 import assess_phase6_readiness
+from oeydesign.stubs import (
     DeterministicArtifactPort,
     DeterministicDeliveryPort,
     DeterministicDesignPort,
     DeterministicQualityPort,
-    Phase6Application,
-    Phase6Bindings,
-    Phase6Profile,
 )
 
 
-class RealDesignForTest(DeterministicDesignPort):
-    capability_version = "design-test-real/1"
-
-
-class RealArtifactForTest(DeterministicArtifactPort):
-    capability_version = "artifact-test-real/1"
-
-
-class RealQualityForTest(DeterministicQualityPort):
-    capability_version = "quality-test-real/1"
-
-
-class RealDeliveryForTest(DeterministicDeliveryPort):
-    capability_version = "delivery-test-real/1"
-
-
-class RealRepositoryForTest:
-    capability_version = "repository-test-real/1"
-
-
-def test_phase6_scaffold_boots_but_does_not_claim_real_readiness(
+def test_missing_dependency_image_keeps_infrastructure_not_ready(
     tmp_path: Path,
 ) -> None:
-    with Phase6Application(tmp_path / "p6.sqlite", data_root=tmp_path) as app:
+    with Phase6Application(
+        tmp_path / "p6.sqlite",
+        data_root=tmp_path,
+        dependency_image=tmp_path / "missing-node-modules",
+    ) as app:
         assert not app.readiness.ready
-        assert "context.repository" not in app.readiness.missing
+        assert "framework.build" in app.readiness.missing
         assert "agent.engine" in app.readiness.missing
         with pytest.raises(RuntimeError, match="agent.engine"):
             app.require_real_slice_ready()
 
 
-def test_phase6_profile_freezes_first_slice_choices() -> None:
+def test_phase6_profile_freezes_all_eight_slots() -> None:
     profile = Phase6Profile()
-
-    assert profile.scenario == "repository-to-agent-workbench"
-    assert profile.medium == "web"
+    assert len(profile.required_capabilities) == 8
     assert profile.framework_profile == "react-mui-native-esbuild/1"
     assert profile.renderer_profile == "playwright-system-chrome/1"
     assert profile.sandbox_profile == "appcontainer-job-broker/1"
-    assert profile.generated_images is False
+    with pytest.raises(ValueError, match="eight Phase 6"):
+        Phase6Profile(required_capabilities=())
 
 
-def test_real_bindings_are_injected_and_satisfy_readiness(tmp_path: Path) -> None:
-    design = RealDesignForTest()
-    artifact = RealArtifactForTest()
-    quality = RealQualityForTest()
-    delivery = RealDeliveryForTest()
-    bindings = Phase6Bindings(
-        design=design,
-        artifact=artifact,
-        quality=quality,
-        delivery=delivery,
-        repository_ingestion=RealRepositoryForTest(),
-        infrastructure_versions={
-            "agent.engine": "agent-engine-test/1",
-            "render.web": "renderer-test/1",
-            "framework.build": "framework-builder-test/1",
-        },
+def test_version_strings_and_renamed_stubs_cannot_fill_all_slots() -> None:
+    class RenamedDesignStub(DeterministicDesignPort):
+        capability_version = "design-called-real/1"
+        p6_slot = "design.intelligence"
+        ready_for_p6 = True
+
+    readiness = assess_phase6_readiness(
+        Phase6Profile(),
+        Phase6Bindings(
+            design=RenamedDesignStub(),
+            artifact=DeterministicArtifactPort(),
+            quality=DeterministicQualityPort(),
+            delivery=DeterministicDeliveryPort(),
+            infrastructure_versions={
+                "agent.engine": "fake-agent/1",
+                "render.web": "fake-renderer/1",
+                "framework.build": "fake-builder/1",
+            },
+        ),
     )
+    assert not readiness.ready
+    assert "agent.engine" in readiness.missing
+    assert "framework.build" in readiness.missing
+    assert "design.intelligence" in readiness.missing
+    assert "artifact.production" in readiness.missing
 
+
+@pytest.mark.skipif(os.name != "nt", reason="AppContainer profile is Windows-only")
+def test_default_phase6_object_graph_binds_all_real_slots(tmp_path: Path) -> None:
+    dependency_image = (
+        Path(__file__).resolve().parents[1]
+        / "spikes"
+        / "e8-e12-framework"
+        / "node_modules"
+    )
+    if not dependency_image.is_dir():
+        pytest.skip("Frozen framework dependency image is unavailable")
     with Phase6Application(
-        tmp_path / "ready.sqlite", data_root=tmp_path, bindings=bindings
+        tmp_path / "ready.sqlite",
+        data_root=tmp_path,
+        dependency_image=dependency_image,
     ) as app:
-        assert app.readiness.ready
         app.require_real_slice_ready()
-        assert app.control.design is design
-        assert app.control.artifact is artifact
-        assert app.control.quality is quality
-        assert app.control.delivery.inner is delivery
-        assert app.repository_ingestion is bindings.repository_ingestion
-
-
-def test_explicit_stub_bindings_do_not_satisfy_real_slots(tmp_path: Path) -> None:
-    bindings = Phase6Bindings(
-        design=DeterministicDesignPort(),
-        artifact=DeterministicArtifactPort(),
-        quality=DeterministicQualityPort(),
-        delivery=DeterministicDeliveryPort(),
-    )
-
-    with Phase6Application(
-        tmp_path / "stub.sqlite", data_root=tmp_path, bindings=bindings
-    ) as app:
-        assert "design.intelligence" in app.readiness.missing
-        assert "delivery.release" in app.readiness.missing
-
-
-def test_infrastructure_declaration_cannot_spoof_a_port_binding(
-    tmp_path: Path,
-) -> None:
-    bindings = Phase6Bindings(
-        infrastructure_versions={"design.intelligence": "fake-design/1"}
-    )
-
-    with Phase6Application(
-        tmp_path / "spoof.sqlite", data_root=tmp_path, bindings=bindings
-    ) as app:
-        assert "design.intelligence" in app.readiness.missing
-        assert app.readiness.version_for("design.intelligence") is None
+        assert len(app.readiness.versions) == 8
+        assert app.control.design is app.bindings.design
+        assert app.control.artifact is app.bindings.artifact
+        assert app.control.quality is app.bindings.quality
+        assert app.control.delivery is app.delivery_validation

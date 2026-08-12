@@ -31,6 +31,20 @@ def _context() -> ContextPackage:
 
 
 def _render(content: str, profile: dict[str, object] | None = None) -> RenderBundle:
+    trusted: dict[str, object] = {
+        "trusted_render": True,
+        "screenshot_sha256": "a" * 64,
+        "chrome_version": "150.0",
+        "healthy": True,
+        "dom_metrics": {
+            "object_anchors": ["hero"],
+            "unique_object_anchors": 1,
+            "scroll_width": 1440,
+            "client_width": 1440,
+            "computed_styles": {"hero": {"display": "block"}},
+        },
+    }
+    trusted.update(profile or {})
     return RenderBundle(
         "render-1",
         1,
@@ -38,7 +52,7 @@ def _render(content: str, profile: dict[str, object] | None = None) -> RenderBun
         "artifact-1",
         1,
         content,
-        profile or {},
+        trusted,
     )
 
 
@@ -64,7 +78,7 @@ def test_quality_hard_track_detects_runtime_and_accessibility_failures() -> None
 def test_declared_mock_is_demo_notice_but_production_block() -> None:
     quality = WebQualityPort()
     subject = _render(
-        '<main data-oey-object="data"><script>fetch("/api")</script></main>',
+        '<main data-oey-object="data"><script>window.fetch = fake</script></main>',
         {"mock_declared": True},
     )
     demo = quality.assess_artifact(
@@ -88,7 +102,7 @@ def test_declared_mock_is_demo_notice_but_production_block() -> None:
     assert production.hard_errors[0].code == "MOCK_PRODUCTION"
 
 
-def test_delivery_authorization_requires_matching_export_approval() -> None:
+def test_render_decision_cannot_authorize_delivery() -> None:
     quality = WebQualityPort()
     decision = quality.assess_artifact(
         _render('<main data-oey-object="hero"></main>'),
@@ -106,4 +120,4 @@ def test_delivery_authorization_requires_matching_export_approval() -> None:
         "release",
     )
     gate = quality.authorize_transition(decision, "deliver", (approval,))
-    assert gate.authorized is True
+    assert gate.authorized is False

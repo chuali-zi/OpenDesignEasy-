@@ -33,6 +33,7 @@ class NativeEsbuildBuilder:
     """Materializes a plan and invokes esbuild only through a native launcher."""
 
     capability_version = "native-esbuild/1"
+    p6_slot = "framework.build"
 
     def __init__(
         self,
@@ -63,6 +64,10 @@ class NativeEsbuildBuilder:
             and self.dependency_image is not None
             and self.dependency_image.is_dir()
         )
+
+    @property
+    def ready_for_p6(self) -> bool:
+        return self.available
 
     def build(
         self,

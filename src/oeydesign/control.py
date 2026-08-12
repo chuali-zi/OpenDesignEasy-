@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Iterable
+from collections.abc import Callable, Iterable, Mapping
 from copy import deepcopy
 from dataclasses import replace
 from datetime import datetime
@@ -164,6 +164,7 @@ class ControlPlane:
         delivery: DeliveryPort | None = None,
         transactional_writer: TransactionalProjectWriter | None = None,
         audit_log: AuditLogPort | None = None,
+        capability_versions: Mapping[str, str] | None = None,
         clock: Callable[[], datetime] = utc_now,
     ) -> None:
         self.repository = (
@@ -182,6 +183,7 @@ class ControlPlane:
         self.transactional_writer = transactional_writer
         self.audit_log = audit_log
         self.clock = clock
+        self.capability_versions = dict(capability_versions or {})
 
     def execute(self, command: Command) -> CommandResult:
         try:
@@ -357,7 +359,7 @@ class ControlPlane:
             project.context_package,
             project.brief,
             project.constraints,
-            {},
+            self.capability_versions,
             run,
             candidate_count=command.candidate_count,
         )

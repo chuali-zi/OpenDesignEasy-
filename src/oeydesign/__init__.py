@@ -12,6 +12,7 @@ from .agent_engine import (
     WorkspaceManager,
     WorkspaceScope,
 )
+from .artifact import WebArtifactProduction
 from .broker import FetchPolicy, FetchRequest, FetchResult, TrustedFetchBroker
 from .builder import FrameworkBuildResult, NativeEsbuildBuilder
 from .capabilities import (
@@ -34,6 +35,7 @@ from .context import (
 )
 from .control import ControlPlane
 from .delivery import ValidatedDeliveryPort
+from .design import TerritoryDesignIntelligence
 from .domain import (
     Approval,
     ApprovalAction,
@@ -140,6 +142,7 @@ from .ports import (
     TransactionalProjectWriter,
     WorkflowRuntimePort,
 )
+from .publisher import LocalImmutableDeliveryPort
 from .quality import WebCheckSummary, WebQualityPort
 from .recovery import DurableDeliveryPort
 from .renderer import RenderProfile, RenderResult, TrustedWebRenderer
@@ -195,6 +198,7 @@ __all__ = [
     "AgentTurn",
     "AgentWorkspace",
     "ArtifactRevision",
+    "WebArtifactProduction",
     "AuditLogPort",
     "BriefRecord",
     "CancelWorkflow",
@@ -218,6 +222,7 @@ __all__ = [
     "ValidatedDeliveryPort",
     "DeliveryPort",
     "DesignBrief",
+    "TerritoryDesignIntelligence",
     "DesignIntelligencePort",
     "DesignStrategy",
     "DeterministicContextAssembler",
@@ -255,6 +260,7 @@ __all__ = [
     "HumanEvidenceConfirmer",
     "Lineage",
     "LocalSourceStore",
+    "LocalImmutableDeliveryPort",
     "PauseWorkflow",
     "P6_REQUIRED_CAPABILITIES",
     "Phase6Application",

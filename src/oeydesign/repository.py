@@ -129,6 +129,8 @@ class RepositoryIngestion:
     """Materialize an authorized repository as a bounded read-only snapshot."""
 
     capability_version = "repository-ingestion/1"
+    p6_slot = "context.repository"
+    ready_for_p6 = True
     media_type = "application/x-oeydesign-repository"
 
     def __init__(

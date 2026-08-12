@@ -31,6 +31,10 @@ class DurableDeliveryPort:
         self.audit_log = audit_log
         self.capability_version = f"durable({inner.capability_version})"
 
+    @property
+    def ready_for_p6(self) -> bool:
+        return bool(getattr(self.inner, "ready_for_p6", False))
+
     def release(
         self,
         artifact: ArtifactRevision,

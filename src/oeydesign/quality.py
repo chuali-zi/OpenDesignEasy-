@@ -41,11 +41,16 @@ class WebCheckSummary:
 
 
 class WebQualityPort(QualityGovernancePort):
-    """Runs hard checks without pretending an aesthetic model is available."""
+    """Runs trusted-render and export-integrity gates for the P6 Web slice."""
 
-    capability_version = "quality-web-deterministic/1"
+    capability_version = "quality-web-governance/1"
+    p6_slot = "quality.governance"
+    ready_for_p6 = True
     _mock_patterns = (
-        ("FETCH_XHR_INTERCEPT", re.compile(r"\b(?:fetch|XMLHttpRequest)\s*\(")),
+        (
+            "FETCH_XHR_INTERCEPT",
+            re.compile(r"(?:window\.fetch\s*=|XMLHttpRequest\.prototype\.)"),
+        ),
         ("SERVICE_WORKER", re.compile(r"serviceWorker\s*\.\s*register")),
         ("INLINE_FAKE_DATA", re.compile(r"\b(?:fake|fixture|sample)Data\b")),
         ("TIMEOUT_FAKE_DELAY", re.compile(r"setTimeout\s*\(")),
@@ -108,6 +113,71 @@ class WebQualityPort(QualityGovernancePort):
             constraints=constraints,
             artifact_stage=True,
         )
+        if isinstance(subject, RenderBundle):
+            metrics = profile.get("dom_metrics", {})
+            if (
+                profile.get("trusted_render") is not True
+                or not profile.get("screenshot_sha256")
+                or not profile.get("chrome_version")
+                or profile.get("healthy") is not True
+            ):
+                hard_errors += (
+                    _finding(
+                        "TRUSTED_RENDER_EVIDENCE_MISSING",
+                        "Artifact Quality requires healthy system-Chrome evidence.",
+                        subject.id,
+                    ),
+                )
+            if isinstance(metrics, Mapping):
+                objects = metrics.get("object_anchors", ())
+                unique = metrics.get("unique_object_anchors", 0)
+                if not objects or unique != len(objects):
+                    hard_errors += (
+                        _finding(
+                            "RUNTIME_ANCHORS_INVALID",
+                            "Rendered object anchors must exist and be unique.",
+                            subject.id,
+                        ),
+                    )
+                if metrics.get("scroll_width", 0) > metrics.get("client_width", 0):
+                    hard_errors += (
+                        _finding(
+                            "VIEWPORT_OVERFLOW",
+                            "Rendered content overflows the target viewport.",
+                            subject.id,
+                        ),
+                    )
+                if not metrics.get("computed_styles"):
+                    hard_errors += (
+                        _finding(
+                            "COMPUTED_STYLE_EVIDENCE_MISSING",
+                            "Quality requires computed styles from rendered objects.",
+                            subject.id,
+                        ),
+                    )
+        else:
+            rerender = profile.get("rerender", {})
+            evidence_ok = (
+                profile.get("archive_crc_ok") is True
+                and bool(profile.get("archive_sha256"))
+                and isinstance(profile.get("member_hashes"), Mapping)
+                and bool(profile.get("member_hashes"))
+                and isinstance(rerender, Mapping)
+                and rerender.get("trusted_render") is True
+                and rerender.get("independent_unpack") is True
+                and rerender.get("healthy") is True
+                and bool(rerender.get("screenshot_sha256"))
+                and float(profile.get("pixel_diff_ratio", 1.0)) <= 0.002
+            )
+            if not evidence_ok:
+                hard_errors += (
+                    _finding(
+                        "EXPORT_RERENDER_EVIDENCE_MISSING",
+                        "Export Quality requires CRC, member hashes, and an "
+                        "independent Chrome rerender.",
+                        subject.id,
+                    ),
+                )
         return self._decision(
             target_kind="render" if isinstance(subject, RenderBundle) else "export",
             target_id=subject.id,
@@ -149,10 +219,13 @@ class WebQualityPort(QualityGovernancePort):
         active = tuple(approval for approval in approvals if approval.active)
         passed = decision.verdict is GateVerdict.PASS and not decision.hard_errors
         if requested_action == "deliver":
+            if decision.target_kind != "export":
+                active = ()
             active = tuple(
                 approval
                 for approval in active
-                if approval.action is ApprovalAction.EXPORT
+                if decision.target_kind == "export"
+                and approval.action is ApprovalAction.EXPORT
                 and approval.target_id == decision.artifact_id
                 and approval.target_revision == decision.artifact_revision
             )
@@ -322,7 +395,7 @@ class WebQualityPort(QualityGovernancePort):
             artifact_revision,
             aesthetic,
             hard_errors,
-            ("aesthetic evaluation is not model-backed in this slice",),
+            (),
             GateVerdict.BLOCK if hard_errors else GateVerdict.PASS,
         )
 

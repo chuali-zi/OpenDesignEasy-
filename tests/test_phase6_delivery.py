@@ -36,7 +36,18 @@ def _inputs() -> tuple[ArtifactRevision, ExportCandidate, QualityDecision, Appro
         artifact.id,
         artifact.revision,
         "<main />",
-        {"format": "web"},
+        {
+            "format": "web",
+            "archive_crc_ok": True,
+            "archive_sha256": "a" * 64,
+            "member_hashes": {"index.html": "b" * 64},
+            "pixel_diff_ratio": 0.0,
+            "rerender": {
+                "trusted_render": True,
+                "independent_unpack": True,
+                "healthy": True,
+            },
+        },
     )
     decision = QualityDecision(
         "quality-1",

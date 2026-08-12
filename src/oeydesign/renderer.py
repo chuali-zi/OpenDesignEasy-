@@ -68,6 +68,8 @@ class TrustedWebRenderer:
     """Runs Playwright in the trusted host; generated code gets no host tools."""
 
     capability_version = "playwright-system-chrome/1"
+    p6_slot = "render.web"
+    ready_for_p6 = True
 
     def render(
         self,
@@ -196,11 +198,30 @@ class TrustedWebRenderer:
                               const sections = [...document.querySelectorAll(
                                 '[data-oey-section]')]
                                 .map((node) => node.getAttribute('data-oey-section'));
+                              const styles = {};
+                              for (const node of document.querySelectorAll(
+                                '[data-oey-object]')) {
+                                const id = node.getAttribute('data-oey-object');
+                                const style = getComputedStyle(node);
+                                styles[id] = {
+                                  color: style.color,
+                                  backgroundColor: style.backgroundColor,
+                                  fontFamily: style.fontFamily,
+                                  fontSize: style.fontSize,
+                                  fontWeight: style.fontWeight,
+                                  lineHeight: style.lineHeight,
+                                  display: style.display
+                                };
+                              }
                               return {
                                 object_anchors: objects,
                                 unique_object_anchors: new Set(objects).size,
                                 section_anchors: sections,
                                 unique_section_anchors: new Set(sections).size,
+                                computed_styles: styles,
+                                focusable_count: document.querySelectorAll(
+                                  'a[href],button,input,select,textarea,[tabindex]'
+                                ).length,
                                 text_length: (document.body.innerText || '').length,
                                 scroll_width: document.documentElement.scrollWidth,
                                 client_width: document.documentElement.clientWidth,

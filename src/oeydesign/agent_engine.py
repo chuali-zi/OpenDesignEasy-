@@ -171,6 +171,7 @@ class AgentLoop:
         sandbox_launcher: SandboxLauncher | None = None,
         build_action: Callable[[AgentWorkspace], Any] | None = None,
         allowed_tools: frozenset[str] | None = None,
+        validation_only: bool = False,
     ) -> None:
         if sandbox_launcher is None:
             from .sandbox import default_sandbox_launcher
@@ -182,6 +183,7 @@ class AgentLoop:
         self.sandbox = sandbox_launcher
         self.build_action = build_action
         self.allowed_tools = allowed_tools
+        self.validation_only = validation_only
 
     def run(
         self,
@@ -274,10 +276,26 @@ class AgentLoop:
                     outcome="protocol_error",
                 )
                 continue
+            reviewed_screenshot_this_turn = screenshot_pending
             if screenshot_pending:
                 screenshot_reviewed = True
                 screenshot_pending = False
                 messages = _scrub_render_images(messages)
+            if reviewed_screenshot_this_turn and self.validation_only:
+                if last_render_healthy is True:
+                    self._record_model_turn(
+                        workspace,
+                        session_id,
+                        response,
+                        outcome="complete",
+                    )
+                    session = self.sessions.complete(workspace, session_id)
+                    return AgentRunResult(
+                        session, True, last_render_healthy, tuple(errors)
+                    )
+                raise _invalid(
+                    "Validation-only review received an unhealthy screenshot"
+                )
             actions = document["actions"]
             if not actions:
                 if document.get("done") is True:
@@ -330,6 +348,12 @@ class AgentLoop:
             usage = _usage_values(response.usage)
             for index, action in enumerate(actions):
                 tool = action.get("tool")
+                if self.validation_only and tool == "render":
+                    action = {
+                        "tool": "render",
+                        "scope": WorkspaceScope.OUT,
+                        "entry": "index.html",
+                    }
                 try:
                     result, is_render, path, input_bytes, output_bytes = self._execute(
                         workspace, action
@@ -393,7 +417,9 @@ class AgentLoop:
                 )
                 if is_render and result.get("screenshot_data_url"):
                     messages = _append_render_image(
-                        messages, str(result["screenshot_data_url"])
+                        messages,
+                        str(result["screenshot_data_url"]),
+                        validation_only=self.validation_only,
                     )
 
             if document.get("done") is True:
@@ -614,7 +640,10 @@ def _append_tool_result(
 
 
 def _append_render_image(
-    messages: list[Mapping[str, Any]], screenshot_data_url: str
+    messages: list[Mapping[str, Any]],
+    screenshot_data_url: str,
+    *,
+    validation_only: bool = False,
 ) -> list[Mapping[str, Any]]:
     updated = list(messages)
     updated.append(
@@ -624,9 +653,12 @@ def _append_render_image(
                 {
                     "type": "text",
                     "text": (
-                        "Inspect this exact trusted Chrome screenshot. Continue fixing "
-                        "the artifact if needed, or complete only if it satisfies "
-                        "the goal."
+                        "Inspect this exact trusted Chrome screenshot. This is a "
+                        "validation-only session: do not call another tool; return "
+                        'exactly {"actions":[],"done":true} after inspection.'
+                        if validation_only
+                        else "Inspect the screenshot, edit if needed, and complete "
+                        "only when it satisfies the goal."
                     ),
                 },
                 {"type": "image_url", "image_url": {"url": screenshot_data_url}},
@@ -1046,6 +1078,7 @@ class AgentEngineScaffold:
     """P6.2 durable state facade bound to the configured native sandbox."""
 
     capability_version = "agent-engine-scaffold/1"
+    p6_slot = "agent.engine"
     ready_for_p6 = False
 
     def __init__(
@@ -1071,6 +1104,7 @@ class AgentEngineScaffold:
         self.sandbox = sandbox_launcher
         self.renderer = renderer
         self.build_action = build_action
+        self.ready_for_p6 = bool(self.sandbox.available and self.renderer is not None)
 
     def open_workspace(
         self,
