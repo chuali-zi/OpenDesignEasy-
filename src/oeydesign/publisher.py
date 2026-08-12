@@ -161,8 +161,14 @@ class LocalImmutableDeliveryPort:
             {
                 "archive_path": str(target),
                 "archive_sha256": archive_hash,
+                "archive_crc_ok": export.manifest.get("archive_crc_ok") is True,
                 "export_revision": export.revision,
                 "delivery_profile": export.manifest.get("delivery_profile", {}),
+                "source_tree_sha256": export.manifest.get("source_tree_sha256"),
+                "dist_tree_sha256": export.manifest.get("dist_tree_sha256"),
+                "member_hashes": export.manifest.get("member_hashes", {}),
+                "pixel_diff_ratio": export.manifest.get("pixel_diff_ratio"),
+                "rerender": export.manifest.get("rerender", {}),
             },
         )
 

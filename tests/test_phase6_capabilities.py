@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+import io
+import json
+
 import pytest
 
 from oeydesign.capabilities import (
@@ -64,3 +67,22 @@ def test_trusted_kimi_adapter_never_accepts_missing_or_unapproved_credentials() 
     )
     assert "experiment-key" not in repr(adapter)
     assert "redacted" in repr(adapter)
+
+
+def test_kimi_adapter_bounds_and_validates_provider_responses() -> None:
+    valid = {
+        "choices": [{"message": {"content": "ok"}, "finish_reason": "stop"}],
+        "usage": {"prompt_tokens": 1},
+    }
+    parsed = KimiTrustedAdapter._read_json(
+        io.BytesIO(json.dumps(valid).encode("utf-8"))
+    )
+    assert parsed.content == "ok"
+
+    with pytest.raises(ContractError) as malformed:
+        KimiTrustedAdapter._read_json(io.BytesIO(b'{"choices":[]}'))
+    assert malformed.value.category.value == "CAPABILITY_UNAVAILABLE"
+
+    with pytest.raises(ContractError) as overlong:
+        KimiTrustedAdapter._read_json(io.BytesIO(b"x" * 2_000_001))
+    assert overlong.value.category.value == "CAPABILITY_UNAVAILABLE"

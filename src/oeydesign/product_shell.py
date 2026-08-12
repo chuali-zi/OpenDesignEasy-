@@ -2,14 +2,18 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 import mimetypes
+import secrets
 from argparse import ArgumentParser
 from dataclasses import asdict, is_dataclass
+from email import policy
+from email.parser import BytesParser
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from typing import Any
-from urllib.parse import parse_qs, unquote, urlparse
+from urllib.parse import parse_qs, unquote, urlparse, urlsplit
 
 from .domain import (
     ApproveDirection,
@@ -20,19 +24,22 @@ from .domain import (
     CreateProject,
     DeliverArtifact,
     DesignBrief,
+    ErrorCategory,
     FeedbackKind,
     GenerateCandidates,
     PrepareProject,
     ProduceArtifact,
     Project,
     ProjectState,
+    RestoreProjectRevision,
     SubmitFeedback,
     TemplateRole,
     ValidateArtifact,
+    canonical_json,
     stable_id,
 )
 
-_MAX_BODY = 64 * 1024
+_MAX_BODY = 11 * 1024 * 1024
 _SENSITIVE = {"content", "prompt", "token", "secret", "database", "stack", "provider"}
 _CSP = (
     "default-src 'self'; base-uri 'none'; frame-ancestors 'none'; "
@@ -59,6 +66,7 @@ def _safe(value: Any) -> Any:
             str(k): _safe(v)
             for k, v in value.items()
             if str(k).lower() not in _SENSITIVE
+            and not str(k).lower().endswith("_path")
         }
     if isinstance(value, (list, tuple)):
         return [_safe(v) for v in value]
@@ -97,6 +105,83 @@ def _constraints(p: Project) -> dict[str, Any]:
 class ProductShellService:
     def __init__(self, app: Any) -> None:
         self.app = app
+        self.csrf_token = secrets.token_urlsafe(32)
+        self.session_id = secrets.token_urlsafe(18)
+        self.preview_tokens: dict[str, tuple[str, str, int]] = {}
+        self.preview_bindings: dict[tuple[str, str, int], str] = {}
+
+    def _preview_token(self, file_set_id: str, owner_id: str, revision: int) -> str:
+        binding = (file_set_id, owner_id, revision)
+        token = self.preview_bindings.get(binding)
+        if token is None:
+            token = secrets.token_urlsafe(24)
+            self.preview_bindings[binding] = token
+            self.preview_tokens[token] = binding
+        return token
+
+    @property
+    def production(self) -> bool:
+        return hasattr(self.app, "product_store")
+
+    def session(self) -> dict[str, Any]:
+        return {"session_id": self.session_id, "csrf_token": self.csrf_token}
+
+    def health(self) -> dict[str, Any]:
+        if not self.production:
+            return {
+                "status": "demo",
+                "technical_ready": True,
+                "product_ready": False,
+                "capabilities": {},
+                "provider": {"configured": False, "model": None},
+                "blockers": ["Deterministic demo mode is active"],
+            }
+        readiness = self.app.product_readiness
+        return {
+            "status": "ready" if readiness.ready else "needs_configuration",
+            "technical_ready": self.app.framework_builder.ready_for_p6,
+            "product_ready": readiness.ready,
+            "capabilities": dict(readiness.capabilities),
+            "provider": {
+                "provider": readiness.provider.provider,
+                "configured": readiness.provider.credential_configured,
+                "model": readiness.provider.model,
+            },
+            "blockers": list(readiness.blockers),
+        }
+
+    def provider_settings(self) -> dict[str, Any]:
+        if not self.production:
+            return {
+                "provider": "kimi",
+                "base_url": "",
+                "model": "",
+                "credential_configured": False,
+            }
+        settings = self.app.provider.settings()
+        return {
+            "provider": settings.provider,
+            "base_url": settings.base_url,
+            "model": settings.model,
+            "credential_configured": settings.credential_configured,
+        }
+
+    def configure_provider(self, body: dict[str, Any]) -> dict[str, Any]:
+        if not self.production:
+            raise ValueError("Provider settings are unavailable in demo mode")
+        api_key = self._text(body, "api_key")
+        base_url = self._text(body, "base_url")
+        model = self._text(body, "model")
+        self.app.provider.configure(
+            base_url=base_url, model=model, api_key=api_key, probe=True
+        )
+        return self.provider_settings()
+
+    def delete_provider(self) -> dict[str, Any]:
+        if not self.production:
+            raise ValueError("Provider settings are unavailable in demo mode")
+        self.app.provider.delete()
+        return self.provider_settings()
 
     @staticmethod
     def _cid(body: dict[str, Any]) -> str:
@@ -173,6 +258,16 @@ class ProductShellService:
                 )
             )
         return self.project(p.id)
+
+    def create_project(self, body: dict[str, Any]) -> dict[str, Any]:
+        if not self.production:
+            return self.create_demo(body)
+        cid = self._cid(body)
+        name = body.get("name", "Untitled Web project")
+        if not isinstance(name, str) or not name.strip() or len(name) > 200:
+            raise ValueError("name must be a non-empty string")
+        result = self.app.create_empty_project(command_id=cid, name=name.strip())
+        return self.project(result.project_id)
 
     def projects(self) -> list[dict[str, Any]]:
         return [
@@ -260,7 +355,7 @@ class ProductShellService:
             }
         else:
             focus = None
-        return {
+        projection = {
             "id": p.id,
             "name": p.name,
             "state": p.state.value,
@@ -351,6 +446,22 @@ class ProductShellService:
                 for x in p.events
             ],
             "actions": self._actions(p),
+            "revisions": [
+                {
+                    "revision": revision,
+                    "state": snapshot.state.value,
+                    "candidate_count": len(snapshot.candidates),
+                    "artifact_revision": (
+                        snapshot.current_artifact.revision
+                        if snapshot.current_artifact
+                        else None
+                    ),
+                }
+                for revision in self.app.repository.list_revisions(project_id)[-50:]
+                for snapshot in (
+                    self.app.repository.get_revision(project_id, revision),
+                )
+            ],
             "settings": {
                 "capabilities": (
                     {"slot": "Design Intelligence", "binding": "deterministic stub"},
@@ -367,6 +478,324 @@ class ProductShellService:
                     "actual_export_verification": "required",
                 },
             },
+        }
+        if self.production:
+            projection["messages"] = self.messages(project_id)
+            projection["runs"] = [
+                self._job(item) for item in self.app.product_store.list_jobs(project_id)
+            ]
+            projection["sources"] = [
+                {
+                    "id": source.id,
+                    "name": source.original_name,
+                    "kind": source.kind.value,
+                    "media_type": source.media_type,
+                    "byte_size": source.byte_size,
+                    "rights": source.rights.value,
+                }
+                for source in self.app.evidence_repository.list_sources(project_id)
+            ]
+            projection["settings"] = {
+                "capabilities": [
+                    {"slot": key, "binding": value}
+                    for key, value in self.app.readiness.versions
+                ],
+                "product_readiness": self.health(),
+                "template_role": p.constraints.template_role.value,
+                "permissions": {
+                    "level": p.constraints.runtime_permissions.level,
+                    "source": p.constraints.runtime_permissions.source,
+                },
+                "export": {
+                    "location": "immutable local source + dist ZIP",
+                    "actual_export_verification": "required",
+                },
+            }
+            for item in projection["candidates"]:
+                file_set = self.app.product_store.file_set_for(
+                    "candidate", item["id"], item["revision"]
+                )
+                if file_set is not None:
+                    token = self._preview_token(
+                        file_set.id, item["id"], item["revision"]
+                    )
+                    item["file_set_id"] = file_set.id
+                    item["preview_url"] = (
+                        f"/api/previews/{file_set.id}/index.html?token={token}"
+                    )
+                    item["preview_token"] = token
+                    item["visual_review"] = _safe(
+                        file_set.metadata.get("visual_review")
+                    )
+            if a:
+                file_set = self.app.product_store.file_set_for(
+                    "artifact", a.id, a.revision
+                )
+                if file_set is not None and projection["focus"]:
+                    token = self._preview_token(file_set.id, a.id, a.revision)
+                    projection["focus"]["file_set_id"] = file_set.id
+                    projection["focus"]["preview_url"] = (
+                        f"/api/previews/{file_set.id}/index.html?token={token}"
+                    )
+                    projection["focus"]["preview_token"] = token
+                    projection["focus"]["visual_review"] = _safe(
+                        file_set.metadata.get("visual_review")
+                    )
+        return projection
+
+    def attach_repository(
+        self, project_id: str, body: dict[str, Any]
+    ) -> dict[str, Any]:
+        if not self.production:
+            raise ValueError("Repository ingestion is unavailable in demo mode")
+        self._cid(body)
+        revision = self._revision(body)
+        project = self.app.repository.get(project_id)
+        if project.revision != revision:
+            raise ContractError(
+                ErrorCategory.STALE_REVISION,
+                "Project revision changed",
+                current_revision=project.revision,
+            )
+        path = self._text(body, "path")
+        fingerprint = hashlib.sha256(
+            canonical_json(
+                {"project_id": project_id, "revision": revision, "path": path}
+            ).encode()
+        ).hexdigest()
+
+        def ingest() -> str:
+            existing = tuple(
+                source
+                for source in self.app.evidence_repository.list_sources(project_id)
+                if source.kind.value == "CODE_REPOSITORY"
+            )
+            if existing:
+                raise ValueError("Project already has a repository")
+            result = self.app.repository_ingestion.ingest_repository(
+                project_id, self.app.repository_ingestion.authorize(path)
+            )
+            return result.source.id
+
+        source_id = self.app.product_store.run_idempotent(
+            request_key=f"repository:{project_id}:{self._cid(body)}",
+            fingerprint=fingerprint,
+            operation=ingest,
+        )
+        source = next(
+            item
+            for item in self.app.evidence_repository.list_sources(project_id)
+            if item.id == source_id
+        )
+        return {
+            "source": {
+                "id": source.id,
+                "name": source.original_name,
+                "file_count": len(self.app.repository_ingestion.list_files(source)),
+                "byte_size": source.byte_size,
+                "rights": source.rights.value,
+            },
+            "project": self.project(project_id),
+        }
+
+    def upload_image(
+        self,
+        project_id: str,
+        *,
+        command_id: str,
+        expected_revision: int,
+        filename: str,
+        media_type: str,
+        payload: bytes,
+    ) -> dict[str, Any]:
+        if not self.production:
+            raise ValueError("Reference images are unavailable in demo mode")
+        if not command_id.strip() or len(command_id) > 160:
+            raise ValueError("command_id must be a non-empty string")
+        if (
+            isinstance(expected_revision, bool)
+            or not isinstance(expected_revision, int)
+            or expected_revision < 1
+        ):
+            raise ValueError("expected_revision must be a positive integer")
+        project = self.app.repository.get(project_id)
+        if project.revision != expected_revision:
+            raise ContractError(
+                ErrorCategory.STALE_REVISION,
+                "Project revision changed",
+                current_revision=project.revision,
+            )
+        fingerprint = hashlib.sha256(
+            canonical_json(
+                {
+                    "project_id": project_id,
+                    "revision": expected_revision,
+                    "filename": filename,
+                    "media_type": media_type,
+                    "payload_sha256": hashlib.sha256(payload).hexdigest(),
+                }
+            ).encode()
+        ).hexdigest()
+
+        def ingest() -> str:
+            return self.app.images.ingest(
+                project_id=project_id,
+                filename=filename,
+                media_type=media_type,
+                payload=payload,
+            ).id
+
+        source_id = self.app.product_store.run_idempotent(
+            request_key=f"image:{project_id}:{command_id}",
+            fingerprint=fingerprint,
+            operation=ingest,
+        )
+        source = next(
+            item
+            for item in self.app.evidence_repository.list_sources(project_id)
+            if item.id == source_id
+        )
+        return {
+            "id": source.id,
+            "name": source.original_name,
+            "media_type": source.media_type,
+            "byte_size": source.byte_size,
+            "rights": source.rights.value,
+        }
+
+    def messages(self, project_id: str) -> list[dict[str, Any]]:
+        if not self.production:
+            return []
+        self.app.repository.get(project_id)
+        return [
+            {
+                "id": message.id,
+                "role": message.role.value,
+                "text": message.text,
+                "run_id": message.run_id,
+                "target_id": message.target_id,
+                "target_revision": message.target_revision,
+                "object_ref": message.object_ref,
+                "created_at": message.created_at,
+            }
+            for message in self.app.product_store.list_messages(project_id)
+        ]
+
+    def send_message(self, project_id: str, body: dict[str, Any]) -> dict[str, Any]:
+        if not self.production:
+            raise ValueError("Agent messages are unavailable in demo mode")
+        client_id = self._text(body, "client_message_id")
+        target_revision = body.get("target_revision")
+        if target_revision is not None and (
+            isinstance(target_revision, bool)
+            or not isinstance(target_revision, int)
+            or target_revision < 1
+        ):
+            raise ValueError("target_revision must be a positive integer")
+        job = self.app.submit_message(
+            project_id=project_id,
+            client_message_id=client_id,
+            expected_revision=self._revision(body),
+            text=self._text(body, "text"),
+            target_id=body.get("target_id"),
+            target_revision=target_revision,
+            object_ref=body.get("object_ref"),
+        )
+        return {"run": self._job(job), "project_id": project_id}
+
+    def run(self, job_id: str) -> dict[str, Any]:
+        if not self.production:
+            raise ValueError("Agent jobs are unavailable in demo mode")
+        return self._job(self.app.product_store.get_job(job_id))
+
+    def run_action(self, job_id: str, action: str) -> dict[str, Any]:
+        if not self.production:
+            raise ValueError("Agent jobs are unavailable in demo mode")
+        handlers = {
+            "pause": self.app.jobs.pause,
+            "resume": self.app.jobs.resume,
+            "cancel": self.app.jobs.cancel,
+        }
+        try:
+            job = handlers[action](job_id)
+        except KeyError as exc:
+            raise ValueError("Unknown run action") from exc
+        return self._job(job)
+
+    def preview(
+        self, file_set_id: str, relative: str, token: str | None
+    ) -> tuple[bytes, str]:
+        if not self.production:
+            raise ValueError("Product previews are unavailable in demo mode")
+        file_set = self.app.product_store.get_file_set(file_set_id)
+        payload = self.app.file_sets.read(file_set, "dist", relative)
+        mime = mimetypes.guess_type(relative)[0] or "application/octet-stream"
+        if relative == "index.html":
+            bound = self.preview_tokens.get(token or "")
+            if bound is None or bound[0] != file_set_id:
+                raise ContractError(
+                    ErrorCategory.POLICY_BLOCKED, "Preview token is invalid"
+                )
+            bridge = _preview_bridge(token or "", bound[1], bound[2])
+            text = payload.decode("utf-8")
+            payload = text.replace("</body>", bridge + "</body>").encode("utf-8")
+        return payload, mime
+
+    def rotate_preview_token(
+        self, file_set_id: str, body: dict[str, Any]
+    ) -> dict[str, str]:
+        token = self._text(body, "token")
+        binding = self.preview_tokens.get(token)
+        if binding is None or binding[0] != file_set_id:
+            raise ContractError(
+                ErrorCategory.POLICY_BLOCKED, "Preview token is invalid"
+            )
+        self.preview_tokens.pop(token, None)
+        self.preview_bindings.pop(binding, None)
+        replacement = self._preview_token(*binding)
+        return {
+            "preview_token": replacement,
+            "preview_url": (
+                f"/api/previews/{file_set_id}/index.html?token={replacement}"
+            ),
+        }
+
+    def download(self, delivery_id: str) -> tuple[bytes, str]:
+        if not self.production:
+            raise ValueError("Product downloads are unavailable in demo mode")
+        for project in self.app.repository.list_projects():
+            delivery = next(
+                (item for item in project.deliveries if item.id == delivery_id), None
+            )
+            if delivery is None:
+                continue
+            archive = Path(str(delivery.manifest.get("archive_path", "")))
+            if not archive.is_file():
+                raise ContractError(
+                    ErrorCategory.DETERMINISTIC_FAILURE,
+                    "Delivery archive is unavailable",
+                )
+            return archive.read_bytes(), f"{delivery.id}.zip"
+        raise ContractError(ErrorCategory.DETERMINISTIC_FAILURE, "Delivery not found")
+
+    @staticmethod
+    def _job(job: Any) -> dict[str, Any]:
+        return {
+            "id": job.id,
+            "project_id": job.project_id,
+            "kind": job.kind,
+            "status": job.status.value,
+            "stage": job.stage,
+            "steps": job.steps,
+            "total_tokens": job.total_tokens,
+            "renders": job.renders,
+            "elapsed_seconds": job.elapsed_seconds,
+            "result": _safe(dict(job.result)),
+            "error_category": job.error_category,
+            "error_message": job.error_message,
+            "can_pause": job.status.value == "RUNNING",
+            "can_resume": job.status.value == "PAUSED",
+            "can_cancel": job.status.value in {"QUEUED", "RUNNING", "PAUSED"},
         }
 
     def events(self, project_id: str, after: int) -> list[dict[str, Any]]:
@@ -494,16 +923,35 @@ class ProductShellService:
                 object_ref=object_ref.strip() if isinstance(object_ref, str) else None,
             )
         elif action == "produce_artifact":
+            medium = body.get("medium", "web")
+            fidelity_mode = body.get("fidelity_mode", "production")
+            if medium != "web" or not isinstance(fidelity_mode, str):
+                raise ValueError("Web MVP supports only Web artifact production")
             c = ProduceArtifact(
                 command_id=cid,
                 project_id=project_id,
                 expected_project_revision=rev,
+                medium=medium,
+                fidelity_mode=fidelity_mode,
             )
         elif action == "validate_artifact":
+            render_profile = body.get("render_profile", {})
+            if not isinstance(render_profile, dict):
+                raise ValueError("render_profile must be an object")
+            width = render_profile.get("width", 1440)
+            height = render_profile.get("height", 1000)
+            if any(
+                isinstance(value, bool)
+                or not isinstance(value, int)
+                or not 320 <= value <= 5000
+                for value in (width, height)
+            ):
+                raise ValueError("render_profile dimensions are invalid")
             c = ValidateArtifact(
                 command_id=cid,
                 project_id=project_id,
                 expected_project_revision=rev,
+                render_profile={"width": width, "height": height},
             )
         elif action == "approve_export":
             if not p.current_artifact:
@@ -522,6 +970,13 @@ class ProductShellService:
                 expected_project_revision=rev,
                 delivery_profile=self._profile(body),
             )
+        elif action == "restore_revision":
+            c = RestoreProjectRevision(
+                command_id=cid,
+                project_id=project_id,
+                expected_project_revision=rev,
+                source_revision=self._positive(body, "source_revision"),
+            )
         else:
             raise ValueError("Unknown action")
         self.app.control.execute(c)
@@ -533,7 +988,7 @@ class ProductShellService:
         if (
             not isinstance(p, dict)
             or any(not isinstance(k, str) for k in p)
-            or set(p) - {"format", "simulate_hard_error"}
+            or set(p) - {"format", "profile", "simulate_hard_error"}
             or any(isinstance(v, (dict, list)) for v in p.values())
         ):
             raise ValueError("Unsupported delivery_profile")
@@ -556,6 +1011,24 @@ def _not_found(error: ContractError) -> bool:
 
 def _default_static_dir() -> Path:
     return Path(__file__).resolve().parents[2] / "product-client"
+
+
+def _preview_bridge(token: str, owner_id: str, revision: int) -> str:
+    values = json.dumps(
+        {"token": token, "owner_id": owner_id, "revision": revision},
+        separators=(",", ":"),
+    ).replace("<", "\\u003c")
+    return f"""<script>(function(){{
+const binding={values};
+document.addEventListener('click',function(event){{
+  const target=event.target.closest('[data-oey-object]');
+  if(!target)return;
+  event.preventDefault();
+  parent.postMessage({{type:'oey-object-selected',token:binding.token,
+    owner_id:binding.owner_id,revision:binding.revision,
+    object_ref:target.getAttribute('data-oey-object')}},'*');
+}});
+}})();</script>"""
 
 
 def make_handler(
@@ -585,8 +1058,12 @@ def make_handler(
 
         def _error(self, error: Exception) -> None:
             if isinstance(error, ContractError):
+                status = {
+                    ErrorCategory.CAPABILITY_UNAVAILABLE: 503,
+                    ErrorCategory.POLICY_BLOCKED: 403,
+                }.get(error.category, 404 if _not_found(error) else 409)
                 self._json(
-                    404 if _not_found(error) else 409,
+                    status,
                     {
                         "category": error.category.value,
                         "message": str(error),
@@ -603,6 +1080,97 @@ def make_handler(
                         "message": "The local shell could not complete this request",
                     },
                 )
+
+        def _raw(
+            self,
+            status: int,
+            payload: bytes,
+            media_type: str,
+            *,
+            disposition: str | None = None,
+        ) -> None:
+            self.send_response(status)
+            self.send_header("Content-Type", media_type)
+            self.send_header("Content-Length", str(len(payload)))
+            self.send_header("Cache-Control", "no-store")
+            self.send_header("X-Content-Type-Options", "nosniff")
+            self.send_header("Referrer-Policy", "no-referrer")
+            self.send_header(
+                "Content-Security-Policy",
+                "default-src 'self'; connect-src 'none'; frame-ancestors 'self'; "
+                "object-src 'none'; base-uri 'none'; img-src 'self' data:; "
+                "style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'",
+            )
+            if disposition:
+                self.send_header("Content-Disposition", disposition)
+            self.end_headers()
+            self.wfile.write(payload)
+
+        def _require_write(self) -> None:
+            if not service.production:
+                return
+            host = self.headers.get("Host", "")
+            origin = self.headers.get("Origin", "")
+            host_name = urlsplit("//" + host).hostname
+            parsed_origin = urlsplit(origin)
+            if (
+                host_name not in {"127.0.0.1", "::1", "localhost"}
+                or parsed_origin.scheme != "http"
+                or parsed_origin.hostname != host_name
+                or parsed_origin.netloc != host
+            ):
+                raise ContractError(
+                    ErrorCategory.POLICY_BLOCKED, "Request origin is not allowed"
+                )
+            if self.headers.get("X-OEY-CSRF") != service.csrf_token:
+                raise ContractError(
+                    ErrorCategory.POLICY_BLOCKED, "CSRF token is invalid"
+                )
+
+        def _read_body(self) -> bytes:
+            size = int(self.headers.get("Content-Length", "-1"))
+            if size < 0 or size > _MAX_BODY:
+                raise ValueError("Request body is missing or too large")
+            return self.rfile.read(size)
+
+        def _body(self) -> dict[str, Any]:
+            body = json.loads(self._read_body().decode("utf-8"))
+            if not isinstance(body, dict):
+                raise ValueError("JSON request body must be an object")
+            return body
+
+        def _multipart_image(self) -> tuple[dict[str, str], str, str, bytes]:
+            content_type = self.headers.get("Content-Type", "")
+            if not content_type.casefold().startswith("multipart/form-data;"):
+                raise ValueError("Image upload must use multipart/form-data")
+            envelope = (
+                f"Content-Type: {content_type}\r\nMIME-Version: 1.0\r\n\r\n".encode()
+                + self._read_body()
+            )
+            message = BytesParser(policy=policy.default).parsebytes(envelope)
+            if not message.is_multipart():
+                raise ValueError("Multipart image body is invalid")
+            fields: dict[str, str] = {}
+            upload: tuple[str, str, bytes] | None = None
+            for part in message.iter_parts():
+                name = part.get_param("name", header="content-disposition")
+                filename = part.get_filename()
+                payload = part.get_payload(decode=True)
+                if not isinstance(name, str) or not isinstance(payload, bytes):
+                    raise ValueError("Multipart image part is invalid")
+                if filename is not None:
+                    if upload is not None or name != "image":
+                        raise ValueError("Exactly one image part is required")
+                    upload = (
+                        filename,
+                        part.get_content_type(),
+                        payload,
+                    )
+                else:
+                    fields[name] = payload.decode("utf-8")
+            if upload is None:
+                raise ValueError("Image part is required")
+            return fields, upload[0], upload[1], upload[2]
 
         def _static(self, path: str) -> None:
             target = (
@@ -640,9 +1208,41 @@ def make_handler(
             try:
                 path = parsed.path
                 if path == "/api/health":
-                    self._json(200, {"status": "ok"})
+                    self._json(200, service.health())
+                elif path == "/api/session":
+                    self._json(200, service.session())
+                elif path == "/api/settings/provider":
+                    self._json(200, service.provider_settings())
                 elif path == "/api/projects":
                     self._json(200, service.projects())
+                elif path.startswith("/api/previews/"):
+                    parts = path.split("/", 4)
+                    if len(parts) != 5 or not parts[3] or not parts[4]:
+                        raise ValueError("Invalid preview path")
+                    token = parse_qs(parsed.query).get("token", [None])[0]
+                    payload, media_type = service.preview(parts[3], parts[4], token)
+                    self._raw(200, payload, media_type)
+                elif path.startswith("/api/deliveries/") and path.endswith("/download"):
+                    parts = path.split("/")
+                    if len(parts) != 5 or not parts[3]:
+                        raise ValueError("Invalid delivery path")
+                    payload, filename = service.download(parts[3])
+                    self._raw(
+                        200,
+                        payload,
+                        "application/zip",
+                        disposition=f'attachment; filename="{filename}"',
+                    )
+                elif path.startswith("/api/runs/"):
+                    parts = path.split("/")
+                    if len(parts) != 4 or not parts[3]:
+                        raise ValueError("Invalid run path")
+                    self._json(200, service.run(parts[3]))
+                elif path.startswith("/api/projects/") and path.endswith("/messages"):
+                    parts = path.split("/")
+                    if len(parts) != 5 or not parts[3]:
+                        raise ValueError("Invalid project path")
+                    self._json(200, service.messages(parts[3]))
                 elif path.startswith("/api/projects/") and path.endswith("/events"):
                     parts = path.split("/")
                     if len(parts) != 5 or not parts[3]:
@@ -665,15 +1265,56 @@ def make_handler(
 
         def do_POST(self) -> None:
             try:
-                size = int(self.headers.get("Content-Length", "-1"))
-                if size < 0 or size > _MAX_BODY:
-                    raise ValueError("Request body is missing or too large")
-                body = json.loads(self.rfile.read(size).decode("utf-8"))
-                if not isinstance(body, dict):
-                    raise ValueError("JSON request body must be an object")
+                self._require_write()
                 path = urlparse(self.path).path
+                is_image = path.startswith("/api/projects/") and path.endswith(
+                    "/sources/images"
+                )
+                body = {} if is_image else self._body()
                 if path == "/api/projects":
-                    self._json(201, service.create_demo(body))
+                    self._json(201, service.create_project(body))
+                elif path.startswith("/api/projects/") and path.endswith("/repository"):
+                    parts = path.split("/")
+                    if len(parts) != 5 or not parts[3]:
+                        raise ValueError("Invalid project path")
+                    self._json(201, service.attach_repository(parts[3], body))
+                elif path.startswith("/api/projects/") and path.endswith("/messages"):
+                    parts = path.split("/")
+                    if len(parts) != 5 or not parts[3]:
+                        raise ValueError("Invalid project path")
+                    self._json(202, service.send_message(parts[3], body))
+                elif is_image:
+                    parts = path.split("/")
+                    if len(parts) != 6 or not parts[3]:
+                        raise ValueError("Invalid project path")
+                    fields, filename, media_type, decoded = self._multipart_image()
+                    try:
+                        expected_revision = int(fields.get("expected_revision", ""))
+                    except ValueError as exc:
+                        raise ValueError(
+                            "expected_revision must be a positive integer"
+                        ) from exc
+                    self._json(
+                        201,
+                        service.upload_image(
+                            parts[3],
+                            command_id=fields.get("command_id", ""),
+                            expected_revision=expected_revision,
+                            filename=filename,
+                            media_type=media_type,
+                            payload=decoded,
+                        ),
+                    )
+                elif path.startswith("/api/runs/"):
+                    parts = path.split("/")
+                    if len(parts) != 5 or not parts[3] or not parts[4]:
+                        raise ValueError("Invalid run action")
+                    self._json(200, service.run_action(parts[3], parts[4]))
+                elif path.startswith("/api/previews/") and path.endswith("/token"):
+                    parts = path.split("/")
+                    if len(parts) != 5 or not parts[3]:
+                        raise ValueError("Invalid preview token path")
+                    self._json(200, service.rotate_preview_token(parts[3], body))
                 elif path.startswith("/api/projects/") and path.endswith("/commands"):
                     parts = path.split("/")
                     if len(parts) != 5 or not parts[3]:
@@ -684,6 +1325,33 @@ def make_handler(
                         404,
                         {"category": "NOT_FOUND", "message": "Resource was not found"},
                     )
+            except Exception as e:
+                self._error(e)
+
+        def do_PUT(self) -> None:
+            try:
+                self._require_write()
+                body = self._body()
+                if urlparse(self.path).path != "/api/settings/provider":
+                    self._json(
+                        404,
+                        {"category": "NOT_FOUND", "message": "Resource was not found"},
+                    )
+                    return
+                self._json(200, service.configure_provider(body))
+            except Exception as e:
+                self._error(e)
+
+        def do_DELETE(self) -> None:
+            try:
+                self._require_write()
+                if urlparse(self.path).path != "/api/settings/provider":
+                    self._json(
+                        404,
+                        {"category": "NOT_FOUND", "message": "Resource was not found"},
+                    )
+                    return
+                self._json(200, service.delete_provider())
             except Exception as e:
                 self._error(e)
 
@@ -707,17 +1375,33 @@ def make_server(
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = ArgumentParser(description="Run the local OEYdesign Phase 4 shell")
+    parser = ArgumentParser(description="Run the local OEYdesign Web workbench")
     parser.add_argument("--database", default="oeydesign.sqlite")
     parser.add_argument("--data-root", default="data/product-shell")
     parser.add_argument("--host", default="127.0.0.1")
     parser.add_argument("--port", type=int, default=8765)
     parser.add_argument("--static-dir", type=Path, default=_default_static_dir())
+    parser.add_argument("--dependency-image", type=Path, default=None)
+    parser.add_argument(
+        "--demo",
+        action="store_true",
+        help="Use deterministic Phase 4 adapters instead of the real Web MVP",
+    )
     args = parser.parse_args(argv)
 
-    from .composition import SQLiteApplication
+    if args.demo:
+        from .composition import SQLiteApplication
 
-    with SQLiteApplication(args.database, data_root=args.data_root) as app:
+        app_context: Any = SQLiteApplication(args.database, data_root=args.data_root)
+    else:
+        from .web_mvp import ProductApplication
+
+        app_context = ProductApplication(
+            args.database,
+            data_root=args.data_root,
+            dependency_image=args.dependency_image,
+        )
+    with app_context as app:
         server = make_server(app, args.host, args.port, args.static_dir)
         print(f"OEYdesign shell listening on http://{args.host}:{server.server_port}")
         try:

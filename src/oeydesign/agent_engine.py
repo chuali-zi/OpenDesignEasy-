@@ -172,6 +172,7 @@ class AgentLoop:
         build_action: Callable[[AgentWorkspace], Any] | None = None,
         allowed_tools: frozenset[str] | None = None,
         validation_only: bool = False,
+        boundary_check: Callable[[str], Any] | None = None,
     ) -> None:
         if sandbox_launcher is None:
             from .sandbox import default_sandbox_launcher
@@ -184,6 +185,8 @@ class AgentLoop:
         self.build_action = build_action
         self.allowed_tools = allowed_tools
         self.validation_only = validation_only
+        self.last_render_result: Any | None = None
+        self.boundary_check = boundary_check
 
     def run(
         self,
@@ -241,6 +244,8 @@ class AgentLoop:
         while True:
             for attempt in range(3):
                 try:
+                    if self.boundary_check is not None:
+                        self.boundary_check("provider-request")
                     response = self.client.chat(
                         messages,
                         model=model,
@@ -248,6 +253,8 @@ class AgentLoop:
                         temperature=temperature,
                         stream=True,
                     )
+                    if self.boundary_check is not None:
+                        self.boundary_check("provider-response")
                     break
                 except ContractError as exc:
                     if exc.category is not ErrorCategory.RETRYABLE or attempt == 2:
@@ -348,6 +355,8 @@ class AgentLoop:
             usage = _usage_values(response.usage)
             for index, action in enumerate(actions):
                 tool = action.get("tool")
+                if self.boundary_check is not None:
+                    self.boundary_check(f"tool:{tool or 'invalid'}")
                 if self.validation_only and tool == "render":
                     action = {
                         "tool": "render",
@@ -492,6 +501,7 @@ class AgentLoop:
             files = workspace.list_files(scope)
             return {"ok": True, "files": files}, False, None, 0, len(files)
         if tool == "write_file":
+            _require_agent_editable(path)
             content = action.get("content")
             if not isinstance(content, str):
                 raise _policy("write_file requires text content")
@@ -499,6 +509,7 @@ class AgentLoop:
             workspace.write_file(scope, path, payload)
             return {"ok": True, "bytes": len(payload)}, False, path, len(payload), 0
         if tool == "delete_file":
+            _require_agent_editable(path)
             workspace.delete_file(scope, path)
             return {"ok": True}, False, path, 0, 0
         if tool == "run_command":
@@ -559,6 +570,7 @@ class AgentLoop:
             if not isinstance(entry, str):
                 raise _policy("render requires a text entry path")
             result = self.renderer.render(workspace._base(scope), entry)
+            self.last_render_result = result
             screenshot_data_url = None
             screenshot_bytes = 0
             screenshot_path = getattr(result, "screenshot_path", None)
@@ -621,6 +633,14 @@ def _action_document(content: str) -> dict[str, Any]:
         actions.append(action)
     document["actions"] = actions
     return document
+
+
+def _require_agent_editable(path: str) -> None:
+    normalized = path.replace("\\", "/").casefold()
+    if normalized in {"package.json", "package-lock.json"} or normalized.startswith(
+        ("node_modules/", ".agent/", "dist/")
+    ):
+        raise _policy("Agent cannot edit the frozen framework or build output")
 
 
 def _append_tool_result(

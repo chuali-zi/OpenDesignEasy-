@@ -152,6 +152,10 @@ class LocalSourceStore:
                     ErrorCategory.POLICY_BLOCKED, "unsafe PNG dimensions"
                 )
             return SourceKind.IMAGE
+        if m == "image/jpeg":
+            if len(p) < 4 or p[:2] != b"\xff\xd8" or p[-2:] != b"\xff\xd9":
+                raise ContractError(ErrorCategory.POLICY_BLOCKED, "malformed JPEG")
+            return SourceKind.IMAGE
         raise ContractError(ErrorCategory.POLICY_BLOCKED, "unsupported media type")
 
 

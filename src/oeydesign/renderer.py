@@ -69,7 +69,30 @@ class TrustedWebRenderer:
 
     capability_version = "playwright-system-chrome/1"
     p6_slot = "render.web"
-    ready_for_p6 = True
+    _probe_lock = threading.Lock()
+    _probe_result: tuple[bool, str | None] | None = None
+
+    @property
+    def ready_for_p6(self) -> bool:
+        return self.probe()[0]
+
+    def probe(self) -> tuple[bool, str | None]:
+        with self._probe_lock:
+            if self._probe_result is not None:
+                return self._probe_result
+            try:
+                from playwright.sync_api import sync_playwright
+
+                with sync_playwright() as playwright:
+                    browser = playwright.chromium.launch(
+                        channel="chrome", headless=True
+                    )
+                    with browser:
+                        result = (True, browser.version)
+            except Exception:
+                result = (False, None)
+            type(self)._probe_result = result
+            return result
 
     def render(
         self,

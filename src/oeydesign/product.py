@@ -107,6 +107,7 @@ class ProductStore:
 
     def __init__(self, store: SQLiteStore) -> None:
         self.store = store
+        self._request_lock = threading.Lock()
         with store._lock:
             store.connection.executescript(
                 """
@@ -151,10 +152,48 @@ class ProductStore:
                     credential_configured INTEGER NOT NULL,
                     updated_at TEXT NOT NULL
                 );
+                CREATE TABLE IF NOT EXISTS product_requests (
+                    request_key TEXT PRIMARY KEY,
+                    fingerprint TEXT NOT NULL,
+                    result_id TEXT NOT NULL,
+                    created_at TEXT NOT NULL
+                );
                 """
             )
             store.connection.commit()
         self.pause_interrupted_jobs()
+
+    def run_idempotent(
+        self,
+        *,
+        request_key: str,
+        fingerprint: str,
+        operation: Callable[[], str],
+    ) -> str:
+        _label(request_key, "request key")
+        _label(fingerprint, "request fingerprint")
+        with self._request_lock:
+            with self.store._lock:
+                row = self.store.connection.execute(
+                    "SELECT fingerprint, result_id FROM product_requests "
+                    "WHERE request_key = ?",
+                    (request_key,),
+                ).fetchone()
+            if row is not None:
+                if str(row["fingerprint"]) != fingerprint:
+                    raise ContractError(
+                        ErrorCategory.DETERMINISTIC_FAILURE,
+                        "Idempotency key was reused with a different request",
+                    )
+                return str(row["result_id"])
+            result_id = operation()
+            _label(result_id, "idempotent result")
+            with self.store.transaction() as conn:
+                conn.execute(
+                    "INSERT INTO product_requests VALUES (?, ?, ?, ?)",
+                    (request_key, fingerprint, result_id, utc_now().isoformat()),
+                )
+            return result_id
 
     def add_message(self, message: ProductMessage) -> ProductMessage:
         _message(message)
@@ -462,13 +501,31 @@ class JobControl:
             raise JobPaused()
         return self.store.update_job(_job_replace(job, stage=stage))
 
+    def add_usage(
+        self, *, steps: int, total_tokens: int, renders: int
+    ) -> AgentJob:
+        job = self.store.get_job(self.job_id)
+        return self.store.update_job(
+            _job_replace(
+                job,
+                steps=job.steps + max(0, steps),
+                total_tokens=job.total_tokens + max(0, total_tokens),
+                renders=job.renders + max(0, renders),
+            )
+        )
+
+    def wait_for_input(self) -> None:
+        raise JobPaused("needs-input")
+
 
 class JobCanceled(Exception):
     pass
 
 
 class JobPaused(Exception):
-    pass
+    def __init__(self, stage: str = "paused") -> None:
+        self.stage = stage
+        super().__init__(stage)
 
 
 JobHandler = Callable[[AgentJob, JobControl], Mapping[str, Any]]
@@ -605,13 +662,16 @@ class AgentJobRunner:
                         cancel_requested=False,
                     )
                 )
-            except JobPaused:
+            except JobPaused as exc:
                 current = self.store.get_job(running.id)
                 self.store.update_job(
                     _job_replace(
                         current,
                         status=AgentJobStatus.PAUSED,
-                        stage="paused",
+                        stage=exc.stage,
+                        elapsed_seconds=current.elapsed_seconds
+                        + time.monotonic()
+                        - started,
                         pause_requested=False,
                     )
                 )
@@ -622,6 +682,9 @@ class AgentJobRunner:
                         current,
                         status=AgentJobStatus.CANCELED,
                         stage="canceled",
+                        elapsed_seconds=current.elapsed_seconds
+                        + time.monotonic()
+                        - started,
                         cancel_requested=True,
                     )
                 )
@@ -632,6 +695,9 @@ class AgentJobRunner:
                         current,
                         status=AgentJobStatus.FAILED,
                         stage="failed",
+                        elapsed_seconds=current.elapsed_seconds
+                        + time.monotonic()
+                        - started,
                         error_category=exc.category.value,
                         error_message=str(exc),
                     )
@@ -643,6 +709,9 @@ class AgentJobRunner:
                         current,
                         status=AgentJobStatus.FAILED,
                         stage="failed",
+                        elapsed_seconds=current.elapsed_seconds
+                        + time.monotonic()
+                        - started,
                         error_category=ErrorCategory.DETERMINISTIC_FAILURE.value,
                         error_message="Agent job failed",
                     )

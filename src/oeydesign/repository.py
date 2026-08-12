@@ -70,11 +70,13 @@ class RepositoryAuthorization:
     @classmethod
     def from_user_selection(cls, root: str | Path) -> RepositoryAuthorization:
         candidate = Path(root)
-        if candidate.is_symlink():
-            raise _policy("Repository root cannot be a symbolic link")
         try:
+            if candidate.is_symlink() or _is_reparse(candidate.lstat()):
+                raise _policy("Repository root cannot be a link or junction")
             resolved = candidate.resolve(strict=True)
             stat = resolved.stat()
+        except ContractError:
+            raise
         except (FileNotFoundError, OSError) as exc:
             raise _policy("Repository root is unavailable") from exc
         if not resolved.is_dir():
@@ -88,11 +90,13 @@ class RepositoryAuthorization:
 
     def current_root(self) -> Path:
         candidate = Path(self.root)
-        if candidate.is_symlink():
-            raise _policy("Authorized repository root became a symbolic link")
         try:
+            if candidate.is_symlink() or _is_reparse(candidate.lstat()):
+                raise _policy("Authorized repository root became a link or junction")
             resolved = candidate.resolve(strict=True)
             stat = resolved.stat()
+        except ContractError:
+            raise
         except (FileNotFoundError, OSError) as exc:
             raise _policy("Authorized repository root is unavailable") from exc
         if (
@@ -248,6 +252,7 @@ class RepositoryIngestion:
 
     def _collect(self, root: Path) -> tuple[_CollectedFile, ...]:
         collected: list[_CollectedFile] = []
+        folded_paths: set[str] = set()
         total_bytes = 0
 
         def visit(directory: Path, relative_directory: PurePosixPath) -> None:
@@ -260,8 +265,12 @@ class RepositoryIngestion:
             for entry in entries:
                 name = entry.name
                 relative = relative_directory / name
-                if entry.is_symlink():
-                    raise _policy(f"Repository symbolic link rejected: {relative}")
+                try:
+                    entry_stat = entry.stat(follow_symlinks=False)
+                except OSError as exc:
+                    raise _policy("Repository entry cannot be inspected") from exc
+                if entry.is_symlink() or _is_reparse(entry_stat):
+                    raise _policy(f"Repository link or junction rejected: {relative}")
                 if entry.is_dir(follow_symlinks=False):
                     if name.casefold() in _EXCLUDED_DIRECTORY_NAMES:
                         continue
@@ -274,19 +283,32 @@ class RepositoryIngestion:
                 if len(collected) >= self.max_files:
                     raise _policy("Repository file count exceeds the limit")
                 try:
-                    stat = entry.stat(follow_symlinks=False)
-                    size = int(stat.st_size)
+                    before = entry.stat(follow_symlinks=False)
+                    size = int(before.st_size)
                     if size < 0 or total_bytes + size > self.max_bytes:
                         raise _policy("Repository size exceeds the limit")
                     with Path(entry.path).open("rb") as stream:
                         payload = stream.read(self.max_bytes - total_bytes + 1)
+                    after = entry.stat(follow_symlinks=False)
                 except ContractError:
                     raise
                 except OSError as exc:
                     raise _policy("Repository file cannot be read") from exc
-                if len(payload) != size:
+                if len(payload) != size or (
+                    int(before.st_size),
+                    int(before.st_mtime_ns),
+                    int(before.st_ino),
+                ) != (
+                    int(after.st_size),
+                    int(after.st_mtime_ns),
+                    int(after.st_ino),
+                ):
                     raise _policy("Repository file changed during ingestion")
                 normalized = relative.as_posix()
+                folded = normalized.casefold()
+                if folded in folded_paths:
+                    raise _policy("Repository paths differ only by case")
+                folded_paths.add(folded)
                 summary = RepositoryFileSummary(
                     normalized,
                     size,
@@ -445,6 +467,10 @@ def _is_credential_file(name: str) -> bool:
         or lowered in _CREDENTIAL_NAMES
         or lowered.endswith(_CREDENTIAL_SUFFIXES)
     )
+
+
+def _is_reparse(value: os.stat_result) -> bool:
+    return bool(int(getattr(value, "st_file_attributes", 0)) & 0x400)
 
 
 def _line_count(payload: bytes) -> int:

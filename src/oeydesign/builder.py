@@ -5,6 +5,7 @@ from __future__ import annotations
 import hashlib
 import os
 import shutil
+import threading
 from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
@@ -56,6 +57,8 @@ class NativeEsbuildBuilder:
         )
         self.executable = executable
         self.launcher = launcher
+        self._dependency_hash: str | None = None
+        self._dependency_hash_lock = threading.Lock()
 
     @property
     def available(self) -> bool:
@@ -89,11 +92,23 @@ class NativeEsbuildBuilder:
                 ErrorCategory.CAPABILITY_UNAVAILABLE,
                 "Frozen framework dependency image is unavailable",
             )
+        dependency_hash = self._frozen_dependency_hash()
         dependencies = workspace.work_root / "node_modules"
-        if dependencies.exists():
-            shutil.rmtree(dependencies)
-        shutil.copytree(self.dependency_image, dependencies)
-        dependency_hash = _directory_hash(dependencies)
+        marker = dependencies / ".oeydesign-image-sha256"
+        current_hash = (
+            marker.read_text(encoding="ascii").strip()
+            if marker.is_file() and not marker.is_symlink()
+            else ""
+        )
+        executable_in_image = (
+            dependencies / "@esbuild" / "win32-x64" / "esbuild.exe"
+        )
+        if current_hash != dependency_hash or not executable_in_image.is_file():
+            if dependencies.exists():
+                shutil.rmtree(dependencies)
+            cached = self._cached_dependency_image(workspace, dependency_hash)
+            shutil.copytree(cached, dependencies, copy_function=_link_or_copy)
+            marker.write_text(dependency_hash, encoding="ascii")
         output_path = "dist/assets/app.js"
         executable = self.executable
         if executable == "esbuild":
@@ -122,7 +137,11 @@ class NativeEsbuildBuilder:
                 },
             )
         bundle = workspace.read_file(WorkspaceScope.WORK, output_path)
-        html = plan.source_files["index.html"].encode("utf-8")
+        source_html = plan.source_files["index.html"]
+        html = source_html.replace(
+            'src="/src/main.jsx"', 'src="./assets/app.js"'
+        ).replace('src="src/main.jsx"', 'src="./assets/app.js"')
+        html = html.encode("utf-8")
         workspace.write_file(WorkspaceScope.WORK, "dist/index.html", html)
         workspace.write_file(WorkspaceScope.OUT, "assets/app.js", bundle)
         workspace.write_file(WorkspaceScope.OUT, "index.html", html)
@@ -169,6 +188,60 @@ class NativeEsbuildBuilder:
             _bounded_text(result.stderr),
         )
 
+    def _frozen_dependency_hash(self) -> str:
+        with self._dependency_hash_lock:
+            if self._dependency_hash is None:
+                if self.dependency_image is None:
+                    raise ContractError(
+                        ErrorCategory.CAPABILITY_UNAVAILABLE,
+                        "Frozen framework dependency image is unavailable",
+                    )
+                self._dependency_hash = _directory_hash(self.dependency_image)
+            return self._dependency_hash
+
+    def _cached_dependency_image(
+        self, workspace: AgentWorkspace, dependency_hash: str
+    ) -> Path:
+        if self.dependency_image is None:
+            raise ContractError(
+                ErrorCategory.CAPABILITY_UNAVAILABLE,
+                "Frozen framework dependency image is unavailable",
+            )
+        workspace_base = workspace.root.parent.parent.resolve()
+        cache_root = (workspace_base / "_dependency-cache").resolve()
+        cache_name = f"d{dependency_hash[:16]}"
+        cached = (cache_root / cache_name).resolve()
+        try:
+            cached.relative_to(cache_root)
+        except ValueError as exc:
+            raise ContractError(
+                ErrorCategory.POLICY_BLOCKED,
+                "Dependency cache escaped the workspace base",
+            ) from exc
+        marker = cached / ".oeydesign-image-sha256"
+        with self._dependency_hash_lock:
+            if not marker.is_file() or marker.read_text(encoding="ascii").strip() != (
+                dependency_hash
+            ):
+                if cached.exists():
+                    shutil.rmtree(cached)
+                cache_root.mkdir(parents=True, exist_ok=True)
+                staging = cache_root / f"{cache_name}.tmp"
+                if staging.exists():
+                    shutil.rmtree(staging)
+                try:
+                    shutil.copytree(self.dependency_image, staging)
+                except OSError as exc:
+                    raise ContractError(
+                        ErrorCategory.CAPABILITY_UNAVAILABLE,
+                        "Frozen dependency image could not be cached",
+                    ) from exc
+                (staging / ".oeydesign-image-sha256").write_text(
+                    dependency_hash, encoding="ascii"
+                )
+                staging.replace(cached)
+        return cached
+
 
 def _safe_relative(value: str) -> None:
     if (
@@ -204,3 +277,11 @@ def _directory_hash(root: Path) -> str:
 
 def _bounded_text(payload: bytes, limit: int = 32_000) -> str:
     return payload[:limit].decode("utf-8", "replace")
+
+
+def _link_or_copy(source: str, target: str) -> str:
+    try:
+        os.link(source, target)
+        return target
+    except OSError:
+        return shutil.copy2(source, target)

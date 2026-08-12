@@ -15,6 +15,8 @@ from urllib.parse import urlsplit
 
 from .domain import ContractError, ErrorCategory
 
+_MAX_PROVIDER_RESPONSE_BYTES = 2_000_000
+
 
 class CapabilitySlot:
     DESIGN_DIRECTION = "design.direction"
@@ -214,8 +216,13 @@ class KimiTrustedAdapter:
                 else:
                     result = self._read_json(response)
         except urllib.error.HTTPError as exc:
+            category = (
+                ErrorCategory.CAPABILITY_UNAVAILABLE
+                if exc.code in {401, 403}
+                else ErrorCategory.RETRYABLE
+            )
             raise ContractError(
-                ErrorCategory.RETRYABLE,
+                category,
                 f"Provider returned HTTP {exc.code}",
             ) from exc
         except (OSError, TimeoutError) as exc:
@@ -244,7 +251,13 @@ class KimiTrustedAdapter:
     @staticmethod
     def _read_json(response: Any) -> ProviderResponse:
         try:
-            document = json.loads(response.read().decode("utf-8"))
+            raw = response.read(_MAX_PROVIDER_RESPONSE_BYTES + 1)
+            if len(raw) > _MAX_PROVIDER_RESPONSE_BYTES:
+                raise ContractError(
+                    ErrorCategory.CAPABILITY_UNAVAILABLE,
+                    "Provider response exceeds the trusted size limit",
+                )
+            document = json.loads(raw.decode("utf-8"))
             choice = document["choices"][0]
             message = choice["message"]
             content = message.get("content") or ""
@@ -255,6 +268,8 @@ class KimiTrustedAdapter:
                 0.0,
                 choice.get("finish_reason"),
             )
+        except ContractError:
+            raise
         except (KeyError, IndexError, TypeError, ValueError, UnicodeDecodeError) as exc:
             raise ContractError(
                 ErrorCategory.CAPABILITY_UNAVAILABLE,
@@ -266,7 +281,14 @@ class KimiTrustedAdapter:
         pieces: list[str] = []
         usage: Mapping[str, int] = {}
         finish_reason: str | None = None
+        response_bytes = 0
         for raw in response:
+            response_bytes += len(raw)
+            if response_bytes > _MAX_PROVIDER_RESPONSE_BYTES:
+                raise ContractError(
+                    ErrorCategory.CAPABILITY_UNAVAILABLE,
+                    "Provider response exceeds the trusted size limit",
+                )
             line = raw.decode("utf-8", "replace").strip()
             if not line or not line.startswith("data:"):
                 continue
