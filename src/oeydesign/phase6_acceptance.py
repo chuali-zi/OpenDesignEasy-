@@ -6,6 +6,7 @@ import argparse
 import json
 import os
 import shutil
+import subprocess
 import time
 from pathlib import Path
 from typing import Any
@@ -94,6 +95,7 @@ def run_acceptance(
 ) -> Path:
     if not source.is_dir() or not dependency_image.is_dir():
         raise RuntimeError("Phase 6 source or frozen dependency image is unavailable")
+    source_control = _git_provenance(repository)
     stamp = time.strftime("%Y%m%d-%H%M%S")
     evidence_dir = evidence_root / stamp
     evidence_dir.mkdir(parents=True, exist_ok=False)
@@ -200,9 +202,10 @@ def run_acceptance(
     )
 
     evidence = {
-        "version": 2,
+        "version": 3,
         "passed": True,
         "elapsed_seconds": round(time.monotonic() - started, 3),
+        "source_control": source_control,
         "launcher": {
             "capability_version": launcher.capability_version,
             "available": launcher.available,
@@ -544,6 +547,34 @@ def _plain(value: Any) -> Any:
     if isinstance(value, tuple | list):
         return [_plain(item) for item in value]
     return value
+
+
+def _git_provenance(repository: Path) -> dict[str, Any]:
+    def git(*args: str) -> subprocess.CompletedProcess[str]:
+        return subprocess.run(
+            ["git", *args],
+            cwd=repository,
+            check=False,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+        )
+
+    head = git("rev-parse", "HEAD")
+    branch = git("branch", "--show-current")
+    tracked = git("diff", "--quiet", "HEAD", "--")
+    status = git("status", "--porcelain", "--untracked-files=all")
+    if head.returncode or branch.returncode or status.returncode:
+        raise RuntimeError("Git provenance could not be resolved")
+    untracked_count = sum(
+        line.startswith("?? ") for line in status.stdout.splitlines()
+    )
+    return {
+        "head": head.stdout.strip(),
+        "branch": branch.stdout.strip(),
+        "tracked_clean": tracked.returncode == 0,
+        "untracked_count": untracked_count,
+    }
 
 
 if __name__ == "__main__":
