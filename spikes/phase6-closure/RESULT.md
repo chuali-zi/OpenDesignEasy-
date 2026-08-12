@@ -1,6 +1,6 @@
-# Phase 6 execution closure
+# Phase 6 eight-slot closure
 
-> 运行日期：2026-08-03。结论：**通过**。
+> 运行日期：2026-08-04。结论：**首个真实纵切通过，八槽 ready。**
 
 正式入口：
 
@@ -9,23 +9,34 @@ $env:PYTHONPATH = "src"
 python -m oeydesign.phase6_acceptance
 ```
 
-最新指针为 `evidence/latest.json`，本次通过记录位于
-`evidence/20260803-091403/phase6-closure.json`。
+最新指针为 `evidence/latest.json`；本次记录位于
+`evidence/20260804-000725/phase6-closure.json`。
+
+## 八槽
+
+| 槽 | 实际绑定 |
+|---|---|
+| `context.repository` | `repository-ingestion/1` |
+| `agent.engine` | `agent-engine-appcontainer/1` |
+| `design.intelligence` | `design-territories-web/1` |
+| `artifact.production` | `artifact-web-production/1` |
+| `render.web` | `playwright-system-chrome/1` |
+| `quality.governance` | `quality-web-governance/1` |
+| `delivery.release` | `delivery-validation/1(durable(delivery-local-immutable/1))` |
+| `framework.build` | `native-esbuild/1` |
 
 ## 真实证据
 
-- Windows AppContainer profile `OEYdesign.Phase6`，工作区位于 package `AC` 内，零 capability；进程在
-  resume 前加入 Job Object，构建使用随机临时盘符。
-- native esbuild 0.25.12 连续两次构建成功，dist tree SHA-256 均为
-  `492e5a2e855a95c03fa3ef4a6eee887edb0c36e99e4b0b945fdc7a9d964525df`。
-- 系统 Chrome `150.0.7871.187` 真渲染；截图 SHA-256 为
-  `f8bc34eeab31ebfdbbd0b85422825c289b31cd5e6b7b1acbea7e320fc1c23354`；console/page/request 错误均为 0。
-- 渲染后 DOM 有 12 个唯一 `data-oey-object` 和 1 个唯一 section；页面文本 3,582 字符，无横向溢出。
-- Kimi `k3` 会话依次记录 `run_build`、`render`、`model/complete`，最终状态 `COMPLETED`；1 次 render，
-  3,673 prompt token，222 completion token，会话计量 16.452 秒。
-- 完整验收含依赖镜像复制与 hash，共 443.657 秒，低于冻结的 900 秒上限。
+- 零 capability AppContainer + Job Object；依赖镜像内 native esbuild 两次构建 hash 一致。
+- Kimi `k3` 会话执行 `run_build → render → model/complete`，系统 Chrome 截图后完成。
+- repository ingestion 读取 8 个受控文件；Design 产生两个独立候选并完成方向批准。
+- Artifact 与安全解包后的 export 均由 Chrome 真渲染；console/page/request 为 0，computed style 已采集。
+- ZIP CRC 通过，成员含 `index.html` 和 `artifact-manifest.json`，逐文件 SHA-256 已记录。
+- export Quality 为 `PASS`、hard error 为 0；Validated/Durable/Local delivery 到达 `DELIVERED`。
+- 关闭并重开 SQLite 后仍为 `DELIVERED`，delivery count 为 1，Delivery ID 不变。
+- 完整运行 521.703 秒，低于冻结的 900 秒预算。
 
-## 范围
+## 后续
 
-此结果关闭正式 sandbox/build/Chrome/session 指定闭环，不代表整个 G5 完成。真实 Design、
-`ArtifactProductionPort`、export/Quality/Delivery 纵切仍按 `docs/phase6/README.md` 推进。
+八个能力槽及首个 P6 纵切已补齐。P6.6 仍需扩展故障注入、并发 claim 和外部用户验收，不应把这些
+发布强化项与本次已经通过的八槽对象图混为一谈。

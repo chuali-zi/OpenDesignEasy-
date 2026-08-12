@@ -18,8 +18,23 @@ from .agent_engine import (
 )
 from .builder import FrameworkBuildResult, NativeEsbuildBuilder
 from .capabilities import KimiTrustedAdapter
-from .domain import canonical_json
+from .domain import (
+    ApproveDirection,
+    ApproveExport,
+    ContextPackage,
+    CreateProject,
+    DeliverArtifact,
+    DesignBrief,
+    GenerateCandidates,
+    PrepareProject,
+    ProduceArtifact,
+    ProjectState,
+    ValidateArtifact,
+    canonical_json,
+    stable_id,
+)
 from .framework_artifact import FrameworkArtifactContract
+from .phase6 import Phase6Application
 from .renderer import TrustedWebRenderer
 from .sandbox import WindowsAppContainerLauncher
 
@@ -146,6 +161,7 @@ def run_acceptance(
         sandbox_launcher=launcher,
         build_action=build_action,
         allowed_tools=frozenset({"run_build", "render", "complete"}),
+        validation_only=True,
     ).run(
         workspace,
         session_id,
@@ -176,9 +192,15 @@ def run_acceptance(
         raise RuntimeError("Final trusted Chrome render was missing or unhealthy")
     final_screenshot = evidence_dir / "chrome-final.png"
     shutil.copy2(final_render.screenshot_path, final_screenshot)
+    vertical = _run_vertical_slice(
+        evidence_dir=evidence_dir,
+        source=source,
+        dependency_image=dependency_image,
+        stamp=stamp,
+    )
 
     evidence = {
-        "version": 1,
+        "version": 2,
         "passed": True,
         "elapsed_seconds": round(time.monotonic() - started, 3),
         "launcher": {
@@ -226,6 +248,7 @@ def run_acceptance(
                 for turn in session_result.session.turns
             ],
         },
+        "vertical_slice": vertical,
         "evidence_files": {
             "initial_screenshot": initial_screenshot.name,
             "final_screenshot": final_screenshot.name,
@@ -245,6 +268,209 @@ def run_acceptance(
         encoding="utf-8",
     )
     return result_path
+
+
+def _run_vertical_slice(
+    *,
+    evidence_dir: Path,
+    source: Path,
+    dependency_image: Path,
+    stamp: str,
+) -> dict[str, Any]:
+    data_root = evidence_dir / "vertical-runtime"
+    database = data_root / "vertical.sqlite"
+    project_id = f"p6-vertical-{stamp}"
+    with Phase6Application(
+        database,
+        data_root=data_root,
+        dependency_image=dependency_image,
+    ) as app:
+        app.require_real_slice_ready()
+        app.control.execute(
+            CreateProject(
+                command_id="vertical:01:create",
+                project_id=project_id,
+                name="P6 eight-slot vertical slice",
+            )
+        )
+        ingestion = app.repository_ingestion.ingest_repository(
+            project_id, app.repository_ingestion.authorize(source)
+        )
+        context = ContextPackage(
+            stable_id("context", project_id, ingestion.source.id),
+            project_id,
+            1,
+            ("A complete offline framework candidate is available for delivery.",),
+            (ingestion.source.id,),
+            analysis_asset_refs=tuple(
+                record.locator for record in ingestion.observations[:20]
+            ),
+        )
+        _vertical_command(
+            app,
+            project_id,
+            PrepareProject,
+            "vertical:02:prepare",
+            context_package=context,
+            brief=DesignBrief(
+                "Present a complete P6 design workspace",
+                "Product and design teams",
+                "web",
+            ),
+        )
+        candidates = _vertical_command(
+            app,
+            project_id,
+            GenerateCandidates,
+            "vertical:03:candidates",
+            candidate_count=2,
+        ).value
+        _vertical_command(
+            app,
+            project_id,
+            ApproveDirection,
+            "vertical:04:direction",
+            candidate_id=candidates[0].id,
+            candidate_revision=candidates[0].revision,
+            impact="Approve Graphite Signal for production",
+        )
+        artifact = _vertical_command(
+            app,
+            project_id,
+            ProduceArtifact,
+            "vertical:05:produce",
+            medium="web",
+        ).value
+        render_decision = _vertical_command(
+            app,
+            project_id,
+            ValidateArtifact,
+            "vertical:06:validate",
+            render_profile={"width": 1440, "height": 900},
+        ).value
+        if render_decision.hard_errors:
+            raise RuntimeError("Vertical artifact Quality gate failed")
+        _vertical_command(
+            app,
+            project_id,
+            ApproveExport,
+            "vertical:07:approve-export",
+            artifact_id=artifact.id,
+            artifact_revision=artifact.revision,
+            impact="Release an immutable production ZIP",
+        )
+        delivery = _vertical_command(
+            app,
+            project_id,
+            DeliverArtifact,
+            "vertical:08:deliver",
+            delivery_profile={"format": "zip", "profile": "production"},
+        )
+        if delivery.state is not ProjectState.DELIVERED:
+            raise RuntimeError("Vertical delivery did not reach DELIVERED")
+        project = app.repository.get(project_id)
+        assert project.current_render is not None
+        assert project.current_export is not None
+        assert project.current_quality is not None
+        artifact_screenshot = evidence_dir / "vertical-artifact.png"
+        export_screenshot = evidence_dir / "vertical-export.png"
+        shutil.copy2(
+            str(project.current_render.profile["screenshot_path"]),
+            artifact_screenshot,
+        )
+        rerender = project.current_export.manifest["rerender"]
+        shutil.copy2(str(rerender["screenshot_path"]), export_screenshot)
+        delivery_archive = evidence_dir / "vertical-delivery.zip"
+        shutil.copy2(
+            str(project.deliveries[0].manifest["archive_path"]),
+            delivery_archive,
+        )
+        record = {
+            "readiness": {
+                "ready": app.readiness.ready,
+                "versions": dict(app.readiness.versions),
+                "slot_count": len(app.readiness.versions),
+            },
+            "repository": {
+                "source_id": ingestion.source.id,
+                "revision": ingestion.source.revision,
+                "file_count": len(ingestion.files),
+            },
+            "design": {
+                "candidate_count": len(candidates),
+                "candidate_ids": [candidate.id for candidate in candidates],
+                "approved_direction_id": project.approved_direction.id,
+            },
+            "artifact": {
+                "id": artifact.id,
+                "revision": artifact.revision,
+                "object_refs": dict(artifact.object_refs),
+                "render_quality_id": render_decision.id,
+                "artifact_screenshot": artifact_screenshot.name,
+            },
+            "export": {
+                "id": project.current_export.id,
+                "revision": project.current_export.revision,
+                "archive_sha256": project.current_export.manifest[
+                    "archive_sha256"
+                ],
+                "archive_crc_ok": project.current_export.manifest[
+                    "archive_crc_ok"
+                ],
+                "member_hashes": dict(
+                    project.current_export.manifest["member_hashes"]
+                ),
+                "rerender_healthy": rerender["healthy"],
+                "export_screenshot": export_screenshot.name,
+            },
+            "quality": {
+                "id": project.current_quality.id,
+                "target_kind": project.current_quality.target_kind,
+                "verdict": project.current_quality.verdict.value,
+                "hard_error_count": len(project.current_quality.hard_errors),
+            },
+            "delivery": {
+                "id": project.deliveries[0].id,
+                "archive_path": delivery_archive.name,
+                "archive_sha256": project.deliveries[0].manifest[
+                    "archive_sha256"
+                ],
+                "side_effect_key": project.deliveries[0].side_effect_key,
+            },
+            "state": project.state.value,
+        }
+    with Phase6Application(
+        database,
+        data_root=data_root,
+        dependency_image=dependency_image,
+    ) as reopened:
+        recovered = reopened.repository.get(project_id)
+        record["recovery"] = {
+            "state": recovered.state.value,
+            "delivery_count": len(recovered.deliveries),
+            "same_delivery_id": recovered.deliveries[0].id
+            == record["delivery"]["id"],
+        }
+    shutil.rmtree(data_root)
+    return record
+
+
+def _vertical_command(
+    app: Phase6Application,
+    project_id: str,
+    command: type,
+    command_id: str,
+    **values: object,
+):
+    project = app.repository.get(project_id)
+    return app.control.execute(
+        command(
+            command_id=command_id,
+            project_id=project_id,
+            expected_project_revision=project.revision,
+            **values,
+        )
+    )
 
 
 def _copy_source_into_workspace(source: Path, workspace: Any) -> None:

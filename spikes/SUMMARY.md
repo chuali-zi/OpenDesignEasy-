@@ -28,7 +28,7 @@
 | **D2/Q2/Q3** | 候选审美与 critic 稳定性 | 🔒 **候选排序未裁决** | 4 个候选；Q2 15 条发现；Q3 20 次重复评估 | `d2-aesthetic/review.html` |
 | **E12** | 框架候选预算内完成 | 🔒 **已知风险接受并冻结** | Kimi 会话 1,082s 且未完成自验；不再重测，超时如实失败 | `e8-e12-framework/` |
 | **E13** | 门控安装可行且可审计 | ✅ **通过并冻结** | agent 网络拒绝；trusted broker + zero-cap installer 成功，hash/ledger/key 隔离全通过 | `e13-gated-install/` |
-| **P6-C** | 正式 launcher/build/render/session 闭环 | ✅ **通过** | AppContainer+Job；双构建同 hash；Chrome 150 零错误；Kimi `k3` 会话 `COMPLETED` | `phase6-closure/` |
+| **P6-C** | 八槽真实纵切闭环 | ✅ **通过** | readiness 8/8；AppContainer/build/Kimi/Chrome；ZIP 重渲染；Quality PASS；恢复后单次 Delivery | `phase6-closure/` |
 
 ## 三个最重要的发现
 

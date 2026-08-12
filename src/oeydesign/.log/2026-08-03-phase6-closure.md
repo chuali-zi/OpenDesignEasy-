@@ -1,1 +1,1 @@
-接入正式 Windows AppContainer + Job launcher，工作区落入包目录；native esbuild 使用冻结依赖镜像，输出完整站点及哈希；系统 Chrome 记录截图、版本、DOM 与错误；Agent 完成门要求新鲜构建、渲染及截图后模型回合。新增 phase6_acceptance 验收入口。
+P6 八槽已接入实际对象图：仓库、AppContainer Agent、Design、Artifact、Chrome、Quality、Delivery、builder。补确定性 ZIP、安全解包重渲染、computed style/diff 硬门、immutable receipt 和重启恢复；acceptance 8/8 通过。
