@@ -7,7 +7,9 @@ import hashlib
 import io
 import json
 import os
+import threading
 import warnings
+import weakref
 from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
@@ -48,6 +50,7 @@ from .domain import (
     ValidateArtifact,
     stable_id,
 )
+from .instance_lock import DatabaseInstanceLock
 from .phase6 import (
     Phase6Application,
     Phase6Bindings,
@@ -119,13 +122,17 @@ class ProviderResolver:
         *,
         base_url: str,
         model: str,
-        api_key: str,
+        api_key: str | None,
         probe: bool = True,
     ) -> ProviderSettings:
         if not model.strip() or len(model) > 200:
             raise ValueError("Provider model is invalid")
+        supplied_secret = api_key.strip() if isinstance(api_key, str) else ""
+        secret = supplied_secret or self.credentials.read(KIMI_CREDENTIAL_TARGET)
+        if not secret:
+            raise ValueError("A Kimi API key is required")
         adapter = KimiTrustedAdapter(
-            api_key=api_key,
+            api_key=secret,
             base_url=base_url,
             timeout_seconds=60,
         )
@@ -150,7 +157,8 @@ class ProviderResolver:
                     ErrorCategory.CAPABILITY_UNAVAILABLE,
                     "Provider probe did not confirm readiness",
                 )
-        self.credentials.write(KIMI_CREDENTIAL_TARGET, api_key)
+        if supplied_secret:
+            self.credentials.write(KIMI_CREDENTIAL_TARGET, supplied_secret)
         settings = ProviderSettings("kimi", base_url.rstrip("/"), model.strip(), True)
         self.product_store.save_provider_settings(settings)
         return settings
@@ -415,16 +423,30 @@ class ProductApplication(Phase6Application):
         data_root: str | Path,
         dependency_image: str | Path | None = None,
         credentials: CredentialStorePort | None = None,
+        acquire_instance_lock: bool = True,
     ) -> None:
+        self._instance_lock = (
+            DatabaseInstanceLock(database) if acquire_instance_lock else None
+        )
+        self._instance_lock_finalizer = (
+            weakref.finalize(self, self._instance_lock.release)
+            if self._instance_lock is not None
+            else None
+        )
         configured_dependency = dependency_image or os.environ.get(
             "OEYDESIGN_FRAMEWORK_DEPENDENCIES"
         )
         phase6_dependency = configured_dependency or (
             Path(data_root) / ".dependency-image-unavailable"
         )
-        super().__init__(
-            database, data_root=data_root, dependency_image=phase6_dependency
-        )
+        try:
+            super().__init__(
+                database, data_root=data_root, dependency_image=phase6_dependency
+            )
+        except Exception:
+            if self._instance_lock_finalizer is not None:
+                self._instance_lock_finalizer()
+            raise
         self.data_root = Path(data_root).resolve()
         self.product_store = ProductStore(self.store)
         self.credential_store = credentials or default_credential_store()
@@ -500,6 +522,10 @@ class ProductApplication(Phase6Application):
         self.jobs = AgentJobRunner(self.product_store)
         self.jobs.register("intake-design", self._run_intake_design)
         self.jobs.register("revision", self._run_revision)
+        self._close_lock = threading.Lock()
+        self._close_started = False
+        self._base_closed = False
+        self._deferred_closer: threading.Thread | None = None
 
     @property
     def product_readiness(self) -> ProductReadiness:
@@ -567,6 +593,37 @@ class ProductApplication(Phase6Application):
         target_revision: int | None = None,
         object_ref: str | None = None,
     ) -> AgentJob:
+        idempotency_key = f"message:{project_id}:{client_message_id}"
+        existing_job = self.product_store.message_job(project_id, client_message_id)
+        if existing_job is None:
+            existing_job = next(
+                (
+                    item
+                    for item in self.product_store.list_jobs(project_id)
+                    if item.idempotency_key == idempotency_key
+                ),
+                None,
+            )
+        if existing_job is not None:
+            existing_message = next(
+                (
+                    item
+                    for item in self.product_store.list_messages(project_id)
+                    if item.client_message_id == client_message_id
+                ),
+                None,
+            )
+            if existing_message is None or (
+                existing_message.text != text.strip()
+                or existing_message.target_id != target_id
+                or existing_message.target_revision != target_revision
+                or existing_message.object_ref != object_ref
+            ):
+                raise ContractError(
+                    ErrorCategory.DETERMINISTIC_FAILURE,
+                    "client_message_id was reused with different feedback",
+                )
+            return existing_job
         self.require_product_ready()
         project = self.repository.get(project_id)
         if project.revision != expected_revision:
@@ -639,8 +696,8 @@ class ProductApplication(Phase6Application):
             target_revision,
             object_ref,
         )
-        saved = self.product_store.add_message(message)
         if resume_job is not None:
+            self.product_store.add_message_for_existing_job(message, resume_job.id)
             if resume_job.status.value == "PAUSED":
                 return self.jobs.resume(resume_job.id)
             return resume_job
@@ -649,12 +706,14 @@ class ProductApplication(Phase6Application):
             if project.state in {ProjectState.NEW, ProjectState.NEEDS_INPUT}
             else "revision"
         )
-        return self.jobs.submit(
-            project_id=project_id,
+        _saved, job = self.product_store.add_message_and_create_job(
+            message,
             kind=kind,
-            idempotency_key=f"message:{project_id}:{client_message_id}",
-            input={"message_id": saved.id},
+            idempotency_key=idempotency_key,
+            input={"message_id": message.id},
         )
+        self.jobs.wake()
+        return job
 
     def _run_intake_design(
         self, job: AgentJob, control: JobControl
@@ -966,10 +1025,60 @@ class ProductApplication(Phase6Application):
         if records:
             self.evidence_repository.add_evidence(tuple(records))
 
-    def close(self) -> None:
-        if hasattr(self, "jobs"):
-            self.jobs.close()
-        super().close()
+    def close(self) -> bool:
+        """Stop work without ever closing SQLite under an active worker.
+
+        A provider request is not force-killed mid-flight.  When it outlives the
+        short cooperative shutdown window, a daemon closer retains the application
+        and its SQLite connection until the worker reaches the next checkpoint.
+        """
+
+        with self._close_lock:
+            if self._close_started:
+                return self._base_closed
+            self._close_started = True
+        stopped = not hasattr(self, "jobs") or self.jobs.close()
+        if stopped:
+            self._close_base()
+            return True
+        closer = threading.Thread(
+            target=self._wait_and_close_base,
+            name="oeydesign-deferred-close",
+            daemon=True,
+        )
+        with self._close_lock:
+            self._deferred_closer = closer
+        closer.start()
+        return False
+
+    def wait_closed(self, timeout: float | None = None) -> bool:
+        """Wait for a deferred cooperative close, primarily for runtime owners."""
+
+        with self._close_lock:
+            closer = self._deferred_closer
+            closed = self._base_closed
+        if closed:
+            return True
+        if closer is None:
+            return False
+        closer.join(timeout=timeout)
+        with self._close_lock:
+            return self._base_closed
+
+    def _wait_and_close_base(self) -> None:
+        self.jobs.wait()
+        self._close_base()
+
+    def _close_base(self) -> None:
+        with self._close_lock:
+            if self._base_closed:
+                return
+            self._base_closed = True
+        try:
+            super().close()
+        finally:
+            if self._instance_lock_finalizer is not None:
+                self._instance_lock_finalizer()
 
 
 def parse_intake_decision(content: str) -> IntakeDecision:

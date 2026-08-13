@@ -8,7 +8,7 @@ import os
 import shutil
 import threading
 import time
-from collections.abc import Callable, Mapping
+from collections.abc import Callable, Collection, Mapping
 from dataclasses import dataclass, field
 from enum import StrEnum
 from pathlib import Path, PurePosixPath
@@ -219,6 +219,224 @@ class ProductStore:
             )
         return message
 
+    def message_job(self, project_id: str, client_message_id: str) -> AgentJob | None:
+        """Return the job a client message was durably associated with, if any."""
+
+        with self.store._lock:
+            row = self.store.connection.execute(
+                "SELECT snapshot FROM product_messages "
+                "WHERE project_id = ? AND client_message_id = ?",
+                (project_id, client_message_id),
+            ).fetchone()
+            if row is None:
+                return None
+            message = _message_from_document(json.loads(row["snapshot"]))
+            if not message.run_id:
+                return None
+            job = self.store.connection.execute(
+                "SELECT snapshot FROM agent_jobs WHERE job_id = ?",
+                (message.run_id,),
+            ).fetchone()
+        return None if job is None else _job_from_document(json.loads(job["snapshot"]))
+
+    def add_message_for_existing_job(
+        self, message: ProductMessage, job_id: str
+    ) -> tuple[ProductMessage, AgentJob]:
+        """Atomically bind a clarification message to its resumed intake job."""
+
+        _message(message)
+        with self.store.transaction() as conn:
+            job_row = conn.execute(
+                "SELECT snapshot FROM agent_jobs WHERE job_id = ?", (job_id,)
+            ).fetchone()
+            if job_row is None:
+                raise ContractError(
+                    ErrorCategory.DETERMINISTIC_FAILURE, "Job not found"
+                )
+            job = _job_from_document(json.loads(job_row["snapshot"]))
+            existing = conn.execute(
+                "SELECT snapshot FROM product_messages "
+                "WHERE project_id = ? AND client_message_id = ?",
+                (message.project_id, message.client_message_id),
+            ).fetchone()
+            if existing is not None:
+                saved = _message_from_document(json.loads(existing["snapshot"]))
+                if _message_request_fingerprint(saved) != _message_request_fingerprint(
+                    message
+                ):
+                    raise ContractError(
+                        ErrorCategory.DETERMINISTIC_FAILURE,
+                        "client_message_id was reused with different feedback",
+                    )
+                return saved, job
+            bound = ProductMessage(
+                message.id,
+                message.project_id,
+                message.role,
+                message.text,
+                message.client_message_id,
+                job.id,
+                message.target_id,
+                message.target_revision,
+                message.object_ref,
+                message.created_at,
+            )
+            conn.execute(
+                "INSERT INTO product_messages VALUES (?, ?, ?, ?, ?)",
+                (
+                    bound.id,
+                    bound.project_id,
+                    bound.client_message_id,
+                    bound.created_at,
+                    canonical_json(_message_document(bound)),
+                ),
+            )
+        return bound, job
+
+    def add_message_and_create_job(
+        self,
+        message: ProductMessage,
+        *,
+        kind: str,
+        idempotency_key: str,
+        input: Mapping[str, Any],
+    ) -> tuple[ProductMessage, AgentJob]:
+        """Atomically persist a user message and reserve its one Agent job."""
+
+        _message(message)
+        _label(kind, "job kind")
+        _label(idempotency_key, "idempotency key")
+        now = utc_now().isoformat()
+        with self.store.transaction() as conn:
+            existing_job_row = conn.execute(
+                "SELECT snapshot FROM agent_jobs WHERE idempotency_key = ?",
+                (idempotency_key,),
+            ).fetchone()
+            if existing_job_row is not None:
+                existing_job = _job_from_document(
+                    json.loads(existing_job_row["snapshot"])
+                )
+                existing_message_row = conn.execute(
+                    "SELECT snapshot FROM product_messages "
+                    "WHERE project_id = ? AND client_message_id = ?",
+                    (message.project_id, message.client_message_id),
+                ).fetchone()
+                if existing_message_row is None:
+                    raise ContractError(
+                        ErrorCategory.DETERMINISTIC_FAILURE,
+                        "Idempotent Agent job has no matching product message",
+                    )
+                existing_message = _message_from_document(
+                    json.loads(existing_message_row["snapshot"])
+                )
+                if _message_request_fingerprint(
+                    existing_message
+                ) != _message_request_fingerprint(message):
+                    raise ContractError(
+                        ErrorCategory.DETERMINISTIC_FAILURE,
+                        "client_message_id was reused with different feedback",
+                    )
+                return existing_message, existing_job
+            active = conn.execute(
+                "SELECT 1 FROM agent_jobs WHERE project_id = ? "
+                "AND status IN (?, ?, ?) LIMIT 1",
+                (
+                    message.project_id,
+                    AgentJobStatus.RUNNING.value,
+                    AgentJobStatus.QUEUED.value,
+                    AgentJobStatus.PAUSED.value,
+                ),
+            ).fetchone()
+            if active is not None:
+                raise ContractError(
+                    ErrorCategory.INVALID_TRANSITION,
+                    "Project already has an active Agent job",
+                )
+            existing_message_row = None
+            if message.client_message_id:
+                existing_message_row = conn.execute(
+                    "SELECT snapshot FROM product_messages "
+                    "WHERE project_id = ? AND client_message_id = ?",
+                    (message.project_id, message.client_message_id),
+                ).fetchone()
+            saved = (
+                message
+                if existing_message_row is None
+                else _message_from_document(
+                    json.loads(existing_message_row["snapshot"])
+                )
+            )
+            if _message_request_fingerprint(saved) != _message_request_fingerprint(
+                message
+            ):
+                raise ContractError(
+                    ErrorCategory.DETERMINISTIC_FAILURE,
+                    "client_message_id was reused with different feedback",
+                )
+            sequence = int(
+                conn.execute(
+                    "SELECT COALESCE(MAX(sequence), 0) + 1 AS value FROM agent_jobs"
+                ).fetchone()["value"]
+            )
+            job_id = stable_id("job", message.project_id, kind, idempotency_key)
+            bound = ProductMessage(
+                saved.id,
+                saved.project_id,
+                saved.role,
+                saved.text,
+                saved.client_message_id,
+                job_id,
+                saved.target_id,
+                saved.target_revision,
+                saved.object_ref,
+                saved.created_at,
+            )
+            if existing_message_row is None:
+                conn.execute(
+                    "INSERT INTO product_messages VALUES (?, ?, ?, ?, ?)",
+                    (
+                        bound.id,
+                        bound.project_id,
+                        bound.client_message_id,
+                        bound.created_at,
+                        canonical_json(_message_document(bound)),
+                    ),
+                )
+            else:
+                conn.execute(
+                    "UPDATE product_messages SET snapshot = ? WHERE message_id = ?",
+                    (canonical_json(_message_document(bound)), bound.id),
+                )
+            job_input = dict(input)
+            if "message_id" in job_input:
+                job_input["message_id"] = bound.id
+            job = AgentJob(
+                job_id,
+                message.project_id,
+                kind,
+                idempotency_key,
+                AgentJobStatus.QUEUED,
+                "queued",
+                MappingProxyType(job_input),
+                now,
+                now,
+                sequence,
+            )
+            conn.execute(
+                "INSERT INTO agent_jobs VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                (
+                    job.id,
+                    job.project_id,
+                    job.kind,
+                    job.idempotency_key,
+                    job.status.value,
+                    job.sequence,
+                    now,
+                    canonical_json(_job_document(job)),
+                ),
+            )
+        return bound, job
+
     def list_messages(self, project_id: str) -> tuple[ProductMessage, ...]:
         with self.store._lock:
             rows = self.store.connection.execute(
@@ -299,6 +517,63 @@ class ProductStore:
             ).fetchone()
         return None if row is None else _job_from_document(json.loads(row["snapshot"]))
 
+    def claim_next_queued(
+        self, *, supported_kinds: Collection[str] | None = None
+    ) -> AgentJob | None:
+        """Atomically transition the first runnable FIFO job to ``RUNNING``.
+
+        Reading a queued row and updating it in separate transactions permits two
+        application processes to execute the same job.  The selection and state
+        compare-and-swap deliberately share one ``BEGIN IMMEDIATE`` transaction
+        so SQLite serializes competing local workers.
+        """
+
+        kinds = tuple(sorted(set(supported_kinds or ())))
+        if supported_kinds is not None and not kinds:
+            return None
+        with self.store.transaction() as conn:
+            running = conn.execute(
+                "SELECT 1 FROM agent_jobs WHERE status = ? LIMIT 1",
+                (AgentJobStatus.RUNNING.value,),
+            ).fetchone()
+            if running is not None:
+                return None
+            clauses = ["status = ?"]
+            parameters: list[Any] = [AgentJobStatus.QUEUED.value]
+            if kinds:
+                clauses.append("kind IN (" + ", ".join("?" for _ in kinds) + ")")
+                parameters.extend(kinds)
+            row = conn.execute(
+                "SELECT snapshot FROM agent_jobs WHERE "
+                + " AND ".join(clauses)
+                + " ORDER BY sequence LIMIT 1",
+                tuple(parameters),
+            ).fetchone()
+            if row is None:
+                return None
+            queued = _job_from_document(json.loads(row["snapshot"]))
+            running = _job_replace(
+                queued,
+                status=AgentJobStatus.RUNNING,
+                stage="starting",
+                pause_requested=False,
+                cancel_requested=False,
+            )
+            claimed = conn.execute(
+                "UPDATE agent_jobs SET status = ?, updated_at = ?, snapshot = ? "
+                "WHERE job_id = ? AND status = ?",
+                (
+                    running.status.value,
+                    running.updated_at,
+                    canonical_json(_job_document(running)),
+                    running.id,
+                    AgentJobStatus.QUEUED.value,
+                ),
+            )
+            if claimed.rowcount != 1:
+                return None
+            return running
+
     def list_jobs(self, project_id: str) -> tuple[AgentJob, ...]:
         with self.store._lock:
             rows = self.store.connection.execute(
@@ -309,33 +584,68 @@ class ProductStore:
         return tuple(_job_from_document(json.loads(row["snapshot"])) for row in rows)
 
     def update_job(self, job: AgentJob) -> AgentJob:
-        current = self.get_job(job.id)
-        if current.project_id != job.project_id or current.sequence != job.sequence:
-            raise ContractError(
-                ErrorCategory.DETERMINISTIC_FAILURE, "Job identity changed"
-            )
-        updated = AgentJob(
-            job.id,
-            job.project_id,
-            job.kind,
-            job.idempotency_key,
-            job.status,
-            job.stage,
-            MappingProxyType(dict(job.input)),
-            job.created_at,
-            utc_now().isoformat(),
-            job.sequence,
-            job.steps,
-            job.total_tokens,
-            job.renders,
-            job.elapsed_seconds,
-            MappingProxyType(dict(job.result)),
-            job.error_category,
-            job.error_message,
-            job.cancel_requested,
-            job.pause_requested,
-        )
         with self.store.transaction() as conn:
+            row = conn.execute(
+                "SELECT snapshot FROM agent_jobs WHERE job_id = ?", (job.id,)
+            ).fetchone()
+            if row is None:
+                raise ContractError(
+                    ErrorCategory.DETERMINISTIC_FAILURE, "Job not found"
+                )
+            current = _job_from_document(json.loads(row["snapshot"]))
+            if current.project_id != job.project_id or current.sequence != job.sequence:
+                raise ContractError(
+                    ErrorCategory.DETERMINISTIC_FAILURE, "Job identity changed"
+                )
+            terminal = {
+                AgentJobStatus.COMPLETED,
+                AgentJobStatus.FAILED,
+                AgentJobStatus.CANCELED,
+            }
+            requested = job
+            if current.status in terminal and job.status is not current.status:
+                return current
+            if (
+                current.status is AgentJobStatus.PAUSED
+                and job.status is AgentJobStatus.RUNNING
+            ):
+                return current
+            if current.status is AgentJobStatus.RUNNING:
+                if job.status is AgentJobStatus.PAUSED:
+                    requested = _job_replace(current, pause_requested=True)
+                elif job.status is AgentJobStatus.CANCELED:
+                    requested = _job_replace(current, cancel_requested=True)
+                elif job.status is AgentJobStatus.RUNNING:
+                    requested = _job_replace(
+                        job,
+                        pause_requested=(
+                            current.pause_requested or job.pause_requested
+                        ),
+                        cancel_requested=(
+                            current.cancel_requested or job.cancel_requested
+                        ),
+                    )
+            updated = AgentJob(
+                requested.id,
+                requested.project_id,
+                requested.kind,
+                requested.idempotency_key,
+                requested.status,
+                requested.stage,
+                MappingProxyType(dict(requested.input)),
+                requested.created_at,
+                utc_now().isoformat(),
+                requested.sequence,
+                requested.steps,
+                requested.total_tokens,
+                requested.renders,
+                requested.elapsed_seconds,
+                MappingProxyType(dict(requested.result)),
+                requested.error_category,
+                requested.error_message,
+                requested.cancel_requested,
+                requested.pause_requested,
+            )
             conn.execute(
                 "UPDATE agent_jobs SET status = ?, updated_at = ?, snapshot = ? "
                 "WHERE job_id = ?",
@@ -348,16 +658,77 @@ class ProductStore:
             )
         return updated
 
+    def settle_running_job(
+        self,
+        job_id: str,
+        *,
+        status: AgentJobStatus,
+        stage: str,
+        elapsed_increment: float,
+        result: Mapping[str, Any] | None = None,
+        error_category: str | None = None,
+        error_message: str | None = None,
+    ) -> AgentJob:
+        """Atomically settle a running job without overwriting late controls."""
+
+        with self.store.transaction() as conn:
+            row = conn.execute(
+                "SELECT snapshot FROM agent_jobs WHERE job_id = ?", (job_id,)
+            ).fetchone()
+            if row is None:
+                raise ContractError(
+                    ErrorCategory.DETERMINISTIC_FAILURE, "Job not found"
+                )
+            current = _job_from_document(json.loads(row["snapshot"]))
+            if current.status is not AgentJobStatus.RUNNING:
+                return current
+            resolved_status = status
+            resolved_stage = stage
+            if current.cancel_requested:
+                resolved_status = AgentJobStatus.CANCELED
+                resolved_stage = "canceled"
+            elif current.pause_requested:
+                resolved_status = AgentJobStatus.PAUSED
+                resolved_stage = "paused"
+            settled = _job_replace(
+                current,
+                status=resolved_status,
+                stage=resolved_stage,
+                elapsed_seconds=current.elapsed_seconds + max(0.0, elapsed_increment),
+                result=MappingProxyType(dict(result or {})),
+                error_category=(
+                    error_category if resolved_status is AgentJobStatus.FAILED else None
+                ),
+                error_message=(
+                    error_message if resolved_status is AgentJobStatus.FAILED else None
+                ),
+                pause_requested=False,
+                cancel_requested=resolved_status is AgentJobStatus.CANCELED,
+            )
+            conn.execute(
+                "UPDATE agent_jobs SET status = ?, updated_at = ?, snapshot = ? "
+                "WHERE job_id = ? AND status = ?",
+                (
+                    settled.status.value,
+                    settled.updated_at,
+                    canonical_json(_job_document(settled)),
+                    settled.id,
+                    AgentJobStatus.RUNNING.value,
+                ),
+            )
+            return settled
+
     def project_has_active_job(self, project_id: str, *, except_id: str = "") -> bool:
         with self.store._lock:
             row = self.store.connection.execute(
                 "SELECT 1 FROM agent_jobs WHERE project_id = ? AND job_id != ? "
-                "AND status IN (?, ?) LIMIT 1",
+                "AND status IN (?, ?, ?) LIMIT 1",
                 (
                     project_id,
                     except_id,
                     AgentJobStatus.RUNNING.value,
                     AgentJobStatus.QUEUED.value,
+                    AgentJobStatus.PAUSED.value,
                 ),
             ).fetchone()
         return row is not None
@@ -386,6 +757,36 @@ class ProductStore:
                         paused.id,
                     ),
                 )
+
+    def request_pause_running_jobs(self) -> tuple[AgentJob, ...]:
+        """Request cooperative pauses without claiming that a running tool stopped.
+
+        A provider call can be in flight when the desktop process begins its
+        shutdown.  We persist the pause request first; the worker observes it at
+        its next tool boundary and records the durable ``PAUSED`` terminal state.
+        """
+
+        paused: list[AgentJob] = []
+        with self.store.transaction() as conn:
+            rows = conn.execute(
+                "SELECT snapshot FROM agent_jobs WHERE status = ?",
+                (AgentJobStatus.RUNNING.value,),
+            ).fetchall()
+            for row in rows:
+                job = _job_from_document(json.loads(row["snapshot"]))
+                requested = _job_replace(job, pause_requested=True)
+                conn.execute(
+                    "UPDATE agent_jobs SET updated_at = ?, snapshot = ? "
+                    "WHERE job_id = ? AND status = ?",
+                    (
+                        requested.updated_at,
+                        canonical_json(_job_document(requested)),
+                        requested.id,
+                        AgentJobStatus.RUNNING.value,
+                    ),
+                )
+                paused.append(requested)
+        return tuple(paused)
 
     def save_provider_settings(self, settings: ProviderSettings) -> None:
         if settings.provider != "kimi":
@@ -547,6 +948,14 @@ class AgentJobRunner:
     def register(self, kind: str, handler: JobHandler) -> None:
         _label(kind, "job kind")
         self._handlers[kind] = handler
+        with self._condition:
+            self._condition.notify_all()
+
+    def wake(self) -> None:
+        """Wake the FIFO worker after an externally reserved durable job."""
+
+        with self._condition:
+            self._condition.notify_all()
 
     def submit(
         self,
@@ -625,96 +1034,118 @@ class AgentJobRunner:
             return self.store.update_job(_job_replace(job, cancel_requested=True))
         return job
 
-    def close(self) -> None:
+    @property
+    def is_alive(self) -> bool:
+        return self._thread.is_alive()
+
+    def close(self, *, timeout: float = 5.0) -> bool:
+        """Begin cooperative shutdown and report whether the worker has stopped.
+
+        Callers must keep the SQLite store open when this returns ``False`` and
+        wait for :meth:`wait` before closing it.  This makes a long in-flight
+        provider request safe instead of letting its worker access a closed
+        connection after an arbitrary five-second timeout.
+        """
+
         self._closing = True
+        self.store.request_pause_running_jobs()
         with self._condition:
             self._condition.notify_all()
-        self._thread.join(timeout=5)
+        if threading.current_thread() is not self._thread:
+            self._thread.join(timeout=max(0.0, timeout))
+        return not self._thread.is_alive()
+
+    def wait(self, *, timeout: float | None = None) -> bool:
+        """Wait for a previously requested shutdown to finish."""
+
+        if threading.current_thread() is self._thread:
+            return False
+        self._thread.join(timeout=timeout)
+        return not self._thread.is_alive()
 
     def _loop(self) -> None:
         while not self._closing:
-            job = self.store.next_queued()
-            if job is None:
+            if not self._handlers:
                 with self._condition:
                     self._condition.wait(timeout=0.25)
                 continue
-            handler = self._handlers.get(job.kind)
+            running = self.store.claim_next_queued(
+                supported_kinds=tuple(self._handlers)
+            )
+            if running is None:
+                with self._condition:
+                    self._condition.wait(timeout=0.25)
+                continue
+            if self._closing:
+                # ``close`` may have raced with the claim.  Keep the work
+                # durable and resumable instead of entering its handler.
+                self.store.update_job(
+                    _job_replace(
+                        running,
+                        status=AgentJobStatus.PAUSED,
+                        stage="interrupted",
+                    )
+                )
+                return
+            handler = self._handlers.get(running.kind)
             if handler is None:
-                time.sleep(0.05)
+                # A handler may be unregistered only by a future extension;
+                # retain the claimed work as resumable rather than losing it.
+                self.store.update_job(
+                    _job_replace(
+                        running,
+                        status=AgentJobStatus.PAUSED,
+                        stage="handler-unavailable",
+                    )
+                )
                 continue
             started = time.monotonic()
-            running = self.store.update_job(
-                _job_replace(job, status=AgentJobStatus.RUNNING, stage="starting")
-            )
+            control = JobControl(self.store, running.id)
             try:
-                result = handler(running, JobControl(self.store, running.id))
-                current = self.store.get_job(running.id)
-                self.store.update_job(
-                    _job_replace(
-                        current,
-                        status=AgentJobStatus.COMPLETED,
-                        stage="completed",
-                        result=MappingProxyType(dict(result)),
-                        elapsed_seconds=current.elapsed_seconds
-                        + time.monotonic()
-                        - started,
-                        pause_requested=False,
-                        cancel_requested=False,
-                    )
+                control.checkpoint("starting")
+                result = handler(running, control)
+                # A handler may have returned immediately after an in-flight
+                # provider call.  Honor a concurrent pause/cancel before it
+                # can be committed as a completed run.
+                control.checkpoint("finalizing")
+                self.store.settle_running_job(
+                    running.id,
+                    status=AgentJobStatus.COMPLETED,
+                    stage="completed",
+                    result=result,
+                    elapsed_increment=time.monotonic() - started,
                 )
             except JobPaused as exc:
-                current = self.store.get_job(running.id)
-                self.store.update_job(
-                    _job_replace(
-                        current,
-                        status=AgentJobStatus.PAUSED,
-                        stage=exc.stage,
-                        elapsed_seconds=current.elapsed_seconds
-                        + time.monotonic()
-                        - started,
-                        pause_requested=False,
-                    )
+                self.store.settle_running_job(
+                    running.id,
+                    status=AgentJobStatus.PAUSED,
+                    stage=exc.stage,
+                    elapsed_increment=time.monotonic() - started,
                 )
             except JobCanceled:
-                current = self.store.get_job(running.id)
-                self.store.update_job(
-                    _job_replace(
-                        current,
-                        status=AgentJobStatus.CANCELED,
-                        stage="canceled",
-                        elapsed_seconds=current.elapsed_seconds
-                        + time.monotonic()
-                        - started,
-                        cancel_requested=True,
-                    )
+                self.store.settle_running_job(
+                    running.id,
+                    status=AgentJobStatus.CANCELED,
+                    stage="canceled",
+                    elapsed_increment=time.monotonic() - started,
                 )
             except ContractError as exc:
-                current = self.store.get_job(running.id)
-                self.store.update_job(
-                    _job_replace(
-                        current,
-                        status=AgentJobStatus.FAILED,
-                        stage="failed",
-                        elapsed_seconds=current.elapsed_seconds
-                        + time.monotonic()
-                        - started,
-                        error_category=exc.category.value,
-                        error_message=str(exc),
-                    )
+                self.store.settle_running_job(
+                    running.id,
+                    status=AgentJobStatus.FAILED,
+                    stage="failed",
+                    elapsed_increment=time.monotonic() - started,
+                    error_category=exc.category.value,
+                    error_message=str(exc),
                 )
             except Exception:
-                current = self.store.get_job(running.id)
-                self.store.update_job(
-                    _job_replace(
-                        current,
-                        status=AgentJobStatus.FAILED,
-                        stage="failed",
-                        elapsed_seconds=current.elapsed_seconds
-                        + time.monotonic()
-                        - started,
-                        error_category=ErrorCategory.DETERMINISTIC_FAILURE.value,
-                        error_message="Agent job failed",
-                    )
+                self.store.settle_running_job(
+                    running.id,
+                    status=AgentJobStatus.FAILED,
+                    stage="failed",
+                    elapsed_increment=time.monotonic() - started,
+                    error_category=ErrorCategory.DETERMINISTIC_FAILURE.value,
+                    error_message="Agent job failed",
                 )
 
 
@@ -859,6 +1290,20 @@ def _message_from_document(value: Mapping[str, Any]) -> ProductMessage:
         value.get("target_revision"),
         value.get("object_ref"),
         str(value["created_at"]),
+    )
+
+
+def _message_request_fingerprint(value: ProductMessage) -> str:
+    return canonical_json(
+        {
+            "project_id": value.project_id,
+            "role": value.role.value,
+            "text": value.text,
+            "client_message_id": value.client_message_id,
+            "target_id": value.target_id,
+            "target_revision": value.target_revision,
+            "object_ref": value.object_ref,
+        }
     )
 
 

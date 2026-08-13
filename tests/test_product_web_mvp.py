@@ -13,7 +13,7 @@ import pytest
 from PIL import Image
 
 from oeydesign.capabilities import ProviderResponse
-from oeydesign.credentials import MemoryCredentialStore
+from oeydesign.credentials import KIMI_CREDENTIAL_TARGET, MemoryCredentialStore
 from oeydesign.domain import ContractError, ErrorCategory, RightsStatus
 from oeydesign.product import AgentJobStatus
 from oeydesign.product_shell import ProductShellService, make_server
@@ -262,6 +262,63 @@ def test_product_readiness_recomputes_after_credential_changes(tmp_path: Path) -
         app.close()
 
 
+def test_provider_settings_can_be_reprobed_without_reentering_the_secret(
+    tmp_path: Path,
+) -> None:
+    credentials = MemoryCredentialStore()
+    app = ProductApplication(
+        tmp_path / "provider-reuse.sqlite",
+        data_root=tmp_path,
+        credentials=credentials,
+    )
+    try:
+        app.provider.configure(
+            base_url="https://example.test/v1",
+            model="first-model",
+            api_key="credential-kept-in-windows",
+            probe=False,
+        )
+        updated = app.provider.configure(
+            base_url="https://example.test/v2",
+            model="second-model",
+            api_key=None,
+            probe=False,
+        )
+        assert updated.base_url == "https://example.test/v2"
+        assert updated.model == "second-model"
+        assert credentials.read(KIMI_CREDENTIAL_TARGET) == (
+            "credential-kept-in-windows"
+        )
+    finally:
+        app.close()
+
+
+def test_product_application_refuses_a_second_runtime_for_the_same_database(
+    tmp_path: Path,
+) -> None:
+    database = tmp_path / "single-runtime.sqlite"
+    first = ProductApplication(
+        database,
+        data_root=tmp_path,
+        credentials=MemoryCredentialStore(),
+    )
+    try:
+        with pytest.raises(RuntimeError, match="already open"):
+            ProductApplication(
+                database,
+                data_root=tmp_path,
+                credentials=MemoryCredentialStore(),
+            )
+    finally:
+        first.close()
+    reopened = ProductApplication(
+        database,
+        data_root=tmp_path,
+        credentials=MemoryCredentialStore(),
+    )
+    reopened.close()
+
+
 def test_intake_parser_enforces_one_structured_question() -> None:
     decision = parse_intake_decision(
         json.dumps(
@@ -372,6 +429,14 @@ def test_needs_input_resumes_the_same_durable_intake_job(
             time.sleep(0.05)
         assert completed.status is AgentJobStatus.COMPLETED, completed.error_message
         assert completed.total_tokens == 10
+        repeated = app.submit_message(
+            project_id=created.project_id,
+            client_message_id="message:2",
+            expected_revision=project.revision,
+            text="The primary audience is technical buyers.",
+        )
+        assert repeated.id == first.id
+        assert len(app.product_store.list_jobs(created.project_id)) == 1
         messages = app.product_store.list_messages(created.project_id)
         assert messages[-2].run_id == first.id
         assert app.repository.get(created.project_id).state.value == (

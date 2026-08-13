@@ -3,12 +3,14 @@
 from __future__ import annotations
 
 import argparse
+import os
 import sys
 from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
-from PySide6.QtCore import Qt, QTimer
+from PySide6.QtCore import QSettings, Qt, QThread, QTimer, Signal
+from PySide6.QtGui import QCloseEvent
 from PySide6.QtWidgets import (
     QApplication,
     QComboBox,
@@ -40,6 +42,21 @@ from .theme import (
 _ACTIVE_RUN_STATUSES = {"queued", "running", "paused"}
 
 
+class _BackendTask(QThread):
+    succeeded = Signal(object)
+    failed = Signal(object)
+
+    def __init__(self, operation: Callable[[], object], parent: QWidget) -> None:
+        super().__init__(parent)
+        self._operation = operation
+
+    def run(self) -> None:
+        try:
+            self.succeeded.emit(self._operation())
+        except Exception as exc:  # noqa: BLE001
+            self.failed.emit(exc)
+
+
 class _CrayonStar(QLabel):
     """Tiny painted crayon star for the brand mark."""
 
@@ -55,9 +72,18 @@ class MainWindow(QMainWindow):
     def __init__(self, backend: Backend, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self._backend = backend
+        self._settings = (
+            QSettings("OEYdesign", "Desktop")
+            if isinstance(backend, HttpBackend)
+            else None
+        )
         self._project_id: str | None = None
         self._state: ProjectState | None = None
+        self._render_signature = ""
         self._guard_failed = False
+        self._backend_task: _BackendTask | None = None
+        self._backend_success: Callable[[object], None] | None = None
+        self._provider_dialog: ProviderDialog | None = None
 
         self.setWindowTitle("OEY*design* — Production Room")
         self.resize(1280, 800)
@@ -163,20 +189,72 @@ class MainWindow(QMainWindow):
         self._guard_failed = False
         try:
             return fn(*args, **kwargs)
-        except BackendError as exc:
+        except Exception as exc:  # noqa: BLE001
+            self._handle_backend_exception(exc)
+            self._guard_failed = True
+        return None
+
+    def _handle_backend_exception(self, exc: Exception) -> None:
+        if isinstance(exc, BackendError):
             if exc.current_revision is not None and self._project_id:
                 self._load_project(self._project_id)
             self._notice(f"{exc.category}\n\n{exc}")
-            self._guard_failed = True
-        except Exception as exc:  # noqa: BLE001
+        else:
             self._notice(str(exc))
-            self._guard_failed = True
-        return None
+
+    def _start_backend_operation(
+        self,
+        label: str,
+        operation: Callable[[], object],
+        on_success: Callable[[object], None],
+    ) -> None:
+        if self._backend_task is not None:
+            self._notice("Another local operation is still finishing.")
+            return
+        task = _BackendTask(operation, self)
+        self._poll_timer.stop()
+        self._backend_task = task
+        self._backend_success = on_success
+        self.centralWidget().setEnabled(False)
+        self.statusBar().showMessage(label)
+        QApplication.setOverrideCursor(Qt.CursorShape.WaitCursor)
+        task.succeeded.connect(self._backend_operation_succeeded)
+        task.failed.connect(self._backend_operation_failed)
+        task.finished.connect(self._backend_operation_finished)
+        task.finished.connect(task.deleteLater)
+        task.start()
+
+    def _backend_operation_succeeded(self, result: object) -> None:
+        callback = self._backend_success
+        if callback is None:
+            return
+        try:
+            callback(result)
+        except Exception as exc:  # noqa: BLE001
+            self._handle_backend_exception(exc)
+
+    def _backend_operation_failed(self, exc: object) -> None:
+        if isinstance(exc, Exception):
+            self._handle_backend_exception(exc)
+        else:
+            self._notice("The local operation could not complete.")
+        if self._project_id:
+            self._load_project(self._project_id)
+
+    def _backend_operation_finished(self) -> None:
+        self._backend_task = None
+        self._backend_success = None
+        self.centralWidget().setEnabled(True)
+        self.statusBar().clearMessage()
+        if QApplication.overrideCursor() is not None:
+            QApplication.restoreOverrideCursor()
+        if self._active_run() is not None:
+            self._poll_timer.start(1500)
 
     def _active_run(self) -> Any:
         if self._state is None:
             return None
-        for run in self._state.runs:
+        for run in reversed(self._state.runs):
             if run.status.lower() in _ACTIVE_RUN_STATUSES:
                 return run
         return None
@@ -214,7 +292,12 @@ class MainWindow(QMainWindow):
         for summary in projects:
             label = f"{summary.name} · r{summary.revision}"
             self._project_combo.addItem(label, summary.id)
-        target = prefer_id or self._project_id
+        remembered = (
+            str(self._settings.value("active_project_id", ""))
+            if self._settings is not None
+            else ""
+        )
+        target = prefer_id or self._project_id or remembered
         index = self._project_combo.findData(target) if target else -1
         if index < 0 and self._project_combo.count():
             index = 0
@@ -231,17 +314,43 @@ class MainWindow(QMainWindow):
         if state is None:
             return
         self._project_id = project_id
+        if self._settings is not None:
+            self._settings.setValue("active_project_id", project_id)
         self._render(state)
 
     def _render(self, state: ProjectState | None) -> None:
+        signature = repr(
+            None
+            if state is None
+            else (
+                state.id,
+                state.name,
+                state.revision,
+                state.candidates,
+                state.sources,
+                state.quality,
+                state.history,
+                state.deliveries,
+                state.readiness,
+                state.blockers,
+                state.actions,
+                state.focus,
+                tuple((run.id, run.status) for run in state.runs),
+            )
+        )
+        unchanged = signature == self._render_signature
+        self._render_signature = signature
         self._state = state
+        active_run = self._active_run()
         self.brief.set_messages(state.messages if state else [])
-        self.brief.set_run(self._active_run())
-        self.stage.set_state(state)
-        self.inspector.set_state(state)
-        if state is not None:
-            delay = 1500 if self._active_run() else 4500
-            self._poll_timer.start(delay)
+        if not unchanged:
+            self.stage.set_state(state)
+            self.inspector.set_state(state)
+        self.brief.set_run(active_run)
+        if state is not None and active_run is not None:
+            self._poll_timer.start(1500)
+        else:
+            self._poll_timer.stop()
 
     def _poll(self) -> None:
         if self._project_id:
@@ -262,7 +371,10 @@ class MainWindow(QMainWindow):
             self._refresh_projects(prefer_id=summary.id)
 
     def _open_settings(self) -> None:
-        ProviderDialog(self._backend, self).exec()
+        dialog = ProviderDialog(self._backend, self)
+        self._provider_dialog = dialog
+        dialog.exec()
+        self._provider_dialog = None
         self._refresh_health()
 
     def _send_message(self, text: str) -> None:
@@ -285,20 +397,24 @@ class MainWindow(QMainWindow):
             target.revision if target else None,
         )
         if not self._guard_failed:
+            self.brief.clear_composer()
             self.brief.clear_selection()
             self._load_project(self._project_id)
 
     def _run_command(self, command: str) -> None:
         if not self._project_id:
             return
-        self._guard(
-            self._backend.run_command,
-            self._project_id,
-            command,
-            candidate_id=self.stage.current_candidate_id(),
+        project_id = self._project_id
+        candidate_id = self.stage.current_candidate_id()
+        self._start_backend_operation(
+            f"Running {command.replace('_', ' ')}…",
+            lambda: self._backend.run_command(
+                project_id,
+                command,
+                candidate_id=candidate_id,
+            ),
+            lambda _result: self._load_project(project_id),
         )
-        if not self._guard_failed:
-            self._load_project(self._project_id)
 
     def _run_action(self, action: str, run_id: str) -> None:
         handlers = {
@@ -317,32 +433,51 @@ class MainWindow(QMainWindow):
         if not self._project_id:
             self._notice("Create a project first.")
             return
-        dialog = SourcesDialog(self)
+        repository_attached = bool(
+            self._state
+            and any(source.kind == "repository" for source in self._state.sources)
+        )
+        dialog = SourcesDialog(self, repository_attached=repository_attached)
         if dialog.exec() != SourcesDialog.DialogCode.Accepted:
             return
         if dialog.repo_path:
-            self._guard(
-                self._backend.attach_repository, self._project_id, dialog.repo_path
-            )
+            project_id = self._project_id
+            repository = dialog.repo_path
+
+            def attach_operation() -> object:
+                return self._backend.attach_repository(project_id, repository)
+
+            operation = attach_operation
+            label = "Reading the repository into a safe, read-only snapshot…"
         elif dialog.image_paths:
-            self._guard(
-                self._backend.upload_images, self._project_id, dialog.image_paths
-            )
+            project_id = self._project_id
+            images = list(dialog.image_paths)
+
+            def upload_operation() -> object:
+                return self._backend.upload_images(project_id, images)
+
+            operation = upload_operation
+            label = "Validating and storing visual references…"
         else:
             return
-        if not self._guard_failed:
-            self._load_project(self._project_id)
+        self._start_backend_operation(
+            label,
+            operation,
+            lambda _result: self._load_project(project_id),
+        )
 
     def _restore(self, revision: int) -> None:
         if self._project_id:
-            self._guard(
-                self._backend.run_command,
-                self._project_id,
-                "restore_revision",
-                source_revision=revision,
+            project_id = self._project_id
+            self._start_backend_operation(
+                f"Restoring revision {revision}…",
+                lambda: self._backend.run_command(
+                    project_id,
+                    "restore_revision",
+                    source_revision=revision,
+                ),
+                lambda _result: self._load_project(project_id),
             )
-            if not self._guard_failed:
-                self._load_project(self._project_id)
 
     def _download(self, delivery_id: str) -> None:
         path, _ = QFileDialog.getSaveFileName(
@@ -353,14 +488,40 @@ class MainWindow(QMainWindow):
         )
         if not path:
             return
-        saved = self._guard(self._backend.download_delivery, delivery_id, path)
-        if saved is not None:
-            self._notice(f"Delivery saved to:\n{saved}")
+        self._start_backend_operation(
+            "Downloading and verifying the immutable ZIP…",
+            lambda: self._backend.download_delivery(delivery_id, path),
+            lambda saved: self._notice(f"Delivery saved to:\n{saved}"),
+        )
+
+    def closeEvent(self, event: QCloseEvent) -> None:  # noqa: N802 - Qt override
+        if self._backend_task is not None:
+            event.ignore()
+            self.statusBar().showMessage(
+                "A local operation is reaching a safe boundary before exit."
+            )
+            return
+        if (
+            self._provider_dialog is not None
+            and not self._provider_dialog.wait_for_task()
+        ):
+            event.ignore()
+            self.statusBar().showMessage(
+                "The provider request is reaching a safe boundary before exit."
+            )
+            return
+        super().closeEvent(event)
+
+
+def _default_data_root() -> Path:
+    local = os.environ.get("LOCALAPPDATA")
+    base = Path(local) if local else Path.home() / "AppData" / "Local"
+    return base / "OEYdesign" / "data"
 
 
 def _arguments(argv: list[str]) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Run the OEYdesign desktop client")
-    parser.add_argument("--data-root", type=Path, default=Path("data/desktop"))
+    parser.add_argument("--data-root", type=Path, default=_default_data_root())
     parser.add_argument("--database", type=Path, default=None)
     parser.add_argument("--dependency-image", type=Path, default=None)
     parser.add_argument(

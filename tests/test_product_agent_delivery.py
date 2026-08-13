@@ -222,14 +222,23 @@ def _command(
 
 
 def _assert_secret_absent(secret: bytes, *roots: Path) -> None:
+    seen: set[Path] = set()
     for root in roots:
         for path in root.rglob("*"):
             if (
                 path.is_file()
                 and not path.is_symlink()
                 and path.stat().st_size <= 5_000_000
+                and path not in seen
             ):
-                assert secret not in path.read_bytes(), path
+                seen.add(path)
+                try:
+                    payload = path.read_bytes()
+                except PermissionError as exc:
+                    raise AssertionError(
+                        f"Secret scan could not read product data: {path}"
+                    ) from exc
+                assert secret not in payload, path
 
 
 @pytest.mark.skipif(os.name != "nt", reason="Real build/render path is Windows-only")
@@ -290,6 +299,8 @@ def test_fake_provider_runs_real_build_revision_quality_and_delivery(
         assert project["state"] == "AWAITING_DIRECTION_APPROVAL"
         assert len(project["candidates"]) == 2
         assert all(item["preview_url"] for item in project["candidates"])
+        assert all("preview_token" not in item for item in project["candidates"])
+        assert all("preview_html" not in item for item in project["candidates"])
         concepts = {item["concept"] for item in project["candidates"]}
         assert len(concepts) == 2
 

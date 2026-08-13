@@ -60,6 +60,7 @@ class BriefPanel(DoodlePanel):
         super().__init__("01 / BRIEF", parent)
         self._object_ref: str | None = None
         self._run_id: str | None = None
+        self._message_signature: tuple[tuple[str, str, str, str], ...] = ()
 
         hint = QLabel("Describe the outcome. The project remembers the rest.")
         hint.setFont(font_label(9))
@@ -142,11 +143,25 @@ class BriefPanel(DoodlePanel):
 
     # ------------------------------------------------------------------ API
     def set_messages(self, messages: Sequence[Message]) -> None:
+        items = list(messages or [])
+        signature = tuple(
+            (
+                str(_g(message, "id", "")),
+                str(_g(message, "role", "")),
+                str(_g(message, "text", "")),
+                str(_g(message, "timestamp", "")),
+            )
+            for message in items
+        )
+        if signature == self._message_signature:
+            return
+        bar = self._scroll.verticalScrollBar()
+        was_at_bottom = bar.maximum() == 0 or bar.value() >= bar.maximum() - 4
+        self._message_signature = signature
         while self._messages_layout.count() > 1:  # keep the trailing stretch
             item = self._messages_layout.takeAt(0)
             if item.widget() is not None:
                 item.widget().deleteLater()
-        items = list(messages or [])
         if not items:
             empty = QLabel(
                 "NO BRIEF YET\n\nCreate a project, attach a repository or "
@@ -160,8 +175,8 @@ class BriefPanel(DoodlePanel):
         else:
             for index, message in enumerate(items):
                 self._messages_layout.insertWidget(index, self._bubble(message))
-        bar = self._scroll.verticalScrollBar()
-        QTimer.singleShot(0, lambda: bar.setValue(bar.maximum()))
+        if was_at_bottom:
+            QTimer.singleShot(0, lambda: bar.setValue(bar.maximum()))
 
     def set_run(self, run: RunInfo | None) -> None:
         if run is None:
@@ -201,12 +216,16 @@ class BriefPanel(DoodlePanel):
         self._object_ref = None
         self._selection_chip.hide()
 
+    def clear_composer(self) -> None:
+        """Clear the submitted draft only after the backend accepted it."""
+
+        self._input.clear()
+
     # -------------------------------------------------------------- internals
     def _send(self) -> None:
         text = self._input.toPlainText().strip()
         if not text:
             return
-        self._input.clear()
         if self._object_ref:
             self.object_message_sent.emit(text, self._object_ref)
         else:

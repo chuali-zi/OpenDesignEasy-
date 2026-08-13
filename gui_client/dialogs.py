@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, QThread, Signal
 from PySide6.QtWidgets import (
     QDialog,
     QFileDialog,
@@ -18,6 +18,8 @@ from PySide6.QtWidgets import (
 from .theme import COLORS, DoodleButton, font_body, font_display, font_label
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
+
     from .backend import Backend
 
 
@@ -27,6 +29,21 @@ def _hint(text: str) -> QLabel:
     label.setStyleSheet(f"color: {COLORS['ink_soft']};")
     label.setWordWrap(True)
     return label
+
+
+class _ProviderTask(QThread):
+    succeeded = Signal(object)
+    failed = Signal(str)
+
+    def __init__(self, operation: Callable[[], object], parent: QWidget) -> None:
+        super().__init__(parent)
+        self._operation = operation
+
+    def run(self) -> None:
+        try:
+            self.succeeded.emit(self._operation())
+        except Exception as exc:  # noqa: BLE001
+            self.failed.emit(str(exc))
 
 
 class NewProjectDialog(QDialog):
@@ -80,7 +97,12 @@ class SourcesDialog(QDialog):
     ``image_paths`` (list[str]) — exactly one is non-empty.
     """
 
-    def __init__(self, parent: QWidget | None = None) -> None:
+    def __init__(
+        self,
+        parent: QWidget | None = None,
+        *,
+        repository_attached: bool = False,
+    ) -> None:
         super().__init__(parent)
         self.setWindowTitle("Project Sources")
         self.setMinimumWidth(420)
@@ -99,15 +121,27 @@ class SourcesDialog(QDialog):
         self.repo_edit = QLineEdit()
         self.repo_edit.setPlaceholderText(r"D:\projects\your-repository")
         self.repo_edit.setFont(font_body(11))
-        browse = DoodleButton("Browse...")
-        browse.clicked.connect(self._browse_repo)
+        self._browse_btn = DoodleButton("Browse...")
+        self._browse_btn.clicked.connect(self._browse_repo)
         repo_row.addWidget(self.repo_edit, stretch=1)
-        repo_row.addWidget(browse)
+        repo_row.addWidget(self._browse_btn)
         layout.addLayout(repo_row)
 
-        attach = DoodleButton("Attach Read-Only Repository", kind="primary")
-        attach.clicked.connect(self._attach_repo)
-        layout.addWidget(attach)
+        self._attach_btn = DoodleButton(
+            "Repository Already Attached"
+            if repository_attached
+            else "Attach Read-Only Repository",
+            kind="primary",
+        )
+        self._attach_btn.clicked.connect(self._attach_repo)
+        layout.addWidget(self._attach_btn)
+        if repository_attached:
+            self.repo_edit.setPlaceholderText(
+                "This project already has its one read-only repository"
+            )
+            self.repo_edit.setEnabled(False)
+            self._browse_btn.setEnabled(False)
+            self._attach_btn.setEnabled(False)
 
         or_label = QLabel("— or —")
         or_label.setFont(font_display(13))
@@ -211,19 +245,20 @@ class ProviderDialog(QDialog):
         layout.addWidget(self._result)
 
         row = QHBoxLayout()
-        save = DoodleButton("Save & Probe", kind="accent")
-        save.setMinimumWidth(150)
-        delete = DoodleButton("Delete Credential", kind="danger")
-        cancel = DoodleButton("Cancel")
-        save.clicked.connect(self._save)
-        delete.clicked.connect(self._delete)
-        cancel.clicked.connect(self.reject)
-        row.addWidget(save)
-        row.addWidget(delete)
+        self._save_btn = DoodleButton("Save & Probe", kind="accent")
+        self._save_btn.setMinimumWidth(150)
+        self._delete_btn = DoodleButton("Delete Credential", kind="danger")
+        self._cancel_btn = DoodleButton("Cancel")
+        self._save_btn.clicked.connect(self._save)
+        self._delete_btn.clicked.connect(self._delete)
+        self._cancel_btn.clicked.connect(self.reject)
+        row.addWidget(self._save_btn)
+        row.addWidget(self._delete_btn)
         row.addStretch(1)
-        row.addWidget(cancel)
+        row.addWidget(self._cancel_btn)
         layout.addLayout(row)
 
+        self._task: _ProviderTask | None = None
         self._load()
 
     def _load(self) -> None:
@@ -234,30 +269,99 @@ class ProviderDialog(QDialog):
             return
         self.base_url_edit.setText(str(data.get("base_url", "")))
         self.model_edit.setText(str(data.get("model", "")))
-        if data:
+        configured = bool(data.get("credential_configured"))
+        if configured:
             self._show("credential configured ✔", ok=True)
+            self.key_edit.setPlaceholderText(
+                "Leave blank to keep the credential already stored in Windows"
+            )
+        else:
+            self._show("credential not configured", ok=False)
+            self.key_edit.setPlaceholderText("Required for the first Save & Probe")
 
     def _save(self) -> None:
-        try:
-            self._backend.save_provider(
-                self.base_url_edit.text().strip(),
-                self.model_edit.text().strip(),
-                self.key_edit.text(),
-            )
-        except Exception as exc:  # noqa: BLE001
-            self._show(str(exc), ok=False)
-            return
-        self.key_edit.clear()
-        self._show("saved & probed ✔", ok=True)
+        base_url = self.base_url_edit.text().strip()
+        model = self.model_edit.text().strip()
+        api_key = self.key_edit.text()
+        self._start(
+            lambda: self._backend.save_provider(
+                base_url, model, api_key
+            ),
+            "saved & probed ✔",
+            deleting=False,
+        )
 
     def _delete(self) -> None:
-        try:
-            self._backend.delete_provider()
-        except Exception as exc:  # noqa: BLE001
-            self._show(str(exc), ok=False)
+        self._start(
+            self._backend.delete_provider,
+            "credential deleted",
+            deleting=True,
+        )
+
+    def _start(
+        self,
+        operation: Callable[[], object],
+        success_text: str,
+        *,
+        deleting: bool,
+    ) -> None:
+        if self._task is not None and self._task.isRunning():
             return
+        self._set_busy(True)
+        self._show(
+            "deleting…" if deleting else "probing Kimi without blocking the window…",
+            ok=True,
+        )
+        task = _ProviderTask(operation, self)
+        self._task = task
+        task.succeeded.connect(
+            lambda _result: self._complete(success_text, deleting=deleting)
+        )
+        task.failed.connect(lambda message: self._show(message, ok=False))
+        task.finished.connect(lambda: self._set_busy(False))
+        task.finished.connect(task.deleteLater)
+        task.start()
+
+    def _complete(self, text: str, *, deleting: bool) -> None:
         self.key_edit.clear()
-        self._show("credential deleted", ok=True)
+        if deleting:
+            self.base_url_edit.clear()
+            self.model_edit.clear()
+            self.key_edit.setPlaceholderText("Required for the first Save & Probe")
+        else:
+            self.key_edit.setPlaceholderText(
+                "Leave blank to keep the credential already stored in Windows"
+            )
+        self._show(text, ok=True)
+
+    def _set_busy(self, busy: bool) -> None:
+        for widget in (
+            self.base_url_edit,
+            self.model_edit,
+            self.key_edit,
+            self._save_btn,
+            self._delete_btn,
+            self._cancel_btn,
+        ):
+            widget.setEnabled(not busy)
+        if not busy:
+            self._task = None
+
+    def wait_for_task(self, timeout_ms: int = 65_000) -> bool:
+        """Let the application shutdown retain this dialog until probe completes."""
+
+        return self._task is None or self._task.wait(timeout_ms)
+
+    def reject(self) -> None:
+        if self._task is None or not self._task.isRunning():
+            super().reject()
+
+    def closeEvent(self, event) -> None:  # noqa: N802 - Qt override
+        if self._task is not None and self._task.isRunning():
+            event.ignore()
+            self._show("Wait for the provider request to finish safely.", ok=False)
+            return
+        super().closeEvent(event)
 
     def _show(self, text: str, ok: bool) -> None:
         color = COLORS["green"] if ok else COLORS["red"]

@@ -103,8 +103,16 @@ def _constraints(p: Project) -> dict[str, Any]:
 
 
 class ProductShellService:
-    def __init__(self, app: Any) -> None:
+    def __init__(
+        self,
+        app: Any,
+        *,
+        inline_previews: bool = True,
+        access_token: str | None = None,
+    ) -> None:
         self.app = app
+        self.inline_previews = inline_previews
+        self.access_token = access_token
         self.csrf_token = secrets.token_urlsafe(32)
         self.session_id = secrets.token_urlsafe(18)
         self.preview_tokens: dict[str, tuple[str, str, int]] = {}
@@ -114,6 +122,10 @@ class ProductShellService:
         binding = (file_set_id, owner_id, revision)
         token = self.preview_bindings.get(binding)
         if token is None:
+            while len(self.preview_tokens) >= 256:
+                expired = next(iter(self.preview_tokens))
+                expired_binding = self.preview_tokens.pop(expired)
+                self.preview_bindings.pop(expired_binding, None)
             token = secrets.token_urlsafe(24)
             self.preview_bindings[binding] = token
             self.preview_tokens[token] = binding
@@ -169,7 +181,10 @@ class ProductShellService:
     def configure_provider(self, body: dict[str, Any]) -> dict[str, Any]:
         if not self.production:
             raise ValueError("Provider settings are unavailable in demo mode")
-        api_key = self._text(body, "api_key")
+        raw_api_key = body.get("api_key", "")
+        if not isinstance(raw_api_key, str) or len(raw_api_key) > 8_000:
+            raise ValueError("api_key must be a string")
+        api_key = raw_api_key.strip() or None
         base_url = self._text(body, "base_url")
         model = self._text(body, "model")
         self.app.provider.configure(
@@ -512,6 +527,7 @@ class ProductShellService:
                 },
             }
             for item in projection["candidates"]:
+                item.pop("preview_html", None)
                 file_set = self.app.product_store.file_set_for(
                     "candidate", item["id"], item["revision"]
                 )
@@ -523,9 +539,25 @@ class ProductShellService:
                     item["preview_url"] = (
                         f"/api/previews/{file_set.id}/index.html?token={token}"
                     )
-                    item["preview_token"] = token
                     item["visual_review"] = _safe(
                         file_set.metadata.get("visual_review")
+                    )
+            if projection["focus"]:
+                projection["focus"].pop("html", None)
+            if projection["focus"] and projection["focus"].get("kind") == "candidate":
+                focused = next(
+                    (
+                        item
+                        for item in projection["candidates"]
+                        if item["id"] == projection["focus"]["id"]
+                    ),
+                    None,
+                )
+                if focused is not None and focused.get("preview_url"):
+                    projection["focus"]["file_set_id"] = focused["file_set_id"]
+                    projection["focus"]["preview_url"] = focused["preview_url"]
+                    projection["focus"]["visual_review"] = focused.get(
+                        "visual_review", {}
                     )
             if a:
                 file_set = self.app.product_store.file_set_for(
@@ -537,7 +569,6 @@ class ProductShellService:
                     projection["focus"]["preview_url"] = (
                         f"/api/previews/{file_set.id}/index.html?token={token}"
                     )
-                    projection["focus"]["preview_token"] = token
                     projection["focus"]["visual_review"] = _safe(
                         file_set.metadata.get("visual_review")
                     )
@@ -723,19 +754,27 @@ class ProductShellService:
         return self._job(job)
 
     def preview(
-        self, file_set_id: str, relative: str, token: str | None
+        self,
+        file_set_id: str,
+        relative: str,
+        token: str | None,
+        *,
+        require_token_for_all: bool = False,
     ) -> tuple[bytes, str]:
         if not self.production:
             raise ValueError("Product previews are unavailable in demo mode")
+        bound = self.preview_tokens.get(token or "")
+        if (require_token_for_all or relative == "index.html") and (
+            bound is None or bound[0] != file_set_id
+        ):
+            raise ContractError(
+                ErrorCategory.POLICY_BLOCKED, "Preview token is invalid"
+            )
         file_set = self.app.product_store.get_file_set(file_set_id)
         payload = self.app.file_sets.read(file_set, "dist", relative)
         mime = mimetypes.guess_type(relative)[0] or "application/octet-stream"
         if relative == "index.html":
-            bound = self.preview_tokens.get(token or "")
-            if bound is None or bound[0] != file_set_id:
-                raise ContractError(
-                    ErrorCategory.POLICY_BLOCKED, "Preview token is invalid"
-                )
+            assert bound is not None
             bridge = _preview_bridge(token or "", bound[1], bound[2])
             text = payload.decode("utf-8")
             payload = text.replace("</body>", bridge + "</body>").encode("utf-8")
@@ -1107,6 +1146,7 @@ def make_handler(
             self.wfile.write(payload)
 
         def _require_write(self) -> None:
+            self._require_access()
             if not service.production:
                 return
             host = self.headers.get("Host", "")
@@ -1125,6 +1165,15 @@ def make_handler(
             if self.headers.get("X-OEY-CSRF") != service.csrf_token:
                 raise ContractError(
                     ErrorCategory.POLICY_BLOCKED, "CSRF token is invalid"
+                )
+
+        def _require_access(self) -> None:
+            expected = service.access_token
+            supplied = self.headers.get("X-OEY-Desktop-Capability", "")
+            if expected and not secrets.compare_digest(supplied, expected):
+                raise ContractError(
+                    ErrorCategory.POLICY_BLOCKED,
+                    "Desktop session capability is invalid",
                 )
 
         def _read_body(self) -> bytes:
@@ -1207,6 +1256,8 @@ def make_handler(
             parsed = urlparse(self.path)
             try:
                 path = parsed.path
+                if path.startswith("/api/"):
+                    self._require_access()
                 if path == "/api/health":
                     self._json(200, service.health())
                 elif path == "/api/session":
@@ -1216,6 +1267,12 @@ def make_handler(
                 elif path == "/api/projects":
                     self._json(200, service.projects())
                 elif path.startswith("/api/previews/"):
+                    if not service.inline_previews:
+                        raise ContractError(
+                            ErrorCategory.POLICY_BLOCKED,
+                            "Preview content is served from the isolated preview "
+                            "origin",
+                        )
                     parts = path.split("/", 4)
                     if len(parts) != 5 or not parts[3] or not parts[4]:
                         raise ValueError("Invalid preview path")
@@ -1361,17 +1418,98 @@ def make_handler(
     return Handler
 
 
+def make_preview_handler(
+    service: ProductShellService,
+) -> type[BaseHTTPRequestHandler]:
+    """Build a read-only origin that exposes preview bytes and no product API."""
+
+    class PreviewHandler(BaseHTTPRequestHandler):
+        server_version = "OEYdesignPreview/1"
+
+        def _respond(self, status: int, payload: bytes, media_type: str) -> None:
+            self.send_response(status)
+            self.send_header("Content-Type", media_type)
+            self.send_header("Content-Length", str(len(payload)))
+            self.send_header("Cache-Control", "no-store")
+            self.send_header("X-Content-Type-Options", "nosniff")
+            self.send_header("Referrer-Policy", "no-referrer")
+            self.send_header(
+                "Content-Security-Policy",
+                "default-src 'self'; connect-src 'none'; frame-src 'none'; "
+                "frame-ancestors 'none'; object-src 'none'; base-uri 'none'; "
+                "form-action 'none'; "
+                "img-src 'self' data:; style-src 'self' 'unsafe-inline'; "
+                "script-src 'self' 'unsafe-inline'",
+            )
+            self.end_headers()
+            self.wfile.write(payload)
+
+        def do_GET(self) -> None:
+            parsed = urlparse(self.path)
+            try:
+                parts = parsed.path.split("/", 4)
+                if (
+                    len(parts) != 5
+                    or parts[1] != "preview"
+                    or not parts[2]
+                    or not parts[3]
+                    or not parts[4]
+                    or parsed.query
+                    or parsed.fragment
+                ):
+                    raise ValueError("Invalid isolated preview path")
+                token = unquote(parts[2])
+                file_set_id = unquote(parts[3])
+                relative = unquote(parts[4])
+                payload, media_type = service.preview(
+                    file_set_id,
+                    relative,
+                    token,
+                    require_token_for_all=True,
+                )
+                self._respond(200, payload, media_type)
+            except Exception:
+                # The preview origin intentionally reveals neither policy detail nor
+                # the existence of a file set/token pair.
+                self._respond(404, b"Preview unavailable", "text/plain; charset=utf-8")
+
+        def do_POST(self) -> None:
+            self._respond(405, b"Method not allowed", "text/plain; charset=utf-8")
+
+        do_PUT = do_POST
+        do_DELETE = do_POST
+        do_PATCH = do_POST
+
+        def log_message(self, _format: str, *args: Any) -> None:
+            del args
+
+    return PreviewHandler
+
+
+def make_preview_server(
+    service: ProductShellService,
+    host: str = "127.0.0.1",
+    port: int = 0,
+) -> ThreadingHTTPServer:
+    if host not in {"127.0.0.1", "::1", "localhost"}:
+        raise ValueError("The preview origin is loopback-only")
+    return ThreadingHTTPServer((host, port), make_preview_handler(service))
+
+
 def make_server(
     app: Any,
     host: str = "127.0.0.1",
     port: int = 0,
     static_dir: str | Path | None = None,
+    *,
+    service: ProductShellService | None = None,
 ) -> ThreadingHTTPServer:
     if host not in {"127.0.0.1", "::1", "localhost"}:
         raise ValueError("The unauthenticated Phase 4 shell is loopback-only")
-    return ThreadingHTTPServer(
-        (host, port), make_handler(ProductShellService(app), static_dir)
-    )
+    selected = service or ProductShellService(app)
+    if selected.app is not app:
+        raise ValueError("Product shell service belongs to another application")
+    return ThreadingHTTPServer((host, port), make_handler(selected, static_dir))
 
 
 def main(argv: list[str] | None = None) -> int:

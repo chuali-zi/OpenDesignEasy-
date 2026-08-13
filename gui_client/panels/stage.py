@@ -44,19 +44,22 @@ _ACTIONS: list[tuple[str, str]] = [
 class _PreviewPage(QWebEnginePage):
     """Trusted preview page that reports inspected anchors to Qt only."""
 
-    object_selected = Signal(str)
+    object_selected = Signal(str, int, str)
 
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self._channel = secrets.token_urlsafe(18)
-        self._trusted_prefix = ""
+        self._trusted_origin: tuple[str, str, int] | None = None
+        self._trusted_path_prefix = ""
 
     @property
     def channel(self) -> str:
         return self._channel
 
     def trust(self, preview_url: str) -> None:
-        self._trusted_prefix = preview_url.split("?", 1)[0].rsplit("/", 1)[0] + "/"
+        url = QUrl(preview_url)
+        self._trusted_origin = (url.scheme(), url.host(), url.port())
+        self._trusted_path_prefix = url.path().rsplit("/", 1)[0] + "/"
 
     def acceptNavigationRequest(  # noqa: N802 - Qt override
         self,
@@ -66,11 +69,20 @@ class _PreviewPage(QWebEnginePage):
     ) -> bool:
         del navigation_type
         if not is_main_frame:
+            return False
+        if url.toString() == "about:blank":
             return True
-        value = url.toString()
-        return value == "about:blank" or (
-            bool(self._trusted_prefix) and value.startswith(self._trusted_prefix)
+        return bool(
+            self._trusted_origin
+            and (url.scheme(), url.host(), url.port()) == self._trusted_origin
+            and url.path().startswith(self._trusted_path_prefix)
         )
+
+    def createWindow(  # noqa: N802 - Qt override
+        self, window_type: QWebEnginePage.WebWindowType
+    ) -> QWebEnginePage | None:
+        del window_type
+        return None
 
     def javaScriptConsoleMessage(  # noqa: N802 - Qt override
         self,
@@ -88,8 +100,16 @@ class _PreviewPage(QWebEnginePage):
         except json.JSONDecodeError:
             return
         object_ref = payload.get("object_ref")
-        if isinstance(object_ref, str) and object_ref:
-            self.object_selected.emit(object_ref)
+        owner_id = payload.get("owner_id")
+        revision = payload.get("revision")
+        if (
+            isinstance(object_ref, str)
+            and object_ref
+            and isinstance(owner_id, str)
+            and owner_id
+            and isinstance(revision, int)
+        ):
+            self.object_selected.emit(owner_id, revision, object_ref)
 
 
 def _star_path(cx: float, cy: float, radius: float) -> QPainterPath:
@@ -206,7 +226,7 @@ class StagePanel(DoodlePanel):
         self._preview_stack = QStackedWidget()
         self._canvas = DoodleCanvas()
         self._preview_page = _PreviewPage(self)
-        self._preview_page.object_selected.connect(self.object_selected.emit)
+        self._preview_page.object_selected.connect(self._accept_object_selection)
         self._preview = QWebEngineView()
         self._preview.setPage(self._preview_page)
         self._preview.setZoomFactor(0.75)
@@ -355,7 +375,11 @@ class StagePanel(DoodlePanel):
         if not ok or target is None:
             self._caption.setText("Preview could not be loaded — refresh the project.")
             return
+        if self._preview.url().toString() != target.preview_url:
+            return
         channel = json.dumps(self._preview_page.channel)
+        owner_id = json.dumps(target.id)
+        revision = target.revision
         script = f"""
         (() => {{
           if (window.__oeyGuiInspectorInstalled) return;
@@ -365,6 +389,8 @@ class StagePanel(DoodlePanel):
             if (!node) return;
             event.preventDefault();
             console.log('__OEY_GUI_OBJECT__' + {channel} + ':' + JSON.stringify({{
+              owner_id: {owner_id},
+              revision: {revision},
               object_ref: node.getAttribute('data-oey-object')
             }}));
           }}, true);
@@ -374,6 +400,18 @@ class StagePanel(DoodlePanel):
         self._caption.setText(
             f"trusted preview · {target.kind} r{target.revision} · click to inspect"
         )
+
+    def _accept_object_selection(
+        self, owner_id: str, revision: int, object_ref: str
+    ) -> None:
+        target = self.current_target()
+        if (
+            target is not None
+            and target.id == owner_id
+            and target.revision == revision
+            and self._preview.url().toString() == target.preview_url
+        ):
+            self.object_selected.emit(object_ref)
 
     def _set_actions(self, actions: list[str]) -> None:
         available = set(actions)

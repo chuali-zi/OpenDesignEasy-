@@ -17,6 +17,7 @@ Real service notes:
 
 from __future__ import annotations
 
+import hashlib
 import itertools
 import json
 import mimetypes
@@ -24,11 +25,12 @@ import os
 import secrets
 import tempfile
 import time
+import zipfile
 from dataclasses import dataclass, field
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from typing import Any, Protocol
 from urllib.error import HTTPError, URLError
-from urllib.parse import quote, urlsplit
+from urllib.parse import parse_qs, quote, unquote, urlsplit
 from urllib.request import Request, urlopen
 
 # ---------------------------------------------------------------------------
@@ -522,20 +524,18 @@ class HttpBackend:
         self,
         base_url: str = "http://127.0.0.1:8765",
         *,
+        preview_base_url: str | None = None,
+        capability_token: str | None = None,
         timeout: float = 60.0,
     ) -> None:
-        parsed = urlsplit(base_url.rstrip("/"))
-        if (
-            parsed.scheme != "http"
-            or parsed.hostname not in {"127.0.0.1", "::1", "localhost"}
-            or parsed.username is not None
-            or parsed.password is not None
-            or parsed.query
-            or parsed.fragment
-            or parsed.path not in {"", "/"}
-        ):
-            raise ValueError("The desktop backend must be a plain loopback HTTP URL")
+        self._validate_loopback_origin(base_url, "desktop backend")
+        if preview_base_url is not None:
+            self._validate_loopback_origin(preview_base_url, "preview server")
         self.base_url = base_url.rstrip("/")
+        self.preview_base_url = (
+            preview_base_url.rstrip("/") if preview_base_url is not None else None
+        )
+        self._capability_token = capability_token or ""
         self.timeout = timeout
         self._csrf_token = ""
         self._states: dict[str, ProjectState] = {}
@@ -652,6 +652,10 @@ class HttpBackend:
                 body,
                 content_type=f"multipart/form-data; boundary={boundary}",
             )
+            # Each successful image ingestion advances the durable project
+            # revision.  The next member must use that revision, not the stale
+            # value captured before the batch began.
+            state = self.get_project(project_id)
 
     def run_command(
         self,
@@ -735,15 +739,136 @@ class HttpBackend:
         temporary_path = Path(temporary)
         try:
             temporary_path.write_bytes(raw)
+            self._validate_delivery_zip(temporary_path)
             os.replace(temporary_path, target)
         finally:
             temporary_path.unlink(missing_ok=True)
         return str(target)
 
     def absolute_preview_url(self, value: str) -> str:
-        if not value.startswith("/api/previews/"):
+        parsed = urlsplit(value)
+        if parsed.scheme or parsed.netloc or parsed.fragment:
             raise ValueError("Preview URL is outside the trusted route")
+        parts = parsed.path.split("/", 4)
+        if (
+            len(parts) != 5
+            or parts[:3] != ["", "api", "previews"]
+            or not parts[3]
+            or not parts[4]
+        ):
+            raise ValueError("Preview URL is outside the trusted route")
+        if self.preview_base_url is not None:
+            token = parse_qs(parsed.query).get("token", [""])[0]
+            if not token:
+                raise ValueError("Preview URL has no capability token")
+            file_set_id = unquote(parts[3])
+            relative = unquote(parts[4])
+            relative_path = PurePosixPath(relative)
+            if (
+                relative_path.is_absolute()
+                or ".." in relative_path.parts
+                or "\\" in relative
+            ):
+                raise ValueError("Preview URL contains an unsafe path")
+            return (
+                f"{self.preview_base_url}/preview/"
+                f"{quote(token, safe='')}/{quote(file_set_id, safe='')}/"
+                f"{quote(relative, safe='/')}"
+            )
         return self.base_url + value
+
+    @staticmethod
+    def _validate_loopback_origin(value: str, label: str) -> None:
+        parsed = urlsplit(value.rstrip("/"))
+        if (
+            parsed.scheme != "http"
+            or parsed.hostname not in {"127.0.0.1", "::1", "localhost"}
+            or parsed.username is not None
+            or parsed.password is not None
+            or parsed.query
+            or parsed.fragment
+            or parsed.path not in {"", "/"}
+        ):
+            raise ValueError(f"The {label} must be a plain loopback HTTP URL")
+
+    @staticmethod
+    def _validate_delivery_zip(path: Path) -> None:
+        """Verify the downloaded archive before it replaces a user-visible file."""
+
+        try:
+            with zipfile.ZipFile(path) as archive:
+                if archive.testzip() is not None:
+                    raise ValueError("Downloaded delivery failed its CRC check")
+                infos = archive.infolist()
+                if not infos or len(infos) > 5_000:
+                    raise ValueError("Downloaded delivery has an invalid member count")
+                names: set[str] = set()
+                hashes: dict[str, str] = {}
+                total = 0
+                for member in infos:
+                    name = member.filename
+                    relative = PurePosixPath(name)
+                    mode = (member.external_attr >> 16) & 0o170000
+                    if (
+                        member.is_dir()
+                        or not name
+                        or "\\" in name
+                        or relative.is_absolute()
+                        or ".." in relative.parts
+                        or mode == 0o120000
+                        or name.casefold() in names
+                    ):
+                        raise ValueError(
+                            "Downloaded delivery contains an unsafe ZIP member"
+                        )
+                    names.add(name.casefold())
+                    total += member.file_size
+                    if total > 50_000_000:
+                        raise ValueError("Downloaded delivery exceeds the size limit")
+                    payload = archive.read(member)
+                    hashes[name] = hashlib.sha256(payload).hexdigest()
+                try:
+                    manifest = json.loads(archive.read("oeydesign-manifest.json"))
+                except (KeyError, UnicodeDecodeError, json.JSONDecodeError) as exc:
+                    raise ValueError(
+                        "Downloaded delivery has no valid OEYdesign manifest"
+                    ) from exc
+        except (OSError, zipfile.BadZipFile, zipfile.LargeZipFile) as exc:
+            raise ValueError("Downloaded delivery is not a valid ZIP archive") from exc
+        if not isinstance(manifest, dict) or manifest.get("version") != 1:
+            raise ValueError("Downloaded delivery manifest version is invalid")
+        expected = manifest.get("files")
+        if not isinstance(expected, dict) or not expected:
+            raise ValueError("Downloaded delivery manifest has no file hashes")
+        actual_members = {name for name in hashes if name != "oeydesign-manifest.json"}
+        if set(expected) != actual_members:
+            raise ValueError("Downloaded delivery members do not match its manifest")
+        if any(
+            not isinstance(digest, str) or hashes.get(name) != digest
+            for name, digest in expected.items()
+        ):
+            raise ValueError("Downloaded delivery file hash verification failed")
+        if "dist/index.html" not in actual_members or not any(
+            name.startswith("source/") for name in actual_members
+        ):
+            raise ValueError("Downloaded delivery is missing source or dist content")
+        for prefix, tree_field in (
+            ("source/", "source_tree_sha256"),
+            ("dist/", "dist_tree_sha256"),
+        ):
+            tree = {
+                name[len(prefix) :]: digest
+                for name, digest in expected.items()
+                if name.startswith(prefix)
+            }
+            encoded = json.dumps(
+                dict(sorted(tree.items())),
+                ensure_ascii=False,
+                separators=(",", ":"),
+                sort_keys=True,
+            ).encode()
+            if hashlib.sha256(encoded).hexdigest() != manifest.get(tree_field):
+                raise ValueError(f"Downloaded delivery {prefix[:-1]} tree hash failed")
 
     # -- transport --------------------------------------------------------
 
@@ -821,6 +946,8 @@ class HttpBackend:
         if is_write and not _session_call:
             self._session()
         headers = {"Accept": "application/json", "User-Agent": "OEYdesign-GUI/1"}
+        if self._capability_token:
+            headers["X-OEY-Desktop-Capability"] = self._capability_token
         if body is not None:
             headers["Content-Type"] = content_type
         if is_write:
