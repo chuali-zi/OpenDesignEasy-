@@ -34,6 +34,25 @@ class AgentJobStatus(StrEnum):
 
 
 @dataclass(frozen=True, slots=True)
+class AgentActivityEvent:
+    """A deliberately public, replayable description of Agent job progress.
+
+    This is not a provider transcript.  ``summary`` and ``details`` are the
+    only data intended for the product UI, and are normalized before storage.
+    """
+
+    id: str
+    project_id: str
+    job_id: str
+    sequence: int
+    type: str
+    stage: str
+    summary: str
+    details: Mapping[str, Any]
+    created_at: str
+
+
+@dataclass(frozen=True, slots=True)
 class ProductMessage:
     id: str
     project_id: str
@@ -133,6 +152,20 @@ class ProductStore:
                 );
                 CREATE INDEX IF NOT EXISTS idx_agent_jobs_status
                     ON agent_jobs(status, sequence);
+                CREATE TABLE IF NOT EXISTS agent_activity_events (
+                    project_id TEXT NOT NULL,
+                    sequence INTEGER NOT NULL,
+                    event_id TEXT NOT NULL UNIQUE,
+                    job_id TEXT NOT NULL,
+                    event_type TEXT NOT NULL,
+                    stage TEXT NOT NULL,
+                    summary TEXT NOT NULL,
+                    details_json TEXT NOT NULL,
+                    created_at TEXT NOT NULL,
+                    PRIMARY KEY(project_id, sequence)
+                );
+                CREATE INDEX IF NOT EXISTS idx_agent_activity_job
+                    ON agent_activity_events(job_id, sequence);
                 CREATE TABLE IF NOT EXISTS artifact_file_sets (
                     file_set_id TEXT PRIMARY KEY,
                     project_id TEXT NOT NULL,
@@ -162,6 +195,59 @@ class ProductStore:
             )
             store.connection.commit()
         self.pause_interrupted_jobs()
+
+    def append_activity(
+        self,
+        *,
+        project_id: str,
+        job_id: str,
+        type: str,
+        stage: str,
+        summary: str,
+        details: Mapping[str, Any] | None = None,
+    ) -> AgentActivityEvent:
+        """Append a UI-safe event. Never use this for prompts or provider data."""
+
+        _label(project_id, "project_id")
+        _label(job_id, "job_id")
+        _label(type, "activity type")
+        safe_details = _activity_details(details or {})
+        safe_summary = _activity_summary(summary)
+        with self.store.transaction() as conn:
+            sequence = int(conn.execute(
+                "SELECT COALESCE(MAX(sequence), 0) + 1 AS value "
+                "FROM agent_activity_events WHERE project_id = ?", (project_id,)
+            ).fetchone()["value"])
+            created_at = utc_now().isoformat()
+            event = AgentActivityEvent(
+                stable_id("agent-activity", project_id, job_id, sequence, type),
+                project_id, job_id, sequence, type, stage, safe_summary,
+                MappingProxyType(safe_details), created_at,
+            )
+            conn.execute(
+                "INSERT INTO agent_activity_events VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                (event.project_id, event.sequence, event.id, event.job_id,
+                 event.type, event.stage, event.summary,
+                 canonical_json(dict(event.details)), event.created_at),
+            )
+        return event
+
+    def activity_after(
+        self, project_id: str, after: int = 0
+    ) -> tuple[AgentActivityEvent, ...]:
+        if isinstance(after, bool) or not isinstance(after, int) or after < 0:
+            raise ValueError("after must be a non-negative integer")
+        with self.store._lock:
+            rows = self.store.connection.execute(
+                "SELECT * FROM agent_activity_events WHERE project_id = ? "
+                "AND sequence > ? ORDER BY sequence", (project_id, after)
+            ).fetchall()
+        return tuple(AgentActivityEvent(
+            str(row["event_id"]), str(row["project_id"]), str(row["job_id"]),
+            int(row["sequence"]), str(row["event_type"]), str(row["stage"]),
+            str(row["summary"]), MappingProxyType(json.loads(row["details_json"])),
+            str(row["created_at"]),
+        ) for row in rows)
 
     def run_idempotent(
         self,
@@ -460,6 +546,7 @@ class ProductStore:
         _label(kind, "job kind")
         _label(idempotency_key, "idempotency key")
         now = utc_now().isoformat()
+        created = False
         with self.store.transaction() as conn:
             existing = conn.execute(
                 "SELECT snapshot FROM agent_jobs WHERE idempotency_key = ?",
@@ -496,6 +583,16 @@ class ProductStore:
                     now,
                     canonical_json(_job_document(job)),
                 ),
+            )
+            created = True
+        if created:
+            self.append_activity(
+                project_id=job.project_id,
+                job_id=job.id,
+                type="job",
+                stage="queued",
+                summary="Agent job queued",
+                details={"kind": job.kind},
             )
         return job
 
@@ -900,19 +997,40 @@ class JobControl:
             raise JobCanceled()
         if job.pause_requested:
             raise JobPaused()
-        return self.store.update_job(_job_replace(job, stage=stage))
+        updated = self.store.update_job(_job_replace(job, stage=stage))
+        self.store.append_activity(
+            project_id=updated.project_id, job_id=updated.id, type="stage",
+            stage=stage, summary=_stage_summary(stage),
+        )
+        return updated
 
     def add_usage(
         self, *, steps: int, total_tokens: int, renders: int
     ) -> AgentJob:
         job = self.store.get_job(self.job_id)
-        return self.store.update_job(
+        updated = self.store.update_job(
             _job_replace(
                 job,
                 steps=job.steps + max(0, steps),
                 total_tokens=job.total_tokens + max(0, total_tokens),
                 renders=job.renders + max(0, renders),
             )
+        )
+        self.store.append_activity(
+            project_id=updated.project_id, job_id=updated.id, type="usage",
+            stage=updated.stage, summary="Usage updated",
+            details={"steps": updated.steps, "total_tokens": updated.total_tokens,
+                     "renders": updated.renders},
+        )
+        return updated
+
+    def activity(
+        self, type: str, summary: str, *, details: Mapping[str, Any] | None = None
+    ) -> AgentActivityEvent:
+        job = self.store.get_job(self.job_id)
+        return self.store.append_activity(
+            project_id=job.project_id, job_id=job.id, type=type, stage=job.stage,
+            summary=summary, details=details,
         )
 
     def wait_for_input(self) -> None:
@@ -1101,6 +1219,11 @@ class AgentJobRunner:
                 continue
             started = time.monotonic()
             control = JobControl(self.store, running.id)
+            self.store.append_activity(
+                project_id=running.project_id, job_id=running.id, type="job",
+                stage="starting", summary="Agent job started",
+                details={"kind": running.kind},
+            )
             try:
                 control.checkpoint("starting")
                 result = handler(running, control)
@@ -1108,29 +1231,32 @@ class AgentJobRunner:
                 # provider call.  Honor a concurrent pause/cancel before it
                 # can be committed as a completed run.
                 control.checkpoint("finalizing")
-                self.store.settle_running_job(
+                settled = self.store.settle_running_job(
                     running.id,
                     status=AgentJobStatus.COMPLETED,
                     stage="completed",
                     result=result,
                     elapsed_increment=time.monotonic() - started,
                 )
+                self._record_terminal(settled)
             except JobPaused as exc:
-                self.store.settle_running_job(
+                settled = self.store.settle_running_job(
                     running.id,
                     status=AgentJobStatus.PAUSED,
                     stage=exc.stage,
                     elapsed_increment=time.monotonic() - started,
                 )
+                self._record_terminal(settled)
             except JobCanceled:
-                self.store.settle_running_job(
+                settled = self.store.settle_running_job(
                     running.id,
                     status=AgentJobStatus.CANCELED,
                     stage="canceled",
                     elapsed_increment=time.monotonic() - started,
                 )
+                self._record_terminal(settled)
             except ContractError as exc:
-                self.store.settle_running_job(
+                settled = self.store.settle_running_job(
                     running.id,
                     status=AgentJobStatus.FAILED,
                     stage="failed",
@@ -1138,8 +1264,9 @@ class AgentJobRunner:
                     error_category=exc.category.value,
                     error_message=str(exc),
                 )
+                self._record_terminal(settled)
             except Exception:
-                self.store.settle_running_job(
+                settled = self.store.settle_running_job(
                     running.id,
                     status=AgentJobStatus.FAILED,
                     stage="failed",
@@ -1147,6 +1274,25 @@ class AgentJobRunner:
                     error_category=ErrorCategory.DETERMINISTIC_FAILURE.value,
                     error_message="Agent job failed",
                 )
+                self._record_terminal(settled)
+
+    def _record_terminal(self, job: AgentJob) -> None:
+        summary = {
+            AgentJobStatus.COMPLETED: "Agent job completed",
+            AgentJobStatus.PAUSED: "Agent job paused",
+            AgentJobStatus.CANCELED: "Agent job canceled",
+            AgentJobStatus.FAILED: "Agent job failed",
+        }.get(job.status, "Agent job updated")
+        details: dict[str, Any] = {
+            "steps": job.steps, "total_tokens": job.total_tokens,
+            "renders": job.renders, "elapsed_seconds": round(job.elapsed_seconds, 3),
+        }
+        if job.error_category:
+            details["error_category"] = job.error_category
+        self.store.append_activity(
+            project_id=job.project_id, job_id=job.id, type="job",
+            stage=job.stage, summary=summary, details=details,
+        )
 
 
 class ArtifactFileSetStore:
@@ -1261,6 +1407,59 @@ def _label(value: str, name: str) -> None:
         or "\x00" in value
     ):
         raise ValueError(f"{name} is invalid")
+
+
+_PRIVATE_ACTIVITY_KEYS = frozenset(
+    {"prompt", "system", "system_prompt", "messages", "provider", "payload",
+     "raw", "response", "content", "reasoning", "chain_of_thought", "api_key",
+     "token", "authorization", "secret", "credential"}
+)
+
+
+def _activity_summary(value: str) -> str:
+    if not isinstance(value, str):
+        raise ValueError("activity summary must be text")
+    normalized = " ".join(value.split())
+    if not normalized or len(normalized) > 500:
+        raise ValueError("activity summary is invalid")
+    return normalized
+
+
+def _activity_details(value: Mapping[str, Any]) -> dict[str, Any]:
+    """Allow a compact telemetry vocabulary; drop secrets and raw model data."""
+
+    if not isinstance(value, Mapping):
+        raise ValueError("activity details must be an object")
+    allowed = {
+        "kind", "steps", "total_tokens", "prompt_tokens", "completion_tokens",
+        "reasoning_tokens", "renders", "elapsed_seconds", "tool", "status",
+        "healthy", "verdict", "error_category", "error_code", "repair_round",
+        "candidate_count", "artifact_id", "quality_id", "build", "render",
+        "chunks", "bytes_received",
+    }
+    result: dict[str, Any] = {}
+    for key, item in value.items():
+        if not isinstance(key, str) or key.casefold() in _PRIVATE_ACTIVITY_KEYS:
+            continue
+        if key not in allowed:
+            continue
+        if isinstance(item, bool) or isinstance(item, (int, float)):
+            result[key] = item
+        elif isinstance(item, str) and len(item) <= 200:
+            result[key] = item
+    return result
+
+
+def _stage_summary(stage: str) -> str:
+    labels = {
+        "starting": "Preparing the agent job",
+        "intake": "Understanding the request",
+        "generate-candidates": "Creating design directions",
+        "revision": "Applying the requested revision",
+        "validate-revision": "Rendering and checking the revision",
+        "finalizing": "Finalizing results",
+    }
+    return labels.get(stage, "Agent progress updated")
 
 
 def _message_document(value: ProductMessage) -> dict[str, Any]:

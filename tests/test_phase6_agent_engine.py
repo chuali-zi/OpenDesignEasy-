@@ -152,6 +152,73 @@ class _FakeRenderer:
         return type("Render", (), {"id": "render-1", "healthy": True})()
 
 
+class _StreamingFakeClient(_FakeClient):
+    def chat(
+        self,
+        messages: list[dict[str, object]],
+        *,
+        model: str,
+        max_tokens: int,
+        temperature: float,
+        stream: bool,
+        on_stream_chunk=None,
+    ) -> ProviderResponse:
+        if on_stream_chunk is not None:
+            on_stream_chunk("")  # private-reasoning transport pulse
+            on_stream_chunk('{"actions":[]')
+            on_stream_chunk(',"done":true}')
+        return super().chat(
+            messages,
+            model=model,
+            max_tokens=max_tokens,
+            temperature=temperature,
+            stream=stream,
+        )
+
+
+def test_agent_loop_reports_true_stream_progress_without_model_text(
+    tmp_path: Path,
+) -> None:
+    workspace = WorkspaceManager(tmp_path / "data").open("project", "stream")
+    sessions = AgentSessionManager()
+    sessions.start(
+        workspace,
+        session_id="stream-session",
+        stage="compose",
+        budget=AgentBudget(max_steps=4, max_total_tokens=100),
+    )
+    events: list[tuple[str, str, dict[str, object]]] = []
+    result = AgentLoop(
+        _StreamingFakeClient(
+            '{"actions":[{"tool":"write_file","scope":"out",'
+            '"path":"index.html","content":"<main>ok</main>"}],"done":false}',
+            '{"actions":[{"tool":"render","scope":"out",'
+            '"entry":"index.html"}],"done":false}',
+            '{"actions":[],"done":true}',
+        ),
+        renderer=_FakeRenderer(),
+        session_manager=sessions,
+        activity_reporter=lambda kind, summary, **values: events.append(
+            (kind, summary, dict(values.get("details", {})))
+        ),
+    ).run(
+        workspace,
+        "stream-session",
+        goal="stream safely",
+        model="fixture",
+    )
+
+    assert result.completed is True
+    stream_events = [event for event in events if event[0] == "stream"]
+    assert stream_events
+    assert stream_events[0][2]["chunks"] == 1
+    assert any(
+        event[0] == "tool" and event[2].get("status") == "running"
+        for event in events
+    )
+    assert all("actions" not in repr(event) for event in events)
+
+
 def test_agent_loop_uses_tools_and_requires_a_healthy_render(tmp_path: Path) -> None:
     workspace = WorkspaceManager(tmp_path / "data").open("project", "candidate")
     sessions = AgentSessionManager()

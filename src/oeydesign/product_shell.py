@@ -862,6 +862,24 @@ class ProductShellService:
             for x in events
         ]
 
+    def activity(self, project_id: str, after: int = 0) -> list[dict[str, Any]]:
+        """Return ordered, public Agent progress events after a durable cursor."""
+
+        self.app.repository.get(project_id)
+        return [
+            {
+                "id": event.id,
+                "sequence": event.sequence,
+                "job_id": event.job_id,
+                "type": event.type,
+                "stage": event.stage,
+                "summary": event.summary,
+                "details": _safe(dict(event.details)),
+                "created_at": event.created_at,
+            }
+            for event in self.app.product_store.activity_after(project_id, after)
+        ]
+
     def command(self, project_id: str, body: dict[str, Any]) -> dict[str, Any]:
         cid, rev = self._cid(body), self._revision(body)
         action = body.get("action")
@@ -1307,6 +1325,16 @@ def make_handler(
                     self._json(
                         200,
                         service.events(
+                            parts[3], int(parse_qs(parsed.query).get("after", ["0"])[0])
+                        ),
+                    )
+                elif path.startswith("/api/projects/") and path.endswith("/activity"):
+                    parts = path.split("/")
+                    if len(parts) != 5 or not parts[3]:
+                        raise ValueError("Invalid project path")
+                    self._json(
+                        200,
+                        service.activity(
                             parts[3], int(parse_qs(parsed.query).get("after", ["0"])[0])
                         ),
                     )

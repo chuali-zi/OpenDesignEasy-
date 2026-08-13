@@ -22,6 +22,7 @@ class _ProductFixtureProvider:
 
     def __init__(self) -> None:
         self.calls = 0
+        self.stream_values: list[bool] = []
 
     def chat(
         self,
@@ -32,8 +33,9 @@ class _ProductFixtureProvider:
         temperature: float,
         stream: bool,
     ) -> ProviderResponse:
-        del model, max_tokens, temperature, stream
+        del model, max_tokens, temperature
         self.calls += 1
+        self.stream_values.append(stream)
         system = str(messages[0].get("content", ""))
         if "multimodal design intake editor" in system:
             content = json.dumps(
@@ -295,6 +297,7 @@ def test_fake_provider_runs_real_build_revision_quality_and_delivery(
         assert job.steps > 0
         assert job.total_tokens > 0
         assert job.renders == 2
+        assert provider.stream_values and all(provider.stream_values)
         project = service.project(project["id"])
         assert project["state"] == "AWAITING_DIRECTION_APPROVAL"
         assert len(project["candidates"]) == 2

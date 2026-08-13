@@ -216,8 +216,11 @@ class ProviderDialog(QDialog):
         title.setFont(font_display(16))
         layout.addWidget(title)
         layout.addWidget(
-            _hint("The API key goes to Windows Credential Manager, "
-                  "never into project records.")
+            _hint(
+                "The API key goes to Windows Credential Manager, "
+                "never into project records. Kimi Code membership keys and "
+                "Kimi Platform API keys are not interchangeable."
+            )
         )
 
         layout.addWidget(_hint("BASE URL"))
@@ -267,8 +270,12 @@ class ProviderDialog(QDialog):
         except Exception as exc:  # noqa: BLE001
             self._show(str(exc), ok=False)
             return
-        self.base_url_edit.setText(str(data.get("base_url", "")))
-        self.model_edit.setText(str(data.get("model", "")))
+        # Give a first-time Code user the official compatible endpoint, while
+        # respecting every setting returned by an existing configuration.
+        self.base_url_edit.setText(
+            str(data.get("base_url") or "https://api.kimi.com/coding/v1")
+        )
+        self.model_edit.setText(str(data.get("model") or "k3"))
         configured = bool(data.get("credential_configured"))
         if configured:
             self._show("credential configured ✔", ok=True)
@@ -284,9 +291,7 @@ class ProviderDialog(QDialog):
         model = self.model_edit.text().strip()
         api_key = self.key_edit.text()
         self._start(
-            lambda: self._backend.save_provider(
-                base_url, model, api_key
-            ),
+            lambda: self._backend.save_provider(base_url, model, api_key),
             "saved & probed ✔",
             deleting=False,
         )
@@ -309,7 +314,10 @@ class ProviderDialog(QDialog):
             return
         self._set_busy(True)
         self._show(
-            "deleting…" if deleting else "probing Kimi without blocking the window…",
+            "deleting…"
+            if deleting
+            else "probing Kimi without blocking the window… "
+            "Your typed endpoint, model, and key stay in place if the probe fails.",
             ok=True,
         )
         task = _ProviderTask(operation, self)

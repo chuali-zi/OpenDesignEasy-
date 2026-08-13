@@ -93,6 +93,29 @@ def test_production_shell_starts_blocked_and_enforces_origin_csrf(
         )
         assert status == 201
         assert project["state"] == "NEW"
+        activity = app.product_store.append_activity(
+            project_id=project["id"],
+            job_id="job-visible-progress",
+            type="stream",
+            stage="provider-request",
+            summary="Kimi is streaming the next action",
+            details={"chunks": 3, "content": "must-not-leak"},
+        )
+        status, progress = _request(
+            port,
+            "GET",
+            f"/api/projects/{project['id']}/activity?after=0",
+        )
+        assert status == 200
+        assert progress[0]["sequence"] == activity.sequence
+        assert progress[0]["details"] == {"chunks": 3}
+        status, no_progress = _request(
+            port,
+            "GET",
+            f"/api/projects/{project['id']}/activity?after={activity.sequence}",
+        )
+        assert status == 200
+        assert no_progress == []
         message = json.dumps(
             {
                 "client_message_id": "message:1",

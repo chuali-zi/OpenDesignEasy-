@@ -1,7 +1,8 @@
-"""Vendor-neutral capability registry and trusted Kimi host adapter."""
+"""Vendor-neutral capability registry and trusted chat-completions adapter."""
 
 from __future__ import annotations
 
+import inspect
 import json
 import os
 import time
@@ -54,6 +55,8 @@ class CapabilityClient(Protocol):
         max_tokens: int,
         temperature: float,
         stream: bool,
+        reasoning_effort: str | None = None,
+        on_stream_chunk: Callable[[str], None] | None = None,
     ) -> ProviderResponse: ...
 
 
@@ -126,8 +129,27 @@ class CapabilityRegistry:
         return binding
 
 
+def stream_callback_options(
+    client: CapabilityClient,
+    callback: Callable[[str], None],
+) -> dict[str, Callable[[str], None]]:
+    """Add the optional stream hook while preserving legacy fake adapters."""
+
+    try:
+        parameters = inspect.signature(client.chat).parameters.values()
+    except (TypeError, ValueError):
+        return {}
+    if any(
+        parameter.name == "on_stream_chunk"
+        or parameter.kind is inspect.Parameter.VAR_KEYWORD
+        for parameter in parameters
+    ):
+        return {"on_stream_chunk": callback}
+    return {}
+
+
 class KimiTrustedAdapter:
-    """Minimal OpenAI-compatible Kimi client; credentials never leave this object."""
+    """Minimal OpenAI-compatible client; credentials never leave this object."""
 
     capability_version = "kimi-openai-compatible/1"
 
@@ -179,23 +201,37 @@ class KimiTrustedAdapter:
         max_tokens: int,
         temperature: float = 1.0,
         stream: bool = True,
+        reasoning_effort: str | None = None,
+        on_stream_chunk: Callable[[str], None] | None = None,
     ) -> ProviderResponse:
         if not messages or not model or max_tokens < 1:
             raise ContractError(
                 ErrorCategory.DETERMINISTIC_FAILURE,
                 "Provider request is incomplete",
             )
-        body = json.dumps(
-            {
-                "model": model,
-                "messages": messages,
-                "max_tokens": max_tokens,
-                "temperature": temperature,
-                "stream": stream,
-                **({"stream_options": {"include_usage": True}} if stream else {}),
-            },
-            ensure_ascii=False,
-        ).encode("utf-8")
+        request_document: dict[str, Any] = {
+            "model": model,
+            "messages": messages,
+            "max_tokens": max_tokens,
+            "stream": stream,
+        }
+        # Kimi Code's OpenAI-compatible endpoint accepts Chat Completions but K3
+        # rejects caller-controlled sampling values. Keep the general adapter's
+        # sampling behaviour for ordinary OpenAI-compatible providers.
+        coding_profile = _kimi_coding_profile(self._base_url, model)
+        if not coding_profile:
+            request_document["temperature"] = temperature
+        if coding_profile and model.casefold().startswith("k3"):
+            selected_effort = reasoning_effort or "high"
+            if selected_effort not in {"low", "high", "max"}:
+                raise ContractError(
+                    ErrorCategory.DETERMINISTIC_FAILURE,
+                    "Kimi K3 reasoning effort must be low, high, or max",
+                )
+            request_document["reasoning_effort"] = selected_effort
+        if stream:
+            request_document["stream_options"] = {"include_usage": True}
+        body = json.dumps(request_document, ensure_ascii=False).encode("utf-8")
         request = urllib.request.Request(
             f"{self._base_url}/chat/completions",
             data=body,
@@ -203,6 +239,7 @@ class KimiTrustedAdapter:
                 "Accept": "text/event-stream" if stream else "application/json",
                 "Authorization": f"Bearer {self._api_key}",
                 "Content-Type": "application/json",
+                "User-Agent": "OEYdesign-Agent/1",
             },
             method="POST",
         )
@@ -212,7 +249,7 @@ class KimiTrustedAdapter:
                 request, timeout=self.timeout_seconds
             ) as response:
                 if stream:
-                    result = self._read_stream(response)
+                    result = self._read_stream(response, on_chunk=on_stream_chunk)
                 else:
                     result = self._read_json(response)
         except urllib.error.HTTPError as exc:
@@ -277,7 +314,11 @@ class KimiTrustedAdapter:
             ) from exc
 
     @staticmethod
-    def _read_stream(response: Any) -> ProviderResponse:
+    def _read_stream(
+        response: Any,
+        *,
+        on_chunk: Callable[[str], None] | None = None,
+    ) -> ProviderResponse:
         pieces: list[str] = []
         usage: Mapping[str, int] = {}
         finish_reason: str | None = None
@@ -302,8 +343,16 @@ class KimiTrustedAdapter:
             usage = _usage(document.get("usage")) or usage
             for choice in document.get("choices") or ():
                 delta = choice.get("delta") or {}
+                # Reasoning models can spend a long interval emitting only a
+                # private reasoning channel. Signal transport progress without
+                # forwarding that text to the product/UI callback.
+                if delta.get("reasoning_content") is not None and on_chunk is not None:
+                    on_chunk("")
                 if delta.get("content"):
-                    pieces.append(str(delta["content"]))
+                    content = str(delta["content"])
+                    pieces.append(content)
+                    if on_chunk is not None:
+                        on_chunk(content)
                 if choice.get("finish_reason"):
                     finish_reason = str(choice["finish_reason"])
         return ProviderResponse("".join(pieces), usage, 0.0, finish_reason)
@@ -346,3 +395,21 @@ def _approved_base_url(value: str) -> bool:
     if parsed.scheme != "http":
         return False
     return parsed.hostname in {"127.0.0.1", "localhost", "::1"}
+
+
+def _kimi_coding_profile(base_url: str, model: str) -> bool:
+    """Return whether this request uses the Kimi Code Chat Completions profile.
+
+    This is endpoint capability detection, rather than a model-name rule: Kimi's
+    ordinary Platform API and unrelated OpenAI-compatible endpoints retain their
+    caller-selected temperature. The Code subscription endpoint is deliberately
+    scoped because its coding models reject sampling overrides with HTTP 400.
+    """
+
+    parsed = urlsplit(base_url)
+    path = parsed.path.rstrip("/")
+    return (
+        parsed.hostname == "api.kimi.com"
+        and (path == "/coding" or path.startswith("/coding/"))
+        and bool(model.strip())
+    )

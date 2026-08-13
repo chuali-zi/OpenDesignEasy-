@@ -12,6 +12,7 @@ from dataclasses import dataclass, replace
 from pathlib import Path, PurePosixPath
 from typing import TYPE_CHECKING, Any, Protocol
 
+from .capabilities import stream_callback_options
 from .domain import ContractError, ErrorCategory, SourceAsset, SourceLocator, stable_id
 from .repository import RepositoryFileSummary
 
@@ -173,6 +174,7 @@ class AgentLoop:
         allowed_tools: frozenset[str] | None = None,
         validation_only: bool = False,
         boundary_check: Callable[[str], Any] | None = None,
+        activity_reporter: Callable[[str, str], Any] | None = None,
     ) -> None:
         if sandbox_launcher is None:
             from .sandbox import default_sandbox_launcher
@@ -187,6 +189,7 @@ class AgentLoop:
         self.validation_only = validation_only
         self.last_render_result: Any | None = None
         self.boundary_check = boundary_check
+        self.activity_reporter = activity_reporter
 
     def run(
         self,
@@ -246,12 +249,44 @@ class AgentLoop:
                 try:
                     if self.boundary_check is not None:
                         self.boundary_check("provider-request")
-                    response = self.client.chat(
-                        messages,
-                        model=model,
-                        max_tokens=max_tokens,
-                        temperature=temperature,
-                        stream=True,
+                    stream_chunks = 0
+                    stream_bytes = 0
+                    last_stream_event = 0.0
+
+                    def report_stream_chunk(chunk: str) -> None:
+                        """Expose transport progress without exposing model text."""
+
+                        nonlocal stream_chunks, stream_bytes, last_stream_event
+                        stream_chunks += 1
+                        stream_bytes += len(chunk.encode("utf-8"))
+                        now = time.monotonic()
+                        if stream_chunks != 1 and now - last_stream_event < 0.4:
+                            return
+                        last_stream_event = now
+                        self._activity(
+                            "stream",
+                            "Kimi is streaming the next action",
+                            chunks=stream_chunks,
+                            bytes_received=stream_bytes,
+                            status="receiving",
+                        )
+
+                    request_kwargs: dict[str, Any] = {
+                        "model": model,
+                        "max_tokens": max_tokens,
+                        "temperature": temperature,
+                        "stream": True,
+                    }
+                    request_kwargs.update(
+                        stream_callback_options(self.client, report_stream_chunk)
+                    )
+                    response = self.client.chat(messages, **request_kwargs)
+                    self._activity(
+                        "model",
+                        "Model response received",
+                        chunks=stream_chunks,
+                        bytes_received=stream_bytes,
+                        **_usage_values(response.usage),
                     )
                     if self.boundary_check is not None:
                         self.boundary_check("provider-response")
@@ -357,6 +392,12 @@ class AgentLoop:
                 tool = action.get("tool")
                 if self.boundary_check is not None:
                     self.boundary_check(f"tool:{tool or 'invalid'}")
+                self._activity(
+                    "tool",
+                    "Calling tool",
+                    tool=str(tool or "invalid"),
+                    status="running",
+                )
                 if self.validation_only and tool == "render":
                     action = {
                         "tool": "render",
@@ -417,6 +458,12 @@ class AgentLoop:
                     elapsed_seconds=response.elapsed_seconds if index == 0 else 0.0,
                     render=is_render,
                 )
+                self._activity(
+                    "tool",
+                    "Tool completed" if outcome == "ok" else "Tool needs attention",
+                    tool=str(tool or "invalid"), status=outcome,
+                    healthy=bool(result.get("healthy")) if is_render else None,
+                )
                 visible_result = result
                 if is_render and result.get("screenshot_data_url"):
                     visible_result = dict(result)
@@ -472,6 +519,18 @@ class AgentLoop:
             reasoning_tokens=usage["reasoning_tokens"],
             elapsed_seconds=response.elapsed_seconds,
         )
+
+    def _activity(self, type: str, summary: str, **details: Any) -> None:
+        """Emit only normalized operational metadata, never model/provider text."""
+
+        if self.activity_reporter is None:
+            return
+        safe = {key: value for key, value in details.items() if value is not None}
+        try:
+            self.activity_reporter(type, summary, details=safe)
+        except TypeError:
+            # Keep the lightweight two-argument hook useful to embedders.
+            self.activity_reporter(type, summary)
 
     def _execute(
         self,

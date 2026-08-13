@@ -82,11 +82,15 @@ class MainWindow(QMainWindow):
         self._render_signature = ""
         self._guard_failed = False
         self._backend_task: _BackendTask | None = None
+        self._poll_task: _BackendTask | None = None
         self._backend_success: Callable[[object], None] | None = None
+        self._activity_cursor = 0
+        self._closing = False
         self._provider_dialog: ProviderDialog | None = None
 
         self.setWindowTitle("OEY*design* — Production Room")
-        self.resize(1280, 800)
+        self.resize(1440, 900)
+        self.setMinimumSize(980, 640)
 
         central = QWidget()
         root = QVBoxLayout(central)
@@ -95,22 +99,23 @@ class MainWindow(QMainWindow):
         root.addWidget(self._build_topbar())
 
         splitter = QSplitter(Qt.Orientation.Horizontal)
+        self._workspace_splitter = splitter
         splitter.setChildrenCollapsible(False)
         self.brief = BriefPanel()
         self.stage = StagePanel()
         self.inspector = InspectorPanel()
         # minimum widths keep chips/buttons in the side columns unclipped;
         # the middle canvas is the flexible one.
-        self.brief.setMinimumWidth(280)
-        self.stage.setMinimumWidth(400)
-        self.inspector.setMinimumWidth(300)
+        self.brief.setMinimumWidth(300)
+        self.stage.setMinimumWidth(520)
+        self.inspector.setMinimumWidth(250)
         splitter.addWidget(self.brief)
         splitter.addWidget(self.stage)
         splitter.addWidget(self.inspector)
-        splitter.setStretchFactor(0, 24)
-        splitter.setStretchFactor(1, 50)
-        splitter.setStretchFactor(2, 26)
-        splitter.setSizes([300, 640, 340])
+        splitter.setStretchFactor(0, 18)
+        splitter.setStretchFactor(1, 64)
+        splitter.setStretchFactor(2, 18)
+        splitter.setSizes([320, 880, 280])
         root.addWidget(splitter, stretch=1)
         self.setCentralWidget(central)
 
@@ -249,7 +254,7 @@ class MainWindow(QMainWindow):
         if QApplication.overrideCursor() is not None:
             QApplication.restoreOverrideCursor()
         if self._active_run() is not None:
-            self._poll_timer.start(1500)
+            self._poll_timer.start(750)
 
     def _active_run(self) -> Any:
         if self._state is None:
@@ -257,6 +262,16 @@ class MainWindow(QMainWindow):
         for run in reversed(self._state.runs):
             if run.status.lower() in _ACTIVE_RUN_STATUSES:
                 return run
+        return None
+
+    def _display_run(self) -> Any:
+        """Keep the last run visible after its terminal event arrives."""
+
+        active = self._active_run()
+        if active is not None:
+            return active
+        if self._state is not None and self._state.runs:
+            return self._state.runs[-1]
         return None
 
     # -------------------------------------------------------------- refresh
@@ -314,9 +329,14 @@ class MainWindow(QMainWindow):
         if state is None:
             return
         self._project_id = project_id
+        self._activity_cursor = 0
         if self._settings is not None:
             self._settings.setValue("active_project_id", project_id)
         self._render(state)
+        # Replay the last run's durable activity once after project load even
+        # when the job is already completed or paused after a restart.
+        if self._display_run() is not None:
+            self._poll_timer.start(0)
 
     def _render(self, state: ProjectState | None) -> None:
         signature = repr(
@@ -342,19 +362,68 @@ class MainWindow(QMainWindow):
         self._render_signature = signature
         self._state = state
         active_run = self._active_run()
+        display_run = self._display_run()
         self.brief.set_messages(state.messages if state else [])
         if not unchanged:
             self.stage.set_state(state)
             self.inspector.set_state(state)
-        self.brief.set_run(active_run)
+        self.brief.set_run(display_run)
         if state is not None and active_run is not None:
-            self._poll_timer.start(1500)
+            self._poll_timer.start(750)
         else:
             self._poll_timer.stop()
 
     def _poll(self) -> None:
-        if self._project_id:
-            self._load_project(self._project_id)
+        """Poll project/activity in a worker; never perform network I/O on Qt."""
+        if not self._project_id or self._poll_task is not None or self._backend_task:
+            return
+        project_id = self._project_id
+        cursor = self._activity_cursor
+
+        def operation() -> object:
+            return (
+                self._backend.get_project(project_id),
+                self._backend.get_project_activity(project_id, after_sequence=cursor),
+            )
+
+        task = _BackendTask(operation, self)
+        self._poll_task = task
+        task.succeeded.connect(self._poll_succeeded)
+        task.failed.connect(lambda _exc: None)  # next cycle may recover
+        task.finished.connect(self._poll_finished)
+        task.finished.connect(task.deleteLater)
+        task.start()
+
+    def _poll_succeeded(self, result: object) -> None:
+        if not isinstance(result, tuple) or len(result) != 2:
+            return
+        state, events = result
+        if not isinstance(state, ProjectState) or self._project_id != state.id:
+            return
+        self._render(state)
+        display_run = self._display_run()
+        if not isinstance(events, list):
+            return
+        if events:
+            self._activity_cursor = max(
+                self._activity_cursor,
+                max(int(getattr(event, "sequence", 0) or 0) for event in events),
+            )
+        if display_run is None:
+            return
+        matching = [
+            event
+            for event in events
+            if not getattr(event, "job_id", "")
+            or getattr(event, "job_id", "") == display_run.id
+        ]
+        if matching:
+            self.brief.set_activity(display_run, matching)
+
+    def _poll_finished(self) -> None:
+        self._poll_task = None
+        if not self._closing and self._active_run() is not None:
+            self._poll_timer.start(750)
 
     def _on_combo_changed(self, index: int) -> None:
         project_id = self._project_combo.itemData(index)
@@ -495,6 +564,14 @@ class MainWindow(QMainWindow):
         )
 
     def closeEvent(self, event: QCloseEvent) -> None:  # noqa: N802 - Qt override
+        self._closing = True
+        self._poll_timer.stop()
+        if self._poll_task is not None and not self._poll_task.wait(2_000):
+            event.ignore()
+            self.statusBar().showMessage(
+                "The local status refresh is finishing before exit."
+            )
+            return
         if self._backend_task is not None:
             event.ignore()
             self.statusBar().showMessage(
@@ -557,7 +634,9 @@ def main(argv: list[str] | None = None) -> int:
         backend = runtime.backend
         app.aboutToQuit.connect(runtime.close)
     window = MainWindow(backend)
-    window.show()
+    # The production room is a three-column workspace; start maximized so the
+    # live preview receives the dominant share of a normal desktop display.
+    window.showMaximized()
     return app.exec()
 
 

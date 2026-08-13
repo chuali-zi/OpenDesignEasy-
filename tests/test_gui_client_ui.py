@@ -14,7 +14,14 @@ import pytest
 from PySide6.QtWidgets import QApplication
 
 from gui_client.app import MainWindow
-from gui_client.backend import BackendError, Candidate, MockBackend, ProjectState
+from gui_client.backend import (
+    ActivityEvent,
+    BackendError,
+    Candidate,
+    MockBackend,
+    ProjectState,
+    RunInfo,
+)
 from gui_client.dialogs import NewProjectDialog
 from gui_client.panels.stage import StagePanel
 
@@ -125,9 +132,7 @@ class _ControllableBackend(MockBackend):
         self.calls.append((project_id, text, object_ref, target_id, target_revision))
         if self.fail_messages:
             raise BackendError("TEST_FAILURE", "The controlled request failed")
-        super().send_message(
-            project_id, text, object_ref, target_id, target_revision
-        )
+        super().send_message(project_id, text, object_ref, target_id, target_revision)
 
 
 def test_object_selection_survives_failed_send_and_clears_after_success(
@@ -225,3 +230,69 @@ def test_command_runs_in_background_and_reloads_when_finished(
         window._poll_timer.stop()
         window.close()
         window.deleteLater()
+
+
+def test_workspace_prioritizes_canvas_and_activity_appends_without_reset(
+    window: MainWindow, qt_app: QApplication
+) -> None:
+    window.resize(1920, 1080)
+    window.show()
+    qt_app.processEvents()
+    sizes = window._workspace_splitter.sizes()
+    assert sizes[1] > sizes[0]
+    assert sizes[1] > sizes[2]
+    assert window.stage.width() >= 800
+
+    run = RunInfo(
+        "run-activity",
+        "running",
+        "4s",
+        activity=[ActivityEvent(1, "Build", "Created the page shell.", "build")],
+    )
+    window.brief.set_run(run)
+    assert window.brief._activity_box.isHidden() is False
+    assert window.brief._activity_layout.count() == 2  # row + trailing stretch
+    window.brief.set_activity(
+        run,
+        [
+            ActivityEvent(1, "Build", "Created the page shell.", "build"),
+            ActivityEvent(2, "Render", "Rendered the desktop preview.", "render"),
+        ],
+    )
+    assert window.brief._activity_layout.count() == 3
+
+    window.brief.set_activity(
+        run,
+        [
+            ActivityEvent(
+                3, "Provider", "Kimi is streaming.", "stream", detail="chunks: 1"
+            ),
+            ActivityEvent(
+                4, "Provider", "Kimi is streaming.", "stream", detail="chunks: 9"
+            ),
+        ],
+    )
+    # Consecutive transport pulses update one live row rather than causing
+    # scroll churn, while both durable sequences are remembered.
+    assert window.brief._activity_layout.count() == 4
+    assert window.brief._activity_sequences.issuperset({3, 4})
+    assert "chunks: 9" in window.brief._activity_tail_widget.text()
+
+
+def test_completed_run_remains_visible_with_its_terminal_activity(
+    window: MainWindow,
+) -> None:
+    assert window._state is not None
+    run = RunInfo(
+        "run-complete",
+        "done",
+        "12.0s",
+        stage="completed",
+        activity=[ActivityEvent(7, "Completed", "Agent job completed", "job")],
+    )
+    window._state.runs = [run]
+    window._render(window._state)
+
+    assert window.brief._run_strip.isHidden() is False
+    assert "DONE" in window.brief._run_label.text()
+    assert window.brief._activity_box.isHidden() is False

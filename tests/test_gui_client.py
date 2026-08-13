@@ -141,6 +141,18 @@ def test_http_backend_real_project_sources_and_safe_blocker(tmp_path: Path) -> N
         assert backend.list_projects() == [summary]
         project = backend.get_project(summary.id)
         assert project.revision == 1
+        app.product_store.append_activity(
+            project_id=project.id,
+            job_id="run-desktop-stream",
+            type="stream",
+            stage="provider-request",
+            summary="Kimi is streaming the next action",
+            details={"chunks": 5, "bytes_received": 128},
+        )
+        activity = backend.get_project_activity(project.id, after_sequence=0)
+        assert len(activity) == 1
+        assert activity[0].job_id == "run-desktop-stream"
+        assert "chunks: 5" in activity[0].detail
 
         repository = tmp_path / "repository"
         repository.mkdir()

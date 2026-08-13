@@ -63,6 +63,37 @@ def test_product_schema_is_additive_and_messages_are_idempotent(
         assert repeated == message
         assert product.list_messages("project-1") == (message,)
 
+        first = product.append_activity(
+            project_id="project-1",
+            job_id="job-1",
+            type="model",
+            stage="intake",
+            summary="  Understanding the request  ",
+            details={
+                "total_tokens": 12,
+                "system_prompt": "must never persist",
+                "payload": "raw provider response",
+                "unrecognized": "not public",
+            },
+        )
+        second = product.append_activity(
+            project_id="project-1",
+            job_id="job-1",
+            type="tool",
+            stage="build",
+            summary="Building application",
+            details={"tool": "run_build", "healthy": True},
+        )
+        assert first.sequence == 1
+        assert first.summary == "Understanding the request"
+        assert dict(first.details) == {"total_tokens": 12}
+        assert product.activity_after("project-1", first.sequence) == (second,)
+        raw_activity = store.connection.execute(
+            "SELECT details_json FROM agent_activity_events"
+        ).fetchone()[0]
+        assert "provider response" not in raw_activity
+        assert "system_prompt" not in raw_activity
+
         product.save_provider_settings(
             ProviderSettings("kimi", "https://api.moonshot.cn/v1", "k3", True)
         )
@@ -76,6 +107,7 @@ def test_product_schema_is_additive_and_messages_are_idempotent(
         assert {
             "product_messages",
             "agent_jobs",
+            "agent_activity_events",
             "artifact_file_sets",
             "provider_settings",
         }.issubset(table_names)

@@ -6,6 +6,7 @@ import base64
 import hashlib
 import json
 import shutil
+import time
 from collections.abc import Mapping
 from dataclasses import dataclass, replace
 from pathlib import Path
@@ -21,7 +22,7 @@ from .agent_engine import (
     WorkspaceScope,
 )
 from .builder import NativeEsbuildBuilder
-from .capabilities import CapabilityClient
+from .capabilities import CapabilityClient, stream_callback_options
 from .domain import (
     Approval,
     ApprovedDirection,
@@ -123,6 +124,7 @@ class KimiVisualQualityReview:
 
     def __init__(self, provider: ProviderResolverPort) -> None:
         self.provider = provider
+        self.activity_reporter: Any | None = None
 
     def review(
         self,
@@ -133,6 +135,9 @@ class KimiVisualQualityReview:
     ) -> VisualReview:
         client, model = self.provider.require()
         encoded = base64.b64encode(screenshot).decode("ascii")
+        progress = _stream_progress(
+            self.activity_reporter, "Kimi is reviewing the rendered design"
+        )
         response = client.chat(
             [
                 {
@@ -170,7 +175,8 @@ class KimiVisualQualityReview:
             model=model,
             max_tokens=4_000,
             temperature=0.2,
-            stream=False,
+            stream=True,
+            **stream_callback_options(client, progress),
         )
         return parse_visual_review(response.content)
 
@@ -209,6 +215,7 @@ class AgentComposer:
         self.sessions = AgentSessionManager()
         self.contract = FrameworkArtifactContract()
         self.boundary_check: Any | None = None
+        self.activity_reporter: Any | None = None
 
     @property
     def ready(self) -> bool:
@@ -262,6 +269,12 @@ class AgentComposer:
             )
 
         def build_action(active: AgentWorkspace):
+            if self.activity_reporter:
+                self.activity_reporter(
+                    "tool",
+                    "Building the web application",
+                    details={"tool": "run_build"},
+                )
             files = _workspace_source_files(active)
             plan = self.contract.prepare(
                 files,
@@ -300,7 +313,10 @@ class AgentComposer:
                 }
             ),
             boundary_check=self.boundary_check,
+            activity_reporter=self.activity_reporter,
         )
+        if self.activity_reporter:
+            self.activity_reporter("agent", "Composing a design direction")
         result = loop.run(
             workspace,
             session_id,
@@ -326,10 +342,18 @@ class AgentComposer:
                 "Agent completed without trusted render evidence",
             )
         _require_healthy_render(render)
+        if self.activity_reporter:
+            self.activity_reporter(
+                "render", "Rendered design direction",
+                details={"healthy": True, "render": "trusted"},
+            )
         screenshot = Path(str(render.screenshot_path)).read_bytes()
-        review = self.visual_quality.review(
-            screenshot, brief=brief, territory=territory
-        )
+        review = self._review(screenshot, brief=brief, territory=territory)
+        if self.activity_reporter:
+            self.activity_reporter(
+                "quality", "Reviewed visual quality",
+                details={"verdict": review.verdict.value},
+            )
         repair_round = 0
         while not review.passes and review.verdict is GateVerdict.REPAIR:
             repair_round += 1
@@ -366,6 +390,7 @@ class AgentComposer:
                     }
                 ),
                 boundary_check=self.boundary_check,
+                activity_reporter=self.activity_reporter,
             )
             repair = repair_loop.run(
                 workspace,
@@ -390,10 +415,25 @@ class AgentComposer:
             if render is None:
                 break
             _require_healthy_render(render)
+            if self.activity_reporter:
+                self.activity_reporter(
+                    "render", "Rendered visual repair",
+                    details={
+                        "healthy": True,
+                        "render": "trusted",
+                        "repair_round": repair_round,
+                    },
+                )
             screenshot = Path(str(render.screenshot_path)).read_bytes()
-            review = self.visual_quality.review(
-                screenshot, brief=brief, territory=territory
-            )
+            review = self._review(screenshot, brief=brief, territory=territory)
+            if self.activity_reporter:
+                self.activity_reporter(
+                    "quality", "Reviewed visual repair",
+                    details={
+                        "verdict": review.verdict.value,
+                        "repair_round": repair_round,
+                    },
+                )
         if not review.passes:
             raise ContractError(
                 ErrorCategory.NEEDS_INPUT,
@@ -433,6 +473,19 @@ class AgentComposer:
             metadata=metadata,
         )
         return file_set, review, metadata
+
+    def _review(
+        self,
+        screenshot: bytes,
+        *,
+        brief: DesignBrief,
+        territory: DesignTerritory,
+    ) -> VisualReview:
+        if hasattr(self.visual_quality, "activity_reporter"):
+            self.visual_quality.activity_reporter = self.activity_reporter
+        return self.visual_quality.review(
+            screenshot, brief=brief, territory=territory
+        )
 
     def _seed(
         self, workspace: AgentWorkspace, base_file_set: ArtifactFileSet | None
@@ -511,6 +564,10 @@ class AgentDesignIntelligence:
             count,
         )
         client, model = self.provider.require()
+        progress = _stream_progress(
+            self.composer.activity_reporter,
+            "Kimi is shaping two distinct design territories",
+        )
         response = client.chat(
             [
                 {
@@ -540,7 +597,8 @@ class AgentDesignIntelligence:
             model=model,
             max_tokens=6_000,
             temperature=0.9,
-            stream=False,
+            stream=True,
+            **stream_callback_options(client, progress),
         )
         self._plans[strategy.id] = parse_territory_plan(response.content)
         return strategy
@@ -1157,6 +1215,34 @@ def _territory_document(value: DesignTerritory) -> dict[str, Any]:
         "interaction_emphasis": value.interaction_emphasis,
         "repository_facts": list(value.repository_facts),
     }
+
+
+def _stream_progress(reporter: Any | None, summary: str):
+    """Translate provider chunks into throttled, text-free progress pulses."""
+
+    chunks = 0
+    byte_count = 0
+    last_report = 0.0
+
+    def report(chunk: str) -> None:
+        nonlocal chunks, byte_count, last_report
+        chunks += 1
+        byte_count += len(chunk.encode("utf-8"))
+        now = time.monotonic()
+        if reporter is None or (chunks != 1 and now - last_report < 0.4):
+            return
+        last_report = now
+        reporter(
+            "stream",
+            summary,
+            details={
+                "chunks": chunks,
+                "bytes_received": byte_count,
+                "status": "receiving",
+            },
+        )
+
+    return report
 
 
 def _visual_review_document(value: VisualReview) -> dict[str, Any]:

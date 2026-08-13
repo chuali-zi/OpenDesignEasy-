@@ -12,10 +12,12 @@ from PySide6.QtGui import QColor, QPainter, QPainterPath, QPen
 from PySide6.QtWebEngineCore import QWebEnginePage
 from PySide6.QtWebEngineWidgets import QWebEngineView
 from PySide6.QtWidgets import (
+    QFrame,
     QHBoxLayout,
     QLabel,
     QStackedWidget,
     QTabBar,
+    QVBoxLayout,
     QWidget,
 )
 
@@ -223,7 +225,23 @@ class StagePanel(DoodlePanel):
         self._tabs.currentChanged.connect(self._show_current_preview)
         self.content_layout().addWidget(self._tabs)
 
+        # A rounded preview well owns both the placeholder and WebEngine view.
+        # The small inset prevents a square child surface from visually cutting
+        # through the rounded shell when switching between targets.
+        self._preview_well = QFrame()
+        self._preview_well.setObjectName("previewWell")
+        self._preview_well.setStyleSheet(
+            f"QFrame#previewWell {{ background: {COLORS['paper_alt']}; "
+            f"border: 2px solid {COLORS['ink']}; border-radius: 16px; }}"
+        )
+        preview_layout = QVBoxLayout(self._preview_well)
+        preview_layout.setContentsMargins(4, 4, 4, 4)
+        preview_layout.setSpacing(0)
         self._preview_stack = QStackedWidget()
+        self._preview_stack.setStyleSheet(
+            f"QStackedWidget {{ background: {COLORS['paper']}; "
+            "border: none; border-radius: 12px; }}"
+        )
         self._canvas = DoodleCanvas()
         self._preview_page = _PreviewPage(self)
         self._preview_page.object_selected.connect(self._accept_object_selection)
@@ -234,7 +252,8 @@ class StagePanel(DoodlePanel):
         self._preview.loadFinished.connect(self._preview_loaded)
         self._preview_stack.addWidget(self._canvas)
         self._preview_stack.addWidget(self._preview)
-        self.content_layout().addWidget(self._preview_stack, stretch=1)
+        preview_layout.addWidget(self._preview_stack)
+        self.content_layout().addWidget(self._preview_well, stretch=1)
 
         self._caption = QLabel("No rendered artifact — yet!")
         self._caption.setFont(font_label(9))

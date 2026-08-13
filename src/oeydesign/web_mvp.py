@@ -8,6 +8,7 @@ import io
 import json
 import os
 import threading
+import time
 import warnings
 import weakref
 from collections.abc import Mapping
@@ -23,7 +24,11 @@ from .agent_design import (
     KimiVisualQualityReview,
     ModelAwareWebQualityPort,
 )
-from .capabilities import CapabilityClient, KimiTrustedAdapter
+from .capabilities import (
+    CapabilityClient,
+    KimiTrustedAdapter,
+    stream_callback_options,
+)
 from .context import LocalSourceStore
 from .credentials import (
     KIMI_CREDENTIAL_TARGET,
@@ -148,9 +153,12 @@ class ProviderResolver:
                     }
                 ],
                 model=model.strip(),
-                max_tokens=16,
+                # Reasoning models may consume a small prefix before emitting
+                # READY; an ultra-small cap can create a false-negative probe.
+                max_tokens=1_024,
                 temperature=0,
                 stream=False,
+                reasoning_effort="low",
             )
             if "READY" not in response.content.upper():
                 raise ContractError(
@@ -315,6 +323,7 @@ class KimiIntake:
         self.app = app
         self.product_store = product_store
         self.last_usage: Mapping[str, int] = MappingProxyType({})
+        self.activity_reporter: Any | None = None
 
     def decide(self, project_id: str) -> IntakeDecision:
         client, model = self.provider.require()
@@ -384,6 +393,10 @@ class KimiIntake:
             }
         ]
         content.extend(image_parts)
+        progress = _stream_progress(
+            self.activity_reporter,
+            "Kimi is streaming the intake analysis",
+        )
         response = client.chat(
             [
                 {
@@ -407,7 +420,8 @@ class KimiIntake:
             model=model,
             max_tokens=10_000,
             temperature=0.3,
-            stream=False,
+            stream=True,
+            **stream_callback_options(client, progress),
         )
         self.last_usage = MappingProxyType(dict(response.usage))
         return parse_intake_decision(response.content)
@@ -712,6 +726,10 @@ class ProductApplication(Phase6Application):
             idempotency_key=idempotency_key,
             input={"message_id": message.id},
         )
+        self.product_store.append_activity(
+            project_id=job.project_id, job_id=job.id, type="job", stage="queued",
+            summary="Agent job queued", details={"kind": job.kind},
+        )
         self.jobs.wake()
         return job
 
@@ -719,7 +737,12 @@ class ProductApplication(Phase6Application):
         self, job: AgentJob, control: JobControl
     ) -> Mapping[str, Any]:
         control.checkpoint("intake")
-        decision = self.intake.decide(job.project_id)
+        control.activity("model", "Analyzing the request")
+        self.intake.activity_reporter = control.activity
+        try:
+            decision = self.intake.decide(job.project_id)
+        finally:
+            self.intake.activity_reporter = None
         control.add_usage(
             steps=1,
             total_tokens=sum(int(value) for value in self.intake.last_usage.values()),
@@ -792,6 +815,7 @@ class ProductApplication(Phase6Application):
         prepared = self.repository.get(job.project_id)
         if self.composer is not None:
             self.composer.boundary_check = control.checkpoint
+            self.composer.activity_reporter = control.activity
         try:
             try:
                 result = self.control.execute(
@@ -813,6 +837,7 @@ class ProductApplication(Phase6Application):
         finally:
             if self.composer is not None:
                 self.composer.boundary_check = None
+                self.composer.activity_reporter = None
         budgets = tuple(
             file_set.metadata.get("budget", {})
             for candidate in result.value
@@ -847,6 +872,7 @@ class ProductApplication(Phase6Application):
         self, job: AgentJob, control: JobControl
     ) -> Mapping[str, Any]:
         control.checkpoint("revision")
+        control.activity("model", "Understanding the requested revision")
         message_id = str(job.input.get("message_id", ""))
         message = next(
             (
@@ -891,6 +917,7 @@ class ProductApplication(Phase6Application):
         )
         if self.composer is not None:
             self.composer.boundary_check = control.checkpoint
+            self.composer.activity_reporter = control.activity
         try:
             try:
                 result = self.control.execute(
@@ -916,6 +943,7 @@ class ProductApplication(Phase6Application):
         finally:
             if self.composer is not None:
                 self.composer.boundary_check = None
+                self.composer.activity_reporter = None
         owner_kind = "artifact" if kind is FeedbackKind.ARTIFACT_LOCAL else "candidate"
         file_set = self.product_store.file_set_for(
             owner_kind, result.value.id, result.value.revision
@@ -1235,6 +1263,34 @@ def _dependency_manifests_ready(dependency_image: Path | None) -> bool:
         ):
             return False
     return bool(hashlib.sha256(lock.read_bytes()).hexdigest())
+
+
+def _stream_progress(reporter: Any | None, summary: str):
+    """Emit throttled provider progress while discarding all model text."""
+
+    chunks = 0
+    byte_count = 0
+    last_report = 0.0
+
+    def report(chunk: str) -> None:
+        nonlocal chunks, byte_count, last_report
+        chunks += 1
+        byte_count += len(chunk.encode("utf-8"))
+        now = time.monotonic()
+        if reporter is None or (chunks != 1 and now - last_report < 0.4):
+            return
+        last_report = now
+        reporter(
+            "stream",
+            summary,
+            details={
+                "chunks": chunks,
+                "bytes_received": byte_count,
+                "status": "receiving",
+            },
+        )
+
+    return report
 
 
 def _repository_intake_file(path: str, byte_size: int) -> bool:

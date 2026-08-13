@@ -65,6 +65,26 @@ class Candidate:
 
 
 @dataclass
+class ActivityEvent:
+    """A safe, user-facing progress entry for an agent run.
+
+    ``summary`` is deliberately a concise operational update (for example,
+    "Rendered desktop preview"), not private model reasoning.  ``sequence``
+    is monotonic within a run so clients can merge events delivered by an
+    eventual incremental endpoint without re-rendering the whole activity
+    stream.
+    """
+
+    sequence: int
+    phase: str
+    summary: str
+    kind: str = "status"  # status | tool | build | render | quality | error
+    timestamp: str = ""
+    detail: str = ""
+    job_id: str = ""
+
+
+@dataclass
 class RunInfo:
     id: str
     status: str  # "running" | "paused" | "done" | "cancelled" | "failed"
@@ -73,6 +93,8 @@ class RunInfo:
     can_pause: bool | None = None
     can_resume: bool | None = None
     can_cancel: bool | None = None
+    activity: list[ActivityEvent] = field(default_factory=list)
+    activity_cursor: int = 0
 
 
 @dataclass
@@ -153,6 +175,12 @@ class Backend(Protocol):
 
     def get_project(self, project_id: str) -> ProjectState:
         """GET /api/projects/{id}."""
+        ...
+
+    def get_project_activity(
+        self, project_id: str, *, after_sequence: int = 0
+    ) -> list[ActivityEvent]:
+        """GET /api/projects/{id}/activity?after=<cursor>."""
         ...
 
     def send_message(
@@ -261,8 +289,10 @@ class MockBackend:
             revision=3,
             messages=[
                 Message(
-                    "msg-0001", "user",
-                    "我想要一张恐龙生日派对的海报！", "09:30:12",
+                    "msg-0001",
+                    "user",
+                    "我想要一张恐龙生日派对的海报！",
+                    "09:30:12",
                 ),
                 Message(
                     "msg-0002",
@@ -288,7 +318,34 @@ class MockBackend:
             ],
             runs=[
                 RunInfo("run-0001", "done", "12s"),
-                RunInfo("run-0002", "running", "3s"),
+                RunInfo(
+                    "run-0002",
+                    "running",
+                    "3s",
+                    stage="quality review",
+                    activity=[
+                        ActivityEvent(1, "Plan", "Mapped the birthday-poster brief."),
+                        ActivityEvent(
+                            2, "Tools", "Checked the dinosaur reference image.", "tool"
+                        ),
+                        ActivityEvent(
+                            3, "Build", "Built two visual directions.", "build"
+                        ),
+                        ActivityEvent(
+                            4,
+                            "Render",
+                            "Rendered the approved crayon direction.",
+                            "render",
+                        ),
+                        ActivityEvent(
+                            5,
+                            "Quality",
+                            "Checking contrast and print-safe spacing…",
+                            "quality",
+                        ),
+                    ],
+                    activity_cursor=5,
+                ),
             ],
             sources=[
                 SourceInfo("src-0001", "note", "孩子口述：要绿色恐龙"),
@@ -375,6 +432,16 @@ class MockBackend:
     def get_project(self, project_id: str) -> ProjectState:
         return self._projects[project_id]
 
+    def get_project_activity(
+        self, project_id: str, *, after_sequence: int = 0
+    ) -> list[ActivityEvent]:
+        return [
+            event
+            for run in self._projects[project_id].runs
+            for event in run.activity
+            if event.sequence > after_sequence
+        ]
+
     def send_message(
         self,
         project_id: str,
@@ -392,26 +459,24 @@ class MockBackend:
         reply_idx = len(state.messages) % len(_MOCK_REPLIES)
         state.messages.append(
             Message(
-                self._next_id("msg"), "assistant",
-                _MOCK_REPLIES[reply_idx], self._now(),
+                self._next_id("msg"),
+                "assistant",
+                _MOCK_REPLIES[reply_idx],
+                self._now(),
             )
         )
         state.revision += 1
 
     def attach_repository(self, project_id: str, path: str) -> None:
         state = self._projects[project_id]
-        state.sources.append(
-            SourceInfo(self._next_id("src"), "repository", path)
-        )
+        state.sources.append(SourceInfo(self._next_id("src"), "repository", path))
         state.revision += 1
 
     def upload_images(self, project_id: str, paths: list[str]) -> None:
         state = self._projects[project_id]
         for path in paths:
             label = path.replace("\\", "/").rsplit("/", 1)[-1]
-            state.sources.append(
-                SourceInfo(self._next_id("src"), "image", label)
-            )
+            state.sources.append(SourceInfo(self._next_id("src"), "image", label))
         state.revision += 1
 
     def run_command(
@@ -450,7 +515,24 @@ class MockBackend:
                 state.quality = QualityInfo(
                     verdict="pass", visual_score=92, hard_errors=[]
                 )
-        state.runs.append(RunInfo(self._next_id("run"), "done", "1s"))
+        state.runs.append(
+            RunInfo(
+                self._next_id("run"),
+                "done",
+                "1s",
+                stage="complete",
+                activity=[
+                    ActivityEvent(1, "Plan", f"Queued {command.replace('_', ' ')}."),
+                    ActivityEvent(
+                        2, "Build", "Completed the requested production step.", "build"
+                    ),
+                    ActivityEvent(
+                        3, "Quality", "Recorded the resulting project state.", "quality"
+                    ),
+                ],
+                activity_cursor=3,
+            )
+        )
         state.revision += 1
         if not state.actions:
             state.readiness = "ready"
@@ -465,9 +547,7 @@ class MockBackend:
     def cancel_run(self, run_id: str) -> None:
         self._set_run_status(run_id, {"running", "paused"}, "cancelled")
 
-    def _set_run_status(
-        self, run_id: str, allowed: set[str], new_status: str
-    ) -> None:
+    def _set_run_status(self, run_id: str, allowed: set[str], new_status: str) -> None:
         for state in self._projects.values():
             for run in state.runs:
                 if run.id == run_id and run.status in allowed:
@@ -581,6 +661,26 @@ class HttpBackend:
         state = self._project(data)
         self._states[state.id] = state
         return state
+
+    def get_project_activity(
+        self, project_id: str, *, after_sequence: int = 0
+    ) -> list[ActivityEvent]:
+        """Fetch worker-supplied safe activity without blocking the Qt thread."""
+        try:
+            path = (
+                f"/api/projects/{quote(project_id, safe='')}/activity"
+                f"?after={after_sequence}"
+            )
+            data = self._json(
+                "GET",
+                path,
+            )
+        except BackendError as exc:
+            if exc.status in {404, 405}:
+                return []
+            raise
+        items = data.get("activity", data) if isinstance(data, dict) else data
+        return self._activity(items)
 
     def send_message(
         self,
@@ -1016,9 +1116,7 @@ class HttpBackend:
             chunks.extend(
                 (
                     marker,
-                    (
-                        f'Content-Disposition: form-data; name="{name}"\r\n\r\n'
-                    ).encode(),
+                    (f'Content-Disposition: form-data; name="{name}"\r\n\r\n').encode(),
                     value.encode("utf-8"),
                     b"\r\n",
                 )
@@ -1175,7 +1273,36 @@ class HttpBackend:
         return ""
 
     @staticmethod
-    def _run(item: dict[str, Any]) -> RunInfo:
+    def _activity(items: Any) -> list[ActivityEvent]:
+        if not isinstance(items, list):
+            return []
+        events: list[ActivityEvent] = []
+        for index, item in enumerate(items, start=1):
+            if not isinstance(item, dict):
+                continue
+            raw_detail = item.get("detail", item.get("details", ""))
+            if isinstance(raw_detail, dict):
+                detail = " · ".join(
+                    f"{str(key).replace('_', ' ')}: {value}"
+                    for key, value in raw_detail.items()
+                )
+            else:
+                detail = str(raw_detail or "")
+            events.append(
+                ActivityEvent(
+                    sequence=int(item.get("sequence", index) or index),
+                    phase=str(item.get("phase", item.get("stage", "Working"))),
+                    summary=str(item.get("summary", item.get("message", "Working…"))),
+                    kind=str(item.get("kind", item.get("type", "status"))).lower(),
+                    timestamp=str(item.get("timestamp", item.get("created_at", ""))),
+                    detail=detail,
+                    job_id=str(item.get("job_id", "")),
+                )
+            )
+        return events
+
+    @classmethod
+    def _run(cls, item: dict[str, Any]) -> RunInfo:
         seconds = float(item.get("elapsed_seconds", 0) or 0)
         return RunInfo(
             id=str(item["id"]),
@@ -1185,6 +1312,8 @@ class HttpBackend:
             can_pause=bool(item.get("can_pause")),
             can_resume=bool(item.get("can_resume")),
             can_cancel=bool(item.get("can_cancel")),
+            activity=cls._activity(item.get("activity", [])),
+            activity_cursor=int(item.get("activity_cursor", 0) or 0),
         )
 
     @staticmethod
