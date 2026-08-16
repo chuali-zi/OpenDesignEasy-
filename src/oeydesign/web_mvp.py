@@ -326,6 +326,7 @@ class KimiIntake:
         self.activity_reporter: Any | None = None
 
     def decide(self, project_id: str) -> IntakeDecision:
+        self.last_usage = MappingProxyType({})
         client, model = self.provider.require()
         messages = self.product_store.list_messages(project_id)
         if not any(message.role is ProductMessageRole.USER for message in messages):
@@ -410,6 +411,18 @@ class KimiIntake:
                         "ask. Include goal, audience, medium='web', "
                         "content_priorities, style_intent, constraints, "
                         "confirmed_facts, material_uncertainties, and image_analyses. "
+                        "Use exactly this top-level shape: "
+                        "{\"status\":\"READY|NEEDS_INPUT\","
+                        "\"question\":null|string,\"goal\":string,"
+                        "\"audience\":string,\"medium\":\"web\","
+                        "\"content_priorities\":string[],"
+                        "\"style_intent\":string[],\"constraints\":string[],"
+                        "\"confirmed_facts\":string[],"
+                        "\"material_uncertainties\":string[],"
+                        "\"image_analyses\":object[]}. For READY, question must be "
+                        "null. For NEEDS_INPUT, question must be the one user-facing "
+                        "clarification question. Never replace an array with null, "
+                        "an object, or a scalar. "
                         "Each image analysis must use its source_id and include "
                         "content, composition, color, typography, "
                         "transferable_features, forbidden_copy, confidence."
@@ -743,11 +756,13 @@ class ProductApplication(Phase6Application):
             decision = self.intake.decide(job.project_id)
         finally:
             self.intake.activity_reporter = None
-        control.add_usage(
-            steps=1,
-            total_tokens=sum(int(value) for value in self.intake.last_usage.values()),
-            renders=0,
-        )
+            control.add_usage(
+                steps=1,
+                total_tokens=sum(
+                    int(value) for value in self.intake.last_usage.values()
+                ),
+                renders=0,
+            )
         self._save_image_analyses(job.project_id, decision)
         project = self.repository.get(job.project_id)
         context_revision = (
@@ -1124,20 +1139,20 @@ def parse_intake_decision(content: str) -> IntakeDecision:
     status = str(value.get("status", "")).upper()
     if status not in {"READY", "NEEDS_INPUT"}:
         raise ContractError(ErrorCategory.RETRYABLE, "Intake status is invalid")
-    question = value.get("question")
+    question = _question_text(value)
     if status == "NEEDS_INPUT" and (
         not isinstance(question, str) or not question.strip()
     ):
-        raise ContractError(
-            ErrorCategory.RETRYABLE, "Intake must ask one clarification question"
+        question = _fallback_question(
+            _text_tuple(value.get("material_uncertainties", []))
         )
-    analyses_raw = value.get("image_analyses", [])
+    analyses_raw = value.get("image_analyses") or []
     if not isinstance(analyses_raw, list):
         raise ContractError(ErrorCategory.RETRYABLE, "Image analyses are invalid")
     analyses = tuple(_image_analysis(item) for item in analyses_raw)
     return IntakeDecision(
         status,
-        question.strip() if isinstance(question, str) else None,
+        question.strip() if isinstance(question, str) and question.strip() else None,
         str(value.get("goal", "")).strip(),
         str(value.get("audience", "")).strip(),
         "web",
@@ -1174,12 +1189,55 @@ def _image_analysis(value: Any) -> ImageAnalysis:
 
 
 def _text_tuple(value: Any) -> tuple[str, ...]:
+    if value is None:
+        return ()
+    if isinstance(value, str):
+        return (value.strip(),) if value.strip() else ()
+    if isinstance(value, Mapping):
+        value = tuple(value.values())
     if not isinstance(value, list | tuple):
         raise ContractError(ErrorCategory.RETRYABLE, "Intake list is invalid")
-    return tuple(
-        str(item).strip()
-        for item in value[:100]
-        if isinstance(item, str) and item.strip()
+    items: list[str] = []
+    for item in value[:100]:
+        if isinstance(item, str) and item.strip():
+            items.append(item.strip())
+        elif isinstance(item, Mapping):
+            for nested in item.values():
+                if isinstance(nested, str) and nested.strip():
+                    items.append(nested.strip())
+    return tuple(items)
+
+
+def _question_text(value: Mapping[str, Any]) -> str | None:
+    for key in (
+        "question",
+        "clarification_question",
+        "clarifying_question",
+        "follow_up_question",
+    ):
+        item = value.get(key)
+        if isinstance(item, str) and item.strip():
+            return item.strip()
+    for key in ("questions", "clarification_questions", "clarifying_questions"):
+        item = value.get(key)
+        if isinstance(item, list | tuple):
+            for candidate in item:
+                if isinstance(candidate, str) and candidate.strip():
+                    return candidate.strip()
+                if isinstance(candidate, Mapping):
+                    text = _question_text(candidate)
+                    if text:
+                        return text
+    return None
+
+
+def _fallback_question(uncertainties: tuple[str, ...]) -> str:
+    if uncertainties:
+        topic = uncertainties[0].rstrip(".:;")
+        return f"What should I know about {topic} before designing?"
+    return (
+        "What key audience, fact, or structure should OEYdesign use before "
+        "designing?"
     )
 
 

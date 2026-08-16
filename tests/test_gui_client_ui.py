@@ -167,6 +167,24 @@ def test_object_selection_survives_failed_send_and_clears_after_success(
         window.deleteLater()
 
 
+def test_failed_run_without_activity_shows_error_message(window: MainWindow) -> None:
+    panel = window.brief
+    run = RunInfo(
+        id="run-failed",
+        status="failed",
+        elapsed="33.2s",
+        stage="failed",
+        error_category="RETRYABLE",
+        error_message="Intake JSON is invalid",
+    )
+    panel.set_run(run)
+    assert panel._activity_box.isHidden() is False
+    row = panel._activity_tail_widget
+    assert row is not None
+    assert "Intake JSON is invalid" in row.text()
+    assert "RETRYABLE" in row.text()
+
+
 class _BlockingCommandBackend(MockBackend):
     """A backend command that only completes when the test releases it."""
 

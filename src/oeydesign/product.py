@@ -1289,6 +1289,8 @@ class AgentJobRunner:
         }
         if job.error_category:
             details["error_category"] = job.error_category
+        if job.error_message:
+            details["error_message"] = job.error_message
         self.store.append_activity(
             project_id=job.project_id, job_id=job.id, type="job",
             stage=job.stage, summary=summary, details=details,
@@ -1435,7 +1437,7 @@ def _activity_details(value: Mapping[str, Any]) -> dict[str, Any]:
         "reasoning_tokens", "renders", "elapsed_seconds", "tool", "status",
         "healthy", "verdict", "error_category", "error_code", "repair_round",
         "candidate_count", "artifact_id", "quality_id", "build", "render",
-        "chunks", "bytes_received",
+        "chunks", "bytes_received", "error_message",
     }
     result: dict[str, Any] = {}
     for key, item in value.items():
@@ -1445,8 +1447,8 @@ def _activity_details(value: Mapping[str, Any]) -> dict[str, Any]:
             continue
         if isinstance(item, bool) or isinstance(item, (int, float)):
             result[key] = item
-        elif isinstance(item, str) and len(item) <= 200:
-            result[key] = item
+        elif isinstance(item, str):
+            result[key] = item[:200]
     return result
 
 

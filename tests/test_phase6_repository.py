@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import os
+import shutil
+import subprocess
 from pathlib import Path
 
 import pytest
@@ -127,6 +129,56 @@ def test_authorized_repository_snapshot_has_safe_file_line_evidence_and_recovers
             == package
         )
         assert source.sha256_digest == result.source.sha256_digest
+
+
+def test_repository_ingestion_ignores_local_runtime_artifacts_without_dropping_assets(
+    tmp_path: Path,
+) -> None:
+    git = shutil.which("git")
+    if git is None:
+        pytest.skip("Git is unavailable")
+    data_root = tmp_path / "data-root"
+    database = data_root / "repository.sqlite"
+    user_repo = tmp_path / "oeydesign-like"
+    (user_repo / "src").mkdir(parents=True)
+    (user_repo / "src" / "main.py").write_text("print('safe')\n")
+    (user_repo / "README.md").write_text("# fixture\n")
+    (user_repo / ".gitignore").write_text(
+        "data/\npytest_tmp/\n.ruff_cache/\nnul\n", encoding="utf-8"
+    )
+    subprocess.run(
+        [git, "init", "--quiet", str(user_repo)],
+        check=True,
+        stdin=subprocess.DEVNULL,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+    )
+    (user_repo / "package-lock.json").write_text('{"lockfileVersion":3}\n')
+    (user_repo / "public").mkdir()
+    (user_repo / "public" / "logo.png").write_bytes(b"\x89PNG\r\n\x1a\nfixture")
+    (user_repo / "data").mkdir()
+    (user_repo / "data" / "oeydesign.sqlite").write_text("volatile", encoding="utf-8")
+    (user_repo / "pytest_tmp").mkdir()
+    (user_repo / "pytest_tmp" / "screenshot.png").write_bytes(b"changing")
+    (user_repo / ".ruff_cache").mkdir()
+    (user_repo / ".ruff_cache" / "cache").write_text("cache")
+    (user_repo / "src" / "oeydesign.egg-info").mkdir()
+    (user_repo / "src" / "oeydesign.egg-info" / "PKG-INFO").write_text("cache")
+
+    with SQLiteApplication(database, data_root=data_root) as app:
+        create_project(app, "runtime-artifacts-project")
+        result = app.repository_ingestion.ingest_repository(
+            "runtime-artifacts-project",
+            app.repository_ingestion.authorize(user_repo),
+        )
+
+    paths = {item.path for item in result.files}
+    assert "package-lock.json" in paths
+    assert "public/logo.png" in paths
+    assert not any(path.startswith("data/") for path in paths)
+    assert not any(path.startswith("pytest_tmp/") for path in paths)
+    assert not any(path.startswith(".ruff_cache/") for path in paths)
+    assert not any(path.endswith(".egg-info/PKG-INFO") for path in paths)
 
 
 def test_repository_authorization_and_locator_escape_are_hard_failures(

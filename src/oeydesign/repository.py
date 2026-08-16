@@ -5,6 +5,7 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import subprocess
 from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
 from typing import Any
@@ -35,12 +36,20 @@ _EXCLUDED_DIRECTORY_NAMES = frozenset(
         ".next",
         ".vite",
         ".cache",
+        ".mypy_cache",
+        ".nox",
+        ".pytest_cache",
+        ".ruff_cache",
+        ".tox",
+        ".eggs",
         "coverage",
+        "htmlcov",
         "__pycache__",
         ".venv",
         "venv",
     }
 )
+_EXCLUDED_DIRECTORY_SUFFIXES = (".egg-info",)
 _CREDENTIAL_NAMES = frozenset(
     {
         ".npmrc",
@@ -55,6 +64,17 @@ _CREDENTIAL_NAMES = frozenset(
     }
 )
 _CREDENTIAL_SUFFIXES = (".pem", ".key", ".p12", ".pfx", ".crt")
+_WINDOWS_RESERVED_NAMES = frozenset(
+    {
+        "aux",
+        "clock$",
+        "con",
+        "nul",
+        "prn",
+        *(f"com{index}" for index in range(1, 10)),
+        *(f"lpt{index}" for index in range(1, 10)),
+    }
+)
 _MANIFEST_VERSION = 1
 
 
@@ -185,9 +205,12 @@ class RepositoryIngestion:
         }
         manifest_payload = canonical_json(manifest).encode("utf-8")
         digest = hashlib.sha256(manifest_payload).hexdigest()
-        scope = stable_id("source-scope", project_id)
-        artifact_root = self.data_root / "sources" / scope / digest[:2] / digest
-        repo_root = artifact_root / "repo"
+        # Keep the content address complete while making the fixed prefix short.
+        # Real Windows repositories commonly contain deep paths; the former
+        # project scope + fan-out + digest prefix could consume over 110 path
+        # characters before the repository-relative name even began.
+        artifact_root = self.data_root / "r" / digest
+        repo_root = artifact_root / "w"
         self._materialize(artifact_root, repo_root, manifest_payload, files)
         original_name = root.name or root.anchor or "repository"
         source = SourceAsset(
@@ -254,6 +277,9 @@ class RepositoryIngestion:
         collected: list[_CollectedFile] = []
         folded_paths: set[str] = set()
         total_bytes = 0
+        git_scope = _git_visible_paths(root)
+        git_files = git_scope[0] if git_scope is not None else None
+        git_directories = git_scope[1] if git_scope is not None else None
 
         def visit(directory: Path, relative_directory: PurePosixPath) -> None:
             nonlocal total_bytes
@@ -265,6 +291,15 @@ class RepositoryIngestion:
             for entry in entries:
                 name = entry.name
                 relative = relative_directory / name
+                normalized = relative.as_posix()
+                if _is_excluded_directory_name(name):
+                    continue
+                if git_files is not None and git_directories is not None:
+                    if entry.is_dir(follow_symlinks=False):
+                        if normalized not in git_directories:
+                            continue
+                    elif normalized not in git_files:
+                        continue
                 try:
                     entry_stat = entry.stat(follow_symlinks=False)
                 except OSError as exc:
@@ -272,13 +307,11 @@ class RepositoryIngestion:
                 if entry.is_symlink() or _is_reparse(entry_stat):
                     raise _policy(f"Repository link or junction rejected: {relative}")
                 if entry.is_dir(follow_symlinks=False):
-                    if name.casefold() in _EXCLUDED_DIRECTORY_NAMES:
-                        continue
                     visit(Path(entry.path), relative)
                     continue
                 if not entry.is_file(follow_symlinks=False):
                     continue
-                if _is_credential_file(name):
+                if _is_ignored_file(name):
                     continue
                 if len(collected) >= self.max_files:
                     raise _policy("Repository file count exceeds the limit")
@@ -304,7 +337,6 @@ class RepositoryIngestion:
                     int(after.st_ino),
                 ):
                     raise _policy("Repository file changed during ingestion")
-                normalized = relative.as_posix()
                 folded = normalized.casefold()
                 if folded in folded_paths:
                     raise _policy("Repository paths differ only by case")
@@ -460,6 +492,15 @@ def _safe_relative_path(value: str) -> str:
     return path.as_posix()
 
 
+def _is_excluded_directory_name(value: str) -> bool:
+    folded = value.casefold()
+    return (
+        folded in _EXCLUDED_DIRECTORY_NAMES
+        or folded.endswith(_EXCLUDED_DIRECTORY_SUFFIXES)
+        or _is_windows_reserved_name(folded)
+    )
+
+
 def _is_credential_file(name: str) -> bool:
     lowered = name.casefold()
     return (
@@ -467,6 +508,78 @@ def _is_credential_file(name: str) -> bool:
         or lowered in _CREDENTIAL_NAMES
         or lowered.endswith(_CREDENTIAL_SUFFIXES)
     )
+
+
+def _is_ignored_file(name: str) -> bool:
+    lowered = name.casefold()
+    return (
+        _is_credential_file(lowered)
+        or _is_windows_reserved_name(lowered)
+    )
+
+
+def _is_windows_reserved_name(name: str) -> bool:
+    return name.casefold().split(".", 1)[0] in _WINDOWS_RESERVED_NAMES
+
+
+def _git_visible_paths(root: Path) -> tuple[frozenset[str], frozenset[str]] | None:
+    """Return Git's tracked plus non-ignored worktree view when available.
+
+    A code-repository attachment should not ingest its ignored databases,
+    screenshots, dependency images, or other runtime output.  Calling Git with
+    a fixed argv is both more faithful and substantially safer than attempting
+    to reimplement nested .gitignore semantics.  A non-Git directory (or a
+    machine without Git) keeps the bounded filesystem walker as its fallback.
+    """
+
+    if not (root / ".git").exists():
+        return None
+    try:
+        completed = subprocess.run(
+            [
+                "git",
+                "-c",
+                "core.quotepath=false",
+                "-C",
+                str(root),
+                "ls-files",
+                "-z",
+                "--cached",
+                "--others",
+                "--exclude-standard",
+                "--",
+            ],
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.DEVNULL,
+            check=False,
+            timeout=20,
+        )
+    except (OSError, subprocess.TimeoutExpired):
+        return None
+    if completed.returncode != 0:
+        return None
+    try:
+        names = completed.stdout.decode("utf-8").split("\0")
+    except UnicodeDecodeError:
+        return None
+    files: set[str] = set()
+    directories: set[str] = set()
+    for name in names:
+        if not name:
+            continue
+        normalized = _safe_relative_path(name)
+        path = PurePosixPath(normalized)
+        if any(
+            _is_excluded_directory_name(part) for part in path.parts[:-1]
+        ) or _is_ignored_file(path.name):
+            continue
+        files.add(normalized)
+        parent = path.parent
+        while parent != PurePosixPath("."):
+            directories.add(parent.as_posix())
+            parent = parent.parent
+    return frozenset(files), frozenset(directories)
 
 
 def _is_reparse(value: os.stat_result) -> bool:

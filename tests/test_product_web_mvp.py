@@ -342,7 +342,7 @@ def test_product_application_refuses_a_second_runtime_for_the_same_database(
     reopened.close()
 
 
-def test_intake_parser_enforces_one_structured_question() -> None:
+def test_intake_parser_accepts_one_structured_or_recoverable_question() -> None:
     decision = parse_intake_decision(
         json.dumps(
             {
@@ -355,8 +355,67 @@ def test_intake_parser_enforces_one_structured_question() -> None:
     )
     assert decision.status == "NEEDS_INPUT"
     assert decision.question == "Who is the primary audience?"
-    with pytest.raises(ContractError):
-        parse_intake_decision('{"status":"NEEDS_INPUT","image_analyses":[]}')
+    recovered = parse_intake_decision(
+        json.dumps(
+            {
+                "status": "NEEDS_INPUT",
+                "clarification_question": "Which audience matters most?",
+                "content_priorities": "Explain the product",
+                "style_intent": {"tone": "clear", "density": "focused"},
+                "constraints": None,
+                "confirmed_facts": [],
+                "material_uncertainties": "primary audience",
+                "image_analyses": None,
+            }
+        )
+    )
+    assert recovered.question == "Which audience matters most?"
+    assert recovered.content_priorities == ("Explain the product",)
+    assert recovered.style_intent == ("clear", "focused")
+    assert recovered.constraints == ()
+    fallback = parse_intake_decision(
+        '{"status":"NEEDS_INPUT","material_uncertainties":["audience"]}'
+    )
+    assert fallback.question == "What should I know about audience before designing?"
+
+
+def test_failed_intake_still_accounts_for_the_provider_call(tmp_path: Path) -> None:
+    class InvalidIntakeClient:
+        def chat(self, messages, **kwargs):
+            del messages, kwargs
+            return ProviderResponse(
+                '{"status":"UNKNOWN"}',
+                {"prompt_tokens": 3, "completion_tokens": 2},
+                0.01,
+                "stop",
+            )
+
+    app = _app(tmp_path)
+    app.require_product_ready = lambda: None  # type: ignore[method-assign]
+    app.provider.require = lambda: (  # type: ignore[method-assign]
+        InvalidIntakeClient(),
+        "fixture",
+    )
+    try:
+        project = app.create_empty_project(command_id="usage:project", name="Usage")
+        submitted = app.submit_message(
+            project_id=project.project_id,
+            client_message_id="usage:message",
+            expected_revision=1,
+            text="Create a product page.",
+        )
+        deadline = time.monotonic() + 5
+        while time.monotonic() < deadline:
+            failed = app.product_store.get_job(submitted.id)
+            if failed.status is AgentJobStatus.FAILED:
+                break
+            time.sleep(0.01)
+        assert failed.status is AgentJobStatus.FAILED
+        assert failed.steps == 1
+        assert failed.total_tokens == 5
+        assert failed.error_message == "Intake status is invalid"
+    finally:
+        app.close()
 
 
 def test_preview_selection_tokens_rotate_once(tmp_path: Path) -> None:

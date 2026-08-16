@@ -214,7 +214,7 @@ class BriefPanel(DoodlePanel):
             for index, message in enumerate(items):
                 self._messages_layout.insertWidget(index, self._bubble(message))
         if was_at_bottom:
-            QTimer.singleShot(0, lambda: bar.setValue(bar.maximum()))
+            _defer_scroll_to_bottom(bar)
 
     def set_run(self, run: RunInfo | None) -> None:
         if run is None:
@@ -246,6 +246,23 @@ class BriefPanel(DoodlePanel):
         )
         self._run_strip.show()
         self.set_activity(run, list(_g(run, "activity", []) or []))
+        if status == "FAILED" and not self._activity_sequences:
+            category = str(_g(run, "error_category", "") or "")
+            message = str(_g(run, "error_message", "") or "")
+            if category or message:
+                self.set_activity(
+                    run,
+                    [
+                        _InlineActivityEvent(
+                            sequence=1,
+                            phase="failed",
+                            kind="error",
+                            summary=message or "Agent job failed",
+                            detail=category,
+                            job_id=self._run_id or "",
+                        )
+                    ],
+                )
 
     def set_activity(self, run: RunInfo, events: Sequence[ActivityEvent]) -> None:
         """Append unseen worker events and keep a following viewer at bottom."""
@@ -286,7 +303,7 @@ class BriefPanel(DoodlePanel):
             self._activity_tail_widget = row
         self._activity_box.show()
         if follows_tail:
-            QTimer.singleShot(0, lambda: bar.setValue(bar.maximum()))
+            _defer_scroll_to_bottom(bar)
 
     def select_object(self, object_ref: str) -> None:
         """Show the target chip (parity with the web preview click selection)."""
@@ -383,3 +400,37 @@ class BriefPanel(DoodlePanel):
         detail_line = f"\n{detail}" if detail else ""
         label.setText(f"{phase} · {kind}\n{summary}{detail_line}")
         label.setToolTip(detail)
+
+
+class _InlineActivityEvent:
+    """Local fallback for failed jobs created before durable error details."""
+
+    def __init__(
+        self,
+        *,
+        sequence: int,
+        phase: str,
+        kind: str,
+        summary: str,
+        detail: str,
+        job_id: str,
+    ) -> None:
+        self.sequence = sequence
+        self.phase = phase
+        self.kind = kind
+        self.summary = summary
+        self.detail = detail
+        self.job_id = job_id
+
+
+def _defer_scroll_to_bottom(bar) -> None:
+    QTimer.singleShot(0, lambda: _scroll_to_bottom(bar))
+
+
+def _scroll_to_bottom(bar) -> None:
+    try:
+        bar.setValue(bar.maximum())
+    except RuntimeError:
+        # Qt may delete the scrollbar before a queued single-shot fires during
+        # fast test teardown or window close.  The UI is already gone then.
+        return

@@ -93,6 +93,8 @@ class RunInfo:
     can_pause: bool | None = None
     can_resume: bool | None = None
     can_cancel: bool | None = None
+    error_category: str = ""
+    error_message: str = ""
     activity: list[ActivityEvent] = field(default_factory=list)
     activity_cursor: int = 0
 
@@ -1312,6 +1314,8 @@ class HttpBackend:
             can_pause=bool(item.get("can_pause")),
             can_resume=bool(item.get("can_resume")),
             can_cancel=bool(item.get("can_cancel")),
+            error_category=str(item.get("error_category") or ""),
+            error_message=str(item.get("error_message") or ""),
             activity=cls._activity(item.get("activity", [])),
             activity_cursor=int(item.get("activity_cursor", 0) or 0),
         )

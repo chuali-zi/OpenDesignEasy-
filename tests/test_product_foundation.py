@@ -8,7 +8,7 @@ from pathlib import Path
 import pytest
 
 from oeydesign.credentials import MemoryCredentialStore
-from oeydesign.domain import ContractError
+from oeydesign.domain import ContractError, ErrorCategory
 from oeydesign.persistence import SQLiteStore
 from oeydesign.product import (
     AgentJobRunner,
@@ -279,6 +279,36 @@ def test_single_fifo_worker_and_job_idempotency(tmp_path: Path) -> None:
         assert order == ["project-1", "project-2"]
     finally:
         release.set()
+        runner.close()
+        store.close()
+
+
+def test_failed_agent_job_activity_includes_safe_error_message(tmp_path: Path) -> None:
+    store, product = _open(tmp_path)
+    runner = AgentJobRunner(product)
+
+    def handler(_job, _control):
+        raise ContractError(ErrorCategory.RETRYABLE, "Intake JSON is invalid")
+
+    runner.register("fixture", handler)
+    try:
+        job = runner.submit(
+            project_id="project",
+            kind="fixture",
+            idempotency_key="failure-detail",
+            input={},
+        )
+        deadline = time.monotonic() + 2
+        while product.get_job(job.id).status is not AgentJobStatus.FAILED:
+            assert time.monotonic() < deadline
+            time.sleep(0.01)
+        events = product.activity_after("project")
+        terminal = events[-1]
+        assert terminal.stage == "failed"
+        assert terminal.summary == "Agent job failed"
+        assert terminal.details["error_category"] == "RETRYABLE"
+        assert terminal.details["error_message"] == "Intake JSON is invalid"
+    finally:
         runner.close()
         store.close()
 
