@@ -24,13 +24,28 @@ versioned Context Package consumed by the existing project flow. The contracts
 are documented in `docs/spec/contract-skeleton.md`,
 `docs/spec/runtime-recovery.md`, and `docs/spec/context-evidence-baseline.md`.
 
-Run the local Phase 4 proof desk from the repository root:
+Run the real local Web MVP from the repository root. The helper reuses the
+existing desktop-MVP data root, so Projects and non-secret provider settings
+remain available after switching from the GUI to the browser:
+
+```powershell
+.\start-web.ps1
+```
+
+The equivalent explicit developer command is:
 
 ```powershell
 $env:PYTHONPATH = "src"
-python -m oeydesign.product_shell --data-root data/product-shell --database oeydesign.sqlite --port 8765
+python -m oeydesign.product_shell `
+  --data-root data/desktop-mvp `
+  --database oeydesign.sqlite `
+  --dependency-image spikes/e8-e12-framework/node_modules `
+  --port 8765
 ```
 
-Then open `http://127.0.0.1:8765`. The shell uses only Project projections and
-revision-checked commands; it requires no Agent or provider configuration. Its
-interaction contract is documented in `docs/spec/product-shell-stub-flow.md`.
+Then open `http://127.0.0.1:8765`. The default path is the real
+`ProductApplication`: repository ingestion is read-only, generation is queued
+in the background, and Kimi credentials remain in Windows Credential Manager.
+Use **Settings** in the Web workbench to configure the Kimi Coding endpoint
+(`https://api.kimi.com/coding/v1`) and model (`k3`). Deterministic adapters are
+available only through an explicit `--demo` launch.

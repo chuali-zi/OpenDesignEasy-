@@ -14,9 +14,18 @@ from PIL import Image
 
 from oeydesign.capabilities import ProviderResponse
 from oeydesign.credentials import KIMI_CREDENTIAL_TARGET, MemoryCredentialStore
-from oeydesign.domain import ContractError, ErrorCategory, RightsStatus
+from oeydesign.domain import (
+    ContractError,
+    ErrorCategory,
+    RestoreProjectRevision,
+    RightsStatus,
+)
 from oeydesign.product import AgentJobStatus
-from oeydesign.product_shell import ProductShellService, make_server
+from oeydesign.product_shell import (
+    ProductShellService,
+    _preview_bridge,
+    make_server,
+)
 from oeydesign.web_mvp import ProductApplication, parse_intake_decision
 
 
@@ -378,6 +387,24 @@ def test_intake_parser_accepts_one_structured_or_recoverable_question() -> None:
     )
     assert fallback.question == "What should I know about audience before designing?"
 
+    image_tolerant = parse_intake_decision(
+        json.dumps(
+            {
+                "status": "READY",
+                "goal": "Create a release page",
+                "audience": "Product builders",
+                "image_analyses": [
+                    {"source_id": "", "confidence": "medium"},
+                    {"source_id": "source-image", "confidence": "85%"},
+                    {"source_id": "source-image-2", "confidence": "high"},
+                ],
+            }
+        )
+    )
+    assert len(image_tolerant.image_analyses) == 2
+    assert image_tolerant.image_analyses[0].confidence == 0.85
+    assert image_tolerant.image_analyses[1].confidence == 0.85
+
 
 def test_failed_intake_still_accounts_for_the_provider_call(tmp_path: Path) -> None:
     class InvalidIntakeClient:
@@ -412,8 +439,210 @@ def test_failed_intake_still_accounts_for_the_provider_call(tmp_path: Path) -> N
             time.sleep(0.01)
         assert failed.status is AgentJobStatus.FAILED
         assert failed.steps == 1
-        assert failed.total_tokens == 5
+        assert failed.total_tokens == 10
         assert failed.error_message == "Intake status is invalid"
+    finally:
+        app.close()
+
+
+def test_ready_intake_uncertainties_do_not_block_candidate_generation(
+    tmp_path: Path,
+) -> None:
+    class ReadyWithDefaultsClient:
+        def chat(self, messages, **kwargs):
+            del messages, kwargs
+            payload = {
+                "status": "READY",
+                "question": None,
+                "goal": "Launch OEYdesign",
+                "audience": "Independent designers and product builders",
+                "confirmed_facts": ["OEYdesign is preparing a Web MVP"],
+                "material_uncertainties": [
+                    "Exact release date was not specified; use launch-soon framing"
+                ],
+                "image_analyses": [],
+            }
+            return ProviderResponse(
+                json.dumps(payload),
+                {"prompt_tokens": 11, "completion_tokens": 13, "total_tokens": 17},
+                0.01,
+                "stop",
+            )
+
+    app = _app(tmp_path)
+    app.require_product_ready = lambda: None  # type: ignore[method-assign]
+    app.provider.require = lambda: (  # type: ignore[method-assign]
+        ReadyWithDefaultsClient(),
+        "fixture",
+    )
+    try:
+        project = app.create_empty_project(command_id="ready:project", name="Ready")
+        submitted = app.submit_message(
+            project_id=project.project_id,
+            client_message_id="ready:message",
+            expected_revision=1,
+            text="Write a product release page for OEYdesign.",
+        )
+        deadline = time.monotonic() + 10
+        while time.monotonic() < deadline:
+            completed = app.product_store.get_job(submitted.id)
+            if completed.status in {
+                AgentJobStatus.COMPLETED,
+                AgentJobStatus.FAILED,
+                AgentJobStatus.PAUSED,
+            }:
+                break
+            time.sleep(0.05)
+        assert completed.status is AgentJobStatus.COMPLETED, completed.error_message
+        assert completed.total_tokens == 17
+        updated = app.repository.get(project.project_id)
+        assert updated.state.value == "AWAITING_DIRECTION_APPROVAL"
+        assert updated.context_package is not None
+        assert updated.context_package.material_uncertainties == ()
+        assert updated.context_package.metadata["nonblocking_uncertainties"] == (
+            "Exact release date was not specified; use launch-soon framing",
+        )
+    finally:
+        app.close()
+
+
+def test_restored_new_project_advances_evidence_context_revision(
+    tmp_path: Path,
+) -> None:
+    class ReadyClient:
+        def chat(self, messages, **kwargs):
+            del messages, kwargs
+            return ProviderResponse(
+                json.dumps(
+                    {
+                        "status": "READY",
+                        "question": None,
+                        "goal": "Launch OEYdesign",
+                        "audience": "Product builders",
+                        "confirmed_facts": ["OEYdesign creates Web directions"],
+                        "material_uncertainties": [],
+                        "image_analyses": [],
+                    }
+                ),
+                {"total_tokens": 7},
+                0.01,
+                "stop",
+            )
+
+    app = _app(tmp_path)
+    app.require_product_ready = lambda: None  # type: ignore[method-assign]
+    app.provider.require = lambda: (ReadyClient(), "fixture")  # type: ignore[method-assign]
+    try:
+        created = app.create_empty_project(
+            command_id="restore-context:project", name="Restore context"
+        )
+        first = app.submit_message(
+            project_id=created.project_id,
+            client_message_id="restore-context:first",
+            expected_revision=1,
+            text="Create a launch page.",
+        )
+        deadline = time.monotonic() + 10
+        while time.monotonic() < deadline:
+            completed = app.product_store.get_job(first.id)
+            if completed.status is AgentJobStatus.COMPLETED:
+                break
+            time.sleep(0.02)
+        project = app.repository.get(created.project_id)
+        app.control.execute(
+            RestoreProjectRevision(
+                command_id="restore-context:restore",
+                project_id=created.project_id,
+                expected_project_revision=project.revision,
+                source_revision=1,
+            )
+        )
+        restored = app.repository.get(created.project_id)
+        second = app.submit_message(
+            project_id=created.project_id,
+            client_message_id="restore-context:second",
+            expected_revision=restored.revision,
+            text="Create the launch page again.",
+        )
+        deadline = time.monotonic() + 10
+        while time.monotonic() < deadline:
+            completed = app.product_store.get_job(second.id)
+            if completed.status in {
+                AgentJobStatus.COMPLETED,
+                AgentJobStatus.FAILED,
+            }:
+                break
+            time.sleep(0.02)
+        assert completed.status is AgentJobStatus.COMPLETED, completed.error_message
+        latest = app.evidence_repository.latest_context(created.project_id)
+        assert latest is not None
+        assert latest.revision == 2
+    finally:
+        app.close()
+
+
+def test_ready_intake_keeps_uncertainties_nonblocking_and_uses_total_tokens(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    class ReadyWithUncertaintyClient:
+        def chat(self, messages, **kwargs):
+            del messages, kwargs
+            payload = {
+                "status": "READY",
+                "question": None,
+                "goal": "Launch OEYdesign with a product page",
+                "audience": "Independent designers and product builders",
+                "content_priorities": ["Show the product promise"],
+                "style_intent": ["confident"],
+                "constraints": [],
+                "confirmed_facts": ["OEYdesign builds web design candidates"],
+                "material_uncertainties": ["exact pricing is not provided"],
+                "image_analyses": [],
+            }
+            return ProviderResponse(
+                json.dumps(payload),
+                {
+                    "prompt_tokens": 120,
+                    "completion_tokens": 30,
+                    "total_tokens": 150,
+                },
+                0.01,
+                "stop",
+            )
+
+    monkeypatch.delenv("OEYDESIGN_FRAMEWORK_DEPENDENCIES", raising=False)
+    app = _app(tmp_path)
+    app.require_product_ready = lambda: None  # type: ignore[method-assign]
+    app.provider.require = lambda: (  # type: ignore[method-assign]
+        ReadyWithUncertaintyClient(),
+        "fixture",
+    )
+    try:
+        created = app.create_empty_project(
+            command_id="ready-uncertain:project", name="Ready uncertainty"
+        )
+        job = app.submit_message(
+            project_id=created.project_id,
+            client_message_id="ready-uncertain:message",
+            expected_revision=1,
+            text="Create an OEYdesign launch page for designers.",
+        )
+        deadline = time.monotonic() + 10
+        while time.monotonic() < deadline:
+            completed = app.product_store.get_job(job.id)
+            if completed.status in {AgentJobStatus.COMPLETED, AgentJobStatus.FAILED}:
+                break
+            time.sleep(0.05)
+        assert completed.status is AgentJobStatus.COMPLETED, completed.error_message
+        assert completed.total_tokens == 150
+        project = app.repository.get(created.project_id)
+        assert project.state.value == "AWAITING_DIRECTION_APPROVAL"
+        assert project.context_package is not None
+        assert project.context_package.material_uncertainties == ()
+        assert project.context_package.metadata["nonblocking_uncertainties"] == (
+            "exact pricing is not provided",
+        )
+        assert len(project.candidates) == 2
     finally:
         app.close()
 
@@ -431,6 +660,16 @@ def test_preview_selection_tokens_rotate_once(tmp_path: Path) -> None:
         assert reused.value.category is ErrorCategory.POLICY_BLOCKED
     finally:
         app.close()
+
+
+def test_preview_bridge_captures_clicks_before_generated_handlers() -> None:
+    bridge = _preview_bridge("preview-token", "candidate-1", 3)
+
+    assert "data-oey-object" in bridge
+    assert "parent.postMessage" in bridge
+    assert "owner_id:binding.owner_id" in bridge
+    assert "revision:binding.revision" in bridge
+    assert "},true);" in bridge
 
 
 def test_needs_input_resumes_the_same_durable_intake_job(

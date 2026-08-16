@@ -16,6 +16,7 @@ dependencies = [
 
 [project.scripts]
 oeydesign-gui = "gui_client.app:main"
+oeydesign-web = "oeydesign.product_shell:main"
 
 [tool.setuptools]
 packages = ["oeydesign", "gui_client", "gui_client.panels"]

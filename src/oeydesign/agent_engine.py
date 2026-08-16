@@ -12,7 +12,7 @@ from dataclasses import dataclass, replace
 from pathlib import Path, PurePosixPath
 from typing import TYPE_CHECKING, Any, Protocol
 
-from .capabilities import stream_callback_options
+from .capabilities import reasoning_effort_options, stream_callback_options
 from .domain import ContractError, ErrorCategory, SourceAsset, SourceLocator, stable_id
 from .repository import RepositoryFileSummary
 
@@ -225,7 +225,20 @@ class AgentLoop:
                     "Every action must be an object, for example "
                     "{\"actions\":[{\"tool\":\"run_build\"}],\"done\":false}. "
                     f"Allowed actions in this session are: {allowed_tool_text}. "
-                    "Use run_build before render when it is available."
+                    "Scope must be exactly repo, work, or out. Tool shapes: "
+                    "list_files takes scope (use repo to list the repository); "
+                    "read_file takes scope and path; read_repo takes path; "
+                    "write_file takes scope, path, and "
+                    "content; run_build takes no arguments; render takes scope=out "
+                    "and entry=index.html. Batch independent actions into one "
+                    "response. After source files are known, batch all write_file "
+                    "actions followed by run_build and render. After reviewing a "
+                    "screenshot, never render again unless a file was changed first; "
+                    "return {\"actions\":[],\"done\":true} when it is acceptable. "
+                    "Never place an http:// or https:// literal in a source file, "
+                    "including explanatory copy. Every data-oey-object value and "
+                    "every data-oey-section value must be unique in the rendered DOM; "
+                    "write anchor names as plain text when explaining them."
                 ),
             },
             {
@@ -245,7 +258,7 @@ class AgentLoop:
         screenshot_reviewed = True
         screenshot_pending = False
         while True:
-            for attempt in range(3):
+            for attempt in range(5):
                 try:
                     if self.boundary_check is not None:
                         self.boundary_check("provider-request")
@@ -273,10 +286,17 @@ class AgentLoop:
 
                     request_kwargs: dict[str, Any] = {
                         "model": model,
-                        "max_tokens": max_tokens,
-                        "temperature": temperature,
+                        "max_tokens": min(max_tokens, 2_000)
+                        if screenshot_pending
+                        else max_tokens,
+                        "temperature": 0.1 if screenshot_pending else temperature,
                         "stream": True,
                     }
+                    request_kwargs.update(
+                        reasoning_effort_options(
+                            self.client, "low" if attempt == 0 else "high"
+                        )
+                    )
                     request_kwargs.update(
                         stream_callback_options(self.client, report_stream_chunk)
                     )
@@ -292,9 +312,29 @@ class AgentLoop:
                         self.boundary_check("provider-response")
                     break
                 except ContractError as exc:
-                    if exc.category is not ErrorCategory.RETRYABLE or attempt == 2:
+                    if exc.category is not ErrorCategory.RETRYABLE or attempt == 4:
                         raise
+                    self._activity(
+                        "retry",
+                        "Retrying an incomplete provider action",
+                        attempt=attempt + 2,
+                        status="retrying",
+                    )
                     time.sleep(2**attempt)
+            if screenshot_pending and last_render_healthy is True:
+                screenshot_reviewed = True
+                screenshot_pending = False
+                messages = _scrub_render_images(messages)
+                self._record_model_turn(
+                    workspace,
+                    session_id,
+                    response,
+                    outcome="screenshot_reviewed",
+                )
+                session = self.sessions.complete(workspace, session_id)
+                return AgentRunResult(
+                    session, True, last_render_healthy, tuple(errors)
+                )
             try:
                 document = _action_document(response.content)
             except ContractError as exc:
@@ -463,6 +503,8 @@ class AgentLoop:
                     "Tool completed" if outcome == "ok" else "Tool needs attention",
                     tool=str(tool or "invalid"), status=outcome,
                     healthy=bool(result.get("healthy")) if is_render else None,
+                    error_category=result.get("category") if outcome != "ok" else None,
+                    error_message=result.get("error") if outcome != "ok" else None,
                 )
                 visible_result = result
                 if is_render and result.get("screenshot_data_url"):
@@ -542,8 +584,11 @@ class AgentLoop:
             raise _invalid("Agent action requires a tool")
         if self.allowed_tools is not None and tool not in self.allowed_tools:
             raise _policy(f"Tool is not enabled for this session: {tool}")
-        scope = action.get("scope", WorkspaceScope.WORK)
-        path = action.get("path", "")
+        raw_scope = action.get("scope", WorkspaceScope.WORK)
+        scope = _agent_scope(raw_scope)
+        path = action.get("path")
+        if path is None:
+            path = action.get("file_path", action.get("file", ""))
         if not isinstance(scope, str) or not isinstance(path, str):
             raise _policy("Agent tool scope and path must be text")
         if tool in {"read_file", "read_repo"}:
@@ -558,7 +603,21 @@ class AgentLoop:
             )
         if tool == "list_files":
             files = workspace.list_files(scope)
-            return {"ok": True, "files": files}, False, None, 0, len(files)
+            selected = tuple(
+                sorted(files, key=lambda item: (item.count("/"), item.casefold()))[:256]
+            )
+            return (
+                {
+                    "ok": True,
+                    "files": selected,
+                    "total": len(files),
+                    "truncated": len(selected) < len(files),
+                },
+                False,
+                None,
+                0,
+                len(selected),
+            )
         if tool == "write_file":
             _require_agent_editable(path)
             content = action.get("content")
@@ -630,6 +689,8 @@ class AgentLoop:
                 raise _policy("render requires a text entry path")
             result = self.renderer.render(workspace._base(scope), entry)
             self.last_render_result = result
+            validation_error = _render_contract_issue(result)
+            trusted_healthy = result.healthy and validation_error is None
             screenshot_data_url = None
             screenshot_bytes = 0
             screenshot_path = getattr(result, "screenshot_path", None)
@@ -644,9 +705,11 @@ class AgentLoop:
                 )
             return (
                 {
-                    "ok": result.healthy,
+                    "ok": trusted_healthy,
                     "render_id": result.id,
-                    "healthy": result.healthy,
+                    "healthy": trusted_healthy,
+                    "technical_healthy": result.healthy,
+                    "validation_error": validation_error,
                     "screenshot_sha256": getattr(result, "screenshot_sha256", None),
                     "screenshot_data_url": screenshot_data_url,
                     "chrome_version": getattr(result, "chrome_version", None),
@@ -663,6 +726,25 @@ class AgentLoop:
         if tool == "complete":
             return {"ok": True}, False, None, 0, 0
         raise _policy(f"Unknown agent tool: {tool}")
+
+
+def _render_contract_issue(result: Any) -> str | None:
+    if not hasattr(result, "dom_metrics"):
+        return None
+    metrics = getattr(result, "dom_metrics", {})
+    anchors = tuple(metrics.get("object_anchors", ()))
+    sections = tuple(metrics.get("section_anchors", ()))
+    if not anchors:
+        return "Rendered DOM has no data-oey-object anchors"
+    if len(anchors) != int(metrics.get("unique_object_anchors", 0)):
+        return "Rendered DOM has duplicate data-oey-object anchors"
+    if len(sections) < 2:
+        return "Rendered DOM needs at least two data-oey-section anchors"
+    if len(sections) != int(metrics.get("unique_section_anchors", 0)):
+        return "Rendered DOM has duplicate data-oey-section anchors"
+    if int(metrics.get("scroll_width", 0)) > int(metrics.get("client_width", 0)):
+        return "Rendered DOM overflows the horizontal viewport"
+    return None
 
 def _action_document(content: str) -> dict[str, Any]:
     candidate = content.strip() if isinstance(content, str) else content
@@ -689,7 +771,26 @@ def _action_document(content: str) -> dict[str, Any]:
                 ErrorCategory.RETRYABLE,
                 "Agent action must be an object",
             )
-        actions.append(action)
+        normalized = dict(action)
+        nested_action = normalized.get("action")
+        if isinstance(nested_action, Mapping):
+            normalized = {**dict(nested_action), **normalized}
+        nested_tool = normalized.get("tool")
+        if isinstance(nested_tool, Mapping):
+            normalized = {**dict(nested_tool), **normalized}
+            normalized.pop("tool", None)
+        for arguments_key in ("arguments", "parameters", "input"):
+            arguments = normalized.get(arguments_key)
+            if isinstance(arguments, Mapping):
+                normalized = {**dict(arguments), **normalized}
+        tool = normalized.get("tool")
+        if not isinstance(tool, str):
+            for alias in ("name", "tool_name", "action", "type"):
+                candidate_tool = normalized.get(alias)
+                if isinstance(candidate_tool, str):
+                    normalized["tool"] = candidate_tool
+                    break
+        actions.append(normalized)
     document["actions"] = actions
     return document
 
@@ -736,8 +837,11 @@ def _append_render_image(
                         "validation-only session: do not call another tool; return "
                         'exactly {"actions":[],"done":true} after inspection.'
                         if validation_only
-                        else "Inspect the screenshot, edit if needed, and complete "
-                        "only when it satisfies the goal."
+                        else "Inspect this latest trusted Chrome screenshot. If it "
+                        "satisfies the goal, return exactly "
+                        '{"actions":[],"done":true}. If a repair is essential, '
+                        "batch every write followed by run_build and render in one "
+                        "response. Never call render without first changing a file."
                     ),
                 },
                 {"type": "image_url", "image_url": {"url": screenshot_data_url}},
@@ -788,6 +892,21 @@ def _completion_error(
     if not screenshot_reviewed:
         return "complete requires a model turn after the Chrome screenshot"
     return None
+
+
+def _agent_scope(value: object) -> object:
+    if not isinstance(value, str):
+        return value
+    aliases = {
+        "repository": WorkspaceScope.REPO,
+        "source_repo": WorkspaceScope.REPO,
+        "workspace": WorkspaceScope.WORK,
+        "source": WorkspaceScope.WORK,
+        "src": WorkspaceScope.WORK,
+        "dist": WorkspaceScope.OUT,
+        "build": WorkspaceScope.OUT,
+    }
+    return aliases.get(value.casefold(), value)
 
 
 def _usage_values(usage: Mapping[str, int]) -> dict[str, int]:

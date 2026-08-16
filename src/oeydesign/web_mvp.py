@@ -27,6 +27,7 @@ from .agent_design import (
 from .capabilities import (
     CapabilityClient,
     KimiTrustedAdapter,
+    reasoning_effort_options,
     stream_callback_options,
 )
 from .context import LocalSourceStore
@@ -398,11 +399,10 @@ class KimiIntake:
             self.activity_reporter,
             "Kimi is streaming the intake analysis",
         )
-        response = client.chat(
-            [
-                {
-                    "role": "system",
-                    "content": (
+        request_messages: list[Mapping[str, Any]] = [
+            {
+                "role": "system",
+                "content": (
                         "Act as a multimodal design intake editor. Return only JSON. "
                         "Use status READY when the goal and audience can be reasonably "
                         "inferred. Use NEEDS_INPUT only for one uncertainty that would "
@@ -426,18 +426,51 @@ class KimiIntake:
                         "Each image analysis must use its source_id and include "
                         "content, composition, color, typography, "
                         "transferable_features, forbidden_copy, confidence."
-                    ),
-                },
-                {"role": "user", "content": content},
-            ],
-            model=model,
-            max_tokens=10_000,
-            temperature=0.3,
-            stream=True,
-            **stream_callback_options(client, progress),
-        )
-        self.last_usage = MappingProxyType(dict(response.usage))
-        return parse_intake_decision(response.content)
+                ),
+            },
+            {"role": "user", "content": content},
+        ]
+        cumulative_usage: dict[str, int] = {}
+        for attempt in range(2):
+            response = client.chat(
+                request_messages,
+                model=model,
+                max_tokens=10_000 if attempt == 0 else 4_000,
+                temperature=0.3,
+                stream=True,
+                **reasoning_effort_options(client, "low"),
+                **stream_callback_options(client, progress),
+            )
+            for key, value in response.usage.items():
+                cumulative_usage[key] = cumulative_usage.get(key, 0) + int(value)
+            self.last_usage = MappingProxyType(dict(cumulative_usage))
+            try:
+                return parse_intake_decision(response.content)
+            except ContractError as exc:
+                if attempt or exc.category is not ErrorCategory.RETRYABLE:
+                    raise
+                if self.activity_reporter:
+                    self.activity_reporter(
+                        "retry",
+                        "Kimi returned malformed intake JSON; requesting repair",
+                        details={"attempt": 2},
+                    )
+                request_messages.extend(
+                    (
+                        {
+                            "role": "assistant",
+                            "content": response.content[:40_000],
+                        },
+                        {
+                            "role": "user",
+                            "content": (
+                                "Return the same decision again as one complete valid "
+                                "JSON object only. Keep every required array present."
+                            ),
+                        },
+                    )
+                )
+        raise AssertionError("intake retry loop did not return")
 
 
 class ProductApplication(Phase6Application):
@@ -749,6 +782,31 @@ class ProductApplication(Phase6Application):
     def _run_intake_design(
         self, job: AgentJob, control: JobControl
     ) -> Mapping[str, Any]:
+        persisted = self.repository.get(job.project_id)
+        if (
+            persisted.state is ProjectState.AWAITING_DIRECTION_APPROVAL
+            and persisted.candidates
+        ):
+            control.activity(
+                "resume",
+                "Recovered the completed design directions from durable state",
+            )
+            return {
+                "needs_input": False,
+                "candidate_ids": [
+                    candidate.id for candidate in persisted.candidates.values()
+                ],
+            }
+        if (
+            persisted.state is ProjectState.READY_FOR_DESIGN
+            and persisted.context_package is not None
+            and persisted.brief is not None
+        ):
+            control.activity(
+                "resume",
+                "Continuing candidate generation from the prepared brief",
+            )
+            return self._generate_candidates_for_job(job, control)
         control.checkpoint("intake")
         control.activity("model", "Analyzing the request")
         self.intake.activity_reporter = control.activity
@@ -758,21 +816,32 @@ class ProductApplication(Phase6Application):
             self.intake.activity_reporter = None
             control.add_usage(
                 steps=1,
-                total_tokens=sum(
-                    int(value) for value in self.intake.last_usage.values()
-                ),
+                total_tokens=_provider_usage_tokens(self.intake.last_usage),
                 renders=0,
             )
         self._save_image_analyses(job.project_id, decision)
         project = self.repository.get(job.project_id)
+        latest_evidence_context = self.evidence_repository.latest_context(
+            job.project_id
+        )
         context_revision = (
             1
-            if project.context_package is None
-            else project.context_package.revision + 1
+            if latest_evidence_context is None
+            else latest_evidence_context.revision + 1
         )
         source_refs = tuple(
             source.id
             for source in self.evidence_repository.list_sources(job.project_id)
+        )
+        latest_request = next(
+            (
+                item.text
+                for item in reversed(
+                    self.product_store.list_messages(job.project_id)
+                )
+                if item.role is ProductMessageRole.USER
+            ),
+            "",
         )
         context = ContextPackage(
             stable_id("context", job.project_id, project.revision, decision),
@@ -780,12 +849,22 @@ class ProductApplication(Phase6Application):
             context_revision,
             decision.confirmed_facts,
             source_refs,
-            decision.material_uncertainties,
+            (
+                decision.material_uncertainties
+                if decision.status == "NEEDS_INPUT"
+                else ()
+            ),
             metadata={
                 "content_priorities": decision.content_priorities,
                 "style_intent": decision.style_intent,
                 "constraints": decision.constraints,
+                "nonblocking_uncertainties": (
+                    ()
+                    if decision.status == "NEEDS_INPUT"
+                    else decision.material_uncertainties
+                ),
                 "intake_capability": self.intake.capability_version,
+                "request_fingerprint": stable_id("request", latest_request),
             },
         )
         brief = (
@@ -804,7 +883,7 @@ class ProductApplication(Phase6Application):
                 metadata=context.metadata,
             )
         self.evidence_repository.save_context(context)
-        self.control.execute(
+        prepare_result = self.control.execute(
             PrepareProject(
                 command_id=f"{job.id}:prepare:{context_revision}",
                 project_id=job.project_id,
@@ -813,8 +892,11 @@ class ProductApplication(Phase6Application):
                 brief=brief,
             )
         )
-        if decision.status == "NEEDS_INPUT":
-            question = decision.question or "What material requirement is missing?"
+        prepared_after_intake = self.repository.get(job.project_id)
+        if prepared_after_intake.state is ProjectState.NEEDS_INPUT:
+            question = decision.question or _prepare_input_question(
+                getattr(prepare_result, "value", ())
+            )
             self.product_store.add_message(
                 ProductMessage(
                     stable_id("message", job.id, "question"),
@@ -826,6 +908,11 @@ class ProductApplication(Phase6Application):
                 )
             )
             control.wait_for_input()
+        return self._generate_candidates_for_job(job, control)
+
+    def _generate_candidates_for_job(
+        self, job: AgentJob, control: JobControl
+    ) -> Mapping[str, Any]:
         control.checkpoint("generate-candidates")
         prepared = self.repository.get(job.project_id)
         if self.composer is not None:
@@ -1149,7 +1236,11 @@ def parse_intake_decision(content: str) -> IntakeDecision:
     analyses_raw = value.get("image_analyses") or []
     if not isinstance(analyses_raw, list):
         raise ContractError(ErrorCategory.RETRYABLE, "Image analyses are invalid")
-    analyses = tuple(_image_analysis(item) for item in analyses_raw)
+    analyses = tuple(
+        analysis
+        for item in analyses_raw
+        if (analysis := _image_analysis(item)) is not None
+    )
     return IntakeDecision(
         status,
         question.strip() if isinstance(question, str) and question.strip() else None,
@@ -1165,19 +1256,15 @@ def parse_intake_decision(content: str) -> IntakeDecision:
     )
 
 
-def _image_analysis(value: Any) -> ImageAnalysis:
+def _image_analysis(value: Any) -> ImageAnalysis | None:
     if not isinstance(value, Mapping):
         raise ContractError(ErrorCategory.RETRYABLE, "Image analysis is invalid")
-    try:
-        confidence = float(value.get("confidence", 0))
-    except (TypeError, ValueError) as exc:
-        raise ContractError(
-            ErrorCategory.RETRYABLE, "Image confidence is invalid"
-        ) from exc
-    if not 0 <= confidence <= 1:
-        raise ContractError(ErrorCategory.RETRYABLE, "Image confidence is invalid")
+    source_id = str(value.get("source_id", "")).strip()
+    if not source_id:
+        return None
+    confidence = _confidence(value.get("confidence", 0))
     return ImageAnalysis(
-        str(value.get("source_id", "")),
+        source_id,
         str(value.get("content", "")),
         str(value.get("composition", "")),
         str(value.get("color", "")),
@@ -1186,6 +1273,29 @@ def _image_analysis(value: Any) -> ImageAnalysis:
         _text_tuple(value.get("forbidden_copy", [])),
         confidence,
     )
+
+
+def _confidence(value: Any) -> float:
+    if isinstance(value, str):
+        normalized = value.strip().casefold()
+        labels = {"high": 0.85, "medium": 0.55, "low": 0.3, "unknown": 0.0}
+        if normalized in labels:
+            return labels[normalized]
+        candidate = normalized.rstrip("%")
+        try:
+            parsed = float(candidate)
+        except ValueError:
+            return 0.0
+        if value.strip().endswith("%"):
+            parsed /= 100
+    else:
+        try:
+            parsed = float(value)
+        except (TypeError, ValueError):
+            return 0.0
+    if 1 < parsed <= 100:
+        parsed /= 100
+    return max(0.0, min(1.0, parsed))
 
 
 def _text_tuple(value: Any) -> tuple[str, ...]:
@@ -1239,6 +1349,31 @@ def _fallback_question(uncertainties: tuple[str, ...]) -> str:
         "What key audience, fact, or structure should OEYdesign use before "
         "designing?"
     )
+
+
+def _prepare_input_question(missing: Any) -> str:
+    if isinstance(missing, str):
+        items = (missing,)
+    elif isinstance(missing, tuple | list):
+        items = tuple(str(item).strip() for item in missing if str(item).strip())
+    else:
+        items = ()
+    return _fallback_question(items)
+
+
+def _provider_usage_tokens(usage: Mapping[str, Any]) -> int:
+    if "total_tokens" in usage:
+        try:
+            return max(0, int(usage.get("total_tokens") or 0))
+        except (TypeError, ValueError):
+            return 0
+    total = 0
+    for key in ("prompt_tokens", "completion_tokens", "reasoning_tokens"):
+        try:
+            total += max(0, int(usage.get(key) or 0))
+        except (TypeError, ValueError):
+            continue
+    return total
 
 
 def _decode_image(payload: bytes) -> tuple[int, int, str]:

@@ -17,6 +17,7 @@ from urllib.parse import urlsplit
 from .domain import ContractError, ErrorCategory
 
 _MAX_PROVIDER_RESPONSE_BYTES = 2_000_000
+_MAX_PROVIDER_STREAM_BYTES = 32_000_000
 
 
 class CapabilitySlot:
@@ -148,6 +149,24 @@ def stream_callback_options(
     return {}
 
 
+def reasoning_effort_options(
+    client: CapabilityClient, effort: str
+) -> dict[str, str]:
+    """Request structured-task effort without breaking legacy fake adapters."""
+
+    try:
+        parameters = inspect.signature(client.chat).parameters.values()
+    except (TypeError, ValueError):
+        return {}
+    if any(
+        parameter.name == "reasoning_effort"
+        or parameter.kind is inspect.Parameter.VAR_KEYWORD
+        for parameter in parameters
+    ):
+        return {"reasoning_effort": effort}
+    return {}
+
+
 class KimiTrustedAdapter:
     """Minimal OpenAI-compatible client; credentials never leave this object."""
 
@@ -269,13 +288,8 @@ class KimiTrustedAdapter:
             ) from exc
         elapsed = time.monotonic() - started
         if not result.content.strip():
-            category = (
-                ErrorCategory.RETRYABLE
-                if result.finish_reason in {"engine_overloaded", "length"}
-                else ErrorCategory.CAPABILITY_UNAVAILABLE
-            )
             raise ContractError(
-                category,
+                ErrorCategory.RETRYABLE,
                 "Provider returned empty content",
             )
         return ProviderResponse(
@@ -322,13 +336,14 @@ class KimiTrustedAdapter:
         pieces: list[str] = []
         usage: Mapping[str, int] = {}
         finish_reason: str | None = None
-        response_bytes = 0
+        stream_bytes = 0
+        content_bytes = 0
         for raw in response:
-            response_bytes += len(raw)
-            if response_bytes > _MAX_PROVIDER_RESPONSE_BYTES:
+            stream_bytes += len(raw)
+            if stream_bytes > _MAX_PROVIDER_STREAM_BYTES:
                 raise ContractError(
                     ErrorCategory.CAPABILITY_UNAVAILABLE,
-                    "Provider response exceeds the trusted size limit",
+                    "Provider stream exceeds the trusted transport size limit",
                 )
             line = raw.decode("utf-8", "replace").strip()
             if not line or not line.startswith("data:"):
@@ -350,6 +365,12 @@ class KimiTrustedAdapter:
                     on_chunk("")
                 if delta.get("content"):
                     content = str(delta["content"])
+                    content_bytes += len(content.encode("utf-8"))
+                    if content_bytes > _MAX_PROVIDER_RESPONSE_BYTES:
+                        raise ContractError(
+                            ErrorCategory.CAPABILITY_UNAVAILABLE,
+                            "Provider response exceeds the trusted size limit",
+                        )
                     pieces.append(content)
                     if on_chunk is not None:
                         on_chunk(content)

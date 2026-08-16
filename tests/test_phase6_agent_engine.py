@@ -11,10 +11,12 @@ from oeydesign.agent_engine import (
     AgentSessionManager,
     WorkspaceManager,
     WorkspaceScope,
+    _action_document,
+    _render_contract_issue,
 )
 from oeydesign.capabilities import ProviderResponse
 from oeydesign.composition import SQLiteApplication
-from oeydesign.domain import ContractError, CreateProject
+from oeydesign.domain import ContractError, CreateProject, ErrorCategory
 
 
 def test_workspace_mount_is_persistent_and_repo_scope_is_read_only(
@@ -152,6 +154,69 @@ class _FakeRenderer:
         return type("Render", (), {"id": "render-1", "healthy": True})()
 
 
+def test_agent_tool_protocol_accepts_bounded_scope_and_path_aliases(
+    tmp_path: Path,
+) -> None:
+    workspace = WorkspaceManager(tmp_path / "data").open("project", "aliases")
+    workspace.write_file(WorkspaceScope.WORK, "App.jsx", b"export default 1")
+    loop = AgentLoop(_FakeClient())
+
+    listed, *_ = loop._execute(
+        workspace, {"tool": "list_files", "scope": "workspace"}
+    )
+    read, *_ = loop._execute(
+        workspace,
+        {"tool": "read_file", "scope": "source", "file_path": "App.jsx"},
+    )
+
+    assert listed["files"] == ("App.jsx",)
+    assert read["content"] == "export default 1"
+
+
+def test_agent_action_envelope_normalizes_common_structured_tool_aliases() -> None:
+    document = _action_document(
+        json.dumps(
+            {
+                "actions": [
+                    {
+                        "tool_name": "write_file",
+                        "parameters": {
+                            "scope": "work",
+                            "file_path": "App.jsx",
+                            "content": "export default 1",
+                        },
+                    }
+                ],
+                "done": False,
+            }
+        )
+    )
+
+    assert document["actions"][0]["tool"] == "write_file"
+    assert document["actions"][0]["file_path"] == "App.jsx"
+
+
+def test_render_contract_reports_duplicate_object_anchors_before_completion() -> None:
+    result = type(
+        "Render",
+        (),
+        {
+            "dom_metrics": {
+                "object_anchors": ("hero", "hero"),
+                "unique_object_anchors": 1,
+                "section_anchors": ("hero", "features"),
+                "unique_section_anchors": 2,
+                "scroll_width": 1440,
+                "client_width": 1440,
+            }
+        },
+    )()
+
+    assert _render_contract_issue(result) == (
+        "Rendered DOM has duplicate data-oey-object anchors"
+    )
+
+
 class _StreamingFakeClient(_FakeClient):
     def chat(
         self,
@@ -174,6 +239,67 @@ class _StreamingFakeClient(_FakeClient):
             temperature=temperature,
             stream=stream,
         )
+
+
+class _RetryingK3FakeClient(_FakeClient):
+    def __init__(self, *responses: str) -> None:
+        super().__init__(*responses)
+        self.efforts: list[str | None] = []
+        self.calls = 0
+
+    def chat(
+        self,
+        messages: list[dict[str, object]],
+        *,
+        model: str,
+        max_tokens: int,
+        temperature: float,
+        stream: bool,
+        reasoning_effort: str | None = None,
+    ) -> ProviderResponse:
+        self.calls += 1
+        self.efforts.append(reasoning_effort)
+        if self.calls == 1:
+            raise ContractError(
+                ErrorCategory.RETRYABLE, "Provider returned empty content"
+            )
+        return super().chat(
+            messages,
+            model=model,
+            max_tokens=max_tokens,
+            temperature=temperature,
+            stream=stream,
+        )
+
+
+def test_agent_loop_retries_empty_k3_action_with_high_effort(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr("oeydesign.agent_engine.time.sleep", lambda _seconds: None)
+    workspace = WorkspaceManager(tmp_path / "data").open("project", "retry")
+    sessions = AgentSessionManager()
+    sessions.start(
+        workspace,
+        session_id="retry-session",
+        stage="compose",
+        budget=AgentBudget(max_steps=4, max_total_tokens=100),
+    )
+    client = _RetryingK3FakeClient(
+        '{"actions":[{"tool":"write_file","scope":"out",'
+        '"path":"index.html","content":"<main>ok</main>"}],"done":false}',
+        '{"actions":[{"tool":"render","scope":"out",'
+        '"entry":"index.html"}],"done":false}',
+        '{"actions":[],"done":true}',
+    )
+
+    result = AgentLoop(
+        client,
+        renderer=_FakeRenderer(),
+        session_manager=sessions,
+    ).run(workspace, "retry-session", goal="retry safely", model="k3")
+
+    assert result.completed is True
+    assert client.efforts[:2] == ["low", "high"]
 
 
 def test_agent_loop_reports_true_stream_progress_without_model_text(

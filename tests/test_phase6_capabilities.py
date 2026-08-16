@@ -207,3 +207,39 @@ def test_reasoning_stream_reports_progress_without_exposing_reasoning() -> None:
     assert response.content == "READY"
     assert chunks == ["", "READY"]
     assert "private" not in repr(chunks)
+
+
+def test_large_private_reasoning_does_not_consume_visible_response_budget() -> None:
+    private_reasoning = "x" * 2_100_000
+    stream = (
+        'data: {"choices":[{"delta":{"reasoning_content":'
+        + json.dumps(private_reasoning)
+        + "}}]}\n"
+        + 'data: {"choices":[{"delta":{"content":"READY"}}]}\n'
+        + "data: [DONE]\n"
+    )
+
+    response = KimiTrustedAdapter._read_stream(io.BytesIO(stream.encode("utf-8")))
+
+    assert response.content == "READY"
+
+
+def test_empty_stream_is_classified_as_retryable() -> None:
+    adapter = KimiTrustedAdapter(
+        api_key="experiment-key",
+        base_url="https://api.kimi.com/coding/v1",
+    )
+    with patch(
+        "oeydesign.capabilities.urllib.request.urlopen",
+        return_value=_Response(b"data: [DONE]\n"),
+    ):
+        with pytest.raises(ContractError) as empty:
+            adapter.chat(
+                [{"role": "user", "content": "ping"}],
+                model="k3",
+                max_tokens=16,
+                stream=True,
+                reasoning_effort="low",
+            )
+
+    assert empty.value.category.value == "RETRYABLE"

@@ -22,7 +22,11 @@ from .agent_engine import (
     WorkspaceScope,
 )
 from .builder import NativeEsbuildBuilder
-from .capabilities import CapabilityClient, stream_callback_options
+from .capabilities import (
+    CapabilityClient,
+    reasoning_effort_options,
+    stream_callback_options,
+)
 from .domain import (
     Approval,
     ApprovedDirection,
@@ -176,6 +180,7 @@ class KimiVisualQualityReview:
             max_tokens=4_000,
             temperature=0.2,
             stream=True,
+            **reasoning_effort_options(client, "low"),
             **stream_callback_options(client, progress),
         )
         return parse_visual_review(response.content)
@@ -262,7 +267,7 @@ class AgentComposer:
                 budget=AgentBudget(
                     max_steps=20,
                     max_total_tokens=85_000,
-                    max_seconds=300,
+                    max_seconds=360,
                     max_renders=1,
                 ),
                 capability_version="agent-design-session/1",
@@ -291,7 +296,14 @@ class AgentComposer:
             "object_ref": object_ref,
             "constraints": (
                 "Keep every data-oey-object identity stable. Do not use network "
-                "resources, base64 assets, inline fake data, or analysis-only images."
+                "resources, base64 assets, inline fake data, or analysis-only images. "
+                "Do not include literal http:// or https:// text anywhere in source. "
+                "Every rendered data-oey-object and data-oey-section value must be "
+                "unique; explanatory labels must use plain text, not duplicate "
+                "attributes. "
+                "The confirmed facts and territory repository facts are sufficient; "
+                "inspect repository files only when one specific missing fact blocks "
+                "implementation. The frozen scaffold is already present."
             ),
         }
         loop = AgentLoop(
@@ -367,9 +379,9 @@ class AgentComposer:
                 session_id=repair_id,
                 stage="visual-repair",
                 budget=AgentBudget(
-                    max_steps=5,
-                    max_total_tokens=20_000,
-                    max_seconds=75,
+                    max_steps=10,
+                    max_total_tokens=40_000,
+                    max_seconds=120,
                     max_renders=1,
                 ),
                 capability_version="agent-visual-repair/1",
@@ -397,12 +409,14 @@ class AgentComposer:
                 repair_id,
                 goal=(
                     "Repair the existing design without replacing its territory or "
-                    "stable data-oey identities. Apply these review instructions: "
+                    "stable data-oey identities. Do not inspect the repository. Read "
+                    "only work/src/App.jsx if needed, then batch all writes followed "
+                    "by run_build and render. Apply these review instructions: "
                     + " | ".join(review.repair_instructions)
                 ),
                 model=model,
                 context=context_summary,
-                max_tokens=24_000,
+                max_tokens=12_000,
                 temperature=0.5,
             )
             total_steps += repair.session.budget.steps
@@ -555,7 +569,11 @@ class AgentDesignIntelligence:
         count = max(2, min(candidate_count, 2))
         strategy = DesignStrategy(
             stable_id(
-                "strategy", context.id, brief, constraints, self.capability_version
+                "strategy",
+                context.project_id,
+                context.source_refs,
+                context.metadata.get("request_fingerprint", brief),
+                self.capability_version,
             ),
             Lineage(context.project_id, run.id, self.capability_version),
             context.id,
@@ -568,39 +586,66 @@ class AgentDesignIntelligence:
             self.composer.activity_reporter,
             "Kimi is shaping two distinct design territories",
         )
-        response = client.chat(
-            [
-                {
-                    "role": "system",
-                    "content": (
-                        "Return only JSON with territories as an array of exactly two "
-                        "visually distinct complete Web design directions. Each needs "
-                        "name, visual_thesis, information_hierarchy, layout_strategy, "
-                        "typography_strategy, palette_roles, interaction_emphasis, "
-                        "and repository_facts. Do not use generic dashboard cards or "
-                        "purple gradients."
-                    ),
-                },
-                {
-                    "role": "user",
-                    "content": canonical_json(
+        request_messages: list[Mapping[str, Any]] = [
+            {
+                "role": "system",
+                "content": (
+                    "Return only JSON with territories as an array of exactly two "
+                    "visually distinct complete Web design directions. Each needs "
+                    "name, visual_thesis, information_hierarchy, layout_strategy, "
+                    "typography_strategy, palette_roles, interaction_emphasis, "
+                    "and repository_facts. Do not use generic dashboard cards or "
+                    "purple gradients."
+                ),
+            },
+            {
+                "role": "user",
+                "content": canonical_json(
+                    {
+                        "goal": brief.goal,
+                        "audience": brief.audience,
+                        "medium": brief.medium,
+                        "facts": context.confirmed_facts,
+                        "style_intent": context.metadata.get("style_intent", ()),
+                    }
+                ),
+            },
+        ]
+        for attempt in range(2):
+            response = client.chat(
+                request_messages,
+                model=model,
+                max_tokens=6_000 if attempt == 0 else 3_000,
+                temperature=0.9,
+                stream=True,
+                **reasoning_effort_options(client, "low"),
+                **stream_callback_options(client, progress),
+            )
+            try:
+                self._plans[strategy.id] = parse_territory_plan(response.content)
+                break
+            except ContractError as exc:
+                if attempt or exc.category is not ErrorCategory.RETRYABLE:
+                    raise
+                if self.composer.activity_reporter:
+                    self.composer.activity_reporter(
+                        "retry",
+                        "Kimi returned malformed territory JSON; requesting repair",
+                        details={"attempt": 2},
+                    )
+                request_messages.extend(
+                    (
+                        {"role": "assistant", "content": response.content[:40_000]},
                         {
-                            "goal": brief.goal,
-                            "audience": brief.audience,
-                            "medium": brief.medium,
-                            "facts": context.confirmed_facts,
-                            "style_intent": context.metadata.get("style_intent", ()),
-                        }
-                    ),
-                },
-            ],
-            model=model,
-            max_tokens=6_000,
-            temperature=0.9,
-            stream=True,
-            **stream_callback_options(client, progress),
-        )
-        self._plans[strategy.id] = parse_territory_plan(response.content)
+                            "role": "user",
+                            "content": (
+                                "Return one complete valid JSON object only. It must "
+                                "contain exactly two territories; palette_roles must "
+                                "be an object and repository_facts must be an array."
+                            ),
+                        },
+                    )
+                )
         return strategy
 
     def create_candidates(
@@ -1190,18 +1235,65 @@ def _territory_from_mapping(value: Any) -> DesignTerritory:
         raise ContractError(ErrorCategory.RETRYABLE, "Territory text is incomplete")
     palette = value.get("palette_roles", {})
     facts = value.get("repository_facts", [])
-    if not isinstance(palette, Mapping) or not isinstance(facts, list):
-        raise ContractError(ErrorCategory.RETRYABLE, "Territory details are invalid")
+    palette_roles = _territory_palette(palette)
+    repository_facts = _territory_facts(facts)
     return DesignTerritory(
         texts["name"],
         texts["visual_thesis"],
         texts["information_hierarchy"],
         texts["layout_strategy"],
         texts["typography_strategy"],
-        MappingProxyType({str(k): str(v) for k, v in palette.items()}),
+        palette_roles,
         texts["interaction_emphasis"],
-        tuple(str(fact) for fact in facts[:20]),
+        repository_facts,
     )
+
+
+def _territory_palette(value: Any) -> Mapping[str, str]:
+    items: list[tuple[str, str]] = []
+    if isinstance(value, Mapping):
+        items.extend((str(key), str(item)) for key, item in value.items())
+    elif isinstance(value, list | tuple):
+        for index, item in enumerate(value):
+            if isinstance(item, Mapping):
+                items.extend((str(key), str(nested)) for key, nested in item.items())
+            elif isinstance(item, str) and item.strip():
+                label, separator, detail = item.partition(":")
+                items.append(
+                    (
+                        label.strip() if separator else f"role_{index + 1}",
+                        detail.strip() if separator else item.strip(),
+                    )
+                )
+    elif isinstance(value, str) and value.strip():
+        items.append(("palette", value.strip()))
+    normalized = {
+        key.strip()[:120]: item.strip()[:500]
+        for key, item in items[:20]
+        if key.strip() and item.strip()
+    }
+    return MappingProxyType(normalized)
+
+
+def _territory_facts(value: Any) -> tuple[str, ...]:
+    if isinstance(value, str):
+        values: list[Any] = [value]
+    elif isinstance(value, Mapping):
+        values = list(value.values())
+    elif isinstance(value, list | tuple):
+        values = list(value)
+    elif value is None:
+        values = []
+    else:
+        values = [value]
+    facts: list[str] = []
+    for item in values[:20]:
+        if isinstance(item, Mapping):
+            item = ": ".join(str(part) for part in item.values())
+        text = str(item).strip()
+        if text:
+            facts.append(text[:2_000])
+    return tuple(facts)
 
 
 def _territory_document(value: DesignTerritory) -> dict[str, Any]:

@@ -9,12 +9,57 @@ from typing import Any
 
 import pytest
 
+from oeydesign.agent_design import parse_territory_plan
 from oeydesign.capabilities import ProviderResponse
 from oeydesign.credentials import MemoryCredentialStore
 from oeydesign.domain import ContractError, ErrorCategory
 from oeydesign.product import AgentJobStatus
 from oeydesign.product_shell import ProductShellService
 from oeydesign.web_mvp import ProductApplication
+
+
+def test_territory_plan_accepts_provider_list_and_scalar_details() -> None:
+    plan = parse_territory_plan(
+        json.dumps(
+            {
+                "territories": [
+                    {
+                        "name": "Paper Signal",
+                        "visual_thesis": "A warm editorial release statement",
+                        "information_hierarchy": "Promise, proof, workflow, action",
+                        "layout_strategy": "Asymmetric editorial sections",
+                        "typography_strategy": "Expressive display with calm body",
+                        "palette_roles": [
+                            "ground: warm paper",
+                            {"accent": "signal orange"},
+                        ],
+                        "interaction_emphasis": "Measured sectional movement",
+                        "repository_facts": "OEYdesign creates two directions",
+                    },
+                    {
+                        "name": "Proof Terminal",
+                        "visual_thesis": "A precise technical launch narrative",
+                        "information_hierarchy": "Evidence, system, quality, delivery",
+                        "layout_strategy": "A strict proof-led grid",
+                        "typography_strategy": "Condensed labels and large statements",
+                        "palette_roles": "graphite with verification green",
+                        "interaction_emphasis": "Object-level inspection",
+                        "repository_facts": {"delivery": "immutable source and dist ZIP"},
+                    },
+                ]
+            }
+        )
+    )
+    assert dict(plan.territories[0].palette_roles) == {
+        "ground": "warm paper",
+        "accent": "signal orange",
+    }
+    assert plan.territories[0].repository_facts == (
+        "OEYdesign creates two directions",
+    )
+    assert plan.territories[1].repository_facts == (
+        "immutable source and dist ZIP",
+    )
 
 
 class _ProductFixtureProvider:

@@ -6,6 +6,7 @@ import hashlib
 import json
 import mimetypes
 import secrets
+import threading
 from argparse import ArgumentParser
 from dataclasses import asdict, is_dataclass
 from email import policy
@@ -13,7 +14,7 @@ from email.parser import BytesParser
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from typing import Any
-from urllib.parse import parse_qs, unquote, urlparse, urlsplit
+from urllib.parse import parse_qs, quote, unquote, urlparse, urlsplit
 
 from .domain import (
     ApproveDirection,
@@ -109,14 +110,26 @@ class ProductShellService:
         *,
         inline_previews: bool = True,
         access_token: str | None = None,
+        preview_base_url: str | None = None,
+        shell_origin: str | None = None,
     ) -> None:
         self.app = app
         self.inline_previews = inline_previews
         self.access_token = access_token
+        self.preview_base_url = preview_base_url
+        self.shell_origin = shell_origin
         self.csrf_token = secrets.token_urlsafe(32)
         self.session_id = secrets.token_urlsafe(18)
         self.preview_tokens: dict[str, tuple[str, str, int]] = {}
         self.preview_bindings: dict[tuple[str, str, int], str] = {}
+
+    def _preview_url(self, file_set_id: str, token: str) -> str:
+        if self.preview_base_url:
+            return (
+                f"{self.preview_base_url.rstrip('/')}/preview/"
+                f"{quote(token)}/{quote(file_set_id)}/index.html"
+            )
+        return f"/api/previews/{file_set_id}/index.html?token={token}"
 
     def _preview_token(self, file_set_id: str, owner_id: str, revision: int) -> str:
         binding = (file_set_id, owner_id, revision)
@@ -536,9 +549,7 @@ class ProductShellService:
                         file_set.id, item["id"], item["revision"]
                     )
                     item["file_set_id"] = file_set.id
-                    item["preview_url"] = (
-                        f"/api/previews/{file_set.id}/index.html?token={token}"
-                    )
+                    item["preview_url"] = self._preview_url(file_set.id, token)
                     item["visual_review"] = _safe(
                         file_set.metadata.get("visual_review")
                     )
@@ -566,8 +577,8 @@ class ProductShellService:
                 if file_set is not None and projection["focus"]:
                     token = self._preview_token(file_set.id, a.id, a.revision)
                     projection["focus"]["file_set_id"] = file_set.id
-                    projection["focus"]["preview_url"] = (
-                        f"/api/previews/{file_set.id}/index.html?token={token}"
+                    projection["focus"]["preview_url"] = self._preview_url(
+                        file_set.id, token
                     )
                     projection["focus"]["visual_review"] = _safe(
                         file_set.metadata.get("visual_review")
@@ -794,9 +805,7 @@ class ProductShellService:
         replacement = self._preview_token(*binding)
         return {
             "preview_token": replacement,
-            "preview_url": (
-                f"/api/previews/{file_set_id}/index.html?token={replacement}"
-            ),
+            "preview_url": self._preview_url(file_set_id, replacement),
         }
 
     def download(self, delivery_id: str) -> tuple[bytes, str]:
@@ -1084,7 +1093,7 @@ document.addEventListener('click',function(event){{
   parent.postMessage({{type:'oey-object-selected',token:binding.token,
     owner_id:binding.owner_id,revision:binding.revision,
     object_ref:target.getAttribute('data-oey-object')}},'*');
-}});
+}},true);
 }})();</script>"""
 
 
@@ -1265,7 +1274,11 @@ def make_handler(
             self.send_header("Cache-Control", "no-store")
             self.send_header(
                 "Content-Security-Policy",
-                _CSP,
+                (
+                    _CSP + f"; frame-src {service.preview_base_url}"
+                    if service.preview_base_url
+                    else _CSP
+                ),
             )
             self.end_headers()
             self.wfile.write(raw)
@@ -1461,10 +1474,12 @@ def make_preview_handler(
             self.send_header("Cache-Control", "no-store")
             self.send_header("X-Content-Type-Options", "nosniff")
             self.send_header("Referrer-Policy", "no-referrer")
+            frame_ancestor = service.shell_origin or "'none'"
             self.send_header(
                 "Content-Security-Policy",
                 "default-src 'self'; connect-src 'none'; frame-src 'none'; "
-                "frame-ancestors 'none'; object-src 'none'; base-uri 'none'; "
+                f"frame-ancestors {frame_ancestor}; object-src 'none'; "
+                "base-uri 'none'; "
                 "form-action 'none'; "
                 "img-src 'self' data:; style-src 'self' 'unsafe-inline'; "
                 "script-src 'self' 'unsafe-inline'",
@@ -1568,14 +1583,35 @@ def main(argv: list[str] | None = None) -> int:
             dependency_image=args.dependency_image,
         )
     with app_context as app:
-        server = make_server(app, args.host, args.port, args.static_dir)
+        service = ProductShellService(app, inline_previews=False)
+        server = make_server(
+            app, args.host, args.port, args.static_dir, service=service
+        )
+        preview_server = make_preview_server(service, args.host, 0)
+        service.preview_base_url = (
+            f"http://{args.host}:{preview_server.server_port}"
+        )
+        service.shell_origin = f"http://{args.host}:{server.server_port}"
+        preview_thread = threading.Thread(
+            target=preview_server.serve_forever,
+            name="oeydesign-web-preview",
+            daemon=True,
+        )
+        preview_thread.start()
         print(f"OEYdesign shell listening on http://{args.host}:{server.server_port}")
+        print(
+            "OEYdesign isolated preview listening on "
+            f"{service.preview_base_url}"
+        )
         try:
             server.serve_forever()
         except KeyboardInterrupt:
             pass
         finally:
             server.server_close()
+            preview_server.shutdown()
+            preview_server.server_close()
+            preview_thread.join(timeout=5)
     return 0
 
 
