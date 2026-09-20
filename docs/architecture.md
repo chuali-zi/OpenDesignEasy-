@@ -1,6 +1,6 @@
 # OEYdesign 全 TypeScript 架构
 
-> 当前采用：D 路线，2026-09-12。状态截至 2026-09-20：R1 Windows 开发基线已验证；R2 基础 Web 编辑路径通过 Chrome 实测，完整 R2 与目标架构仍未完成。跨平台干净安装安排在 R7。
+> 当前采用：D 路线，2026-09-12。状态截至 2026-09-20：R1 Windows 开发基线已验证；R2 Deck 编辑/导出与 R3 产品 Pi 接入已实现，最终验收见[本轮记录](spec/r2-r3-validation.md)。完整目标架构及跨平台干净安装仍按 R4–R7 推进。
 > 依据：[PRD](prd.md)、[ADR-0006](adr/0006-full-typescript-design-platform.md)。本文替代旧分层架构。
 
 ## 1. 核心决策
@@ -38,18 +38,18 @@ flowchart TB
 
 ```text
 apps/
-  web/                  # Web host 与 React/Vite 壳（R2 基础路径已通过 Chrome 实测；完整 Web 生产在 R4）
+  web/                  # Web host、设计对话和 Deck 工作台；Web 文档生产在 R4
   desktop/              # Electron 主进程 / preload / 共享图形界面（待 R6）
-  cli/                  # 非交互命令与 JSON 输出（R1 基本路径已完成，继续扩展）
+  cli/                  # 项目、文档、素材、导出、agent 与 owner 接续；JSON 输出
   tui/                  # 终端交互（待 R6）
 packages/
-  document/             # 纯 TS 文档模型、命令、校验、反向操作（R1 最小实现）
-  runtime/              # 项目会话、SQLite、命令与事件（R1 基线完成；产品 Pi agent 接入在 R3）
-  editor/               # Konva 基础手势已通过 Chrome 实测；完整富文本、吸附/对齐等 R2 范围未完成
-  media/                # R1 基本 SVG 已完成；Deck 原生对象 PPTX 生产及 Office 验证仍在 R2
+  document/             # Deck 模型、富文本、图片/表格/图表、命令、校验、反向操作
+  runtime/              # SQLite、统一历史、可靠输入、Pi AgentSession、素材与工具服务
+  editor/               # Konva 几何交互、ProseMirror 富文本与共享属性/图层控件
+  media/                # Deck SVG/PNG/PDF 与原生 PPTX；实际 Office 验证脚本
 ```
 
-R1 的可运行边界是 `document`、`runtime`、`media` 的无头子集和 CLI，已在 Node 24.21.0 与 Electron 44.3.0 utility process 上完成 Windows x64 宿主验证。Pi 0.85.1 的 faux AgentSession 工具、消息、hook 与活动中断检查已通过；它验证 SDK 用法，不代表产品 agent 已进入 runtime。产品 agent 与人机共同创作属于尚未开始的 R3。R2 的 Node 24 全 workspace TypeScript 检查、Web production build、29/29 单元/集成检查与 Chrome 3/3 基础路径均已通过：基本文字保存、几何属性、撤销/重做、重新载入、PPTX 下载、拖动、角点缩放、属性旋转，以及切换文档时的旧版本响应保护；视口缩放不增加文档修订。PPTX 重复 `pPr` 已修复，三页 XML 检查通过。R2 整体仍未完成：图片、完整富文本、吸附/对齐、PDF、实际 Office 打开和完整验收待完成。TUI、Desktop 与其他媒介能力按后续阶段推进。
+R1 已在 Node 24.21.0 与 Electron 44.3.0 utility process 上完成 Windows x64 宿主验证。R2/R3 的当前运行路径包含 Deck 编辑、导出和 Pi 产品会话，既可由 CLI 独立使用，也可由 Web owner 提供服务。实际兼容模型完成三页生成、人工修改接续、提问重启和图片链路验证；原生 provider 验证尚待授权。Deck 的 Chrome 4/4 与完整视觉回归已通过。TUI、Desktop 与其他媒介能力按后续阶段推进，不调用旧 Python 填补范围。
 
 起步采用 npm workspaces、TS ESM；按目录组织子模块，不预先拆出几十个包。测试与代码相邻。公共命令和文档类型由 document/runtime 的公开入口提供，不维护重复 schema 仓库。
 

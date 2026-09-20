@@ -1,13 +1,14 @@
 import { readFile, rename, unlink, writeFile } from "node:fs/promises";
-import { writeFileSync } from "node:fs";
+import { existsSync, writeFileSync } from "node:fs";
 import { pathToFileURL } from "node:url";
 import { basename, dirname, extname, resolve } from "node:path";
 import { randomUUID } from "node:crypto";
 import { Fragment, Slice } from "prosemirror-model";
 import { ReplaceStep } from "prosemirror-transform";
 import { textFromString, textSchema } from "@oeydesign/document";
-import { exportDeckPptx, renderDeckSvg } from "@oeydesign/media";
-import { ProjectRuntime } from "@oeydesign/runtime";
+import { exportDeckPptx, exportDeckPdf, renderDeckPng, renderDeckSvg } from "@oeydesign/media";
+import { ProjectAssets, ProjectRuntime } from "@oeydesign/runtime";
+import { executeAgent } from './agent-cli.ts';
 
 type AnyRecord = Record<string, any>;
 
@@ -16,12 +17,14 @@ const HELP = {
   usage: "oey <command> [options]",
   commands: {
     project: ["create <dir> [--name <name>]", "show <dir>"],
+    agent: ["run <dir> --text <prompt> [--session <id>] [--document <id>] [--asset <id>]", "create|list|status|config <dir> [--session <id>] [--file <config.json>]", "send|steer|follow-up|answer|cancel --host <local-url> --session <id> [--text <text>] [--question <id>] [--wait]"],
+    asset: ["import <dir> <file>", "list <dir>"],
     document: [
       "create <dir> [--name <name>]",
       "read <dir> [documentId]",
       "apply <dir> <command.json>",
       "render <dir> <documentId> --output <file.svg> [--page <id>]",
-      "export <dir> <documentId> --output <file.pptx>",
+      "export <dir> <documentId> --output <file.pptx|file.pdf|file.png>",
     ],
     node: [
       "insert <dir> <documentId> --page <id> --kind text|shape --text <text> --x <n> --y <n> --width <n> --height <n> [--id <id>]",
@@ -167,6 +170,20 @@ export async function execute(argv: string[]): Promise<unknown> {
   if (argv.length === 0 || argv.includes("--help") || argv.includes("-h") || argv[0] === "help") return HELP;
 
   const [area, action, ...rest] = argv;
+  if (area === 'agent') return executeAgent(argv.slice(1));
+  if (area === 'asset') {
+    const { positional } = parseFlags(rest, []);
+    expectPositionals(positional, action === 'import' ? 2 : 1, `asset ${action}`);
+    const runtime = ProjectRuntime.open(positional[0]!);
+    try {
+      const assets = new ProjectAssets(runtime);
+      if (action === 'list') return { assets: assets.list() };
+      if (action !== 'import') usage('Unknown asset action');
+      const file = positional[1]!;
+      const bytes = await readFile(file);
+      return { asset: /\.(png|jpe?g|webp)$/i.test(file) ? await assets.importImage(bytes, basename(file)) : await assets.importReference(bytes, basename(file)) };
+    } finally { runtime.close(); }
+  }
   if (area === "project" && action === "create") {
     const { values, positional } = parseFlags(rest, ["name"]);
     expectPositionals(positional, 1, "project create");
@@ -210,23 +227,29 @@ export async function execute(argv: string[]): Promise<unknown> {
     expectPositionals(positional, 2, "document render");
     const output = resolve(requiredFlag(values, "output"));
     const page = optionalFlag(values, "page");
-    return withRuntime(positional[0]!, (runtime) => {
-      const document = runtime.readDocument(positional[1]);
-      const svg = renderDeckSvg(document, page);
+    const runtime = ProjectRuntime.open(positional[0]!);
+    try {
+      const document = runtime.readDocument(positional[1]!);
+      const svg = await renderDeckSvg(document, page, new ProjectAssets(runtime).resolve);
       writeFileSync(output, svg, "utf8");
       return { documentId: document.documentId, revision: document.revision, format: "svg", output };
-    });
+    } finally { runtime.close(); }
   }
 
   if (area === "document" && action === "export") {
     const { values, positional } = parseFlags(rest, ["output"]);
     expectPositionals(positional, 2, "document export");
     const output = resolve(requiredFlag(values, "output"));
-    if (extname(output).toLowerCase() !== ".pptx") usage("option --output must have a .pptx extension");
-    const document = withRuntime(positional[0]!, (runtime) => runtime.readDocument(positional[1]!));
-    const data = await exportDeckPptx(document);
-    await writeFileAtomically(output, data);
-    return { documentId: document.documentId, revision: document.revision, format: "pptx", output };
+    const format = extname(output).toLowerCase().slice(1);
+    if (!['pptx', 'pdf', 'png'].includes(format)) usage('option --output must have a .pptx, .pdf or .png extension');
+    const runtime = ProjectRuntime.open(positional[0]!);
+    try {
+      const document = runtime.readDocument(positional[1]!);
+      const resolver = new ProjectAssets(runtime).resolve;
+      const data = format === 'pptx' ? await exportDeckPptx(document, resolver) : format === 'pdf' ? await exportDeckPdf(document, resolver) : await renderDeckPng(document, undefined, resolver);
+      await writeFileAtomically(output, data);
+      return { documentId: document.documentId, revision: document.revision, format, output };
+    } finally { runtime.close(); }
   }
 
   if (area === "node" && action === "insert") {
@@ -341,6 +364,7 @@ export async function main(argv = process.argv.slice(2)): Promise<number> {
 
 const entry = process.argv[1];
 if (entry && import.meta.url === pathToFileURL(entry).href) {
+  if (existsSync(resolve('.env'))) process.loadEnvFile(resolve('.env'));
   const exitCode = await main();
   if (exitCode !== 0) process.exitCode = exitCode;
 }

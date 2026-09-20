@@ -1,6 +1,6 @@
 # Agent 引擎规范：直接使用 Pi SDK
 
-> TS 重构 v1，2026-09-12。Pi 是新 runtime 的执行核心，尚未接入。
+> TS 重构 v1，2026-09-12；实现状态更新于 2026-09-20。Pi 已直接接入新 runtime，当前产品与验证范围见 [R2/R3 记录](r2-r3-validation.md)。
 > 当前研究基线为 Pi 0.85.1；实现时锁定公开发布版本及 lockfile，不能把研究 checkout 的 main 当成发布契约。
 
 ## 1. 集成方式与分工
@@ -23,7 +23,7 @@ packages/runtime 内直接创建 Pi AgentSession，使用 @earendil-works/pi-cod
 
 ## 3. 工具集合
 
-工具名以下为产品语义草案，实际注册名称应遵守 provider 的字符限制，例如使用下划线；不是现有可调用命令。
+下表使用语义名称。R3 实际注册名用下划线：project_read、document_read/query/schema/apply、document_undo/redo、design_decide、reference_read、asset_import/generate、render_preview、artifact_export、user_ask、version_create/restore。reference.parse、render.inspect 与 source.* 的更广能力分别按 R4/R5 实现。
 
 | 语义 | 工作方式 |
 |---|---|
@@ -52,7 +52,7 @@ Agent 根据用户意图选择讨论、查看、探索、创建、修改或导�
 
 ## 5. 输入、纠偏与停止
 
-输入先以 inputId 写入 OEY 存储，再确认接收，随后交给 Pi。通过公共 custom message 元数据关联输入 ID 和 Pi session entry；图片与文本内容按 SDK 支持的消息形式传入。关联细节需在 R3 验证，不能依赖私有字段补丁。
+输入先以 inputId 写入 OEY 存储，再确认接收，随后交给 Pi。通过公共 custom message 的 details.inputId/runId 关联产品输入与 Pi session entry；图片与文本按 SDK 消息形式传入。R3 已通过持久输入与幂等重试检查，不依赖私有字段补丁。
 
 - steer 在 Pi 的工具批次/turn 边界进入后续模型上下文，不能承诺即刻中断已运行的长工具。
 - follow_up 在当前工作自然结束后继续。
@@ -69,7 +69,7 @@ user.ask 先持久保存 questionId、问题、选项、允许的自由文本和
 
 提问不是一个在工具线程里无限等待的 Promise。runtime 设置 waiting_input，并使用 Pi 公共 beforeToolCall / shouldStopAfterTurn 等控制点阻止后续依赖答案的写入及下一轮模型请求。
 
-不能只让某个工具返回 terminate 就假设整批已停：研究版本的该标志具有整批条件。应在 R3 验证“提问与写入同时被模型请求”的情况。普通用户问题不要求再套审批层。
+不能只让某个工具返回 terminate 就假设整批已停。R3 已用实际 Pi faux 工具批次验证“提问与写入同时被模型请求”：持久状态和 beforeToolCall 共同阻止问题后的写入。普通用户问题不要求再套审批层。
 
 ## 7. 设计上下文
 

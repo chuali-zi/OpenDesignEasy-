@@ -1,7 +1,7 @@
-import { applyTextSteps, textSchema } from "./text.ts";
+import { applyTextSteps, validateTextContent } from "./text.ts";
 import { geometryMatrix, normalizeRotation, parentToWorld, worldToParent, type Matrix } from "./geometry.ts";
 import { KernelError, invalid } from "./errors.ts";
-import type { CommandEnvelope, DeckDocument, DeckNode, DeckPage, DocumentOperation, EditPrecondition, Geometry, Style } from "./model.ts";
+import type { AssetCollection, ChartData, CommandEnvelope, DeckDocument, DeckNode, DeckPage, DocumentAsset, DocumentOperation, EditPrecondition, Geometry, ImageAsset, ImageSettings, Style, TableData, ThemePatch } from "./model.ts";
 
 const clone = <T>(value: T): T => structuredClone(value);
 const equal = (a: unknown, b: unknown): boolean => JSON.stringify(a) === JSON.stringify(b);
@@ -10,7 +10,117 @@ const nonEmpty = (value: unknown): value is string => typeof value === "string" 
 const record = (value: unknown): value is Record<string, unknown> => Boolean(value) && typeof value === "object" && !Array.isArray(value);
 const stableId = (value: unknown): value is string => nonEmpty(value) && !["__proto__", "constructor", "prototype"].includes(value);
 const geometryKeys = new Set(["x", "y", "width", "height", "rotation"]);
+const themeColorKeys = new Set(["accent1", "accent2", "accent3", "accent4", "accent5", "accent6", "text1", "text2", "background1", "background2"]);
+const imageMimeTypes = new Set(["image/png", "image/jpeg", "image/webp"]);
 const hasOwnNode = (document: DeckDocument, nodeId: string): boolean => Object.prototype.hasOwnProperty.call(document.nodes, nodeId);
+
+function validateHexColor(value: unknown, label: string): void {
+  if (typeof value !== "string" || !/^#(?:[\da-f]{3}|[\da-f]{6})$/i.test(value)) invalid(`${label} must be a #RGB or #RRGGBB color`);
+}
+
+function validateImageAsset(asset: unknown, target: string): asserts asset is ImageAsset {
+  if (!record(asset) || !stableId(asset.id) || asset.kind !== "image" || !imageMimeTypes.has(String(asset.mimeType)) || !finite(asset.width) || asset.width <= 0 || !finite(asset.height) || asset.height <= 0) {
+    invalid("invalid image asset metadata", target);
+  }
+  if (asset.name !== undefined && (typeof asset.name !== "string" || !asset.name.trim())) invalid("image asset name must be non-empty", target);
+  if (asset.sizeBytes !== undefined && (typeof asset.sizeBytes !== "number" || !Number.isSafeInteger(asset.sizeBytes) || asset.sizeBytes <= 0)) invalid("image asset sizeBytes must be a positive integer", target);
+  if (asset.sha256 !== undefined && (typeof asset.sha256 !== "string" || !/^[\da-f]{64}$/i.test(asset.sha256))) invalid("image asset sha256 must be a 64-digit hexadecimal string", target);
+}
+
+function assetEntries(assets: AssetCollection | undefined): Array<[string, DocumentAsset]> {
+  if (!assets) return [];
+  return Array.isArray(assets) ? assets.map((asset) => [asset.id, asset]) : Object.entries(assets);
+}
+
+function findAsset(document: DeckDocument, assetId: string): DocumentAsset | undefined {
+  const assets = document.assets;
+  if (!assets) return undefined;
+  if (Array.isArray(assets)) return assets.find((asset) => asset.id === assetId);
+  return Object.prototype.hasOwnProperty.call(assets, assetId) ? assets[assetId] : undefined;
+}
+
+function storeAsset(document: DeckDocument, asset: ImageAsset): void {
+  if (Array.isArray(document.assets)) document.assets.push(clone(asset));
+  else {
+    document.assets ??= {};
+    (document.assets as Record<string, DocumentAsset>)[asset.id] = clone(asset);
+  }
+}
+
+function validateImageSettings(settings: unknown, target: string): asserts settings is ImageSettings {
+  if (!record(settings)) invalid("image settings must be an object", target);
+  if (settings.fit !== undefined && !["contain", "cover", "stretch"].includes(String(settings.fit))) invalid("image fit must be contain, cover or stretch", target);
+  if (settings.opacity !== undefined && (!finite(settings.opacity) || settings.opacity < 0 || settings.opacity > 1)) invalid("image opacity must be between 0 and 1", target);
+  if (settings.crop !== undefined) {
+    const crop = settings.crop;
+    if (!record(crop)) invalid("image crop must be an object", target);
+    const sides = [crop.left, crop.top, crop.right, crop.bottom];
+    if (sides.some((side) => !finite(side) || side < 0 || side >= 1) || (crop.left as number) + (crop.right as number) >= 1 || (crop.top as number) + (crop.bottom as number) >= 1) invalid("image crop must use normalized insets whose opposing sums are less than 1", target);
+  }
+}
+
+function validateTableData(table: unknown, target: string): asserts table is TableData {
+  if (!record(table) || !Array.isArray(table.rows) || table.rows.length === 0) invalid("table node requires at least one row", target);
+  const width = table.rows[0]?.cells?.length;
+  if (!Number.isInteger(width) || width <= 0) invalid("table must contain at least one cell per row", target);
+  const rowIds = new Set<string>();
+  for (const row of table.rows) {
+    if (!record(row) || !stableId(row.id) || rowIds.has(row.id) || !Array.isArray(row.cells) || row.cells.length !== width) invalid("table rows must have unique ids and the same non-zero number of cells", target);
+    rowIds.add(row.id);
+    if (row.height !== undefined && (!finite(row.height) || row.height <= 0)) invalid("table row height must be positive", row.id);
+    const cellIds = new Set<string>();
+    for (const cell of row.cells) {
+      if (!record(cell) || !stableId(cell.id) || cellIds.has(cell.id)) invalid("table cells must have unique ids per row", row.id);
+      cellIds.add(cell.id);
+      if (!cell.content || !record(cell.content) || cell.content.type !== "doc") invalid("table cell content must be a rich-text doc", cell.id);
+      validateTextContent(cell.content as never, `table cell ${cell.id}`);
+      if (cell.style !== undefined) validateTableCellStyle(cell.style, cell.id);
+    }
+  }
+  if (table.columnWidths !== undefined && (!Array.isArray(table.columnWidths) || table.columnWidths.length !== width || table.columnWidths.some((value) => !finite(value) || value <= 0))) invalid("table columnWidths must contain one positive value per column", target);
+  if (table.headerRows !== undefined && (typeof table.headerRows !== "number" || !Number.isInteger(table.headerRows) || table.headerRows < 0 || table.headerRows > table.rows.length)) invalid("table headerRows is out of range", target);
+  if (table.borderColor !== undefined) validateHexColor(table.borderColor, `table ${target} borderColor`);
+  if (table.borderWidth !== undefined && (!finite(table.borderWidth) || table.borderWidth < 0)) invalid("table borderWidth must be non-negative", target);
+  if (table.cellPadding !== undefined && (!finite(table.cellPadding) || table.cellPadding < 0)) invalid("table cellPadding must be non-negative", target);
+}
+
+function validateTableCellStyle(style: unknown, target: string): void {
+  if (!record(style)) invalid("table cell style must be an object", target);
+  if (style.fill !== undefined) validateHexColor(style.fill, `table cell ${target} fill`);
+  if (style.color !== undefined) validateHexColor(style.color, `table cell ${target} color`);
+  if (style.fontFamily !== undefined && (typeof style.fontFamily !== "string" || !style.fontFamily.trim())) invalid("table cell fontFamily must be non-empty", target);
+  if (style.fontSize !== undefined && (!finite(style.fontSize) || style.fontSize <= 0)) invalid("table cell fontSize must be positive", target);
+  if (style.align !== undefined && !["left", "center", "right"].includes(String(style.align))) invalid("table cell align must be left, center or right", target);
+}
+
+function validateChartData(chart: unknown, target: string): asserts chart is ChartData {
+  if (!record(chart) || !["bar", "line", "pie"].includes(String(chart.type)) || !Array.isArray(chart.categories) || !chart.categories.length || chart.categories.some((category) => typeof category !== "string") || !Array.isArray(chart.series) || !chart.series.length) invalid("chart requires a supported type, categories and series", target);
+  if (chart.type === "pie" && chart.series.length !== 1) invalid("pie charts require exactly one data series", target);
+  const seriesIds = new Set<string>();
+  for (const series of chart.series) {
+    if (!record(series) || !stableId(series.id) || seriesIds.has(series.id) || typeof series.name !== "string" || !series.name.trim() || !Array.isArray(series.values) || series.values.length !== chart.categories.length || series.values.some((value) => !finite(value))) invalid("chart series must have a unique id, name, and one finite value per category", target);
+    seriesIds.add(series.id);
+    if (series.color !== undefined) validateHexColor(series.color, `chart series ${series.id} color`);
+  }
+  if (chart.title !== undefined && typeof chart.title !== "string") invalid("chart title must be a string", target);
+  if (chart.xAxisTitle !== undefined && typeof chart.xAxisTitle !== "string" || chart.yAxisTitle !== undefined && typeof chart.yAxisTitle !== "string") invalid("chart axis titles must be strings", target);
+  if (chart.legend !== undefined && typeof chart.legend !== "boolean" || chart.dataLabels !== undefined && typeof chart.dataLabels !== "boolean") invalid("chart legend and dataLabels must be boolean", target);
+}
+
+function validateTheme(theme: unknown): void {
+  if (!record(theme)) invalid("Deck theme must be an object");
+  for (const key of ["name", "fontFamily", "headingFontFamily", "bodyFontFamily"]) {
+    const value = theme[key];
+    if (value !== undefined && (typeof value !== "string" || !value.trim())) invalid(`Deck theme ${key} must be non-empty`);
+  }
+  if (theme.colors !== undefined) {
+    if (!record(theme.colors)) invalid("Deck theme colors must be an object");
+    for (const [key, value] of Object.entries(theme.colors)) {
+      if (!themeColorKeys.has(key)) invalid(`unsupported Deck theme color ${key}`);
+      validateHexColor(value, `Deck theme ${key}`);
+    }
+  }
+}
 
 export function createDeckDocument(input: { documentId: string; name: string; pageId?: string }): DeckDocument {
   if (!stableId(input.documentId) || !nonEmpty(input.name)) invalid("documentId and name are required");
@@ -24,6 +134,15 @@ export function validateDocument(document: DeckDocument): void {
   if (!document || document.schemaVersion !== 1 || document.kind !== "deck") invalid("unsupported document schema or kind");
   if (!stableId(document.documentId) || !nonEmpty(document.name) || !Number.isInteger(document.revision) || document.revision < 0) invalid("invalid document header");
   if (!Array.isArray(document.pages) || !document.pages.length || !document.nodes || typeof document.nodes !== "object") invalid("deck must contain pages and nodes");
+  if (document.theme !== undefined) validateTheme(document.theme);
+  if (document.assets !== undefined && !Array.isArray(document.assets) && !record(document.assets)) invalid("assets must be an array or an id-keyed object");
+  const assetIds = new Set<string>();
+  for (const [key, asset] of assetEntries(document.assets)) {
+    validateImageAsset(asset, key);
+    if (!Array.isArray(document.assets) && key !== asset.id) invalid("asset map key must match its id", key);
+    if (assetIds.has(asset.id)) invalid("asset ids must be unique", asset.id);
+    assetIds.add(asset.id);
+  }
   const ids = new Set<string>();
   for (const page of document.pages) {
     if (!stableId(page.id) || ids.has(page.id) || !nonEmpty(page.name) || !finite(page.width) || !finite(page.height) || page.width <= 0 || page.height <= 0 || !Array.isArray(page.children)) invalid("invalid page", page.id);
@@ -32,13 +151,26 @@ export function validateDocument(document: DeckDocument): void {
   }
   for (const [key, node] of Object.entries(document.nodes)) {
     if (key !== node.id || !stableId(node.id) || ids.has(node.id)) invalid("node has an invalid or duplicate id", node.id);
-    if (!["text", "shape", "image", "group"].includes(node.kind)) invalid("unsupported node kind", node.id);
+    if (!["text", "shape", "image", "group", "table", "chart"].includes(node.kind)) invalid("unsupported node kind", node.id);
     if (!stableId(node.parentId) || !node.geometry || Object.keys(node.geometry).some((key) => !geometryKeys.has(key)) || !finite(node.geometry?.x) || !finite(node.geometry?.y) || !finite(node.geometry?.width) || !finite(node.geometry?.height) || !finite(node.geometry?.rotation) || node.geometry.width <= 0 || node.geometry.height <= 0) invalid("invalid node geometry", node.id);
-    if (typeof node.locked !== "boolean" || typeof node.hidden !== "boolean" || !node.style || typeof node.style !== "object") invalid("invalid node flags or style", node.id);
+    if (typeof node.locked !== "boolean" || typeof node.hidden !== "boolean" || !node.style || typeof node.style !== "object" || Array.isArray(node.style)) invalid("invalid node flags or style", node.id);
+    if (node.kind === "image") {
+      if (!stableId(node.assetId) || !assetIds.has(node.assetId)) invalid("image node must reference a registered image asset", node.id);
+      if (node.image !== undefined) validateImageSettings(node.image, node.id);
+    } else if (node.assetId !== undefined || node.image !== undefined) invalid("only image nodes may reference image assets or settings", node.id);
+    if (node.kind === "table") {
+      if (!node.table) invalid("table node data is required", node.id);
+      validateTableData(node.table, node.id);
+    } else if (node.table !== undefined) invalid("only table nodes may contain table data", node.id);
+    if (node.kind === "chart") {
+      if (!node.chart) invalid("chart node data is required", node.id);
+      validateChartData(node.chart, node.id);
+    } else if (node.chart !== undefined) invalid("only chart nodes may contain chart data", node.id);
     if (node.kind === "text") {
       if (!node.content || typeof node.content !== "object" || !nonEmpty(node.content.type)) invalid("text node content is required", node.id);
-      try { const textNode = textSchema.nodeFromJSON(node.content); textNode.check(); } catch (error) { invalid(`invalid text content: ${error instanceof Error ? error.message : String(error)}`, node.id); }
+      validateTextContent(node.content, `text node ${node.id}`);
     }
+    if (node.kind !== "text" && node.content !== undefined) invalid("only text nodes may contain text content", node.id);
     if (node.kind === "group" && !Array.isArray(node.children)) invalid("group children are required", node.id);
     if (node.kind !== "group" && node.children !== undefined) invalid("only group nodes may have children", node.id);
     if (node.children) assertUniqueChildren(node.children, node.id);
@@ -125,10 +257,14 @@ function assertPreconditions(document: DeckDocument, preconditions: EditPrecondi
   for (const condition of preconditions ?? []) {
     if (!record(condition) || !nonEmpty(condition.type)) invalid("precondition must identify its type");
     if (condition.type === "node.property" && !nonEmpty(condition.path)) invalid("node.property requires a property path");
+    if (condition.type === "document.property" && !["name", "theme"].includes(condition.path)) invalid("unsupported document property precondition");
     if (condition.type === "node.exists") { const exists = hasOwnNode(document, condition.nodeId); if (exists !== (condition.exists ?? true)) throw new KernelError("conflict", "node existence precondition failed", condition.nodeId); }
     else if (condition.type === "node.property") { const actual = valueAt(document.nodes[condition.nodeId], condition.path); if (!equal(actual, condition.value)) throw new KernelError("conflict", "node property precondition failed", condition.nodeId, { path: condition.path, actual }); }
     else if (condition.type === "node.parent") { if (document.nodes[condition.nodeId]?.parentId !== condition.parentId) throw new KernelError("conflict", "node parent precondition failed", condition.nodeId); }
     else if (condition.type === "page.children") { if (!equal(document.pages.find((page) => page.id === condition.pageId)?.children, condition.children)) throw new KernelError("conflict", "page ordering precondition failed", condition.pageId); }
+    else if (condition.type === "page.property") { const actual = valueAt(document.pages.find((page) => page.id === condition.pageId), condition.path); if (!equal(actual, condition.value)) throw new KernelError("conflict", "page property precondition failed", condition.pageId, { path: condition.path, actual }); }
+    else if (condition.type === "asset.exists") { const exists = Boolean(findAsset(document, condition.assetId)); if (exists !== (condition.exists ?? true)) throw new KernelError("conflict", "asset existence precondition failed", condition.assetId); }
+    else if (condition.type === "document.property") { const actual = valueAt(document, condition.path); if (!equal(actual, condition.value)) throw new KernelError("conflict", "document property precondition failed", condition.path, { actual }); }
     else if (condition.type === "text.version") { if (!equal(document.nodes[condition.nodeId]?.content, condition.value)) throw new KernelError("conflict", "text precondition failed", condition.nodeId); }
     else invalid(`unsupported precondition: ${String((condition as { type: unknown }).type)}`);
   }
@@ -151,6 +287,41 @@ function assertStructuralUntouched(current: DeckDocument, base: DeckDocument, pa
   if (baseParent !== currentParent) throw new KernelError("conflict", "hierarchy target changed since base", parentId);
   if (!equal(childrenOf(base, parentId), childrenOf(current, parentId))) throw new KernelError("conflict", "stale hierarchy was changed", parentId);
 }
+function assertPageUntouched(current: DeckDocument, base: DeckDocument, pageId: string, path: "name" | "width" | "height"): void {
+  const basePage = base.pages.find((page) => page.id === pageId);
+  const currentPage = current.pages.find((page) => page.id === pageId);
+  if (!equal(basePage?.[path], currentPage?.[path])) throw new KernelError("conflict", "stale page property was changed", pageId, { path, current: currentPage?.[path] });
+}
+function assertDocumentThemeUntouched(current: DeckDocument, base: DeckDocument, path: string): void {
+  const baseValue = valueAt(base.theme, path);
+  const currentValue = valueAt(current.theme, path);
+  if (!equal(baseValue, currentValue)) throw new KernelError("conflict", "stale Deck theme property was changed", "theme", { path, current: currentValue });
+}
+function themePatchPaths(theme: ThemePatch): string[] {
+  const paths = Object.keys(theme).filter((key) => key !== "colors").map((key) => key);
+  for (const key of Object.keys(theme.colors ?? {})) paths.push(`colors.${key}`);
+  return paths;
+}
+function setThemePatch(document: DeckDocument, patch: ThemePatch): void {
+  const theme: Record<string, unknown> = clone(document.theme ?? {});
+  for (const key of ["name", "fontFamily", "headingFontFamily", "bodyFontFamily"] as const) {
+    if (!Object.prototype.hasOwnProperty.call(patch, key)) continue;
+    const value = patch[key];
+    if (value === null) delete theme[key];
+    else theme[key] = value;
+  }
+  if (patch.colors) {
+    const colors: Record<string, unknown> = { ...((theme.colors as Record<string, unknown> | undefined) ?? {}) };
+    for (const [key, value] of Object.entries(patch.colors)) {
+      if (value === null) delete colors[key];
+      else colors[key] = value;
+    }
+    if (Object.keys(colors).length) theme.colors = colors;
+    else delete theme.colors;
+  }
+  if (Object.keys(theme).length) document.theme = theme;
+  else delete document.theme;
+}
 function validateOperationShape(operation: unknown): asserts operation is DocumentOperation {
   if (!record(operation)) invalid("operation must be an object");
   const type = operation.type;
@@ -159,11 +330,39 @@ function validateOperationShape(operation: unknown): asserts operation is Docume
   if (type === "style.update" && !record(operation.style)) invalid("style.update requires a style object");
   if (type === "node.flags.update" && !record(operation.flags)) invalid("node.flags.update requires a flags object");
   if (type === "text.apply" && !Array.isArray(operation.steps)) invalid("text.apply requires a steps array");
+  if (type === "page.update" && (!record(operation.page) || Object.keys(operation.page).length === 0 || Object.keys(operation.page).some((key) => !["name", "width", "height"].includes(key)))) invalid("page.update requires supported page properties");
+  if (type === "page.reorder" && (typeof operation.index !== "number" || !Number.isInteger(operation.index) || operation.index < 0)) invalid("page.reorder requires a non-negative integer index");
+  if (type === "image.update" && (!record(operation.image) || Object.keys(operation.image).length === 0 || Object.keys(operation.image).some((key) => !["fit", "crop", "opacity"].includes(key)))) invalid("image.update requires supported image settings");
+  if (type === "asset.register" || type === "asset.replace") validateImageAsset(operation.asset, "asset operation");
+  if (type === "table.update" && (!record(operation.table) || !Array.isArray(operation.table.rows))) invalid("table.update requires table data");
+  if (type === "chart.update" && !record(operation.chart)) invalid("chart.update requires chart data");
+  if (type === "document.theme") {
+    if (!record(operation.theme) || Object.keys(operation.theme).length === 0) invalid("document.theme requires theme properties");
+    for (const key of Object.keys(operation.theme)) if (!["name", "fontFamily", "headingFontFamily", "bodyFontFamily", "colors"].includes(key)) invalid(`unsupported Deck theme property ${key}`);
+    if (operation.theme.colors !== undefined) {
+      if (!record(operation.theme.colors) || Object.keys(operation.theme.colors).length === 0) invalid("document.theme colors must include at least one theme color");
+      for (const [key, value] of Object.entries(operation.theme.colors)) {
+        if (!themeColorKeys.has(key)) invalid(`unsupported Deck theme color ${key}`);
+        if (value !== null) validateHexColor(value, `Deck theme ${key}`);
+      }
+    }
+  }
 }
 function checkStale(current: DeckDocument, base: DeckDocument, operation: DocumentOperation): void {
   if (current.revision === base.revision) return;
   const op = operation as any;
   const type = op.type;
+  if (type === "page.update") for (const key of Object.keys(op.page ?? {})) assertPageUntouched(current, base, op.pageId, key as "name" | "width" | "height");
+  else if (type === "page.reorder") {
+    if (!base.pages.some((page) => page.id === op.pageId) || !current.pages.some((page) => page.id === op.pageId)) throw new KernelError("conflict", "reordered page was removed", op.pageId);
+    if (!equal(base.pages.map((page) => page.id), current.pages.map((page) => page.id))) throw new KernelError("conflict", "page order changed since base", op.pageId);
+  }
+  else if (type === "document.theme") for (const path of themePatchPaths(op.theme)) assertDocumentThemeUntouched(current, base, path);
+  else if (type === "asset.register") {
+    const previous = findAsset(base, op.asset.id);
+    const latest = findAsset(current, op.asset.id);
+    if (!previous && latest) throw new KernelError("conflict", "asset id was registered since base", op.asset.id);
+  }
   const targetId = op.nodeId;
   if (targetId && !hasOwnNode(base, targetId)) {
     if (hasOwnNode(current, targetId)) throw new KernelError("conflict", "target was created since base", targetId);
@@ -179,6 +378,10 @@ function checkStale(current: DeckDocument, base: DeckDocument, operation: Docume
   else if (type === "style.update") for (const key of Object.keys(op.style ?? {})) assertUntouched(current, base, op.nodeId, `style.${key}`);
   else if (type === "node.flags.update") for (const key of Object.keys(op.flags ?? {})) assertUntouched(current, base, op.nodeId, key);
   else if (type === "text.apply") assertUntouched(current, base, op.nodeId, "content");
+  else if (type === "image.update") for (const key of Object.keys(op.image ?? {})) assertUntouched(current, base, op.nodeId, `image.${key}`);
+  else if (type === "asset.replace") assertUntouched(current, base, op.nodeId, "assetId");
+  else if (type === "table.update") assertUntouched(current, base, op.nodeId, "table");
+  else if (type === "chart.update") assertUntouched(current, base, op.nodeId, "chart");
   else if (type === "node.remove") {
     const ids = descendants(base, op.nodeId);
     if (ids.some((id) => !current.nodes[id] || !equal(current.nodes[id], base.nodes[id]))) throw new KernelError("conflict", "removed subtree changed since base", op.nodeId);
@@ -219,6 +422,51 @@ function applyOperation(document: DeckDocument, operation: DocumentOperation, ch
     const index = op.index === undefined ? document.pages.length : op.index; if (!Number.isInteger(index) || index < 0 || index > document.pages.length) invalid("invalid page index", page.id);
     document.pages.splice(index, 0, page); return;
   }
+  if (type === "page.update") {
+    const page = findPage(document, op.pageId);
+    if (op.page.name !== undefined) {
+      if (!nonEmpty(op.page.name)) invalid("page name must be non-empty", page.id);
+      page.name = op.page.name;
+    }
+    for (const key of ["width", "height"] as const) {
+      const value = op.page[key];
+      if (value !== undefined) {
+        if (!finite(value) || value <= 0) invalid(`page ${key} must be positive`, page.id);
+        page[key] = value;
+      }
+    }
+    return;
+  }
+  if (type === "page.reorder") {
+    const pageIndex = document.pages.findIndex((page) => page.id === op.pageId);
+    if (pageIndex < 0) throw new KernelError("not_found", "page does not exist", op.pageId);
+    if (op.index >= document.pages.length) invalid("page order index is out of range", op.pageId);
+    const [page] = document.pages.splice(pageIndex, 1);
+    document.pages.splice(op.index, 0, page!);
+    return;
+  }
+  if (type === "document.theme") {
+    setThemePatch(document, op.theme);
+    return;
+  }
+  if (type === "asset.register") {
+    validateImageAsset(op.asset, "asset.register");
+    if (findAsset(document, op.asset.id)) invalid("asset id already exists", op.asset.id);
+    storeAsset(document, op.asset);
+    return;
+  }
+  if (type === "asset.replace") {
+    const node = findNode(document, op.nodeId);
+    assertUnlocked(document, node.id);
+    if (node.kind !== "image") invalid("asset.replace target must be an image node", node.id);
+    validateImageAsset(op.asset, "asset.replace");
+    const existing = findAsset(document, op.asset.id);
+    if (existing && !equal(existing, op.asset)) invalid("replacement asset id already has different metadata", op.asset.id);
+    if (!existing) storeAsset(document, op.asset);
+    node.assetId = op.asset.id;
+    changed.add(node.id);
+    return;
+  }
   if (type === "node.insert") {
     const node: DeckNode = clone(op.node); if (!node || !nonEmpty(node.id) || document.nodes[node.id]) invalid("node id already exists", node?.id);
     const parentId = op.parentId ?? node.parentId; node.parentId = parentId; const parent = pageOrGroup(document, parentId); if (node.kind === "group" && !node.children) node.children = [];
@@ -237,6 +485,27 @@ function applyOperation(document: DeckDocument, operation: DocumentOperation, ch
   }
   if (type === "style.update") {
     const node = findNode(document, op.nodeId); assertUnlocked(document, node.id); node.style = { ...node.style, ...clone(op.style ?? {}) }; changed.add(node.id); return;
+  }
+  if (type === "image.update") {
+    const node = findNode(document, op.nodeId); assertUnlocked(document, node.id);
+    if (node.kind !== "image") invalid("image.update target must be an image node", node.id);
+    node.image = { ...(node.image ?? { fit: "contain" }), ...clone(op.image) };
+    changed.add(node.id);
+    return;
+  }
+  if (type === "table.update") {
+    const node = findNode(document, op.nodeId); assertUnlocked(document, node.id);
+    if (node.kind !== "table") invalid("table.update target must be a table node", node.id);
+    node.table = clone(op.table);
+    changed.add(node.id);
+    return;
+  }
+  if (type === "chart.update") {
+    const node = findNode(document, op.nodeId); assertUnlocked(document, node.id);
+    if (node.kind !== "chart") invalid("chart.update target must be a chart node", node.id);
+    node.chart = clone(op.chart);
+    changed.add(node.id);
+    return;
   }
   if (type === "node.flags.update") {
     const node = findNode(document, op.nodeId); const flags = op.flags ?? {};

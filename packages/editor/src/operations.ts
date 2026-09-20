@@ -1,6 +1,6 @@
 import { Transform } from 'prosemirror-transform';
 import { textSchema, textFromString } from '@oeydesign/document';
-import type { DeckDocument, DeckNode, DocumentOperation, Geometry, PMNodeJSON } from '@oeydesign/document';
+import type { ChartData, DeckDocument, DeckNode, DocumentOperation, Geometry, ImageAsset, PMNodeJSON, TableData } from '@oeydesign/document';
 
 export type NodePlacement = Pick<Geometry, 'x' | 'y'>;
 
@@ -26,6 +26,64 @@ export function makeShapeInsert(parentId: string, placement: NodePlacement, opti
     locked: false, hidden: false,
   };
   return { type: 'node.insert', node };
+}
+
+export function makeTableInsert(parentId: string, placement: NodePlacement, options: { fill?: string; textColor?: string } = {}): DocumentOperation {
+  const values = [['指标', '本期', '变化'], ['收入', '128', '+12%'], ['用户', '4.2万', '+8%']];
+  const table: TableData = {
+    headerRows: 1, columnWidths: [150, 130, 130], borderColor: '#d9e2da', borderWidth: 1, cellPadding: 9,
+    rows: values.map(row => ({ id: newId('row'), cells: row.map(value => ({
+      id: newId('cell'), content: textFromString(value),
+      style: row === values[0] ? { fill: options.fill ?? '#e8efe9', color: options.textColor ?? '#244b3a', fontSize: 14 } : { color: options.textColor ?? '#3f5045', fontSize: 13 },
+    })) })),
+  };
+  const node: DeckNode = { id: newId('table'), kind: 'table', parentId, geometry: { ...placement, width: 410, height: 156, rotation: 0 },
+    style: { name: '数据表格' }, locked: false, hidden: false, table };
+  return { type: 'node.insert', node };
+}
+
+export function makeChartInsert(parentId: string, placement: NodePlacement, options: { colors?: string[]; textColor?: string } = {}): DocumentOperation {
+  const colors = options.colors ?? ['#315d4b', '#c07e4d', '#6e87a1'];
+  const chart: ChartData = { type: 'bar', title: '季度表现', categories: ['第一季', '第二季', '第三季'],
+    series: [{ id: newId('series'), name: '实际值', values: [64, 82, 72], color: colors[0] }, { id: newId('series'), name: '目标值', values: [70, 76, 85], color: colors[1] }], legend: true, dataLabels: true, yAxisTitle: '指数' };
+  const node: DeckNode = { id: newId('chart'), kind: 'chart', parentId, geometry: { ...placement, width: 480, height: 300, rotation: 0 },
+    style: { name: '柱状图', fill: '#ffffff', textColor: options.textColor ?? '#304238' }, locked: false, hidden: false, chart };
+  return { type: 'node.insert', node };
+}
+
+export function makeImageInsert(parentId: string, placement: NodePlacement, asset: ImageAsset, options: { width?: number; height?: number } = {}): DocumentOperation[] {
+  const width = options.width ?? 360;
+  const height = options.height ?? Math.max(120, Math.round(width * asset.height / asset.width));
+  const node: DeckNode = { id: newId('image'), kind: 'image', parentId,
+    geometry: { ...placement, width, height, rotation: 0 }, style: { name: asset.name ?? '图片', stroke: 'none' },
+    locked: false, hidden: false, assetId: asset.id, image: { fit: 'contain', opacity: 1 } };
+  return [{ type: 'asset.register', asset }, { type: 'node.insert', node }];
+}
+
+export function scaleRichTextContent(content: PMNodeJSON, factor: number): { content: PMNodeJSON; steps: unknown[] } {
+  const root = textSchema.nodeFromJSON(content);
+  const transform = new Transform(root);
+  const blocks: Array<{ pos: number; node: typeof root }> = [];
+  const runs: Array<{ from: number; to: number; attrs: Record<string, unknown> }> = [];
+  root.descendants((node, pos) => {
+    if (node.type.name === 'paragraph' || node.type.name === 'heading') blocks.push({ pos, node: node as typeof root });
+    if (node.isText) {
+      const style = node.marks.find(mark => mark.type === textSchema.marks.textStyle);
+      if (typeof style?.attrs.fontSize === 'number') runs.push({ from: pos, to: pos + node.nodeSize, attrs: style.attrs });
+    }
+  });
+  for (const block of blocks) {
+    const attrs = { ...block.node.attrs };
+    for (const key of ['lineHeight', 'spaceBefore', 'spaceAfter', 'indent', 'firstLineIndent']) {
+      if (typeof attrs[key] === 'number') attrs[key] *= factor;
+    }
+    if (JSON.stringify(attrs) !== JSON.stringify(block.node.attrs)) transform.setNodeMarkup(block.pos, undefined, attrs);
+  }
+  for (const run of runs) {
+    transform.removeMark(run.from, run.to, textSchema.marks.textStyle);
+    transform.addMark(run.from, run.to, textSchema.marks.textStyle.create({ ...run.attrs, fontSize: run.attrs.fontSize as number * factor }));
+  }
+  return { content: transform.doc.toJSON() as PMNodeJSON, steps: transform.steps.map(step => step.toJSON()) };
 }
 
 export function makePageInsert(document: DeckDocument, name = `Page ${document.pages.length + 1}`): { operation: DocumentOperation; pageId: string } {

@@ -5,6 +5,7 @@ import type { DeckDocument, DocumentOperation } from '@oeydesign/document';
 import type { DesignVersion } from '@oeydesign/runtime';
 import * as api from './api.ts';
 import './style.css';
+import { AgentPanel } from './AgentPanel.tsx';
 
 function App() {
   const [project, setProject] = useState<api.ProjectSnapshot | null>(null);
@@ -14,6 +15,8 @@ function App() {
   const [connected, setConnected] = useState(false);
   const [exporting, setExporting] = useState(false);
   const [versions, setVersions] = useState<DesignVersion[] | null>(null);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [chatOpen, setChatOpen] = useState(true);
   const current = useRef<DeckDocument | null>(null);
   const sequence = useRef(0);
   const snapshotSequence = useRef(-1);
@@ -78,15 +81,15 @@ function App() {
     const result = await api.listVersions(documentId);
     if (current.current?.documentId === documentId) setVersions(result.versions);
   };
-  const download = async () => {
+  const download = async (format: 'pptx' | 'pdf' | 'png' = 'pptx') => {
     if (!current.current) return;
     setExporting(true); setNotice('');
     try {
-      const response = await fetch(`/api/documents/${encodeURIComponent(current.current.documentId)}/export.pptx`);
+      const response = await fetch(`/api/documents/${encodeURIComponent(current.current.documentId)}/export.${format}`);
       if (!response.ok) throw new Error((await response.json()).error?.message ?? '导出失败');
       const objectUrl = URL.createObjectURL(await response.blob());
       const link = window.document.createElement('a');
-      link.href = objectUrl; link.download = `deck-r${response.headers.get('X-Document-Revision') ?? current.current.revision}.pptx`;
+      link.href = objectUrl; link.download = `deck-r${response.headers.get('X-Document-Revision') ?? current.current.revision}.${format}`;
       link.click(); setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
     } catch (error) { setNotice(error instanceof Error ? error.message : String(error)); }
     finally { setExporting(false); }
@@ -95,6 +98,7 @@ function App() {
     <header className="app-header">
       <div className="brand"><span className="brand-symbol">o.</span><span>OEY<span className="brand-light">design</span></span></div>
       <span className="header-divider"/>
+      <button aria-label="切换设计对话" onClick={() => setChatOpen(!chatOpen)}>对话</button>
       <div className="project-name">{project?.project.name ?? '打开项目…'}</div>
       <select aria-label="选择文档" className="document-select" value={document?.documentId ?? ''} disabled={saving} onChange={event => {
         const selected = project?.documents.find(item => item.documentId === event.target.value); if (selected) { accept(selected); setVersions(null); }
@@ -102,6 +106,7 @@ function App() {
       <span className={`save-state ${connected ? 'connected' : ''}`}><i/>{saving ? '正在保存' : connected ? '已保存到项目' : '正在连接'}</span>
       <button disabled={!document || saving} onClick={() => { if (document) void loadVersions(document.documentId).catch(error => setNotice(error.message)); }}>版本</button>
       <button disabled={!document} onClick={() => { if (document) window.open(`/api/documents/${encodeURIComponent(document.documentId)}/preview.svg`, '_blank', 'noopener'); }}>预览 SVG</button>
+      <select aria-label="其他导出格式" value="" disabled={!document || exporting} onChange={event => { if (event.target.value) void download(event.target.value as 'pdf' | 'png'); }}><option value="">更多导出</option><option value="pdf">PDF 全部页面</option><option value="png">PNG 首页</option></select>
       <button className="export-button" disabled={!document || saving || exporting} onClick={() => { void download(); }}>{exporting ? '正在导出…' : '导出 PPTX'} <span>↗</span></button>
     </header>
     {notice && <div role="alert" className="notice">{notice}<button aria-label="关闭提示" onClick={() => setNotice('')}>×</button></div>}
@@ -110,8 +115,9 @@ function App() {
       {!versions.length && <p>将值得保留的设计存为一个版本。</p>}
       {versions.map(version => <button key={version.versionId} disabled={saving} onClick={() => { void act(() => api.restoreVersion(version.versionId, document.revision)).then(() => setVersions(null)).catch(() => {}); }}>{version.name}<small>修订 {version.revision} · 恢复</small></button>)}
     </section>}
-    {document ? <DeckEditor document={document} onApply={apply} onUndo={() => history('undo')} onRedo={() => history('redo')} disabled={saving} /> : <div className="loading">{notice ? '项目暂不可用' : '正在打开设计工作台…'}</div>}
-    <footer className="app-footer"><span>DECK WORKSPACE <span className="footer-dot">·</span> 基础编辑预览</span><span>{document?.pages.length ?? 0} 页 <span className="footer-dot">·</span> 修订 {document?.revision ?? 0}</span></footer>
+    <div className="workspace-body">{chatOpen && <AgentPanel documentId={document?.documentId} selectedIds={selectedIds} />}
+    {document ? <DeckEditor document={document} onApply={apply} onUndo={() => history('undo')} onRedo={() => history('redo')} disabled={saving} onImportAsset={api.importAsset} assetUrl={api.assetUrl} onSelectionChange={setSelectedIds} /> : <div className="loading">{notice ? '项目暂不可用' : '正在打开设计工作台…'}</div>}</div>
+    <footer className="app-footer"><span>DECK WORKSPACE <span className="footer-dot">·</span> 人工与 Agent 共享作品历史</span><span>{document?.pages.length ?? 0} 页 <span className="footer-dot">·</span> 修订 {document?.revision ?? 0}</span></footer>
   </div>;
 }
 

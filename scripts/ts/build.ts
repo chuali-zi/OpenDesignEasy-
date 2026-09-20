@@ -4,6 +4,7 @@ await build({
   entryPoints: ['apps/cli/src/index.ts'],
   outfile: 'dist/oey.mjs',
   bundle: true,
+  external: ['@earendil-works/*', 'playwright', 'playwright-core'],
   platform: 'node',
   target: 'node24',
   format: 'esm',

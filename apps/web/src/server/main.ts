@@ -1,14 +1,16 @@
 import { existsSync } from 'node:fs';
 import { resolve, join } from 'node:path';
 import { parseArgs } from 'node:util';
-import { ProjectRuntime } from '@oeydesign/runtime';
+import { createDesignServices, ProjectRuntime } from '@oeydesign/runtime';
 import { createWebHost } from './host.ts';
 
 const { values } = parseArgs({ options: { project: { type: 'string', default: '.tmp/workbench' }, port: { type: 'string', default: '4318' } } });
 const root = resolve(values.project!);
+if (existsSync(resolve('.env'))) process.loadEnvFile(resolve('.env'));
 const port = Number(values.port);
 if (!Number.isInteger(port) || port < 1 || port > 65535) throw new Error('Port must be between 1 and 65535.');
 const runtime = existsSync(join(root, 'project.sqlite')) ? ProjectRuntime.open(root) : ProjectRuntime.create(root, { name: '我的设计项目' });
+runtime.agent.configureTools(createDesignServices(runtime));
 try {
   if (!runtime.listDocuments().length) runtime.createDocument({ name: '未命名演示文稿' });
   const staticRoot = resolve('apps/web/dist');

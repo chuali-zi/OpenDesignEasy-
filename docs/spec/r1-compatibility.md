@@ -98,7 +98,9 @@ Node v25.6.1 的早期探测只用于检查脚本；目标版本结论以 2026-0
 
 R1 目标范围的核心 typecheck、测试与 CLI 构建均通过。2026-09-20 的最终宿主与 R2 基础检查中，Node 24 全 workspace TypeScript 检查、Web production build、29/29 单元/集成检查及 Chrome 3/3 通过；`npm install` lockfile 同步完成。R2 实测范围包括基本文字与几何编辑、撤销/重做、重载、PPTX 下载、画布拖动/缩放/旋转和切换文档时旧版本响应保护；PPTX 重复 `pPr` 已修复，三页 XML 检查通过。Node 24 重建的 CLI bundle 也通过真实进程端到端检查：创建项目和文档、插入文字并导出 PPTX，产物为一页原生 `p:sp`，其中的文本与 revision 1 相符；未在 Office 应用中打开验证。R2 仍未完成图片、完整富文本、吸附/对齐、PDF、实际 Office 打开和完整验收。Web 相关结果不改变 R1 的 Windows 开发基线和跨平台干净安装仍待 R7 的范围说明。
 
-当前 PPTX 导出依赖链中的 PptxGenJS 4.0.1 带入 `image-size@1.2.1`，`npm audit` 报告 2 个 high 漏洞（影响 ICNS/JXL/HEIF 解析）。现有导出不接受 image 节点，且 PptxGenJS 发布产物中未发现对 `image-size` 的调用，因此当前没有新增图片解析路径；R2 启用图片解析前需处理该依赖告警。
+后续 R2/R3 已补齐上述编辑、图片和导出能力，实际 Office 及产品 agent 检查见 [本轮验收](r2-r3-validation.md)。上段的 29/29 与 Chrome 3/3 是 R1 收尾时的历史基线，不代表当前能力上限。
+
+R2 启用图片前已将 PptxGenJS 的 `image-size` 依赖覆盖到 2.0.4，并在 root 声明同版 PptxGenJS 以使 workspace lockfile 正确消除旧 1.2.1。runtime 也使用 image-size 2.0.4；更新后的 npm audit 为 0 漏洞。
 
 ## 历史收尾记录（2026-09-12；已由 2026-09-20 宿主复核更新）
 

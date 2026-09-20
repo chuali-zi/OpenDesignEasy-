@@ -4,6 +4,9 @@ import { basename, join, resolve } from 'node:path';
 import { applyCommand, createDeckDocument, restoreDocument, validateDocument } from '@oeydesign/document';
 import type { CommandEnvelope, DeckDocument } from '@oeydesign/document';
 import { RuntimeError } from './errors.ts';
+import { AgentService } from './agent-service.ts';
+import type { AgentServiceOptions } from './agent-service.ts';
+import type { AgentInputRecord, AgentQuestionRecord, AgentRunRecord, AgentSessionRecord } from './agent-types.ts';
 import { acquireOwner } from './storage/owner.ts';
 import { ProjectStore } from './storage/project-store.ts';
 import type { CommandOptions, CommandResult, DesignVersion, HistoryOptions, ProjectEvent, ProjectInfo, StoredDocument } from './types.ts';
@@ -28,17 +31,19 @@ export class ProjectRuntime {
   private readonly store: ProjectStore;
   private readonly owner: ReturnType<typeof acquireOwner>;
   private readonly info: ProjectInfo;
+  readonly agent: AgentService;
   private readonly listeners = new Set<(event: ProjectEvent) => void>();
   private closed = false;
 
-  private constructor(root: string, store: ProjectStore, owner: ReturnType<typeof acquireOwner>, info: ProjectInfo) {
+  private constructor(root: string, store: ProjectStore, owner: ReturnType<typeof acquireOwner>, info: ProjectInfo, agentOptions: AgentServiceOptions = {}) {
     this.root = root;
     this.store = store;
     this.owner = owner;
     this.info = info;
+    this.agent = new AgentService(this, store, agentOptions);
   }
 
-  static create(directory: string, options: { name?: string } = {}): ProjectRuntime {
+  static create(directory: string, options: { name?: string; agentService?: AgentServiceOptions } = {}): ProjectRuntime {
     const absolute = resolve(directory);
     const name = options.name ?? basename(absolute);
     if (!name.trim()) throw new RuntimeError('invalid', 'Project name must not be empty.');
@@ -55,7 +60,7 @@ export class ProjectRuntime {
         store!.createProject(info);
         store!.appendEvent({ projectId: info.projectId, eventId: randomUUID(), type: 'project.created', payload: { name: info.name }, createdAt: info.createdAt });
       });
-      return new ProjectRuntime(root, store, owner, info);
+      return new ProjectRuntime(root, store, owner, info, options.agentService);
     } catch (error) {
       store?.close();
       owner.close();
@@ -63,7 +68,7 @@ export class ProjectRuntime {
     }
   }
 
-  static open(directory: string): ProjectRuntime {
+  static open(directory: string, options: { agentService?: AgentServiceOptions } = {}): ProjectRuntime {
     const absolute = resolve(directory);
     if (!existsSync(join(absolute, 'project.sqlite'))) throw new RuntimeError('not_found', 'No TypeScript project database exists in this directory.', { root: absolute });
     const root = realpathSync(absolute);
@@ -73,7 +78,7 @@ export class ProjectRuntime {
       store = new ProjectStore(join(root, 'project.sqlite'));
       const info = store.project();
       if (!info || info.schemaVersion !== 1 || typeof info.projectId !== 'string') throw new RuntimeError('invalid', 'Unsupported or incomplete project schema.');
-      return new ProjectRuntime(root, store, owner, info);
+      return new ProjectRuntime(root, store, owner, info, options.agentService);
     } catch (error) {
       store?.close();
       owner.close();
@@ -84,6 +89,26 @@ export class ProjectRuntime {
   get project(): ProjectInfo { this.ensureOpen(); return structuredClone(this.info); }
 
   listDocuments(): DeckDocument[] { this.ensureOpen(); return this.store.listDocuments(); }
+
+  getRecord<T>(namespace: string, id: string): T | undefined {
+    this.ensureOpen();
+    return this.store.getRecord<T>(namespace, id);
+  }
+
+  listRecords<T>(namespace: string): Array<{ id: string; value: T }> {
+    this.ensureOpen();
+    return this.store.listRecords<T>(namespace);
+  }
+
+  putRecord(namespace: string, id: string, value: unknown): void {
+    this.ensureOpen();
+    this.store.putRecord(namespace, id, value);
+  }
+
+  getAgentSessions(): AgentSessionRecord[] { this.ensureOpen(); return this.agent.listSessions(); }
+  getAgentRuns(sessionId: string): AgentRunRecord[] { this.ensureOpen(); return this.agent.listRuns(sessionId); }
+  getAgentInputs(sessionId: string): AgentInputRecord[] { this.ensureOpen(); return this.agent.listInputs(sessionId); }
+  getAgentQuestions(sessionId: string): AgentQuestionRecord[] { this.ensureOpen(); return this.agent.listQuestions(sessionId); }
 
   readDocument(documentId: string, revision?: number): DeckDocument {
     this.ensureOpen();
@@ -128,8 +153,9 @@ export class ProjectRuntime {
     const request = canonicalJson(command);
     const previous = this.retry(command.commandId, request);
     if (previous) return previous;
-    // R1 has no model run lifecycle. Refuse run-bound writes until the R3 session owner exists.
-    if (command.runId) throw new RuntimeError('cancelled', 'No active agent run owns this command.', { runId: command.runId });
+    if (command.runId && !this.agent.canWrite(command.runId, command.documentId)) {
+      throw new RuntimeError('cancelled', 'No active agent run owns this command.', { runId: command.runId });
+    }
     if (!Number.isSafeInteger(command.baseRevision) || command.baseRevision < 0) throw new RuntimeError('invalid', 'baseRevision must be a non-negative integer.');
     const state = this.store.document(command.documentId);
     const base = this.store.snapshot(command.documentId, command.baseRevision);
@@ -153,6 +179,7 @@ export class ProjectRuntime {
     const request = canonicalJson({ type: direction, commandId, documentId, options });
     const previous = this.retry(commandId, request);
     if (previous) return previous;
+    if (options.runId && !this.agent.canWrite(options.runId, documentId)) throw new RuntimeError('cancelled', 'No active agent run owns this history change.', { runId: options.runId });
     const state = this.store.document(documentId);
     this.checkHistoryBase(state.document, options);
     const stack = direction === 'undo' ? state.undo : state.redo;
@@ -190,6 +217,7 @@ export class ProjectRuntime {
     const previous = this.retry(commandId, request);
     if (previous) return previous;
     const version = this.store.version(versionId);
+    if (options.runId && !this.agent.canWrite(options.runId, version.documentId)) throw new RuntimeError('cancelled', 'No active agent run owns this version restore.', { runId: options.runId });
     const state = this.store.document(version.documentId);
     this.checkHistoryBase(state.document, options);
     const document = restoreDocument(state.document, this.store.snapshot(version.documentId, version.revision));
@@ -210,6 +238,7 @@ export class ProjectRuntime {
 
   close(): void {
     if (this.closed) return;
+    this.agent.close();
     this.closed = true;
     this.listeners.clear();
     try { this.store.close(); } finally { this.owner.close(); }

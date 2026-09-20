@@ -11,7 +11,7 @@ test('text and geometry edits survive undo, reload and native PPTX download', as
   await expect.poll(async () => Object.keys((await snapshot()).nodes).length).toBe(1);
   const initial = await snapshot();
   const id = Object.keys(initial.nodes)[0]!;
-  const content = page.getByLabel('文字内容', { exact: true });
+  const content = page.getByLabel('富文本内容', { exact: true });
   await content.fill('共同创作\n保留每一次调整');
   await content.blur();
   await expect.poll(async () => JSON.stringify((await snapshot()).nodes[id]!.content)).toContain('共同创作');

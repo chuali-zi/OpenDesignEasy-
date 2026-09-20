@@ -6,6 +6,24 @@ import { tmpdir } from 'node:os';
 import { ProjectRuntime } from '@oeydesign/runtime';
 import { createWebHost } from '../src/server/host.ts';
 
+test('uploaded image originals remain addressable independently of document revisions', async () => {
+  const directory = mkdtempSync(join(tmpdir(), 'oey-upload-'));
+  const runtime = ProjectRuntime.create(directory);
+  const document = runtime.createDocument();
+  const app = await createWebHost(runtime);
+  try {
+    const base64 = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Wl6BwAAAABJRU5ErkJggg==';
+    const uploaded = await app.inject({ method: 'POST', url: '/api/assets', payload: { name: 'image.png', base64 } });
+    assert.equal(uploaded.statusCode, 200, uploaded.body);
+    const asset = uploaded.json().asset;
+    const bytes = await app.inject({ url: `/api/assets/${asset.id}` });
+    assert.equal(bytes.headers['content-type'], 'image/png');
+    assert.equal(bytes.rawPayload.toString('base64'), base64);
+    assert.equal(runtime.readDocument(document.documentId).revision, 0);
+    assert.equal((await app.inject({ url: '/api/assets' })).json().assets.length, 1);
+  } finally { await app.close(); runtime.close(); rmSync(directory, { recursive: true, force: true }); }
+});
+
 test('Web commits share CLI state, revisions, conflicts and undo after reopen', async () => {
   const directory = mkdtempSync(join(tmpdir(), 'oey-web-'));
   let runtime = ProjectRuntime.create(directory);

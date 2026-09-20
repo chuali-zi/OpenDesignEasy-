@@ -1,4 +1,4 @@
-import type { CommandEnvelope, DeckDocument, DocumentOperation } from '@oeydesign/document';
+import type { CommandEnvelope, DeckDocument, DocumentOperation, DocumentAsset } from '@oeydesign/document';
 import type { DesignVersion, ProjectInfo } from '@oeydesign/runtime';
 
 export interface ProjectSnapshot { project: ProjectInfo; documents: DeckDocument[]; seq: number }
@@ -8,7 +8,7 @@ export class ApiError extends Error {
   constructor(code: string, message: string) { super(message); this.code = code; }
 }
 
-async function request<T>(url: string, body?: unknown): Promise<T> {
+export async function request<T>(url: string, body?: unknown): Promise<T> {
   const response = await fetch(url, { signal: AbortSignal.timeout(15_000), ...(body === undefined ? {} : {
     method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
   }) });
@@ -16,6 +16,17 @@ async function request<T>(url: string, body?: unknown): Promise<T> {
   if (!response.ok) throw new ApiError(data.error?.code ?? 'failed', data.error?.message ?? '请求失败');
   return data as T;
 }
+
+export async function importAsset(file: File, kind: 'image' | 'reference' = 'image'): Promise<DocumentAsset> {
+  const base64 = await new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result).split(',')[1]!);
+    reader.onerror = () => reject(new Error('无法读取文件'));
+    reader.readAsDataURL(file);
+  });
+  return (await request<{ asset: DocumentAsset }>('/api/assets', { name: file.name, base64, kind })).asset;
+}
+export const assetUrl = (id: string) => `/api/assets/${encodeURIComponent(id)}`;
 
 export const readProject = (): Promise<ProjectSnapshot> => request('/api/project');
 export const readDocument = (id: string): Promise<{ document: DeckDocument }> => request(`/api/documents/${encodeURIComponent(id)}`);

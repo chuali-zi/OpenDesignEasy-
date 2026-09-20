@@ -1,7 +1,7 @@
 # OEYdesign 文档与实施状态
 
 > 当前有效路线：**D / 全 TypeScript / Pi SDK / 直接编辑 / 多客户端**。用户于 2026-09-12 明确采用。
-> 状态截至 2026-09-20：R1 已完成 Windows 开发基线验证；R2 基础 Web 路径通过 Chrome 3/3 实测，Node 24 全 workspace TypeScript 检查、Web production build 与 29/29 单元/集成检查通过；R2 整体仍未完成。下表和[实施计划](spec/implementation-plan.md)记录当前证据与剩余范围；跨平台干净安装留在 R7。
+> 状态截至 2026-09-20：R1 已完成 Windows 开发基线验证；R2 Deck 编辑与原生导出已完成本轮验收；R3 产品 Pi 会话已接入，现有兼容服务的共同创作、恢复与图片链路已实测通过，原生 provider 验证尚待授权。见[本轮验收](spec/r2-r3-validation.md)与[实施计划](spec/implementation-plan.md)。跨平台干净安装留在 R7。
 
 ## 阅读顺序与效力
 
@@ -26,6 +26,7 @@
 | [客户端规范](spec/clients-spec.md) | Web、CLI、TUI、Desktop、进程与分发 |
 | [实施计划](spec/implementation-plan.md) | 全量替换阶段、依赖、完成标准、风险与退役 |
 | [R1 兼容性与状态](spec/r1-compatibility.md) | Node/SQLite、Pi faux、Konva/ProseMirror 验证与当前未完成项 |
+| [R2/R3 实现与验收](spec/r2-r3-validation.md) | Deck 编辑、实际 Office、产品 agent、真实兼容服务与使用入口 |
 
 ## 实施状态
 
@@ -35,15 +36,15 @@
 | 当前规范与历史失效标记 | 已更新 |
 | TS document/runtime/media、SQLite、命令/历史/事件与 owner 锁 | R1 已完成 Windows 开发基线验证 |
 | CLI 无头项目/文档/节点/历史/事件/SVG 路径 | R1 已完成；更广媒介能力继续按阶段实现 |
-| Pi 0.85.1 faux AgentSession 与公共控制点 | R1 隔离检查通过；产品 agent 集成属于尚未开始的 R3 |
+| Pi 0.85.1 产品 AgentSession | 已接入 runtime；真实兼容服务文本、工具、图片、问答恢复通过；原生 provider 实测待授权 |
 | Node 24.21.0 与 Electron 44.3.0 utilityProcess/SQLite | R1 Windows x64 实际宿主验证通过；跨平台干净安装留到 R7 |
-| Web host、React/Vite 壳、Konva 编辑基础与 Deck 原生对象路径 | 基础路径 Chrome 3/3、单元/集成 29/29 通过；R2 整体仍在进行 |
+| Web host、React/Vite、Konva/ProseMirror Deck 编辑与原生导出 | 完整编辑与图片/表格/图表路径通过 Chrome 4/4；实际 Office 打开及视觉复验通过 |
 | TUI、Desktop 完整产品及 Web/Deck/Doc 全部生产能力 | 后续阶段未完成 |
 | 旧数据导入与 Python 退役 | 尚未实施 |
 
-2026-09-20 的 R2 基础验证通过 Node 24 全 workspace TypeScript 检查、Web production build、29/29 单元/集成检查，以及 Chrome 3/3：基本文字保存、几何属性、撤销/重做、重新载入和 PPTX 下载；鼠标拖动、角点缩放和属性旋转；切换文档时旧版本列表响应不会覆盖新选择。单纯缩放视口不增加文档修订。PPTX 重复 `pPr` 已修复，三页 XML 检查通过；图片、完整富文本、吸附/对齐、PDF、实际 Office 打开和完整 R2 验收仍未完成。
+2026-09-20 已补齐图片裁切与原件、富文本、吸附/对齐、表格图表、PDF/PNG 和实际 PowerPoint 打开路径。真实兼容服务完成了讨论、生成三页、保留人工标题改动并扩展第四页、提问重启回答，以及一次实际图片生成/识图/插入/截图检查。开发检查还覆盖共享历史、输入幂等、取消、Pi 压缩、恢复和 CLI 连接 Web owner。最终完成条件与待验项见本轮验收及实施计划。
 
-R1 完成说明共享无头核心、CLI 路径和 Windows 开发运行基线成立，不等于 Web、TUI、Desktop 或完整图形编辑已经完成。R2 的基础浏览器路径通过也不代表 R2 全部完成。R1 的 Pi faux 检查只验证 SDK 接入方法，不代表产品 agent 已接入；该集成与人机共同创作属于 R3。仍不允许将“先做 Deck”解读成取消 Web、Doc 或其他客户端，也不允许将尚未实现的模块通过调用旧 Python 工具视为完成。
+R2/R3 的交付面向交互式 Deck。Web 文档生产、Doc、TUI、Desktop、旧数据迁移和跨平台发行继续在 R4–R7 实施；当前代码不通过旧 Python 补齐这些能力。R1 隔离 faux 检查是历史基线，R3 产品接入有独立的实际验证记录。
 
 ## 旧实现与研究
 

@@ -1,11 +1,14 @@
 import Fastify from 'fastify';
 import fastifyStatic from '@fastify/static';
 import type { ServerResponse } from 'node:http';
+import { readFile } from 'node:fs/promises';
+import { basename, join } from 'node:path';
 import type { CommandEnvelope } from '@oeydesign/document';
 import { KernelError } from '@oeydesign/document';
-import { ProjectRuntime, RuntimeError } from '@oeydesign/runtime';
+import { ProjectAssets, ProjectRuntime, RuntimeError } from '@oeydesign/runtime';
 import type { ProjectEvent, CommandOptions } from '@oeydesign/runtime';
-import { renderDeckSvg, exportDeckPptx } from '@oeydesign/media';
+import { renderDeckSvg, exportDeckPptx, exportDeckPdf, renderDeckPng } from '@oeydesign/media';
+import { registerAgentRoutes } from './agent-routes.ts';
 
 export interface WebHostOptions {
   staticRoot?: string;
@@ -18,6 +21,8 @@ const human = { actorId: 'local-user', actorKind: 'human' as const };
 export async function createWebHost(runtime: ProjectRuntime, options: WebHostOptions = {}) {
   const app = Fastify({ logger: false, bodyLimit: 2 * 1024 * 1024 });
   const streams = new Set<ServerResponse>();
+  const assets = new ProjectAssets(runtime);
+  registerAgentRoutes(app, runtime, streams);
   const statusCodes: Record<string, number> = { invalid: 400, conflict: 409, locked: 423, not_found: 404, busy: 409, cancelled: 409 };
   app.setErrorHandler((error, _request, reply) => {
     if (error instanceof KernelError || error instanceof RuntimeError) {
@@ -38,6 +43,27 @@ export async function createWebHost(runtime: ProjectRuntime, options: WebHostOpt
   app.get('/api/project', () => {
     const events = runtime.events();
     return { project: runtime.project, documents: runtime.listDocuments(), seq: events.at(-1)?.seq ?? 0 };
+  });
+  app.get('/api/assets', () => ({ assets: assets.list() }));
+  app.get('/api/exports', () => ({ exports: runtime.listRecords('exports').map(record => record.value) }));
+  app.get<{ Params: { id: string } }>('/api/exports/:id', async (request, reply) => {
+    const result = runtime.getRecord<{ filename: string; format: string }>('exports', request.params.id);
+    if (!result || basename(result.filename) !== result.filename) throw new RuntimeError('not_found', 'Export not found.');
+    const mime: Record<string, string> = { pptx: 'application/vnd.openxmlformats-officedocument.presentationml.presentation', pdf: 'application/pdf', png: 'image/png' };
+    return reply.type(mime[result.format] ?? 'application/octet-stream').header('Content-Disposition', `attachment; filename="${result.filename}"`)
+      .send(await readFile(join(runtime.root, 'exports', result.filename)));
+  });
+  app.post<{ Body: { name: string; base64: string; kind?: string } }>('/api/assets', { bodyLimit: 29 * 1024 * 1024 }, async request => {
+    const body = request.body;
+    if (typeof body?.name !== 'string' || typeof body.base64 !== 'string' || !/^[A-Za-z0-9+/]*={0,2}$/.test(body.base64)) throw new RuntimeError('invalid', 'Expected an asset name and base64 bytes.');
+    const bytes = Buffer.from(body.base64, 'base64');
+    return { asset: body.kind === 'reference' ? await assets.importReference(bytes, body.name) : await assets.importImage(bytes, body.name) };
+  });
+  app.get<{ Params: { id: string } }>('/api/assets/:id', async (request, reply) => {
+    const { asset, bytes } = await assets.read(request.params.id);
+    reply.header('X-Content-Type-Options', 'nosniff').header('Content-Security-Policy', "default-src 'none'");
+    if (asset.kind === 'reference') reply.header('Content-Disposition', 'attachment');
+    return reply.type(asset.mimeType).send(Buffer.from(bytes));
   });
   app.get<{ Params: { id: string } }>('/api/documents/:id', request => ({ document: runtime.readDocument(request.params.id) }));
   app.post<{ Body: { name?: string; commandId?: string } }>('/api/documents', request => {
@@ -69,17 +95,28 @@ export async function createWebHost(runtime: ProjectRuntime, options: WebHostOpt
     const result = runtime.restoreVersion(request.params.id, { ...human, clientId: 'web', commandId: body.commandId, baseRevision: body.baseRevision });
     return { result, document: runtime.readDocument(result.documentId) };
   });
-  app.get<{ Params: { id: string }; Querystring: { page?: string } }>('/api/documents/:id/preview.svg', (request, reply) => {
+  app.get<{ Params: { id: string }; Querystring: { page?: string } }>('/api/documents/:id/preview.svg', async (request, reply) => {
     const document = runtime.readDocument(request.params.id);
-    return reply.type('image/svg+xml').header('Content-Security-Policy', "default-src 'none'; style-src 'unsafe-inline'")
-      .header('X-Document-Revision', document.revision).send(renderDeckSvg(document, request.query.page));
+    return reply.type('image/svg+xml').header('Content-Security-Policy', "default-src 'none'; img-src data:; style-src 'unsafe-inline'")
+      .header('X-Document-Revision', document.revision).send(await renderDeckSvg(document, request.query.page, assets.resolve));
   });
   app.get<{ Params: { id: string } }>('/api/documents/:id/export.pptx', async (request, reply) => {
     const document = runtime.readDocument(request.params.id);
-    const file = await exportDeckPptx(document);
+    const file = await exportDeckPptx(document, assets.resolve);
     return reply.type('application/vnd.openxmlformats-officedocument.presentationml.presentation')
       .header('Content-Disposition', `attachment; filename="deck-r${document.revision}.pptx"`)
       .header('X-Document-Revision', document.revision).send(Buffer.from(file));
+  });
+  for (const format of ['pdf', 'png'] as const) app.get<{ Params: { id: string } }>(`/api/documents/:id/export.${format}`, async (request, reply) => {
+    const document = runtime.readDocument(request.params.id);
+    const controller = new AbortController();
+    const stop = () => { if (!reply.raw.writableEnded) controller.abort(); };
+    reply.raw.once('close', stop);
+    try {
+      const bytes = format === 'pdf' ? await exportDeckPdf(document, assets.resolve, { signal: controller.signal }) : await renderDeckPng(document, undefined, assets.resolve, { signal: controller.signal });
+      return reply.type(format === 'pdf' ? 'application/pdf' : 'image/png').header('Content-Disposition', `attachment; filename="deck-r${document.revision}.${format}"`)
+        .header('X-Document-Revision', document.revision).send(Buffer.from(bytes));
+    } finally { reply.raw.removeListener('close', stop); }
   });
   app.get<{ Querystring: { after?: string } }>('/api/events', (request, reply) => {
     const cursor = Number(request.headers['last-event-id'] ?? request.query.after ?? 0);

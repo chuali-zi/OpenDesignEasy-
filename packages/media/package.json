@@ -7,6 +7,7 @@
   "dependencies": {
     "@oeydesign/document": "0.1.0",
     "jszip": "3.10.2",
+    "playwright": "1.63.0",
     "pptxgenjs": "4.0.1"
   }
 }

@@ -33,6 +33,29 @@ export class ProjectStore {
           id TEXT PRIMARY KEY, document_id TEXT NOT NULL REFERENCES documents(id), data TEXT NOT NULL
         );
       `);
+      this.db.exec(`
+        CREATE TABLE IF NOT EXISTS records (
+          namespace TEXT NOT NULL, id TEXT NOT NULL, data TEXT NOT NULL,
+          PRIMARY KEY(namespace, id)
+        );
+        CREATE TABLE IF NOT EXISTS agent_sessions (
+          id TEXT PRIMARY KEY, data TEXT NOT NULL
+        );
+        CREATE TABLE IF NOT EXISTS agent_runs (
+          id TEXT PRIMARY KEY, session_id TEXT NOT NULL REFERENCES agent_sessions(id), data TEXT NOT NULL
+        );
+        CREATE INDEX IF NOT EXISTS agent_runs_session ON agent_runs(session_id);
+        CREATE TABLE IF NOT EXISTS agent_inputs (
+          id TEXT PRIMARY KEY, session_id TEXT NOT NULL REFERENCES agent_sessions(id), run_id TEXT,
+          data TEXT NOT NULL
+        );
+        CREATE INDEX IF NOT EXISTS agent_inputs_session ON agent_inputs(session_id);
+        CREATE TABLE IF NOT EXISTS agent_questions (
+          id TEXT PRIMARY KEY, session_id TEXT NOT NULL REFERENCES agent_sessions(id), run_id TEXT NOT NULL,
+          data TEXT NOT NULL
+        );
+        CREATE INDEX IF NOT EXISTS agent_questions_session ON agent_questions(session_id);
+      `);
     } catch (error) {
       this.db.close();
       throw error;
@@ -116,6 +139,89 @@ export class ProjectStore {
   versions(documentId: string): DesignVersion[] {
     return this.db.prepare('SELECT data FROM versions WHERE document_id = ? ORDER BY rowid').all(documentId)
       .map(row => parse<DesignVersion>(row.data));
+  }
+
+  putRecord(namespace: string, id: string, value: unknown): void {
+    this.db.prepare(`INSERT INTO records(namespace, id, data) VALUES (?, ?, ?)
+      ON CONFLICT(namespace, id) DO UPDATE SET data=excluded.data`).run(namespace, id, JSON.stringify(value));
+  }
+
+  getRecord<T>(namespace: string, id: string): T | undefined {
+    const row = this.db.prepare('SELECT data FROM records WHERE namespace = ? AND id = ?').get(namespace, id);
+    return row ? parse<T>(row.data) : undefined;
+  }
+
+  listRecords<T>(namespace: string): Array<{ id: string; value: T }> {
+    return this.db.prepare('SELECT id, data FROM records WHERE namespace = ? ORDER BY rowid').all(namespace)
+      .map(row => ({ id: String(row.id), value: parse<T>(row.data) }));
+  }
+
+  saveAgentSession<T extends { sessionId: string }>(session: T): void {
+    this.db.prepare(`INSERT INTO agent_sessions(id, data) VALUES (?, ?)
+      ON CONFLICT(id) DO UPDATE SET data=excluded.data`).run(session.sessionId, JSON.stringify(session));
+  }
+
+  agentSession<T>(sessionId: string): T | undefined {
+    const row = this.db.prepare('SELECT data FROM agent_sessions WHERE id = ?').get(sessionId);
+    return row ? parse<T>(row.data) : undefined;
+  }
+
+  agentSessions<T>(): T[] {
+    return this.db.prepare('SELECT data FROM agent_sessions ORDER BY rowid').all().map(row => parse<T>(row.data));
+  }
+
+  saveAgentRun<T extends { runId: string; sessionId: string }>(run: T): void {
+    this.db.prepare(`INSERT INTO agent_runs(id, session_id, data) VALUES (?, ?, ?)
+      ON CONFLICT(id) DO UPDATE SET data=excluded.data`).run(run.runId, run.sessionId, JSON.stringify(run));
+  }
+
+  agentRun<T>(runId: string): T | undefined {
+    const row = this.db.prepare('SELECT data FROM agent_runs WHERE id = ?').get(runId);
+    return row ? parse<T>(row.data) : undefined;
+  }
+
+  agentRuns<T>(sessionId: string): T[] {
+    return this.db.prepare('SELECT data FROM agent_runs WHERE session_id = ? ORDER BY rowid').all(sessionId)
+      .map(row => parse<T>(row.data));
+  }
+
+  agentRunsAll<T>(): T[] {
+    return this.db.prepare('SELECT data FROM agent_runs ORDER BY rowid').all().map(row => parse<T>(row.data));
+  }
+
+  saveAgentInput<T extends { inputId: string; sessionId: string; runId?: string }>(input: T): void {
+    this.db.prepare(`INSERT INTO agent_inputs(id, session_id, run_id, data) VALUES (?, ?, ?, ?)
+      ON CONFLICT(id) DO UPDATE SET run_id=excluded.run_id, data=excluded.data`).run(input.inputId, input.sessionId, input.runId ?? null, JSON.stringify(input));
+  }
+
+  insertAgentInput<T extends { inputId: string; sessionId: string; runId?: string }>(input: T): void {
+    this.db.prepare('INSERT INTO agent_inputs(id, session_id, run_id, data) VALUES (?, ?, ?, ?)')
+      .run(input.inputId, input.sessionId, input.runId ?? null, JSON.stringify(input));
+  }
+
+  agentInput<T>(inputId: string): T | undefined {
+    const row = this.db.prepare('SELECT data FROM agent_inputs WHERE id = ?').get(inputId);
+    return row ? parse<T>(row.data) : undefined;
+  }
+
+  agentInputs<T>(sessionId: string): T[] {
+    return this.db.prepare('SELECT data FROM agent_inputs WHERE session_id = ? ORDER BY rowid').all(sessionId)
+      .map(row => parse<T>(row.data));
+  }
+
+  saveAgentQuestion<T extends { questionId: string; sessionId: string; runId: string }>(question: T): void {
+    this.db.prepare(`INSERT INTO agent_questions(id, session_id, run_id, data) VALUES (?, ?, ?, ?)
+      ON CONFLICT(id) DO UPDATE SET data=excluded.data`).run(question.questionId, question.sessionId, question.runId, JSON.stringify(question));
+  }
+
+  agentQuestion<T>(questionId: string): T | undefined {
+    const row = this.db.prepare('SELECT data FROM agent_questions WHERE id = ?').get(questionId);
+    return row ? parse<T>(row.data) : undefined;
+  }
+
+  agentQuestions<T>(sessionId: string): T[] {
+    return this.db.prepare('SELECT data FROM agent_questions WHERE session_id = ? ORDER BY rowid').all(sessionId)
+      .map(row => parse<T>(row.data));
   }
 
   version(versionId: string): DesignVersion {

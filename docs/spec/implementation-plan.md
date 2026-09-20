@@ -1,7 +1,7 @@
 # D 路线：全 TypeScript 彻底重构实施计划
 
 > 版本：TS 重构 v1，2026-09-12；实施状态更新：2026-09-20。
-> 路线已由用户选择；R1 的 Windows 开发基线已完成。R2 基础 Web 编辑路径已通过 Chrome 实测，但 R2 整体与完整重构仍未完成。
+> 路线已由用户选择；R1 的 Windows 开发基线已完成。R2 Deck 编辑与导出已完成本轮验收；R3 产品集成与真实兼容服务路径已通过，原生 provider 实测待授权。完整重构仍未完成。
 > 本计划取代旧 Phase 0–6 计划和 Python/Pi 兼容路线。R0–R7 是新的交付序列。
 
 ## 1. 决策与完成范围
@@ -36,7 +36,7 @@ TS 解决共享代码与运行栈问题，不自动解决视觉设计质量、Of
 
 基线：Node 24 LTS、TS ESM/npm workspaces、Pi 公共 SDK、React/Vite、Konva、ProseMirror、Electron、pi-tui、SQLite、PptxGenJS/docx/Playwright/PDF.js/TS OOXML 与 WASM OCR。
 
-R1 已建立 `packages/document`、`packages/runtime`、`packages/media` 和 `apps/cli` 的无头核心路径，并完成 Windows 开发基线验证。R2 的 Node 24 全 workspace TypeScript 检查、Web production build 与 Chrome 基础编辑实测已通过；完整编辑与导出验收仍在进行。TUI、Desktop 与完整媒介生产目录仍待对应阶段实现。跨平台干净安装留到 R7；不增加通用 provider 平台、插件市场或第二个工作流引擎。
+R1 已建立共享无头核心并完成 Windows 开发基线。R2 已补齐 Konva/ProseMirror 编辑器、图片/表格/图表和 PPTX/PDF/PNG。R3 将 Pi 公共 SDK 接入 runtime、Web 与 CLI，共用文档与历史，已有兼容服务路径已通过真实验证。TUI、Desktop 与其他媒介仍待对应阶段实现；跨平台干净安装留到 R7。
 
 ## 4. 实施状态
 
@@ -44,14 +44,14 @@ R1 已建立 `packages/document`、`packages/runtime`、`packages/media` 和 `ap
 |---|---|---|
 | R0 | 当前规范、架构、ADR、旧文档失效标记 | 已完成 |
 | R1 | TS 内核/存储、CLI 无头路径、关键库兼容验证 | 已完成（Windows 开发基线）：核心/CLI、Node 24.21.0、Electron 44.3.0 utilityProcess/SQLite 与隔离 Pi faux AgentSession 检查通过；跨平台干净安装留到 R7 |
-| R2 | Deck 完整直接编辑与原生生产首条路径 | 部分通过、仍在实现：Node 24 全 workspace TypeScript 检查、Web production build、29/29 单元/集成检查与 Chrome 3/3 基础路径通过；PPTX 三页 XML 检查通过。图片、完整富文本、吸附/对齐、PDF、实际 Office 打开和完整验收未完成 |
-| R3 | Pi 交互与人工/agent 双向同步 | 未开始；R1 faux 检查不算产品 agent 接入 |
+| R2 | Deck 完整直接编辑与原生生产首条路径 | 已完成（Windows 开发基线）：Chrome 4/4、实际 PowerPoint 打开及视觉复验、PPTX/PDF/PNG 与原生图片/表格/图表通过 |
+| R3 | Pi 交互与人工/agent 双向同步 | 产品集成与现有兼容服务真实共同创作、提问重启、图片生成/识图通过；Pi 压缩、取消、输入幂等及 CLI/Web 接续已验证。原生 provider 实测尚待授权，阶段未结案 |
 | R4 | Web 文档、DOM 编辑、受管源码与真实应用生产 | 未开始 |
 | R5 | Doc 富文本/模板/分页、TS 资料与原生导出补齐 | 未开始 |
 | R6 | TUI 与 Desktop 完整产品、四端配置与接续 | 未开始 |
 | R7 | 实际旧数据导入、全格式/平台交付、Python 退役 | 未开始 |
 
-R1 已按 Windows 开发基线完成。Node/Electron 探测使用实际目标 binary；Pi 检查确认固定 SDK 的隔离接入和公共控制点，不要求在 R1 接入真实 provider 或完成产品 agent。R2 已通过基础浏览器编辑路径，但完整直接编辑与原生生产仍在实现；TUI、Desktop、跨平台干净安装和旧数据迁移继续由后续阶段完成。不把旧 Python 接入新路径。
+R1 已按 Windows 开发基线完成。R2/R3 当前实现与证据见 [R2/R3 实现与验收](r2-r3-validation.md)。R1 的 SDK 隔离探测不代替 R3 产品验收；R3 也不代替后续 TUI、Desktop、其他媒介、跨平台发行和旧数据迁移。
 
 ## 5. R1：让核心先在终端成立
 
@@ -78,9 +78,9 @@ R1 的退出结果是一条真实 CLI 文档编辑路径和 Windows 开发宿主
 
 以 Deck 为首个媒介，建立共享 editor、Web 宿主与文档渲染：
 
-截至 2026-09-20，Node 24 全 workspace TypeScript 检查、Web production build 和 29/29 单元/集成检查已通过。Chrome 3/3 覆盖三条基础路径：文字内容保存、几何属性、撤销/重做、重新载入和 PPTX 下载；鼠标拖动、角点缩放与属性旋转；延迟 A 文档版本响应后切换到 B，确认旧列表不出现且仍选中 B。单纯缩放视口不增加文档修订。PPTX 重复 `pPr` 已修复，三页 XML 检查通过；实际 Office 打开尚未验证。
+截至 2026-09-20，已补齐富文本、中文输入、图片原件/替换/裁切/fit/透明度、对齐/分布/吸附、框选、组内编辑、主题、表格和三类图表。实际 PowerPoint 打开混排三页并导出 PDF/PNG，发现并修正了表格的无效垂直对齐值。Chrome 4/4 覆盖基础与扩展控件，文本换行的最终视觉检查已通过。
 
-R2 仍未完成图片、完整富文本、吸附/对齐、PDF、真实 Office 打开和全范围验收。试用当前 production UI 只需先运行 `npm run build:web`，再运行 `npm run web -- --project .tmp/workbench`；该 host 默认 `localhost:4318` 并直接提供 `apps/web/dist`。`npm run dev:web`（Vite 默认 `localhost:5173`）仅用于开发代理，不是试用所需的第二个服务。
+试用当前 production UI：先运行 `npm run build:web`，再运行 `npm run web -- --project .tmp/workbench`；host 默认 `localhost:4318` 并直接提供 `apps/web/dist`。`npm run dev:web` 仅用于开发代理，不需要作为试用的第二个服务。详细配置、CLI 接续与格式边界见本轮验收文档。
 
 - 完成 [编辑规范](editor-document-spec.md)列出的选择、视口、几何、图层、分组、对齐/吸附、富文本、图片和历史操作。
 - 属性、图层与画布共用稳定 ID；一个手势一个命令，本地预演与保存状态分开。
@@ -95,6 +95,8 @@ R2 仍未完成图片、完整富文本、吸附/对齐、PDF、真实 Office �
 ## 7. R3：让 Pi 与用户共同创作
 
 在 runtime 直接接入 Pi SDK，建立设计提示与工具，工具调用共享文档命令。实现项目会话、可靠输入接收、steer/follow_up、取消、待答问题、当前选区与变更上下文。
+
+当前以上产品路径已实现。真实兼容服务完成合成资料讨论、三页生成、人工调整后扩展第四页、提问重启回答；图片生成、识图、插入和截图检查也已通过。原生 provider endpoint 需要独立授权，尚未执行，不能据兼容服务通过而将此项算作完成。
 
 模型配置支持 Pi 已支持的 provider 与经过验证的自定义兼容 endpoint；用原生 provider 和用户实际使用的兼容服务检查文本、工具与图片能力，不以 API 名称相似推定完全兼容。
 
@@ -217,4 +219,4 @@ CLI 从 R1 开始伴随每个媒介和工具开发；Desktop 的 Node/SQLite 分
 | TUI 与 Desktop | R6 | R7 安装与平台 |
 | 旧项目迁入与 Python 退役 | R7 | 独立打开与产品入口 |
 
-R1 已完成，当前主线进入 R2；R2 仍在实现与验收中，R3–R7 按状态表继续推进。不能把 CLI 子集或 faux SDK 验证当成完整 D 路线，也不能把 R1 的 faux 检查误标成 R3 产品 agent 集成。
+R1/R2 已完成本轮验收，R3 的原生 provider 检查待结案。R4–R7 尚未开始；不能把交互式 Deck 或产品 Pi 接入当作完整 D 路线完成。

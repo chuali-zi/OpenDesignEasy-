@@ -11,7 +11,7 @@ OEYdesign 的目标是一个可持续协作的多模态设计应用：用户与 
 - 人工操作和 agent 操作提交到同一份可编辑文档，共享对象 ID、修订、撤销重做与冲突处理。
 - Web、Deck、Doc 保留各自布局语义，共享项目、素材、设计决定和操作机制。
 
-**状态（2026-09-20）：R1 已完成；R2 的基础 Web 编辑路径已通过 Chrome 3/3 实测，R2 整体仍在进行。** Node 24 全 workspace TypeScript 检查、Web production build 与 29/29 单元/集成检查通过。浏览器覆盖基本文字保存、几何属性、撤销/重做、重新载入、PPTX 下载，鼠标拖动、角点缩放、属性旋转，以及切换文档时旧版本响应不覆盖新选择；仅缩放视口不会增加文档修订。图片、完整富文本、吸附/对齐、PDF、实际 Office 打开和完整 R2 验收仍未完成。PPTX 重复 `pPr` 已修复，三页 XML 检查通过；实际 Office 打开尚未验证。R1 的 TS 文档/运行时/媒介核心和无头 CLI 路径已在 Node 24.21.0 验证；Electron 44.3.0 的真实 utility process 也已通过 SQLite 探测。Pi 0.85.1 完成了隔离 faux AgentSession 行为检查，但产品 agent 接入、消息恢复和人机共同创作属于尚未开始的 R3。跨平台干净安装仍属 R7。仓库里的 Python Studio 仍是旧实现，不能用它的测试或启动成功宣称新架构完成。
+**状态（2026-09-20）：R1 已完成；R2 Deck 编辑与导出已完成本轮验收，R3 产品 agent 已接入并通过真实兼容服务验证。** 现有实现支持富文本、图片裁切、图层与几何、对齐吸附、原生表格/图表、PPTX/PDF/PNG；三页混排及实际模型生成的四页作品均已在 PowerPoint 打开。兼容服务完成讨论、共同编辑、提问重启和图片生成/识图检查，原生 provider 实测仍待授权。Node 24 的单元/集成回归 53/53 通过。详情和未结案项目见 [R2/R3 实现与验收](docs/spec/r2-r3-validation.md)。R4–R7 的其他媒介、TUI/Desktop、旧数据迁移与跨平台发行尚未完成；旧 Python Studio 的测试不作为新架构证据。
 
 ## 开发入口
 
@@ -24,8 +24,9 @@ OEYdesign 的目标是一个可持续协作的多模态设计应用：用户与 
 7. [多客户端与交付](docs/spec/clients-spec.md)
 8. [已采用的 D 路线决策](docs/adr/0006-full-typescript-design-platform.md)
 9. [R1 兼容性与状态](docs/spec/r1-compatibility.md)
+10. [R2/R3 实现与验收](docs/spec/r2-r3-validation.md)
 
-R1 的 CLI 核心路径已完成；R2 已有基础浏览器路径通过，但完整编辑和媒介验收仍在推进。TUI、Desktop 与真实 Pi agent 集成仍按实施计划推进。
+CLI 和 Web 使用同一无头核心与 Pi 产品会话。TUI、Desktop、Web 文档生产和 Doc 按后续实施计划推进。
 
 ## R1 CLI 快速检查
 
@@ -42,14 +43,14 @@ npm run oey -- document read .tmp/demo $created.document.documentId
 
 ## R2 Web 开发入口
 
-可用单个 production host 试用当前 Web 基础编辑路径：
+可用单个 production host 试用当前设计对话与 Deck 编辑器：
 
 ```powershell
 npm run build:web
 npm run web -- --project .tmp/workbench
 ```
 
-`npm run build:web` 生成 `apps/web/dist`，随后 `npm run web` 由本地 host（默认 `localhost:4318`）同时提供 UI 和 API。开发时也可单独运行 `npm run dev:web`，它启动 Vite（默认 `localhost:5173`）并代理到 host。Chrome 3/3 基础检查和 29/29 单元/集成检查通过；R2 尚缺图片、完整富文本、吸附/对齐、PDF、实际 Office 打开和完整验收。
+`npm run build:web` 生成 `apps/web/dist`，随后 `npm run web` 由本地 host（默认 `localhost:4318`）同时提供 UI 和 API。开发时也可单独运行 `npm run dev:web`，它启动 Vite 并代理到 host。已有 `.env` 的模型配置由服务端读取；无模型凭据也可手工编辑和导出。[验收文档](docs/spec/r2-r3-validation.md)提供 CLI 独立运行及接续 Web owner 的命令。
 
 ## 运行现有旧版
 
