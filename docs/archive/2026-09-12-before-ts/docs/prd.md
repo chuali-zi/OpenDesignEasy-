@@ -1,0 +1,29 @@
+﻿我要做一个 design_agent
+
+这个design_agent应该具备强大的design能力
+
+这个design_agent应当具有强大的兼容性，兼容各种model
+
+这个design_agent应当在结果上是极容易部署的app形态，所有的设置和配置都应该可视化
+
+这个design_agent的ui应当类似claude design，即左侧聊天栏，右侧实时预览design产品
+
+design产品应当包括 web前端页面 ppt docs设计
+
+design产品应当可导出
+
+design产品必须好看必须好看必须好看
+
+design_agent应当是多模态的智能agent，他不是简单的claude design根据模板生成相对应的产品，他是智能的理解人的真实需求然后，即使是自然模糊语言，也能创造出来人想要的真实的产品，而不止是套模板
+
+design_agent应当也可以生图进行配图，在适当的时候
+例1:当用户需要design_agent生成一个关于离散数学的教学ppt时，ppt的配图不应只是llm生成格式化公式，应当有生图ai产生的必要的公式图片或者知识图谱
+例2：当用户仅仅描述要做一个介绍锚脸识别项目且只有项目仓库没有任何参考图时，design_agent应当在需要的时候在ppt空的位置或者背景放上合适的猫咪图片或者用户愿景图片
+
+design_agent应当在信息不确定的时候询问用户补充必要信息
+
+design_agent应当有很强大的风格模仿功能
+
+design_agent应当有很强大的参考物读取功能和参考物使用agent，即用户随机抛出大量图片或者其它参考物，design_agent应当能够识别出来他们什么意思并理解用户意图并利用这些参考物设计出用户需要的产品，
+例1：用户把项目仓库和一些杂乱的演示照片交给design_agent,design_agent应当生成完善的项目介绍ppt
+例2: 用户做渗透测试，把杂乱的渗透测试的截图证据和混乱的复制，以及一个空的渗透测试docs模板交给design_agent,design_agent应当返回完整和有条理并且符合格式的真实的渗透测试报告

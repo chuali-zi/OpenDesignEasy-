@@ -1,29 +1,16 @@
-# Architecture Decision Records
+# 架构决策记录
 
-本目录记录会改变系统边界、长期依赖或跨模块契约的重要决策。
+当前战略决策为 [ADR-0006](0006-full-typescript-design-platform.md)：用户于 2026-09-12 采用全 TypeScript、Pi SDK、完整直接编辑、人机同步与四端共享核心。
 
-需要 ADR 的典型事项包括：
+| ADR | 当前效力 |
+|---|---|
+| [0006：全 TypeScript 交互设计平台](0006-full-typescript-design-platform.md) | 已采用，目标实现尚未完成 |
+| [0001：运行与持久化](0001-runtime-persistence-foundation.md) | 旧实现记录，被 0006 取代 |
+| [0002：Web 渲染与验证](0002-web-rendering-validation.md) | 旧实现记录，被 0006 取代 |
+| [0003：能力与 provider](0003-capability-provider-bindings.md) | 旧实现记录，被 0006 取代 |
+| [0004：工作区与沙箱](0004-agent-workspace-sandbox.md) | 旧实现记录，被 0006 取代 |
+| [0005：框架应用基底](0005-framework-application-base.md) | 旧实现记录，被 0006 取代 |
 
-- 运行时、工作流、数据和隔离方案；
-- 智能设计、Artifact 生产、质量治理三大模块的内部架构；
-- Web、PPT、DOCX 的规范表示和导出策略；
-- 会造成长期锁定的模型、协议或基础设施选择；
-- 对已采用架构原则的修改。
+旧记录中的“已接受”只代表当时的决定，不与 0006 并列约束新实现。局部工程原则可参考，但不得恢复旧 Python 运行链、强制 Phase 6 流程或受限视觉 profile。
 
-每份 ADR 至少说明状态、上下文、决策、备选方案、影响和替换条件。尚未接受的 ADR 不具有规范效力。
-
-## 已接受
-
-- [ADR-0001：Phase 2 runtime 与持久化基础](./0001-runtime-persistence-foundation.md)
-- [ADR-0002：Web 渲染与验证技术](./0002-web-rendering-validation.md) —— Playwright + 系统
-  Chrome、零外链、computed-style 验证、导出物重渲染与 `0.002` 局部修改阈值。
-- [ADR-0003：能力平面与首批 provider 绑定](./0003-capability-provider-bindings.md) —— 保持端口
-  vendor-neutral，首批 Kimi capability adapter；生图在首个 P6 场景中可选且默认关闭。
-- [ADR-0004：Agent 工作区与沙箱边界](./0004-agent-workspace-sandbox.md) —— Windows
-  AppContainer + Job Object + allowlist env，网络与真实后端仅经 trusted broker。
-- [ADR-0005：框架应用基底](./0005-framework-application-base.md) —— 接受受限 P6 profile：
-  React/MUI/Emotion + native esbuild，源码与验证后的 `dist/` 一并交付。
-
-ADR-0002～0005 已于 2026-08-03 接受。它们把 Phase 5 冻结能力落实为 P6 技术边界；其中
-ADR-0005 仅在 `framework` profile 范围内扩展 Design v0.4 与 Artifact v0.4，不授权任意
-React/Vue/Vite/npm 工具链。E12 的 provider 超时风险已被显式接受，但超时仍必须如实失败。
+当前范围与行为由 [PRD](../prd.md)、[架构](../architecture.md)、[Spec](../spec/README.md)共同说明。新的实质决策应更新相应规范；日常实现无需为每个小修改新增 ADR 或审批。

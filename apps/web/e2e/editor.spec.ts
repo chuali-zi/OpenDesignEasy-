@@ -1,0 +1,104 @@
+import { expect, test } from '@playwright/test';
+import type { DeckDocument } from '@oeydesign/document';
+
+test('text and geometry edits survive undo, reload and native PPTX download', async ({ page }) => {
+  const errors: string[] = [];
+  page.on('pageerror', error => { errors.push(error.message); console.error(error.stack); });
+  await page.goto('/');
+  await expect(page.getByRole('button', { name: '增加文字', exact: true })).toBeVisible();
+  const snapshot = async (): Promise<DeckDocument> => (await (await page.request.get('/api/project')).json()).documents[0];
+  await page.getByRole('button', { name: '增加文字', exact: true }).click();
+  await expect.poll(async () => Object.keys((await snapshot()).nodes).length).toBe(1);
+  const initial = await snapshot();
+  const id = Object.keys(initial.nodes)[0]!;
+  const content = page.getByLabel('文字内容', { exact: true });
+  await content.fill('共同创作\n保留每一次调整');
+  await content.blur();
+  await expect.poll(async () => JSON.stringify((await snapshot()).nodes[id]!.content)).toContain('共同创作');
+  const x = page.getByLabel('属性 X', { exact: true });
+  await x.fill('240');
+  await x.blur();
+  await expect.poll(async () => (await snapshot()).nodes[id]!.geometry.x).toBe(240);
+  const afterMove = await snapshot();
+  await page.getByRole('button', { name: '撤销', exact: true }).click();
+  await expect.poll(async () => (await snapshot()).nodes[id]!.geometry.x).toBe(initial.nodes[id]!.geometry.x);
+  await page.getByRole('button', { name: '重做', exact: true }).click();
+  await expect.poll(async () => (await snapshot()).nodes[id]!.geometry.x).toBe(240);
+  await page.reload();
+  await expect(page.getByRole('button', { name: '增加文字', exact: true })).toBeVisible();
+  const reopened = await snapshot();
+  expect(reopened.nodes[id]!.geometry.x).toBe(240);
+  expect(reopened.revision).toBeGreaterThan(afterMove.revision);
+  const downloadEvent = page.waitForEvent('download');
+  await page.getByRole('button', { name: '导出 PPTX', exact: false }).click();
+  const download = await downloadEvent;
+  expect(download.suggestedFilename()).toMatch(/\.pptx$/);
+  expect(await download.failure()).toBeNull();
+  expect(errors).toEqual([]);
+});
+
+test('canvas drag, resize and rotation persist while zoom stays local', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: '增加形状', exact: true }).click();
+  const snapshot = async (): Promise<DeckDocument> => (await (await page.request.get('/api/project')).json()).documents[0];
+  await expect.poll(async () => Object.values((await snapshot()).nodes).filter(node => node.kind === 'shape').length).toBe(1);
+  const before = await snapshot();
+  const shape = Object.values(before.nodes).find(node => node.kind === 'shape')!;
+  const bounds = (await page.locator('.editor-canvas-wrap').boundingBox())!;
+  const slide = before.pages[0]!;
+  const scale = Math.min((bounds.width - 108) / slide.width, (bounds.height - 108) / slide.height, 1);
+  const origin = { x: bounds.x + (bounds.width - slide.width * scale) / 2, y: bounds.y + (bounds.height - slide.height * scale) / 2 };
+  const g = shape.geometry;
+  const center = { x: origin.x + (g.x + g.width / 2) * scale, y: origin.y + (g.y + g.height / 2) * scale };
+  await page.mouse.move(center.x, center.y);
+  await page.mouse.down();
+  await page.mouse.move(center.x + 60, center.y + 40, { steps: 8 });
+  await page.mouse.up();
+  await expect.poll(async () => (await snapshot()).nodes[shape.id]!.geometry.x).toBeGreaterThan(g.x + 20);
+  const moved = await snapshot();
+  const m = moved.nodes[shape.id]!.geometry;
+  const corner = { x: origin.x + (m.x + m.width) * scale, y: origin.y + (m.y + m.height) * scale };
+  await page.mouse.move(corner.x, corner.y);
+  await page.mouse.down();
+  await page.mouse.move(corner.x + 45, corner.y + 25, { steps: 8 });
+  await page.mouse.up();
+  await expect.poll(async () => (await snapshot()).nodes[shape.id]!.geometry.width).toBeGreaterThan(m.width + 20);
+  await page.getByLabel('属性 旋转', { exact: true }).fill('30');
+  await page.getByLabel('属性 旋转', { exact: true }).blur();
+  await expect.poll(async () => (await snapshot()).nodes[shape.id]!.geometry.rotation).toBe(30);
+  const revision = (await snapshot()).revision;
+  await page.getByRole('button', { name: '放大画布', exact: true }).click();
+  await page.getByRole('button', { name: '适应页面', exact: true }).click();
+  expect((await snapshot()).revision).toBe(revision);
+  await page.screenshot({ path: '.tmp/deck-editor-verified.png' });
+});
+
+test('a delayed version response cannot appear after switching documents', async ({ page }) => {
+  await page.goto('/');
+  await expect(page.getByRole('button', { name: '版本', exact: true })).toBeEnabled();
+  const project = await (await page.request.get('/api/project')).json();
+  const first = project.documents[0] as DeckDocument;
+  await page.request.post(`/api/documents/${first.documentId}/versions`, { data: { name: 'A 的版本' } });
+  let release!: () => void;
+  let arrived!: () => void;
+  const gate = new Promise<void>(resolve => { release = resolve; });
+  const requested = new Promise<void>(resolve => { arrived = resolve; });
+  await page.route(`**/api/documents/${first.documentId}/versions`, async route => {
+    const response = await route.fetch();
+    arrived();
+    await gate;
+    await route.fulfill({ response });
+  });
+  await page.getByRole('button', { name: '版本', exact: true }).click();
+  await requested;
+  const created = await (await page.request.post('/api/documents', { data: { name: '另一份文档' } })).json();
+  await expect(page.getByLabel('选择文档').locator('option')).toHaveCount(2);
+  await page.getByLabel('选择文档').selectOption(created.document.documentId);
+  const response = page.waitForResponse(url => url.url().endsWith(`/api/documents/${first.documentId}/versions`));
+  release();
+  await response;
+  await expect(page.getByRole('region', { name: '文档版本' })).toHaveCount(0);
+  await expect(page.getByLabel('选择文档')).toHaveValue(created.document.documentId);
+});
+
+

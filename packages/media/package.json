@@ -1,0 +1,12 @@
+{
+  "name": "@oeydesign/media",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": "./src/index.ts",
+  "dependencies": {
+    "@oeydesign/document": "0.1.0",
+    "jszip": "3.10.2",
+    "pptxgenjs": "4.0.1"
+  }
+}

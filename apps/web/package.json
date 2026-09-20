@@ -1,0 +1,16 @@
+{
+  "name": "@oeydesign/web",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@oeydesign/document": "0.1.0",
+    "@oeydesign/runtime": "0.1.0",
+    "@oeydesign/media": "0.1.0",
+    "@oeydesign/editor": "0.1.0",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "fastify": "5.12.5",
+    "@fastify/static": "10.1.4"
+  }
+}

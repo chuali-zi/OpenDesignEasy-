@@ -1,0 +1,17 @@
+{
+  "name": "@oeydesign/document",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./src/index.ts": "./src/index.ts"
+  },
+  "dependencies": {
+    "prosemirror-model": "1.25.11",
+    "prosemirror-transform": "1.12.1"
+  },
+  "scripts": {
+    "test": "node --import tsx --test test/*.test.ts"
+  }
+}

@@ -1,149 +1,84 @@
-# Phase 2：Project 与可恢复工作流基础
+# 运行、持久化与恢复规范
 
-> 状态：v0.1，2026-07-24 采用。
-> 上位规范：system-spec、implementation-plan、contract-skeleton。
-> 配套决策：ADR-0001 runtime and persistence foundation。
+> TS 重构 v1，2026-09-12。新运行路径只依赖 TS runtime 与可分发第三方引擎。
+> 本文定义项目恢复；Pi 对话内部由所选 SDK 管理。
 
-## 1. 目标与非目标
+## 1. 项目存储
 
-Phase 2 把 Phase 1 的内存 reference harness 变成可在进程重启后恢复的产品状态基础，同时保持领域契约不依赖数据库或 workflow 框架。
+每个新项目有明确根目录，包含 SQLite 数据库、原始资产、派生缓存、导出结果与 Pi session。路径布局由 runtime 管理，客户端不拼接内部路径作为业务接口。
 
-本阶段必须提供：
+SQLite 保存项目/文档元数据、当前文档、命令结果及反向数据、版本、持久事件、输入/问题、资料和资产记录、Pi 会话关联。起步使用少量表与普通事务，不引入消息总线、分布式事务或事件溯源框架。
 
-- Project、Artifact、Workflow Run、命令结果和事件的持久生命周期；
-- workflow start、pause、resume、cancel、query 与阶段 checkpoint；
-- Client 按 cursor 重连并重放有序事件；
-- revision 乐观并发、命令幂等和外部副作用对账；
-- 项目历史恢复、审批失效、审计和失败注入；
-- NEEDS_INPUT、BLOCKED、FAILED、CANCELED 的可演示行为。
+文档可按 JSON 保存当前快照；命令日志用于撤销、诊断和变更通知，不要求启动时从零重放整个历史。资产内容不塞进数据库大 JSON。
 
-本阶段不实现真实模型、真实渲染器、多节点调度、云对象存储或生产级高可用。
+## 2. 原子提交
 
-## 2. 持久真源边界
+同一文档的命令在 owner 内顺序处理。写入当前快照、修订、命令结果、反向信息和 document.changed 事件在同一个 SQLite 事务中完成。
 
-持久层至少保存以下相互独立的记录：
+事务成功才确认和广播。事务前失败不留下半个文档；事务后通知失败可通过 commandId 查询或 seq 重连恢复，不重新执行命令。
 
-| 记录 | 所有权 | 恢复语义 |
-|---|---|---|
-| Project snapshot | Control Plane | 当前业务状态与 current pointers |
-| Project revision snapshot | Control Plane | 只追加；历史恢复的来源 |
-| Project event | Control Plane | 按 Project 单调 sequence 重放 |
-| Command record | Control Plane | command ID、payload fingerprint、结果 |
-| Workflow Run | Runtime | 执行状态，不拥有业务真源 |
-| Stage checkpoint | Runtime | 输入 revision、输出引用、完成状态、attempt |
-| Workflow event | Runtime | 按 Run 单调 sequence 重放 |
-| Side-effect record | Delivery/runtime | claim、完成结果或失败；key 唯一 |
-| Audit entry | Governance | 动作、结果、revision、耗时和安全元数据 |
+大资产先写临时文件，完成后在同一文件系统重命名到受管位置，再提交引用记录。中途失败留下的未引用文件可稍后清理，不能让已提交文档指向尚未写完的文件。
 
-Project snapshot 采用带 schema version 的序列化格式。大型原件与导出物只保存引用和摘要，不把文件正文写入事件、命令或审计。
+构建、渲染和导出写入临时结果，完成后发布文件与元数据。取消和失败结果不能命名为最终成功产物。
 
-## 3. 事务与 revision
+## 3. 输入与 Pi 会话
 
-- 每个 Project 命令在单一事务中验证 expected revision、写入新 snapshot、追加 revision snapshot 与 Project events，并记录命令结果。
-- 更新使用乐观并发；数据库中的 revision 与 expected revision 不一致时返回 STALE_REVISION，事务不产生部分结果。
-- 同一 command ID 与相同 payload fingerprint 返回原结果；同一 ID 携带不同 payload 时返回 DETERMINISTIC_FAILURE。
-- ProjectCreated 从 revision 1 开始。恢复历史会复制所选业务内容形成 current revision + 1，并追加 ProjectRestored；不得删除后续历史。
-- 历史恢复会失效旧审批和未完成交付链；已经释放的 Delivery Bundle 保持不可变。
+用户输入在确认接收前落库，包含 inputId、sessionId、类型、正文/附件引用、questionId（适用时）和处理状态。
 
-## 4. Workflow Run 与 checkpoint
+输入状态至少区分 accepted、delivered、resolved、cancelled、interrupted。delivered 只说明交给模型会话，不说明用户目标完成。运行结束后关联其实际结果。
 
-Run 状态为 PENDING、RUNNING、PAUSED、NEEDS_INPUT、BLOCKED、RETRY_WAIT、COMPLETED、FAILED 或 CANCELED。每个 stage checkpoint 记录：
+Pi SDK 会话用于模型历史和压缩；OEY 输入记录用于接收与恢复。通过公共消息元数据关联，避免靠相同字符串猜测哪个输入已经消费。
 
-- stage key 与顺序；
-- input Project revision 和规范化 input fingerprint；
-- attempt、最大重试和超时；
-- status、output references 与错误类别；
-- side-effect key（若有）；
-- started、updated、completed 时间。
+产品数据库与 Pi session 文件不是一个事务。崩溃窗口需要保守处理：可验证已提交的命令通过 ID 恢复；不确定的模型/外部动作标记中断，让继续任务读取当前设计再判断，不自动重复收费或发布。
 
-运行边界：
+## 4. 项目 owner
 
-~~~text
-start(project, kind, input_revision, idempotency_key)
-pause(run, reason)
-resume(run, input?)
-cancel(run, reason)
-query(run_or_project, after_event)
-checkpoint(run, stage, input_fingerprint, output_refs)
-~~~
+第一版每项目一个活动写入进程，防止 Web、CLI、TUI 与 Desktop 同时各自打开独立的可写 runtime。
 
-相同 Run、stage 和 input fingerprint 已 COMPLETED 时，resume 直接复用 checkpoint；输入 revision 或 fingerprint 变化时必须建立新 Run 或显式重算，不覆盖原 checkpoint。
+实现一个本地 owner 记录和活动锁，记录实例 ID、进程身份与受控连接信息；活动连接需要验证同一实例。已有 owner 时客户端连接它；不能连接且无法确认已退出时返回 busy，而不是强行清锁再写。
 
-进程重启后，runtime 从持久 Run 和 checkpoint 继续。没有完成标记的阶段可以按错误与 retry policy 重新执行；已完成阶段和已完成副作用不能无条件重跑。
+owner 的建立和接管需要互斥操作，不能仅凭“文件存在”或 PID 数字判断。R1 验证同项目双开与崩溃恢复；不建设跨机器租约服务。
 
-## 5. Pause、resume 与终止状态
+已有 owner 时的通信可采用受控本地 IPC；Web 网络 API 是该宿主的对外入口。核心独立于具体传输协议，不为进程差异建立另一套业务模型。
 
-- pause 只停止后续阶段，不回滚已提交 Project revision。
-- resume 必须验证 Project current revision 仍与 Run 输入或明确的 resume input 兼容。
-- cancel 将 Run 标为 CANCELED，并由 Control Plane 将可取消的 Project 运行态提交为 CANCELED；已完成 Artifact 与历史仍保留。
-- NEEDS_INPUT 记录缺失信息、恢复目标 stage 和安全的 resume token，不把敏感正文写入 token。
-- POLICY_BLOCKED、CAPABILITY_UNAVAILABLE 等不可自动继续的条件进入 BLOCKED。
-- 确定性不可恢复错误进入 FAILED。
-- retryable error 或 timeout 在剩余 attempt 内进入 RETRY_WAIT；耗尽后进入 FAILED。
+## 5. 重启与重连
 
-## 6. Client 重连与事件
+重启读取当前文档快照、修订、有效版本、资料状态与未完成输入。原来 running/cancelling 且已无执行进程的 run 标记 interrupted 对应的恢复说明，并结束为 failed 或 cancelled；不能仍显示“正在工作”。
 
-Project events 和 Workflow events 都使用数据库分配的单调 sequence。Client 保存最后确认的 cursor，并使用：
+waiting_input 问题恢复后继续展示。用户回答后开启关联的继续执行，旧 run 的迟到结果无权写入。
 
-~~~text
-query project events(project_id, after_sequence)
-query workflow events(run_id, after_sequence)
-~~~
+客户端按项目 seq 补事件，必要时重新获取快照。SSE/IPC 重放只应用通知，不再次生成图片、修改文档或导出文件。未持久保存的 token 片段可丢失，最终会话和文档状态应可读取。
 
-重新连接先读取最新 Project snapshot，再重放 cursor 后事件。事件允许至少一次读取，因此 Client 以 event ID 去重；Project snapshot 仍是界面恢复真源。
+## 6. 历史、撤销和快照
 
-事件 payload 只包含可展示的状态、引用、计数和原因摘要。原始用户内容、附件正文、凭据与供应商响应不进入默认事件日志。
+统一线性历史规则见 [编辑规范](editor-document-spec.md)。存储保留必要反向值和子树，不靠模型生成“撤销方案”。
 
-## 7. 审批与副作用对账
+用户版本保留完整可打开设计与依赖资产。清理缓存可以自动进行；删除仍被当前设计、版本或历史引用的原件需要保持可恢复性。
 
-外部副作用执行两步协议：
+恢复一个设计版本产生新修订，不删除对话。切换 Pi 会话分支也不自动改变设计版本。
 
-1. 在事务中以稳定 side-effect key claim；
-2. 执行后记录 COMPLETED 及规范化结果引用。
+## 7. 旧项目导入
 
-相同 key 已 COMPLETED 时返回已保存结果；处于 CLAIMED 且租约有效时不并发执行；租约过期时先对账，再决定补记完成或安全重试。
+旧 Python 数据只作为输入。实现一次性 TS 导入工具，读取实际旧 SQLite schema、项目目录、资料、聊天与导出文件，在新位置创建新格式项目，不启动旧服务。
 
-稳定 key 至少包含 Project、动作、目标 revision、Approval、实际 export revision 和 delivery profile fingerprint。审批必须 active 且与目标 revision/action 匹配。Artifact、方向、事实或策略发生超出批准范围的变化时追加 ApprovalInvalidated。
+迁入策略：
 
-Phase 2 只模拟本地 delivery 副作用，但必须使用与未来 adapter 相同的 ledger。
+- 能识别的原件与资料保留 ID 映射和来源；历史解析可带入，但不成为新解析器。
+- 旧 HTML/Markdown 按支持规则转为新文档，无法还原的布局明确标记。
+- 旧 PPTX/DOCX 用新 TS 导入能力读取；截图只作为图片对象，不伪造原生图层。
+- 旧聊天作为历史会话内容或附属记录，绝不重放旧工具调用。
+- 旧候选/版本可识别则迁入，不可识别则保留原始文件并报告。
 
-## 8. 失败注入与观测
+导入原件保持不变，输出包含实际迁入项与具体未转换项。迁入完成后新项目可在没有旧服务的环境独立打开。数据导入不是长期兼容层。
 
-测试工具可以在指定 Run/stage/attempt 注入：
+## 8. Schema 与安装升级
 
-- RETRYABLE；
-- TIMEOUT；
-- NEEDS_INPUT；
-- POLICY_BLOCKED；
-- CAPABILITY_UNAVAILABLE；
-- DETERMINISTIC_FAILURE。
+新 schema 版本迁移用 TS 编写，迁移前保留可恢复副本，失败不覆盖唯一原件。版本变化确有需要时再增加迁移，不为未来几十个版本预建框架。
 
-审计至少记录 Project、Run、command/action、输入 revision、结果类别、attempt、耗时、capability version、Approval 和 side-effect key。审计 metadata 使用 allowlist，不记录 prompt、文件正文、token、凭据或完整用户输入。
+开发、安装、打包与升级不要求 Python，包括 native npm 依赖回退到 node-gyp 后要求用户装 Python 的路径。采用受支持 Node 内置能力、预编译依赖或随包运行时解决；各平台实际验证。
 
-## 9. 持久化适配器契约
+## 9. 必要恢复检查
 
-SQLite reference adapter 必须：
+覆盖提交前后进程退出、重复 commandId、通知断线、活动 run 重启、待答问题重启、停止后晚到结果、同项目双开，以及一个真实旧项目迁入。
 
-- 打开 foreign keys、WAL 和 busy timeout；
-- 所有路径由部署配置给出，并限制在应用数据根；
-- 使用参数化 SQL；
-- 以 schema migration 初始化，不依赖手工建表；
-- 关闭并重新打开数据库后恢复同一 Project、Run、events、command result 和 side-effect result；
-- 不把 SQLite row 或 ORM 对象暴露给 domain/Client。
-
-Repository、Runtime、EventStore、AuditLog 和 SideEffectLedger 保持独立端口；未来 PostgreSQL 或外部 workflow runtime 通过 conformance tests 替换。
-
-## 10. Phase 2 验收
-
-自动化验收至少证明：
-
-1. 关闭并重建 composition root 后，Project、Artifact、Run 和 cursor 后事件可恢复；
-2. command retry、stage retry 和 delivery retry 不重复 revision 或副作用；
-3. stale revision 与 command ID payload collision 被拒绝；
-4. pause/resume/cancel/query 与 Project 状态一致；
-5. restore revision 创建新 revision、保留历史并失效审批；
-6. NEEDS_INPUT、BLOCKED、FAILED、CANCELED 均有持久状态和可读原因；
-7. retryable/timeout obey bounded retry，已完成 stage 不重跑；
-8. 审计可按 Project/Run 查询且不含敏感正文；
-9. Client 使用 after_sequence 重连不会丢失或重复应用事件；
-10. SQLite adapter 可以被同一 persistence conformance suite 驱动。
+不要求证明任何外部 provider 的恰好一次执行；需要避免系统默默重复，并让用户看懂当前设计与待处理工作。

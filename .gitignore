@@ -19,6 +19,15 @@ spikes/**/assets/tailwind.js
 
 # Windows 设备名，由 shell 重定向意外产生，Win32 下无法访问。永远不入库。
 nul
+studio-ui/node_modules/
+studio-ui/dist/
+studio-ui/.screenshots/
+
 dist/
 build/
 *.egg-info/
+
+# TypeScript workspace dependencies and local verification projects
+node_modules/
+.tmp/
+*.tsbuildinfo

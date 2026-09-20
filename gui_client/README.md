@@ -1,3 +1,6 @@
+> **历史资料：已被 2026-09-12 的 D 路线替代。** 当前方案见 [文档入口](../docs/README.md)与 [ADR-0006](../docs/adr/0006-full-typescript-design-platform.md)：全 TypeScript、Pi SDK、完整直接编辑、人机双向同步、Web/CLI/TUI/Desktop 共用核心。
+> 下文的“当前”“冻结”“已接受”、Python/sidecar/兼容层建议和阶段验收只适用于旧版本，不约束新实现。原文保留用于理解旧代码、研究结论与数据迁入；不能据此宣布新重构已完成。
+
 # gui_client — OEY*design* 桌面涂鸦版（壳子）
 
 OEYdesign 真实产品路径的 PySide6 桌面工作台。
