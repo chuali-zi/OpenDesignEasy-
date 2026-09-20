@@ -8,7 +8,8 @@ process.loadEnvFile(resolve('.env'));
 const root = resolve(`.tmp/r3-native-${Date.now()}`);
 const runtime = ProjectRuntime.create(root, { name: 'Synthetic native protocol acceptance' });
 try {
-  runtime.agent.configure({ providerId: 'kimi-coding', modelId: 'k3', apiKeyEnv: 'API_KEY', thinkingLevel: 'low' });
+  runtime.agent.configure({ providerId: 'kimi-coding', modelId: 'k3', baseUrl: '', apiKeyEnv: 'API_KEY', thinkingLevel: 'low' });
+  assert.equal(runtime.agent.getConfig().baseUrl, undefined, 'Native validation must not inherit the compatible BASE_URL.');
   runtime.agent.configureTools(createDesignServices(runtime));
   const document = runtime.createDocument({ name: 'Synthetic red square' });
   runtime.submit(runtime.makeCommand(document.documentId, [{ type: 'node.insert', node: {
@@ -30,7 +31,10 @@ try {
   assert.ok(calls.includes('design_decide'));
   assert.equal(runtime.readDocument(document.documentId).revision, 1);
   const messages = await runtime.agent.getMessages(session.sessionId);
-  const result = { root, protocol: 'Pi native kimi-coding / anthropic-messages', sessionId: session.sessionId, calls, lastMessage: messages.at(-1) };
+  const assistant = messages.findLast(message => message.role === 'assistant');
+  assert.equal(assistant?.api, 'anthropic-messages', 'Verify the protocol actually used, not just the provider name.');
+  const result = { root, protocol: assistant.api, provider: assistant.provider, model: assistant.model, sessionId: session.sessionId, calls,
+    text: assistant.content.filter(part => part.type === 'text').map(part => part.text).join('\n') };
   await writeFile(join(root, 'acceptance.json'), JSON.stringify(result, null, 2));
   console.log(JSON.stringify(result));
 } finally { runtime.close(); }

@@ -49,7 +49,7 @@ packages/
   media/                # Deck SVG/PNG/PDF 与原生 PPTX；实际 Office 验证脚本
 ```
 
-R1 已在 Node 24.21.0 与 Electron 44.3.0 utility process 上完成 Windows x64 宿主验证。R2/R3 的当前运行路径包含 Deck 编辑、导出和 Pi 产品会话，既可由 CLI 独立使用，也可由 Web owner 提供服务。实际兼容模型完成三页生成、人工修改接续、提问重启和图片链路验证；原生 provider 验证尚待授权。Deck 的 Chrome 4/4 与完整视觉回归已通过。TUI、Desktop 与其他媒介能力按后续阶段推进，不调用旧 Python 填补范围。
+R1 已在 Node 24.21.0 与 Electron 44.3.0 utility process 上完成 Windows x64 宿主验证。R2/R3 的当前运行路径包含 Deck 编辑、导出和 Pi 产品会话，既可由 CLI 独立使用，也可由 Web owner 提供服务。实际兼容模型完成三页生成、人工修改接续、提问重启和图片链路验证；原生 K3 的文本、工具及截图识别也已实测通过。Deck 的 Chrome 4/4 与完整视觉回归已通过。TUI、Desktop 与其他媒介能力按后续阶段推进，不调用旧 Python 填补范围。
 
 起步采用 npm workspaces、TS ESM；按目录组织子模块，不预先拆出几十个包。测试与代码相邻。公共命令和文档类型由 document/runtime 的公开入口提供，不维护重复 schema 仓库。
 

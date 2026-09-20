@@ -71,6 +71,6 @@ runtime 直接组合 Pi 公共 `AgentSession`，没有第二个 agent loop。Web
 3. 提问、关闭项目、重新打开后回答，保持文档不变。
 4. 项目图片服务生成一张合成插画，兼容模型读取图片、将其插入为可编辑对象并检查截图。
 
-上述实际兼容服务流程已通过。原生 provider 验收脚本为 `scripts/ts/check-r3-native.ts`，使用新的合成红色方形画面，检查文本、工具和截图；原生 endpoint 的执行授权与结果尚待确认，不能据兼容服务结果宣称原生协议已验证。
+上述实际兼容服务流程已通过。原生 provider 验收脚本 `scripts/ts/check-r3-native.ts` 也已通过：使用 `.env` 的 K3 凭据与 Pi 原生 `kimi-coding` 注册，显式清除兼容 `BASE_URL` 覆盖，并断言响应实际为 `anthropic-messages`。模型调用 `render_preview` 正确识别合成红色正方形，再调用 `design_decide` 保存“保持简洁留白”；文档 revision 未改变。2026-09-20 的本机结果保存在 `.tmp/r3-native-1789905405511/acceptance.json`。Seedream 使用项目现有图片服务配置，生成、识图与插入流程已通过。
 
-普通自动化检查覆盖文档冲突、共享历史、原始素材、可靠输入、Pi 队列/取消/问题恢复、CLI 子进程与 Web owner 接续；Chrome 检查直接编辑行为。Node 24 单元/集成测试 53/53、Chrome 4/4、TypeScript 检查及 CLI/Web 构建通过。三页混排及实际模型生成的四页作品均在 PowerPoint 打开；最终视觉复验通过。原生 provider 的真实验证尚未结案，R3 目前不能标记为全部完成。
+普通自动化检查覆盖文档冲突、共享历史、原始素材、可靠输入、Pi 队列/取消/问题恢复、CLI 子进程与 Web owner 接续；Chrome 检查直接编辑行为。Node 24 单元/集成测试 53/53、Chrome 4/4、TypeScript 检查及 CLI/Web 构建通过。三页混排及实际模型生成的四页作品均在 PowerPoint 打开；最终视觉复验通过。原生与兼容 provider 的真实验证均已通过，R3 已完成本轮 Windows 开发基线验收。R4–R7 仍未开始。

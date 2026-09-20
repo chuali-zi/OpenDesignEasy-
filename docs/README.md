@@ -1,7 +1,7 @@
 # OEYdesign 文档与实施状态
 
 > 当前有效路线：**D / 全 TypeScript / Pi SDK / 直接编辑 / 多客户端**。用户于 2026-09-12 明确采用。
-> 状态截至 2026-09-20：R1 已完成 Windows 开发基线验证；R2 Deck 编辑与原生导出已完成本轮验收；R3 产品 Pi 会话已接入，现有兼容服务的共同创作、恢复与图片链路已实测通过，原生 provider 验证尚待授权。见[本轮验收](spec/r2-r3-validation.md)与[实施计划](spec/implementation-plan.md)。跨平台干净安装留在 R7。
+> 状态截至 2026-09-20：R1 已完成 Windows 开发基线验证；R2 Deck 编辑与原生导出已完成本轮验收；R3 产品 Pi 会话已接入，现有兼容服务的共同创作、恢复与图片链路已实测通过，原生 K3 的文本、工具及截图识别也已实测通过。见[本轮验收](spec/r2-r3-validation.md)与[实施计划](spec/implementation-plan.md)。跨平台干净安装留在 R7。
 
 ## 阅读顺序与效力
 
@@ -36,7 +36,7 @@
 | 当前规范与历史失效标记 | 已更新 |
 | TS document/runtime/media、SQLite、命令/历史/事件与 owner 锁 | R1 已完成 Windows 开发基线验证 |
 | CLI 无头项目/文档/节点/历史/事件/SVG 路径 | R1 已完成；更广媒介能力继续按阶段实现 |
-| Pi 0.85.1 产品 AgentSession | 已接入 runtime；真实兼容服务文本、工具、图片、问答恢复通过；原生 provider 实测待授权 |
+| Pi 0.85.1 产品 AgentSession | 已接入 runtime；真实兼容服务文本、工具、图片、问答恢复通过；原生 K3 文本、工具、截图识别实测通过 |
 | Node 24.21.0 与 Electron 44.3.0 utilityProcess/SQLite | R1 Windows x64 实际宿主验证通过；跨平台干净安装留到 R7 |
 | Web host、React/Vite、Konva/ProseMirror Deck 编辑与原生导出 | 完整编辑与图片/表格/图表路径通过 Chrome 4/4；实际 Office 打开及视觉复验通过 |
 | TUI、Desktop 完整产品及 Web/Deck/Doc 全部生产能力 | 后续阶段未完成 |
