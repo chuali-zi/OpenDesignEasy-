@@ -5,13 +5,14 @@ import type { RenderOptions } from './raster.ts';
 import { exportDeckPdf, renderDeckPng } from './raster.ts';
 import { exportDeckPptx } from './pptx.ts';
 import { exportWebPdf, exportWebSourceZip, exportWebZip, renderWebHtml, renderWebPng } from './web.ts';
+import { exportWebBuildZip } from './web-build.ts';
 
-export type ArtifactFormat = 'pptx' | 'pdf' | 'png' | 'html' | 'zip' | 'source.zip';
+export type ArtifactFormat = 'pptx' | 'pdf' | 'png' | 'html' | 'zip' | 'source.zip' | 'build.zip';
 
 export const artifactMimeTypes: Record<ArtifactFormat, string> = {
   pptx: 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
   pdf: 'application/pdf', png: 'image/png', html: 'text/html; charset=utf-8',
-  zip: 'application/zip', 'source.zip': 'application/zip',
+  zip: 'application/zip', 'source.zip': 'application/zip', 'build.zip': 'application/zip',
 };
 
 /** All clients export the same committed snapshot through this entry point. */
@@ -24,9 +25,10 @@ export async function exportDocumentArtifact(document: EditableDocument, resolve
       case 'html': result = new TextEncoder().encode(await renderWebHtml(document, options.pageId, resolveAsset)); break;
       case 'zip': result = await exportWebZip(document, resolveAsset); break;
       case 'source.zip': result = await exportWebSourceZip(document, resolveAsset); break;
+      case 'build.zip': result = await exportWebBuildZip(document, resolveAsset, options); break;
       case 'pdf': result = await exportWebPdf(document, resolveAsset, options); break;
       case 'png': result = await renderWebPng(document, options.pageId, resolveAsset, options); break;
-      default: throw new KernelError('invalid', 'Web documents support HTML, ZIP, source.zip, PDF and PNG exports.');
+      default: throw new KernelError('invalid', 'Web documents support HTML, ZIP, source.zip, build.zip, PDF and PNG exports.');
     }
   } else {
     switch (format) {

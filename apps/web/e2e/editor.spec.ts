@@ -1,12 +1,20 @@
 import { expect, test } from '@playwright/test';
 import type { DeckDocument } from '@oeydesign/document';
+import type { Page } from '@playwright/test';
+
+async function createDeck(page: Page, name: string) {
+  const created = (await (await page.request.post('/api/documents', { data: { name } })).json()).document as DeckDocument;
+  await expect(page.getByLabel('选择文档').locator(`option[value="${created.documentId}"]`)).toHaveCount(1);
+  await page.getByLabel('选择文档').selectOption(created.documentId);
+  return async (): Promise<DeckDocument> => (await (await page.request.get(`/api/documents/${created.documentId}`)).json()).document;
+}
 
 test('text and geometry edits survive undo, reload and native PPTX download', async ({ page }) => {
   const errors: string[] = [];
   page.on('pageerror', error => { errors.push(error.message); console.error(error.stack); });
   await page.goto('/');
   await expect(page.getByRole('button', { name: '增加文字', exact: true })).toBeVisible();
-  const snapshot = async (): Promise<DeckDocument> => (await (await page.request.get('/api/project')).json()).documents[0];
+  const snapshot = await createDeck(page, 'Text and geometry fixture');
   await page.getByRole('button', { name: '增加文字', exact: true }).click();
   await expect.poll(async () => Object.keys((await snapshot()).nodes).length).toBe(1);
   const initial = await snapshot();
@@ -39,8 +47,8 @@ test('text and geometry edits survive undo, reload and native PPTX download', as
 
 test('canvas drag, resize and rotation persist while zoom stays local', async ({ page }) => {
   await page.goto('/');
+  const snapshot = await createDeck(page, 'Pointer editing fixture');
   await page.getByRole('button', { name: '增加形状', exact: true }).click();
-  const snapshot = async (): Promise<DeckDocument> => (await (await page.request.get('/api/project')).json()).documents[0];
   await expect.poll(async () => Object.values((await snapshot()).nodes).filter(node => node.kind === 'shape').length).toBe(1);
   const before = await snapshot();
   const shape = Object.values(before.nodes).find(node => node.kind === 'shape')!;
@@ -92,13 +100,55 @@ test('a delayed version response cannot appear after switching documents', async
   await page.getByRole('button', { name: '版本', exact: true }).click();
   await requested;
   const created = await (await page.request.post('/api/documents', { data: { name: '另一份文档' } })).json();
-  await expect(page.getByLabel('选择文档').locator('option')).toHaveCount(2);
+  await expect(page.getByLabel('选择文档').locator(`option[value="${created.document.documentId}"]`)).toHaveCount(1);
   await page.getByLabel('选择文档').selectOption(created.document.documentId);
   const response = page.waitForResponse(url => url.url().endsWith(`/api/documents/${first.documentId}/versions`));
   release();
   await response;
   await expect(page.getByRole('region', { name: '文档版本' })).toHaveCount(0);
   await expect(page.getByLabel('选择文档')).toHaveValue(created.document.documentId);
+});
+
+test('rich-text idle save restores its caret without stealing a later focus', async ({ page }) => {
+  await page.goto('/');
+  const snapshot = await createDeck(page, 'Idle save focus fixture');
+  await page.getByRole('button', { name: '增加文字', exact: true }).click();
+  const content = page.getByLabel('富文本内容', { exact: true });
+  await content.click();
+  const nodeId = Object.keys((await snapshot()).nodes)[0]!;
+  const text = async () => JSON.stringify((await snapshot()).nodes[nodeId]!.content);
+  const delayNextSave = async () => {
+    let release!: () => void;
+    let arrived!: () => void;
+    const gate = new Promise<void>(resolve => { release = resolve; });
+    const requested = new Promise<void>(resolve => { arrived = resolve; });
+    await page.route('**/api/commands', async route => { arrived(); await gate; await route.continue(); }, { times: 1 });
+    return { release, requested };
+  };
+
+  const first = await delayNextSave();
+  await content.fill('Saved with a caret');
+  await first.requested;
+  await expect(content).toHaveAttribute('contenteditable', 'false');
+  first.release();
+  await expect.poll(text).toContain('Saved with a caret');
+  await expect(content).toBeFocused();
+  await content.press('End');
+  await page.keyboard.type(' retained');
+  await expect(content).toHaveText('Saved with a caret retained');
+  await content.blur();
+  await expect.poll(text).toContain('retained');
+
+  const second = await delayNextSave();
+  await content.click();
+  await content.fill('Saved after focus moved');
+  await second.requested;
+  const other = page.getByRole('button', { name: '切换设计对话' });
+  await other.focus();
+  second.release();
+  await expect.poll(text).toContain('Saved after focus moved');
+  await expect(content).toHaveAttribute('contenteditable', 'true');
+  await expect(other).toBeFocused();
 });
 
 

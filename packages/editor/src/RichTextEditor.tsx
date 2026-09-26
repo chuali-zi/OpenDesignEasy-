@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { PMNodeJSON } from '@oeydesign/document';
 import { EditorState } from 'prosemirror-state';
+import type { Selection } from 'prosemirror-state';
 import { EditorView } from 'prosemirror-view';
 import { editorTextSchema } from './editor-text-schema.ts';
 
@@ -18,6 +19,7 @@ export type RichTextEditorProps = {
 
 const FONT_CHOICES = ['Segoe UI', 'Arial', 'Georgia', 'Aptos', 'Microsoft YaHei', 'Noto Sans'];
 const docJson = (value: PMNodeJSON) => editorTextSchema.nodeFromJSON(value);
+type PendingFocusRestore = { view: EditorView; selection: Selection; moved: boolean; cleanup: () => void };
 
 export function RichTextEditor({ documentId, nodeId, content, revision, disabled, focused = false, baseStyle, onCommit, onConflict }: RichTextEditorProps) {
   const hostRef = useRef<HTMLDivElement | null>(null);
@@ -28,6 +30,7 @@ export function RichTextEditor({ documentId, nodeId, content, revision, disabled
   const propsRef = useRef({ onCommit, onConflict, disabled });
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const savingRef = useRef(false);
+  const focusRestoreRef = useRef<PendingFocusRestore | null>(null);
   const [saving, setSaving] = useState(false);
   const [fontFamily, setFontFamily] = useState(baseStyle?.fontFamily ?? 'Segoe UI');
   const [fontSize, setFontSize] = useState(String(baseStyle?.fontSize ?? 24));
@@ -53,6 +56,24 @@ export function RichTextEditor({ documentId, nodeId, content, revision, disabled
     const steps = stepsRef.current.splice(0);
     const baseRevision = baseRevisionRef.current;
     const submittedDoc = view.state.doc;
+    if (!closing && view.hasFocus()) {
+      focusRestoreRef.current?.cleanup();
+      const ownerDocument = view.dom.ownerDocument;
+      const pending: PendingFocusRestore = { view, selection: view.state.selection, moved: false, cleanup: () => undefined };
+      const onPointerDown = (event: PointerEvent) => {
+        if (!(event.target instanceof Node) || !view.dom.contains(event.target)) pending.moved = true;
+      };
+      const onFocusIn = (event: FocusEvent) => {
+        if (event.target instanceof Node && event.target !== ownerDocument.body && !view.dom.contains(event.target)) pending.moved = true;
+      };
+      ownerDocument.addEventListener('pointerdown', onPointerDown, true);
+      ownerDocument.addEventListener('focusin', onFocusIn, true);
+      pending.cleanup = () => {
+        ownerDocument.removeEventListener('pointerdown', onPointerDown, true);
+        ownerDocument.removeEventListener('focusin', onFocusIn, true);
+      };
+      focusRestoreRef.current = pending;
+    }
     savingRef.current = true;
     if (!closing) {
       setSaving(true);
@@ -62,6 +83,10 @@ export function RichTextEditor({ documentId, nodeId, content, revision, disabled
     try { ok = await propsRef.current.onCommit(documentId, nodeId, steps, '编辑富文本', baseRevision); }
     catch { ok = false; }
     const stillCurrent = viewRef.current === view && !view.isDestroyed;
+    if (!ok && focusRestoreRef.current?.view === view) {
+      focusRestoreRef.current.cleanup();
+      focusRestoreRef.current = null;
+    }
     if (ok && stillCurrent) {
       committedDocRef.current = submittedDoc;
       baseRevisionRef.current = baseRevision + 1;
@@ -73,10 +98,8 @@ export function RichTextEditor({ documentId, nodeId, content, revision, disabled
     savingRef.current = false;
     if (stillCurrent) {
       setSaving(false);
-      view.setProps({ editable: () => !propsRef.current.disabled });
     } else if (viewRef.current && !viewRef.current.isDestroyed) {
       setSaving(false);
-      viewRef.current.setProps({ editable: () => !propsRef.current.disabled && !savingRef.current });
     }
   }, [documentId, nodeId]);
 
@@ -94,8 +117,16 @@ export function RichTextEditor({ documentId, nodeId, content, revision, disabled
     const state = EditorState.create({ schema: editorTextSchema, doc });
     const view = new EditorView(host, {
       state,
-      editable: () => !propsRef.current.disabled,
+      editable: () => !propsRef.current.disabled && !savingRef.current,
       attributes: { class: 'editor-rich-text-surface', 'aria-label': '富文本内容' },
+      handleDOMEvents: {
+        keydown: () => {
+          // Navigation/modifier keys may not create a ProseMirror transaction,
+          // but they still mean the user has not finished editing yet.
+          if (stepsRef.current.length) scheduleFlush();
+          return false;
+        },
+      },
       dispatchTransaction(transaction) {
         const next = view.state.apply(transaction);
         view.updateState(next);
@@ -120,6 +151,10 @@ export function RichTextEditor({ documentId, nodeId, content, revision, disabled
       // the commit while this view is still live; flush captures its steps/doc and
       // ignores its result once a replacement view is mounted.
       if (stepsRef.current.length) void flush(true);
+      if (focusRestoreRef.current?.view === view) {
+        focusRestoreRef.current.cleanup();
+        focusRestoreRef.current = null;
+      }
       view.dom.removeEventListener('blur', onBlur, true);
       view.dom.removeEventListener('compositionend', scheduleFlush);
       view.destroy();
@@ -135,6 +170,10 @@ export function RichTextEditor({ documentId, nodeId, content, revision, disabled
     if (!view) return;
     const incoming = docJson(content);
     if (editorDocumentIdRef.current !== documentId) {
+      if (focusRestoreRef.current) {
+        focusRestoreRef.current.cleanup();
+        focusRestoreRef.current = null;
+      }
       if (timerRef.current) clearTimeout(timerRef.current);
       timerRef.current = null;
       stepsRef.current = [];
@@ -157,6 +196,10 @@ export function RichTextEditor({ documentId, nodeId, content, revision, disabled
     }
     if (timerRef.current) clearTimeout(timerRef.current);
     timerRef.current = null;
+    if (focusRestoreRef.current) {
+      focusRestoreRef.current.cleanup();
+      focusRestoreRef.current = null;
+    }
     stepsRef.current = [];
     committedDocRef.current = incoming;
     baseRevisionRef.current = revision;
@@ -194,7 +237,19 @@ export function RichTextEditor({ documentId, nodeId, content, revision, disabled
 
   useEffect(() => {
     const view = viewRef.current;
-    view?.setProps({ editable: () => !disabled && !savingRef.current });
+    view?.setProps({ editable: () => !propsRef.current.disabled && !savingRef.current });
+    const pending = focusRestoreRef.current;
+    if (!pending || disabled || saving) return;
+    pending.cleanup();
+    focusRestoreRef.current = null;
+    if (pending.moved || pending.view !== view || !view || view.isDestroyed) return;
+    const active = view.dom.ownerDocument.activeElement;
+    if (active && active !== view.dom.ownerDocument.body && !view.dom.contains(active)) return;
+    if (!pending.selection.$from.doc.eq(view.state.doc)) return;
+    view.focus();
+    if (!view.state.selection.eq(pending.selection)) {
+      view.dispatch(view.state.tr.setSelection(pending.selection));
+    }
   }, [disabled, saving]);
 
   function toggleMark(name: 'strong' | 'em' | 'underline' | 'strike') {

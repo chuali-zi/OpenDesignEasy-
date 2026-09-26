@@ -287,7 +287,7 @@
 .editor-rich-paragraph-tools select { padding: 0 5px; }
 .editor-rich-paragraph-tools input { width: 48px; padding: 0 4px; }
 .editor-rich-host { min-height: 150px; max-height: 290px; overflow: auto; border: 1px solid #e1e8e0; border-radius: 5px; background: #fcfdfa; }
-.editor-rich-text-surface { min-height: 136px; padding: 10px; outline: none; color: #35473b; font-size: 12px; line-height: 1.55; overflow-wrap: anywhere; }
+.editor-rich-text-surface { min-height: 136px; padding: 10px; outline: none; color: #35473b; font-size: 12px; line-height: 1.55; overflow-wrap: anywhere; white-space: pre-wrap; }
 .editor-rich-text-surface p { margin: 0 0 8px; }
 .editor-rich-text-surface p:last-child { margin-bottom: 0; }
 .editor-rich-text-surface p[style*='text-align: center'] { text-align: center; }

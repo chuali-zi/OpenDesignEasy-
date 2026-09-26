@@ -221,7 +221,7 @@ export function WebEditor({ document, onApply, onUndo, onRedo, onImportAsset, di
   };
   const createSource = () => {
     const path = modulePath.trim(); if (!path) return;
-    const module: WebSourceModule = { id: uid('source'), path, language: moduleLanguage, source: moduleLanguage === 'css' ? '/* 页面样式 */\n' : moduleLanguage === 'tsx' ? 'export function Component() {\n  return <div>新组件</div>;\n}\n' : 'export const pageTitle = "New page";\n' };
+    const module: WebSourceModule = { id: uid('source'), path, language: moduleLanguage, source: moduleLanguage === 'css' ? '/* 页面样式 */\n' : moduleLanguage === 'tsx' ? 'export function Component() {\n  return <div>新组件</div>;\n}\n' : 'export const pageTitle = "New page";\n', ...(moduleLanguage === 'tsx' ? { exports: ['Component'] } : {}) };
     void act([{ type: 'source.update', module }], '创建受管源码').then(ok => { if (ok) { setSourceId(module.id); setSourceDraft(module.source); sourceChanged.current = false; setSourceDirty(false); } });
   };
   const duplicateNode = (source: WebNode) => {
@@ -285,6 +285,22 @@ export function WebEditor({ document, onApply, onUndo, onRedo, onImportAsset, di
         {node.tag === 'a' && field('链接地址', String(node.props?.href ?? ''), (href, base) => act([{ type: 'web.node.update', nodeId: node.id, props: { href } }], '修改链接', base))}
         {node.tag === 'input' && field('输入提示', String(node.props?.placeholder ?? ''), (placeholder, base) => act([{ type: 'web.node.update', nodeId: node.id, props: { placeholder } }], '修改输入提示', base))}
         {node.tag === 'img' && field('图片说明', String(node.props?.alt ?? ''), (alt, base) => act([{ type: 'web.node.update', nodeId: node.id, props: { alt } }], '修改图片说明', base))}
+        {containers.has(node.tag) && <label>绑定组件<select aria-label="绑定组件" value={node.component?.moduleId ?? ''} disabled={!editable} onChange={event => {
+          const module = document.sourceModules?.find(item => item.id === event.currentTarget.value);
+          void act([{ type: 'web.node.update', nodeId: node.id, component: module ? { moduleId: module.id, exportName: module.exports?.[0] ?? 'default' } : null }], '绑定网页组件');
+        }}><option value="">原生容器</option>{document.sourceModules?.filter(item => item.language === 'tsx').map(item => <option key={item.id} value={item.id}>{item.path}</option>)}</select></label>}
+        {node.component && <>
+          {field('组件导出名称', node.component.exportName, (exportName, base) => act([{ type: 'web.node.update', nodeId: node.id, component: { ...node.component!, exportName } }], '修改组件导出', base))}
+          {field('组件属性 JSON', JSON.stringify(node.props ?? {}, null, 2), async (value, base) => {
+            try {
+              const props: unknown = JSON.parse(value);
+              if (!props || typeof props !== 'object' || Array.isArray(props)) throw new Error('组件属性必须是 JSON 对象');
+              const removed = Object.fromEntries(Object.keys(node.props ?? {}).filter(key => !Object.hasOwn(props, key)).map(key => [key, null]));
+              return act([{ type: 'web.node.update', nodeId: node.id, props: { ...removed, ...props } }], '修改组件属性', base);
+            } catch (error) { setEditorError(error instanceof Error ? error.message : String(error)); return false; }
+          }, { multiline: true })}
+          <small className="web-editor-breakpoint-note">预览显示组件边界；在“构建应用 ZIP”中运行组件交互。</small>
+        </>}
         {node.parentId && <label>父级容器<select aria-label="父级容器" value={node.parentId} disabled={!editable} onChange={event => void act([{ type: 'web.node.reparent', nodeId: node.id, parentId: event.currentTarget.value }], '移动到容器')}>{flatNodes.filter(item => containers.has(item.node.tag) && !item.node.component && !contains(document, node.id, item.node.id)).map(item => <option key={item.node.id} value={item.node.id}>{labelFor(item.node)}</option>)}</select></label>}
         <div className="web-editor-node-actions"><button onClick={() => moveLayer(-1)} disabled={!editable || !node.parentId}>上移</button><button onClick={() => moveLayer(1)} disabled={!editable || !node.parentId}>下移</button></div>
         <div className="web-editor-node-actions"><button onClick={() => duplicateNode(node)} disabled={!editable || !node.parentId}>复制</button><button className="is-danger" onClick={() => void act([{ type: 'web.node.remove', nodeId: node.id }], '删除元素').then(ok => { if (ok) setSelection(''); })} disabled={!editable || !node.parentId}>删除</button></div>

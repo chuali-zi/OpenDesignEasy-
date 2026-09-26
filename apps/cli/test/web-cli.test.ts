@@ -27,5 +27,11 @@ test('CLI creates, edits, reopens and exports a Web document without a Web host'
     const exported = run('document', 'export', directory, document.documentId, '--output', archive);
     assert.equal(exported.format, 'source.zip');
     assert.ok((await JSZip.loadAsync(await readFile(archive))).file('src/App.tsx'));
+    const buildArchive = join(directory, 'site.build.zip');
+    const built = run('document', 'export', directory, document.documentId, '--output', buildArchive);
+    assert.equal(built.format, 'build.zip');
+    const buildZip = await JSZip.loadAsync(await readFile(buildArchive));
+    assert.ok(buildZip.file('index.html'));
+    assert.ok(buildZip.file('oey-build-metadata.json'));
   } finally { await rm(directory, { recursive: true, force: true }); }
 });

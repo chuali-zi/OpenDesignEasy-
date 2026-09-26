@@ -1,0 +1,53 @@
+import { readFile } from 'node:fs/promises';
+import { expect, test } from '@playwright/test';
+import JSZip from 'jszip';
+import type { WebDocument } from '@oeydesign/document';
+
+test('managed component binding exports a production application and build errors stay recoverable', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: '新建 Web 文档' }).click();
+  await expect(page.getByRole('main', { name: 'Web 编辑器' })).toBeVisible();
+  const documentId = await page.getByLabel('选择文档').inputValue();
+  const read = async (): Promise<WebDocument> => (await (await page.request.get(`/api/documents/${documentId}`)).json()).document;
+  await page.getByRole('button', { name: '源码模块' }).click();
+  await page.getByLabel('新模块路径').fill('components/Counter.tsx');
+  await page.getByLabel('新模块语言').selectOption('tsx');
+  await page.getByRole('button', { name: '新建模块' }).click();
+  const source = page.getByLabel('源码模块内容');
+  await expect(source).toBeVisible();
+  const code = `import { useState } from 'react';
+export function Component({ label }: { label: string }) {
+  const [count, setCount] = useState(0);
+  return <button onClick={() => setCount(count + 1)}>{label}: {count}</button>;
+}`;
+  await source.fill(code);
+  await page.getByRole('button', { name: '保存模块' }).click();
+  await expect.poll(async () => (await read()).sourceModules?.[0]?.source).toBe(code);
+  await page.getByRole('button', { name: '区段', exact: true }).click();
+  const module = (await read()).sourceModules![0]!;
+  await page.getByLabel('绑定组件').selectOption(module.id);
+  await expect(page.getByLabel('组件导出名称')).toHaveValue('Component');
+  await page.getByLabel('组件属性 JSON').fill('{"label":"交互计数"}');
+  await page.getByLabel('组件属性 JSON').blur();
+  await expect.poll(async () => Object.values((await read()).nodes).find(node => node.component)?.props?.label).toBe('交互计数');
+  const snapshot = await read();
+  const downloadEvent = page.waitForEvent('download');
+  await page.getByLabel('其他导出格式').selectOption('build.zip');
+  const download = await downloadEvent;
+  expect(download.suggestedFilename()).toMatch(/\.build\.zip$/);
+  expect(await download.failure()).toBeNull();
+  const archive = await JSZip.loadAsync(await readFile((await download.path())!));
+  expect(archive.file('index.html')).toBeTruthy();
+  const metadata = JSON.parse(await archive.file('oey-build-metadata.json')!.async('string'));
+  expect(metadata).toMatchObject({ documentId, revision: snapshot.revision, status: 'built' });
+
+  await source.fill('export function Component( {');
+  await page.getByRole('button', { name: '保存模块' }).click();
+  await expect.poll(async () => (await read()).sourceModules?.[0]?.source).toBe('export function Component( {');
+  await page.getByLabel('其他导出格式').selectOption('build.zip');
+  await expect(page.getByRole('alert')).toContainText('Vite build failed');
+  await expect(page.getByLabel('其他导出格式')).toBeEnabled();
+  await page.getByRole('button', { name: '撤销', exact: true }).click();
+  await expect(source).toHaveValue(code);
+  expect((await read()).sourceModules![0]!.source).toBe(code);
+});

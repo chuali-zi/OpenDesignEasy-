@@ -110,7 +110,7 @@ export async function createWebHost(runtime: ProjectRuntime, options: WebHostOpt
       .header('X-Content-Type-Options', 'nosniff').header('X-Document-Revision', document.revision)
       .send(await renderWebHtml(document, request.query.page, assets.resolve, { pageUrl: page => `/api/documents/${encodeURIComponent(document.documentId)}/preview.html?page=${encodeURIComponent(page.id)}` }));
   });
-  for (const format of ['pptx', 'pdf', 'png', 'html', 'zip', 'source.zip'] as const) app.get<{ Params: { id: string }; Querystring: { page?: string } }>(`/api/documents/:id/export.${format}`, async (request, reply) => {
+  for (const format of ['pptx', 'pdf', 'png', 'html', 'zip', 'source.zip', 'build.zip'] as const) app.get<{ Params: { id: string }; Querystring: { page?: string } }>(`/api/documents/:id/export.${format}`, async (request, reply) => {
     const document = runtime.readDocument(request.params.id);
     const controller = new AbortController();
     const stop = () => { if (!reply.raw.writableEnded) controller.abort(); };

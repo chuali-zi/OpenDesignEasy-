@@ -880,8 +880,8 @@ export class AgentService {
       },
     }));
     tools.push(define({
-      name: 'artifact_export', label: 'Export artifact', description: 'Export the committed revision. Deck: pptx/pdf/png. Web: html/zip/source.zip/pdf/png.',
-      parameters: Type.Object({ documentId: Type.String(), format: Type.Union([Type.Literal('pptx'), Type.Literal('pdf'), Type.Literal('png'), Type.Literal('html'), Type.Literal('zip'), Type.Literal('source.zip')]) }), ...sequential,
+      name: 'artifact_export', label: 'Export artifact', description: 'Export the committed revision. Deck: pptx/pdf/png. Web: html/zip/source.zip/build.zip/pdf/png.',
+      parameters: Type.Object({ documentId: Type.String(), format: Type.Union([Type.Literal('pptx'), Type.Literal('pdf'), Type.Literal('png'), Type.Literal('html'), Type.Literal('zip'), Type.Literal('source.zip'), Type.Literal('build.zip')]) }), ...sequential,
       async execute(_id, args, signal) {
         const result = await thisService.requireServices().exportArtifact({ documentId: args.documentId, format: args.format }, signal ?? new AbortController().signal);
         return textResult(JSON.stringify(result), result);

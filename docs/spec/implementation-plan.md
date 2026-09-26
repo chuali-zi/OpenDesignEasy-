@@ -46,7 +46,7 @@ R1 已建立共享无头核心并完成 Windows 开发基线。R2 已补齐 Konv
 | R1 | TS 内核/存储、CLI 无头路径、关键库兼容验证 | 已完成（Windows 开发基线）：核心/CLI、Node 24.21.0、Electron 44.3.0 utilityProcess/SQLite 与隔离 Pi faux AgentSession 检查通过；跨平台干净安装留到 R7 |
 | R2 | Deck 完整直接编辑与原生生产首条路径 | 已完成（Windows 开发基线）：Chrome 4/4、实际 PowerPoint 打开及视觉复验、PPTX/PDF/PNG 与原生图片/表格/图表通过 |
 | R3 | Pi 交互与人工/agent 双向同步 | 已完成（Windows 开发基线）：原生 K3 与兼容服务文本/工具/图片实测通过；共同创作、提问重启、Seedream 生成/识图、Pi 压缩、取消、输入幂等及 CLI/Web 接续通过 |
-| R4 | Web 文档、DOM 编辑、受管源码与真实应用生产 | 进行中：Web 内核、统一历史、CLI/host/agent 与 HTML/ZIP/React 源码生产已实现；DOM 编辑基础与冲突恢复通过 Chrome 回归 9/9。完整编辑、产品构建及导入继续推进，见 [R4 记录](r4-web-validation.md) |
+| R4 | Web 文档、DOM 编辑、受管源码与真实应用生产 | 进行中：Web 内核、统一历史、CLI/host/agent 与 HTML/ZIP/React 源码生产已实现；DOM 编辑基础、源码/组件绑定、应用 ZIP 构建已接入。完整编辑、内置组件交互预览及导入继续推进，见 [R4 记录](r4-web-validation.md) |
 | R5 | Doc 富文本/模板/分页、TS 资料与原生导出补齐 | 未开始 |
 | R6 | TUI 与 Desktop 完整产品、四端配置与接续 | 未开始 |
 | R7 | 实际旧数据导入、全格式/平台交付、Python 退役 | 未开始 |

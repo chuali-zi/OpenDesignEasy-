@@ -7,6 +7,17 @@ import * as api from './api.ts';
 import './style.css';
 import { AgentPanel } from './AgentPanel.tsx';
 
+function includeDocument(documents: EditableDocument[], next: EditableDocument): EditableDocument[] {
+  const index = documents.findIndex(item => item.documentId === next.documentId);
+  if (index < 0) return [...documents, next];
+  if (documents[index]!.revision >= next.revision) return documents;
+  return documents.map((item, i) => i === index ? next : item);
+}
+
+function preserveCurrentDocument(snapshot: api.ProjectSnapshot, selected: EditableDocument | null): api.ProjectSnapshot {
+  return selected ? { ...snapshot, documents: includeDocument(snapshot.documents, selected) } : snapshot;
+}
+
 function App() {
   const [project, setProject] = useState<api.ProjectSnapshot | null>(null);
   const [document, setDocument] = useState<EditableDocument | null>(null);
@@ -26,6 +37,7 @@ function App() {
   const selectionEpoch = useRef(0);
   const accept = useCallback((next: EditableDocument) => {
     const previous = current.current;
+    setProject(snapshot => snapshot ? preserveCurrentDocument(snapshot, next) : snapshot);
     if (previous?.documentId === next.documentId && previous.revision >= next.revision) return;
     if (previous?.documentId !== next.documentId) {
       setSelectedIds([]);
@@ -42,11 +54,15 @@ function App() {
       const snapshot = await api.readProject();
       if (!active || snapshot.seq < snapshotSequence.current) return;
       snapshotSequence.current = snapshot.seq;
-      setProject(snapshot);
+      const selectedId = current.current?.documentId ?? localStorage.getItem(`oey:selected-document:${snapshot.project.projectId}`);
+      const selected = snapshot.documents.find(item => item.documentId === selectedId);
+      setProject(previous => preserveCurrentDocument(snapshot, current.current ?? previous?.documents.find(item => item.documentId === selectedId) ?? null));
       sequence.current = Math.max(sequence.current, snapshot.seq);
-      const id = current.current?.documentId ?? localStorage.getItem(`oey:selected-document:${snapshot.project.projectId}`);
-      const selected = snapshot.documents.find(item => item.documentId === id) ?? snapshot.documents[0];
-      if (selected) { accept(selected); localStorage.setItem(`oey:selected-document:${snapshot.project.projectId}`, selected.documentId); }
+      // Keep the current document selected if this snapshot predates its creation.
+      // Only fall back to the first document before a current selection exists.
+      const next = selected ?? (!current.current ? snapshot.documents[0] : undefined);
+      if (next) { accept(next); localStorage.setItem(`oey:selected-document:${snapshot.project.projectId}`, next.documentId); }
+      else if (current.current) localStorage.setItem(`oey:selected-document:${snapshot.project.projectId}`, current.current.documentId);
     };
     void refresh().then(() => {
       if (!active) return;
@@ -109,12 +125,13 @@ function App() {
       }
       const snapshot = await api.readProject();
       if (snapshot.project.projectId === projectId && snapshot.seq >= snapshotSequence.current) {
-        setProject(snapshot); snapshotSequence.current = snapshot.seq;
+        setProject(previous => preserveCurrentDocument(snapshot, current.current ?? previous?.documents.find(item => item.documentId === created.document.documentId) ?? null));
+        snapshotSequence.current = snapshot.seq;
       }
     } catch (error) { setNotice(error instanceof Error ? error.message : String(error)); }
     finally { creatingDocumentRef.current = false; setCreatingDocument(false); }
   };
-  const download = async (format?: 'pptx' | 'pdf' | 'png' | 'html' | 'zip' | 'source.zip') => {
+  const download = async (format?: 'pptx' | 'pdf' | 'png' | 'html' | 'zip' | 'source.zip' | 'build.zip') => {
     if (!current.current) return;
     setExporting(true); setNotice('');
     try {
@@ -142,9 +159,9 @@ function App() {
       <span className={`save-state ${connected ? 'connected' : ''}`}><i/>{saving ? '正在保存' : connected ? '已保存到项目' : '正在连接'}</span>
       <button disabled={!document || saving} onClick={() => { if (document) void loadVersions(document.documentId).catch(error => setNotice(error.message)); }}>版本</button>
       <button disabled={!document} onClick={() => { if (document) window.open(`/api/documents/${encodeURIComponent(document.documentId)}/${document.kind === 'web' ? 'preview.html' : 'preview.svg'}`, '_blank', 'noopener'); }}>{document?.kind === 'web' ? '预览网页' : '预览 SVG'}</button>
-      <select aria-label="其他导出格式" value="" disabled={!document || exporting} onChange={event => { if (event.target.value) void download(event.target.value as 'pdf' | 'png' | 'html' | 'zip'); }}>
+      <select aria-label="其他导出格式" value="" disabled={!document || saving || exporting} onChange={event => { if (event.target.value) void download(event.target.value as 'pdf' | 'png' | 'html' | 'zip' | 'build.zip'); }}>
         <option value="">更多导出</option>
-        {document?.kind === 'web' ? <><option value="html">单页 HTML</option><option value="zip">静态站点 ZIP</option><option value="pdf">PDF</option><option value="png">PNG 预览</option></> : <><option value="pdf">PDF 全部页面</option><option value="png">PNG 首页</option></>}
+        {document?.kind === 'web' ? <><option value="build.zip">构建应用 ZIP</option><option value="html">单页 HTML</option><option value="zip">静态站点 ZIP</option><option value="pdf">PDF</option><option value="png">PNG 预览</option></> : <><option value="pdf">PDF 全部页面</option><option value="png">PNG 首页</option></>}
       </select>
       <button className="export-button" disabled={!document || saving || exporting} onClick={() => { void download(); }}>{exporting ? '正在导出…' : document?.kind === 'web' ? '导出源码 ZIP' : '导出 PPTX'} <span>↗</span></button>
     </header>

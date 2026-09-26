@@ -45,6 +45,11 @@ test('Web host creates native pages, preserves human edits, exports the same rev
     const source = await app.inject({ url: `/api/documents/${id}/export.source.zip` });
     assert.equal(source.statusCode, 200, source.body);
     assert.ok((await JSZip.loadAsync(source.rawPayload)).file('package.json'));
+    const build = await app.inject({ url: `/api/documents/${id}/export.build.zip` });
+    assert.equal(build.statusCode, 200, build.body);
+    assert.equal(build.headers['content-type'], 'application/zip');
+    assert.ok((await JSZip.loadAsync(build.rawPayload)).file('index.html'));
+    assert.ok((await JSZip.loadAsync(build.rawPayload)).file('oey-build-metadata.json'));
     assert.equal((await app.inject({ method: 'POST', url: `/api/documents/${id}/undo`, payload: { baseRevision: revision } })).statusCode, 200);
     await app.close(); runtime.close();
     runtime = ProjectRuntime.open(directory);

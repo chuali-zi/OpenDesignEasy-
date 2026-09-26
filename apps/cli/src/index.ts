@@ -25,7 +25,7 @@ const HELP = {
       "read <dir> [documentId]",
       "apply <dir> <command.json>",
       "render <dir> <documentId> --output <file.svg|file.html> [--page <id>]",
-      "export <dir> <documentId> --output <file.pptx|file.pdf|file.png|file.html|file.zip|file.source.zip> [--page <id>]",
+      "export <dir> <documentId> --output <file.pptx|file.pdf|file.png|file.html|file.zip|file.source.zip|file.build.zip> [--page <id>]",
     ],
     node: [
       "insert <dir> <documentId> --page <id> --kind text|shape --text <text> --x <n> --y <n> --width <n> --height <n> [--id <id>]",
@@ -246,8 +246,9 @@ export async function execute(argv: string[]): Promise<unknown> {
     const { values, positional } = parseFlags(rest, ["output", "page"]);
     expectPositionals(positional, 2, "document export");
     const output = resolve(requiredFlag(values, "output"));
-    const format = output.toLowerCase().endsWith('.source.zip') ? 'source.zip' : extname(output).toLowerCase().slice(1);
-    if (!['pptx', 'pdf', 'png', 'html', 'zip', 'source.zip'].includes(format)) usage('option --output must have a .pptx, .pdf, .png, .html, .zip or .source.zip extension');
+    const outputLower = output.toLowerCase();
+    const format = outputLower.endsWith('.source.zip') ? 'source.zip' : outputLower.endsWith('.build.zip') ? 'build.zip' : extname(output).toLowerCase().slice(1);
+    if (!['pptx', 'pdf', 'png', 'html', 'zip', 'source.zip', 'build.zip'].includes(format)) usage('option --output must have a .pptx, .pdf, .png, .html, .zip, .source.zip or .build.zip extension');
     const runtime = ProjectRuntime.open(positional[0]!);
     try {
       const document = runtime.readDocument(positional[1]!);
