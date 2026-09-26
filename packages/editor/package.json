@@ -6,6 +6,7 @@
   "exports": "./src/index.tsx",
   "dependencies": {
     "@oeydesign/document": "0.1.0",
+    "@oeydesign/media": "0.1.0",
     "react": "19.3.0",
     "react-dom": "19.3.0",
     "react-konva": "19.3.0",

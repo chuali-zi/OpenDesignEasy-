@@ -1,0 +1,145 @@
+import { expect, test } from '@playwright/test';
+import type { WebDocument } from '@oeydesign/document';
+
+test('Web document can be created, visually edited, resized responsively, undone and reopened', async ({ page }) => {
+  const errors: string[] = [];
+  page.on('pageerror', error => { errors.push(error.message); });
+  await page.goto('/');
+  await page.getByRole('button', { name: '新建 Web 文档' }).click();
+  await expect(page.getByRole('main', { name: 'Web 编辑器' })).toBeVisible();
+  const snapshot = async (): Promise<WebDocument> => {
+    const id = await page.getByLabel('选择文档').inputValue();
+    return (await (await page.request.get(`/api/documents/${id}`)).json()).document as WebDocument;
+  };
+  const initial = await snapshot();
+  expect(initial.pages).toHaveLength(1);
+  await expect(page.frameLocator('iframe[title="隔离网页预览"]').locator('[data-web-id]')).toHaveCount(1);
+
+  await page.getByRole('button', { name: '标题', exact: true }).click();
+  await expect.poll(async () => Object.values((await snapshot()).nodes).some(node => node.tag === 'h2')).toBe(true);
+  let doc = await snapshot();
+  let heading = Object.values(doc.nodes).find(node => node.tag === 'h2')!;
+  await page.getByLabel('元素文案').fill('面向真实网页的编辑');
+  await page.getByLabel('元素文案').blur();
+  await expect.poll(async () => (await snapshot()).nodes[heading.id]!.text).toBe('面向真实网页的编辑');
+  await expect(page.frameLocator('iframe[title="隔离网页预览"]').locator(`[data-web-id="${heading.id}"]`)).toHaveText('面向真实网页的编辑');
+
+  await page.getByLabel('预览宽度').focus();
+  await page.getByLabel('预览宽度').press('Home');
+  await page.getByRole('button', { name: '为 mobile 创建样式覆盖' }).click();
+  await page.getByLabel('样式宽度').fill('92%');
+  await page.getByLabel('样式宽度').blur();
+  await expect.poll(async () => (await snapshot()).nodes[heading.id]!.responsive?.mobile?.style?.width).toBe('92%');
+  await page.getByRole('button', { name: '＋ 页面' }).click();
+  await expect.poll(async () => (await snapshot()).pages.length).toBe(2);
+  doc = await snapshot();
+  const second = doc.pages[1]!;
+  await page.getByLabel('页面路由').fill('/studio');
+  await page.getByLabel('页面路由').blur();
+  await expect.poll(async () => (await snapshot()).pages.find(item => item.id === second.id)?.route).toBe('/studio');
+  const afterRoute = await snapshot();
+
+  await page.getByRole('button', { name: '撤销' }).click();
+  await expect.poll(async () => (await snapshot()).pages.find(item => item.id === second.id)?.route).toBe(second.route);
+  await page.getByRole('button', { name: '重做' }).click();
+  await expect.poll(async () => (await snapshot()).pages.find(item => item.id === second.id)?.route).toBe('/studio');
+  await page.reload();
+  await expect(page.getByRole('main', { name: 'Web 编辑器' })).toBeVisible();
+  expect((await snapshot()).pages.find(item => item.id === second.id)?.route).toBe('/studio');
+  expect((await snapshot()).revision).toBeGreaterThan(afterRoute.revision);
+  expect(errors).toEqual([]);
+});
+
+test('Web layer controls and source module edits commit through shared document commands', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: '新建 Web 文档' }).click();
+  const current = async (): Promise<WebDocument> => {
+    const id = await page.getByLabel('选择文档').inputValue();
+    return (await (await page.request.get(`/api/documents/${id}`)).json()).document;
+  };
+  await page.getByRole('button', { name: '段落', exact: true }).click();
+  await expect.poll(async () => Object.values((await current()).nodes).some(node => node.tag === 'p')).toBe(true);
+  let doc = await current();
+  const paragraph = Object.values(doc.nodes).find(node => node.tag === 'p')!;
+  await page.getByRole('button', { name: `隐藏 ${paragraph.text}` }).click();
+  await expect.poll(async () => (await current()).nodes[paragraph.id]!.hidden).toBe(true);
+
+  await page.getByRole('button', { name: '源码模块' }).click();
+  await page.getByLabel('新模块路径').fill('styles/editor-check.css');
+  await page.getByRole('button', { name: '新建模块' }).click();
+  await expect.poll(async () => (await current()).sourceModules?.some(module => module.path === 'styles/editor-check.css')).toBe(true);
+  doc = await current();
+  const css = doc.sourceModules!.find(module => module.path === 'styles/editor-check.css')!;
+  await page.getByLabel('源码模块内容').fill(`${css.source}\n[data-web-id] { letter-spacing: .01em; }`);
+  await page.getByRole('button', { name: '保存模块' }).click();
+  await expect.poll(async () => (await current()).sourceModules?.find(module => module.id === css.id)?.source).toContain('letter-spacing');
+  await expect(page.getByRole('button', { name: '重做' })).toBeVisible();
+});
+
+test('Web DOM drag, resize, rotation and image insertion persist as document operations', async ({ page }) => {
+  const errors: string[] = [];
+  page.on('pageerror', error => errors.push(error.message));
+  await page.goto('/');
+  await page.getByRole('button', { name: '切换设计对话' }).click();
+  await page.getByRole('button', { name: '新建 Web 文档' }).click();
+  await expect(page.getByRole('main', { name: 'Web 编辑器' })).toBeVisible();
+  const read = async (): Promise<WebDocument> => {
+    const id = await page.getByLabel('选择文档').inputValue();
+    return (await (await page.request.get(`/api/documents/${id}`)).json()).document;
+  };
+  const frame = page.frameLocator('iframe[title="隔离网页预览"]');
+  await page.getByRole('button', { name: '标题', exact: true }).click();
+  await page.getByLabel('样式宽度').fill('220');
+  await page.getByLabel('样式宽度').blur();
+  await expect.poll(async () => Object.values((await read()).nodes).find(node => node.tag === 'h2')?.style.width).toBe(220);
+  await page.getByRole('button', { name: '段落', exact: true }).click();
+  await expect.poll(async () => Object.values((await read()).nodes).some(node => node.tag === 'p')).toBe(true);
+  let doc = await read();
+  const heading = Object.values(doc.nodes).find(node => node.tag === 'h2')!;
+  const paragraph = Object.values(doc.nodes).find(node => node.tag === 'p')!;
+  expect(paragraph.parentId).toBe(heading.parentId);
+  const h = frame.locator(`[data-web-id="${heading.id}"]`);
+  const p = frame.locator(`[data-web-id="${paragraph.id}"]`);
+  const first = (await h.boundingBox())!, second = (await p.boundingBox())!;
+  await page.mouse.move(first.x + 30, first.y + first.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(second.x + 30, second.y + second.height - 2, { steps: 6 });
+  await page.mouse.up();
+  await expect.poll(async () => (await read()).nodes[heading.parentId!]!.children).toEqual([paragraph.id, heading.id]);
+  await page.getByLabel('布局模式').selectOption('position');
+  await expect.poll(async () => (await read()).nodes[heading.id]!.layout.mode).toBe('position');
+  await expect(h).toHaveCSS('position', 'absolute');
+  const before = (await h.boundingBox())!;
+  await page.mouse.move(before.x + 30, before.y + 10);
+  await page.mouse.down();
+  await page.mouse.move(before.x + 80, before.y + 45, { steps: 6 });
+  await page.mouse.up();
+  await expect.poll(async () => Number((await read()).nodes[heading.id]!.style.left)).toBeGreaterThan(40);
+  const handle = frame.getByRole('button', { name: '调整元素尺寸' });
+  await expect(handle).toBeVisible();
+  const corner = (await handle.boundingBox())!;
+  await page.mouse.move(corner.x + 6, corner.y + 6);
+  await page.mouse.down();
+  await page.mouse.move(corner.x + 56, corner.y + 26, { steps: 6 });
+  await page.mouse.up();
+  await expect.poll(async () => Number((await read()).nodes[heading.id]!.style.width)).toBeGreaterThan(250);
+  const resized = (await read()).nodes[heading.id]!.style.width;
+  await page.getByRole('button', { name: '撤销', exact: true }).click();
+  await expect.poll(async () => (await read()).nodes[heading.id]!.style.width).toBe(220);
+  await page.getByRole('button', { name: '重做', exact: true }).click();
+  await expect.poll(async () => (await read()).nodes[heading.id]!.style.width).toBe(resized);
+  await page.getByLabel('旋转角度').fill('12deg');
+  await page.getByLabel('旋转角度').blur();
+  await expect(h).toHaveCSS('rotate', '12deg');
+  await page.locator('.web-editor-add input[type=file]').setInputFiles({ name: 'pixel.png', mimeType: 'image/png', buffer: Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jvP8AAAAASUVORK5CYII=', 'base64') });
+  await expect.poll(async () => Object.values((await read()).nodes).some(node => node.tag === 'img')).toBe(true);
+  await expect.poll(() => frame.locator('img').evaluate((image: HTMLImageElement) => image.complete && image.naturalWidth > 0)).toBe(true);
+  await page.reload();
+  await expect(page.getByRole('main', { name: 'Web 编辑器' })).toBeVisible();
+  doc = await read();
+  expect(doc.nodes[heading.id]!.style.rotate).toBe('12deg');
+  expect(doc.nodes[heading.id]!.style.width).toBe(resized);
+  await expect(frame.locator('img')).toBeVisible();
+  await page.screenshot({ path: '.tmp/web-editor-review.png', fullPage: true });
+  expect(errors).toEqual([]);
+});

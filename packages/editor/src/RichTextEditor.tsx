@@ -102,8 +102,10 @@ export function RichTextEditor({ documentId, nodeId, content, revision, disabled
         syncToolbar(next);
         if (transaction.steps.length) {
           stepsRef.current.push(...transaction.steps.map(step => step.toJSON()));
-          scheduleFlush();
         }
+        // Selecting recently typed text is still active editing. Do not start
+        // an idle save in the middle of keyboard range selection.
+        if (stepsRef.current.length) scheduleFlush();
       },
     });
     viewRef.current = view;

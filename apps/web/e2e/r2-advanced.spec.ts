@@ -61,7 +61,7 @@ test('R2 rich text, image crop, table and chart edits persist', async ({ page })
   await expect(textContent).toBeVisible();
   await textContent.fill('Alpha beta');
   await page.keyboard.press('Home');
-  for (let index = 0; index < 5; index += 1) await page.keyboard.press('Shift+ArrowRight');
+  for (let index = 0; index < 5; index += 1) await page.keyboard.press('Shift+ArrowRight', { delay: 160 });
   await expect.poll(() => page.evaluate(() => window.getSelection()?.toString() ?? '')).toBe('Alpha');
   await page.getByLabel('粗体', { exact: true }).evaluate(element => (element as HTMLButtonElement).click());
   await expect.poll(() => textContent.locator('strong').allTextContents()).toEqual(['Alpha']);
