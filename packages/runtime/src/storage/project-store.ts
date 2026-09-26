@@ -1,5 +1,5 @@
 import { DatabaseSync } from 'node:sqlite';
-import type { DeckDocument } from '@oeydesign/document';
+import type { EditableDocument } from '@oeydesign/document';
 import type { CommandResult, DesignVersion, ProjectEvent, ProjectInfo, StoredCommand, StoredDocument } from '../types.ts';
 import { RuntimeError } from '../errors.ts';
 
@@ -83,20 +83,20 @@ export class ProjectStore {
     this.db.prepare('INSERT INTO project(id, data) VALUES (1, ?)').run(JSON.stringify(project));
   }
 
-  listDocuments(): DeckDocument[] {
-    return this.db.prepare('SELECT data FROM documents ORDER BY rowid').all().map(row => parse<DeckDocument>(row.data));
+  listDocuments(): EditableDocument[] {
+    return this.db.prepare('SELECT data FROM documents ORDER BY rowid').all().map(row => parse<EditableDocument>(row.data));
   }
 
   document(id: string): StoredDocument {
     const row = this.db.prepare('SELECT * FROM documents WHERE id = ?').get(id);
     if (!row) throw new RuntimeError('not_found', `Document ${id} does not exist.`);
-    return { document: parse<DeckDocument>(row.data), undo: parse<string[]>(row.undo_stack), redo: parse<string[]>(row.redo_stack) };
+    return { document: parse<EditableDocument>(row.data), undo: parse<string[]>(row.undo_stack), redo: parse<string[]>(row.redo_stack) };
   }
 
-  snapshot(id: string, revision: number): DeckDocument {
+  snapshot(id: string, revision: number): EditableDocument {
     const row = this.db.prepare('SELECT data FROM snapshots WHERE document_id = ? AND revision = ?').get(id, revision);
     if (!row) throw new RuntimeError('conflict', `Base revision ${revision} is not available. Read the current document and retry.`, { documentId: id, baseRevision: revision });
-    return parse<DeckDocument>(row.data);
+    return parse<EditableDocument>(row.data);
   }
 
   saveDocument(state: StoredDocument): void {

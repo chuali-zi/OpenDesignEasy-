@@ -1,0 +1,56 @@
+import assert from 'node:assert/strict';
+import test from 'node:test';
+import { mkdtempSync, rmSync } from 'node:fs';
+import { join } from 'node:path';
+import { tmpdir } from 'node:os';
+import JSZip from 'jszip';
+import { ProjectRuntime } from '@oeydesign/runtime';
+import { createWebHost } from '../src/server/host.ts';
+
+test('Web host creates native pages, preserves human edits, exports the same revision and reopens history', async () => {
+  const directory = mkdtempSync(join(tmpdir(), 'oey-web-document-'));
+  let runtime = ProjectRuntime.create(directory);
+  const app = await createWebHost(runtime);
+  try {
+    const created = await app.inject({ method: 'POST', url: '/api/documents', payload: { kind: 'web', name: 'Site', commandId: 'create-site' } });
+    assert.equal(created.statusCode, 200, created.body);
+    const document = created.json().document;
+    assert.equal(document.kind, 'web');
+    const id = document.documentId;
+    const root = document.pages[0].rootId;
+    const insert = runtime.makeCommand(id, [{ type: 'web.node.insert', node: { id: 'heading', parentId: root, tag: 'h1', text: 'Original', children: [], layout: { mode: 'flow' }, style: { fontSize: 48 } } }]);
+    const inserted = await app.inject({ method: 'POST', url: '/api/commands', payload: insert });
+    assert.equal(inserted.statusCode, 200, inserted.body);
+    const agentBase = runtime.readWebDocument(id).revision;
+    const humanEdit = runtime.makeCommand(id, [{ type: 'web.node.update', nodeId: 'heading', text: '人工标题' }]);
+    assert.equal((await app.inject({ method: 'POST', url: '/api/commands', payload: humanEdit })).statusCode, 200);
+    const staleStyle = runtime.makeCommand(id, [{ type: 'web.style.update', nodeId: 'heading', style: { color: '#234D39' } }], { baseRevision: agentBase });
+    const merged = await app.inject({ method: 'POST', url: '/api/commands', payload: staleStyle });
+    assert.equal(merged.statusCode, 200, merged.body);
+    assert.equal(merged.json().document.nodes.heading.text, '人工标题');
+    const staleText = runtime.makeCommand(id, [{ type: 'web.node.update', nodeId: 'heading', text: 'Overwrite' }], { baseRevision: agentBase });
+    assert.equal((await app.inject({ method: 'POST', url: '/api/commands', payload: staleText })).statusCode, 409);
+    const revision = runtime.readWebDocument(id).revision;
+    const preview = await app.inject({ url: `/api/documents/${id}/preview.html` });
+    assert.equal(preview.statusCode, 200, preview.body);
+    assert.match(preview.body, /人工标题/);
+    assert.match(String(preview.headers['content-security-policy']), /sandbox allow-scripts/);
+    assert.equal(String(preview.headers['x-document-revision']), String(revision));
+    assert.equal((await app.inject({ url: `/api/documents/${id}/preview.svg` })).statusCode, 400);
+    const download = await app.inject({ url: `/api/documents/${id}/export.zip` });
+    assert.equal(download.statusCode, 200, download.body);
+    const zip = await JSZip.loadAsync(download.rawPayload);
+    assert.match(await zip.file('index.html')!.async('string'), /人工标题/);
+    assert.equal(JSON.parse(await zip.file('oey-document.json')!.async('string')).revision, revision);
+    const source = await app.inject({ url: `/api/documents/${id}/export.source.zip` });
+    assert.equal(source.statusCode, 200, source.body);
+    assert.ok((await JSZip.loadAsync(source.rawPayload)).file('package.json'));
+    assert.equal((await app.inject({ method: 'POST', url: `/api/documents/${id}/undo`, payload: { baseRevision: revision } })).statusCode, 200);
+    await app.close(); runtime.close();
+    runtime = ProjectRuntime.open(directory);
+    assert.equal(runtime.readWebDocument(id).nodes.heading!.text, '人工标题');
+    assert.equal(runtime.readWebDocument(id).nodes.heading!.style.color, undefined);
+    runtime.redo(id);
+    assert.equal(runtime.readWebDocument(id).nodes.heading!.style.color, '#234D39');
+  } finally { await app.close(); runtime.close(); rmSync(directory, { recursive: true, force: true }); }
+});

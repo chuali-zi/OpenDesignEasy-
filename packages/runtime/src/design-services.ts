@@ -1,7 +1,8 @@
 import { randomUUID } from 'node:crypto';
 import { mkdir, readFile, realpath, rename, writeFile } from 'node:fs/promises';
 import { basename, isAbsolute, join, relative, resolve } from 'node:path';
-import { exportDeckPptx, exportDeckPdf, renderDeckPng } from '@oeydesign/media';
+import { exportDocumentArtifact } from '@oeydesign/media';
+import type { ArtifactFormat } from '@oeydesign/media';
 import { ProjectAssets, generateImage } from './assets.ts';
 import type { ProjectRuntime } from './project-runtime.ts';
 import { RuntimeError } from './errors.ts';
@@ -11,7 +12,7 @@ export interface AgentDesignServices {
   importAsset(args: { path: string }, signal: AbortSignal): Promise<unknown>;
   generateAsset(args: { prompt: string }, signal: AbortSignal): Promise<unknown>;
   preview(args: { documentId: string; pageId?: string }, signal: AbortSignal): Promise<{ revision: number; mimeType: 'image/png'; data: string }>;
-  exportArtifact(args: { documentId: string; format: 'pptx' | 'pdf' | 'png' }, signal: AbortSignal): Promise<unknown>;
+  exportArtifact(args: { documentId: string; format: ArtifactFormat }, signal: AbortSignal): Promise<unknown>;
 }
 
 export function createDesignServices(runtime: ProjectRuntime): AgentDesignServices {
@@ -41,16 +42,14 @@ export function createDesignServices(runtime: ProjectRuntime): AgentDesignServic
     async preview(args, signal) {
       signal.throwIfAborted();
       const document = runtime.readDocument(args.documentId);
-      const bytes = await renderDeckPng(document, args.pageId, assets.resolve, { signal });
+      const bytes = await exportDocumentArtifact(document, assets.resolve, 'png', { signal, pageId: args.pageId });
       signal.throwIfAborted();
       return { revision: document.revision, mimeType: 'image/png', data: Buffer.from(bytes).toString('base64') };
     },
     async exportArtifact(args, signal) {
       signal.throwIfAborted();
       const document = runtime.readDocument(args.documentId);
-      const bytes = args.format === 'pptx' ? await exportDeckPptx(document, assets.resolve)
-        : args.format === 'pdf' ? await exportDeckPdf(document, assets.resolve, { signal })
-        : await renderDeckPng(document, undefined, assets.resolve, { signal });
+      const bytes = await exportDocumentArtifact(document, assets.resolve, args.format, { signal });
       signal.throwIfAborted();
       const id = `export-${randomUUID()}`;
       const directory = join(runtime.root, 'exports');

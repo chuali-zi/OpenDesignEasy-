@@ -1,0 +1,27 @@
+/** Agent guidance uses the same operations as graphical and CLI clients. */
+export const webOperationSchema = {
+  kind: 'web',
+  revisionRule: 'Read document_read first; pass its revision as baseRevision. Preserve human edits. Conflicts require re-reading the document. Source and visual changes share one history.',
+  structure: 'Pages have id/name/route/rootId. Roots have parentId:null; other nodes have a parent node ID. Insert empty containers before their children. Never use Deck geometry or a page ID as a Web parent.',
+  layout: 'flow/flex/grid use DOM order: reorder/reparent children. Only position mode uses left/top. CSS keys are camelCase, numeric lengths use pixels. Responsive overrides refer to document.breakpoints IDs.',
+  nodeExample: { id: 'heading', parentId: 'root-id', tag: 'h1', children: [], text: 'A considered design', style: { fontSize: 48, color: '#20352B' }, layout: { mode: 'flow' } },
+  operations: {
+    'web.page.insert': { page: { id: 'about', name: 'About', route: '/about', rootId: 'about-root' }, root: { id: 'about-root', parentId: null, tag: 'main', children: [], style: {}, layout: { mode: 'flow' } } },
+    'web.page.update': { pageId: 'about', page: { route: '/story', name: 'Our story' } },
+    'web.node.insert': { node: { id: 'link', parentId: 'root-id', tag: 'a', text: 'Our story', children: [], props: { href: '/story' }, style: {}, layout: { mode: 'flow' } } },
+    'web.node.remove': { nodeId: 'node-id' },
+    'web.node.reparent': { nodeId: 'node-id', parentId: 'container-id', index: 0 },
+    'web.node.update': { nodeId: 'node-id', text: 'Updated copy', props: { title: 'Description' }, flags: { hidden: false, locked: false } },
+    'web.style.update': { nodeId: 'node-id', style: { padding: 24, width: '100%', color: '#234D39' } },
+    'web.layout.update': { nodeId: 'container-id', layout: { mode: 'flex', flexDirection: 'column', gap: 16 } },
+    'web.breakpoints.update': { breakpoints: [{ id: 'mobile', maxWidth: 767 }] },
+    responsiveStyle: { type: 'web.style.update', nodeId: 'node-id', breakpointId: 'mobile', style: { fontSize: 28 } },
+    'asset.register': { asset: { id: 'asset-id', kind: 'image', mimeType: 'image/png', width: 640, height: 480 } },
+    image: { type: 'web.node.insert', node: { id: 'photo', parentId: 'root-id', tag: 'img', children: [], props: { assetId: 'asset-id', alt: 'Description' }, style: { width: '100%' }, layout: { mode: 'flow' } } },
+    'source.update': { module: { id: 'counter', path: 'Counter.tsx', language: 'tsx', exports: ['Counter'], source: 'import React from "react"; export function Counter({ label }: { label: string }) { const [count,setCount]=React.useState(0); return <button onClick={()=>setCount(count+1)}>{label}: {count}</button>; }' } },
+    bindComponent: { type: 'web.node.update', nodeId: 'boundary-node', component: { moduleId: 'counter', exportName: 'Counter' }, props: { label: 'Count' } },
+    'source.remove': { moduleId: 'unbound-module-id' },
+  },
+  sources: 'TS/TSX/CSS modules live in the document. Edit with source.update, never generated files. Components expose wrapper layout and props; internal code requires source export/build. Static exports report unsupported bound components.',
+  exports: 'html (one page), zip (all static pages), source.zip (React/Vite source), pdf, png. Forms are local demos. Null style/props values delete that property.',
+};

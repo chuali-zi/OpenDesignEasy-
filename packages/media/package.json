@@ -3,7 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "exports": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./web-markup": "./src/web-markup.ts"
+  },
   "dependencies": {
     "@oeydesign/document": "0.1.0",
     "jszip": "3.10.2",

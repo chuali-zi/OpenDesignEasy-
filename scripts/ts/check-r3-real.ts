@@ -32,11 +32,11 @@ try {
     await wait();
   };
   await run('请先读取参考资料并用三句话讨论叙事方向。现在只讨论，不要修改任何文档。', [brief.id]);
-  assert.equal(runtime.readDocument(document.documentId).revision, 0);
+  assert.equal(runtime.readDeckDocument(document.documentId).revision, 0);
   stages.push({ stage: 'discussion', unchanged: true });
   console.log(JSON.stringify(stages.at(-1)));
   await run(`方向确认。请在文档 ${document.documentId} 中直接制作总计三页的可编辑演示，使用现有空白页作为第一页。每页至少两个真实节点：第1页标题与说明，第2页社区活动安排表格，第3页按参考资料中的人数做原生柱状图和结论标题。先读取文档/工具结构；不要创建另一个文档，不要提问，不要生成图片。保留中文可读字号，完成后读回检查。`);
-  let current = runtime.readDocument(document.documentId);
+  let current = runtime.readDeckDocument(document.documentId);
   assert.equal(current.pages.length, 3);
   assert.ok(Object.values(current.nodes).some(node => node.kind === 'table'));
   assert.ok(Object.values(current.nodes).some(node => node.kind === 'chart'));
@@ -46,7 +46,7 @@ try {
   runtime.submit(runtime.makeCommand(document.documentId, [{ type: 'geometry.update', nodeId: title.id, geometry: { x: 87, y: 91 } }], { actorId: 'human-acceptance', label: '人工调整标题位置' }));
   runtime.agent.setSelection(sessionId, { documentId: document.documentId, nodeIds: [title.id] });
   await run('我刚手动调整了选中的标题。读取最新状态，保持已有三页和所有节点不变，沿用设计只扩展第四页作为下一步行动，至少两个可编辑文字对象。');
-  current = runtime.readDocument(document.documentId);
+  current = runtime.readDeckDocument(document.documentId);
   assert.equal(current.pages.length, 4);
   assert.equal(current.nodes[title.id]!.geometry.x, 87);
   assert.equal(current.nodes[title.id]!.geometry.y, 91);
@@ -55,7 +55,7 @@ try {
   await run('请使用 user_ask 让我选择“方案 A”或“方案 B”，本轮只提问，不改作品。收到答案以后只简短确认选择，也不要改作品。');
   const question = runtime.agent.listQuestions(sessionId).find(item => item.status === 'pending');
   assert.ok(question);
-  const revisionBeforeAnswer = runtime.readDocument(document.documentId).revision;
+  const revisionBeforeAnswer = runtime.readDeckDocument(document.documentId).revision;
   runtime.close();
   runtime = ProjectRuntime.open(root);
   runtime.agent.configureTools(createDesignServices(runtime));
@@ -63,7 +63,7 @@ try {
   assert.equal(runtime.agent.listQuestions(sessionId).find(item => item.questionId === question.questionId)?.status, 'pending');
   await runtime.agent.answer(sessionId, question.questionId, question.options[0] ?? '方案 A');
   await wait();
-  assert.equal(runtime.readDocument(document.documentId).revision, revisionBeforeAnswer);
+  assert.equal(runtime.readDeckDocument(document.documentId).revision, revisionBeforeAnswer);
   stages.push({ stage: 'question-restart-answer', recovered: true, messages: (await runtime.agent.getMessages(sessionId)).length });
   console.log(JSON.stringify(stages.at(-1)));
   const services = createDesignServices(runtime);

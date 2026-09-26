@@ -124,7 +124,7 @@ test('question ends a mixed tool batch before document write and resumes after r
   await within(fixture.runtime.agent.waitForIdle(session.sessionId), 'question run');
   assert.equal(fixture.runtime.agent.getRun(first.runId)?.status, 'waiting_input');
   assert.equal(fixture.runtime.agent.listQuestions(session.sessionId).filter(question => question.status === 'pending').length, 1);
-  assert.equal(fixture.runtime.readDocument(fixture.documentId).nodes.title!.geometry.x, 10);
+  assert.equal(fixture.runtime.readDeckDocument(fixture.documentId).nodes.title!.geometry.x, 10);
   await assert.rejects(fixture.runtime.agent.send(session.sessionId, 'Bypass the pending question.', { inputId: 'bypass-input' }), { code: 'conflict' });
   fixture.reopen();
   const pending = fixture.runtime.agent.listQuestions(session.sessionId).find(question => question.status === 'pending')!;
@@ -134,7 +134,7 @@ test('question ends a mixed tool batch before document write and resumes after r
   await within(fixture.runtime.agent.waitForIdle(session.sessionId), 'answer run');
   assert.equal(fixture.runtime.agent.getRun(answer.runId)?.status, 'completed');
   assert.deepEqual(await fixture.runtime.agent.answer(session.sessionId, pending.questionId, 'A', { inputId: 'answer-once' }), answer);
-  assert.equal(fixture.runtime.readDocument(fixture.documentId).nodes.title!.geometry.x, 10);
+  assert.equal(fixture.runtime.readDeckDocument(fixture.documentId).nodes.title!.geometry.x, 10);
   assert.equal(fixture.faux.state.callCount, 2);
   assert.ok((await fixture.runtime.agent.getMessages(session.sessionId)).length >= 4);
 });
@@ -174,7 +174,7 @@ test('steer and follow-up reach real Pi queues, and cancellation aborts an activ
         signal.addEventListener('abort', () => reject(signal.reason), { once: true });
         releaseTool.promise.then(resolvePromise, reject);
       });
-      return { revision: fixture.runtime.readDocument(fixture.documentId).revision, mimeType: 'image/png', data: '' };
+      return { revision: fixture.runtime.readDeckDocument(fixture.documentId).revision, mimeType: 'image/png', data: '' };
     },
   });
   fixture.faux.setResponses([fauxAssistantMessage(
@@ -211,11 +211,11 @@ test('SDK compaction refreshes the latest document, selection, human edits and d
   await within(fixture.runtime.agent.compact(session.sessionId), 'Pi SDK compaction');
   assert.equal(faux.state.callCount, ordinaryReplies.length + 1, 'manual compaction makes a real faux provider summary request');
 
-  const changed = fixture.runtime.readDocument(fixture.documentId);
+  const changed = fixture.runtime.readDeckDocument(fixture.documentId);
   fixture.runtime.submit(fixture.runtime.makeCommand(fixture.documentId, [{
     type: 'geometry.update', nodeId: 'title', geometry: { x: 333 },
   }], { actorId: 'reviewer', actorKind: 'human', clientId: 'manual' }));
-  const latestRevision = fixture.runtime.readDocument(fixture.documentId).revision;
+  const latestRevision = fixture.runtime.readDeckDocument(fixture.documentId).revision;
   fixture.runtime.agent.setSelection(session.sessionId, { documentId: fixture.documentId, nodeIds: ['title'] });
   fixture.runtime.putRecord('agent-decisions', 'decision-after-compact', {
     decisionId: 'decision-after-compact', sessionId: session.sessionId, runId: 'human-review',
@@ -327,12 +327,12 @@ test('cancelled run drops a late attachment result and cannot commit with its fo
   assert.equal(fixture.runtime.agent.listInputs(session.sessionId).find(input => input.inputId === queued.inputId)?.status, 'cancelled');
   assert.equal(fixture.faux.state.callCount, 1, 'the stale steering input is not delivered as a second model turn');
 
-  const revision = fixture.runtime.readDocument(fixture.documentId).revision;
+  const revision = fixture.runtime.readDeckDocument(fixture.documentId).revision;
   const staleCommand = fixture.runtime.makeCommand(fixture.documentId, [{
     type: 'geometry.update', nodeId: 'title', geometry: { x: 444 },
   }], { actorId: `agent:${session.sessionId}`, actorKind: 'agent', clientId: `agent:${session.sessionId}`, runId: started.runId });
   assert.throws(() => fixture.runtime.submit(staleCommand), { code: 'cancelled' });
-  assert.equal(fixture.runtime.readDocument(fixture.documentId).revision, revision);
+  assert.equal(fixture.runtime.readDeckDocument(fixture.documentId).revision, revision);
 });
 
 test('a tool that ignores abort cannot let its tool batch write after cancellation', async t => {
@@ -364,7 +364,36 @@ test('a tool that ignores abort cannot let its tool batch write after cancellati
   releaseTool.resolve();
   await within(cancellation, 'cancel active tool batch');
   await within(fixture.runtime.agent.waitForIdle(session.sessionId), 'cancelled tool batch idle');
-  assert.equal(fixture.runtime.readDocument(fixture.documentId).revision, 1);
-  assert.equal(fixture.runtime.readDocument(fixture.documentId).nodes.title!.geometry.x, 10);
+  assert.equal(fixture.runtime.readDeckDocument(fixture.documentId).revision, 1);
+  assert.equal(fixture.runtime.readDeckDocument(fixture.documentId).nodes.title!.geometry.x, 10);
   assert.equal(fixture.faux.state.callCount, 1, 'the model does not continue to the queued write after the delayed tool returns');
+});
+
+test('Pi tools expose Web operations and preserve human text while editing and exporting the same document', async t => {
+  const fixture = makeFixture(t);
+  const web = fixture.runtime.createDocument({ kind: 'web', name: 'Shared website' });
+  const documentId = web.documentId;
+  fixture.runtime.submit(fixture.runtime.makeCommand(documentId, [{ type: 'web.node.insert', node: {
+    id: 'headline', parentId: web.pages[0]!.rootId, tag: 'h1', text: 'Original', children: [], style: {}, layout: { mode: 'flow' },
+  } }]));
+  fixture.runtime.submit(fixture.runtime.makeCommand(documentId, [{ type: 'web.node.update', nodeId: 'headline', text: '人工确定的标题' }]));
+  fixture.faux.setResponses([
+    fauxAssistantMessage(fauxToolCall('document_schema', { documentId }, { id: 'web-schema' }), { stopReason: 'toolUse' }),
+    fauxAssistantMessage(fauxToolCall('document_apply', { documentId, baseRevision: 1,
+      operations: [{ type: 'web.style.update', nodeId: 'headline', style: { color: '#234D39' } }],
+    }, { id: 'web-style' }), { stopReason: 'toolUse' }),
+    fauxAssistantMessage(fauxToolCall('artifact_export', { documentId, format: 'html' }, { id: 'web-export' }), { stopReason: 'toolUse' }),
+    fauxAssistantMessage('Done.', { stopReason: 'stop' }),
+  ]);
+  const session = await fixture.runtime.agent.createSession();
+  const accepted = await fixture.runtime.agent.send(session.sessionId, '继续完善网站，保留我的标题并导出。', { documentId });
+  await within(fixture.runtime.agent.waitForIdle(session.sessionId), 'Web design run');
+  assert.equal(fixture.runtime.agent.getRun(accepted.runId)?.status, 'completed');
+  const latest = fixture.runtime.readWebDocument(documentId);
+  assert.equal(latest.nodes.headline!.text, '人工确定的标题');
+  assert.equal(latest.nodes.headline!.style.color, '#234D39');
+  const exported = fixture.runtime.listRecords<{ documentId: string; revision: number; format: string }>('exports');
+  assert.equal(exported.length, 1);
+  assert.deepEqual({ documentId: exported[0]!.value.documentId, revision: exported[0]!.value.revision, format: exported[0]!.value.format }, { documentId, revision: latest.revision, format: 'html' });
+  assert.match(JSON.stringify(await fixture.runtime.agent.getMessages(session.sessionId)), /web\.layout\.update/);
 });

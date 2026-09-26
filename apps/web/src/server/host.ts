@@ -7,7 +7,8 @@ import type { CommandEnvelope } from '@oeydesign/document';
 import { KernelError } from '@oeydesign/document';
 import { ProjectAssets, ProjectRuntime, RuntimeError } from '@oeydesign/runtime';
 import type { ProjectEvent, CommandOptions } from '@oeydesign/runtime';
-import { renderDeckSvg, exportDeckPptx, exportDeckPdf, renderDeckPng } from '@oeydesign/media';
+import { renderDeckSvg, renderWebHtml, exportDocumentArtifact, artifactMimeTypes } from '@oeydesign/media';
+import type { ArtifactFormat } from '@oeydesign/media';
 import { registerAgentRoutes } from './agent-routes.ts';
 
 export interface WebHostOptions {
@@ -49,8 +50,7 @@ export async function createWebHost(runtime: ProjectRuntime, options: WebHostOpt
   app.get<{ Params: { id: string } }>('/api/exports/:id', async (request, reply) => {
     const result = runtime.getRecord<{ filename: string; format: string }>('exports', request.params.id);
     if (!result || basename(result.filename) !== result.filename) throw new RuntimeError('not_found', 'Export not found.');
-    const mime: Record<string, string> = { pptx: 'application/vnd.openxmlformats-officedocument.presentationml.presentation', pdf: 'application/pdf', png: 'image/png' };
-    return reply.type(mime[result.format] ?? 'application/octet-stream').header('Content-Disposition', `attachment; filename="${result.filename}"`)
+    return reply.type(artifactMimeTypes[result.format as ArtifactFormat] ?? 'application/octet-stream').header('Content-Disposition', `attachment; filename="${result.filename}"`)
       .send(await readFile(join(runtime.root, 'exports', result.filename)));
   });
   app.post<{ Body: { name: string; base64: string; kind?: string } }>('/api/assets', { bodyLimit: 29 * 1024 * 1024 }, async request => {
@@ -66,11 +66,13 @@ export async function createWebHost(runtime: ProjectRuntime, options: WebHostOpt
     return reply.type(asset.mimeType).send(Buffer.from(bytes));
   });
   app.get<{ Params: { id: string } }>('/api/documents/:id', request => ({ document: runtime.readDocument(request.params.id) }));
-  app.post<{ Body: { name?: string; commandId?: string } }>('/api/documents', request => {
+  app.post<{ Body: { name?: string; commandId?: string; kind?: 'deck' | 'web' } }>('/api/documents', request => {
     const body = request.body ?? {};
     if (body.name !== undefined && typeof body.name !== 'string') throw new RuntimeError('invalid', 'Document name must be text.');
     if (body.commandId !== undefined && (typeof body.commandId !== 'string' || !body.commandId)) throw new RuntimeError('invalid', 'commandId must be a non-empty string.');
-    return { document: runtime.createDocument({ name: body.name }, { ...human, clientId: 'web', commandId: body.commandId }) };
+    if (body.kind !== undefined && body.kind !== 'deck' && body.kind !== 'web') throw new RuntimeError('invalid', 'Document kind must be deck or web.');
+    const command = { ...human, clientId: 'web', commandId: body.commandId };
+    return { document: body.kind === 'web' ? runtime.createDocument({ name: body.name, kind: 'web' }, command) : runtime.createDocument({ name: body.name }, command) };
   });
   app.post<{ Body: CommandEnvelope }>('/api/commands', request => {
     if (!request.body || typeof request.body !== 'object' || Array.isArray(request.body)) throw new RuntimeError('invalid', 'Expected a document command.');
@@ -96,25 +98,26 @@ export async function createWebHost(runtime: ProjectRuntime, options: WebHostOpt
     return { result, document: runtime.readDocument(result.documentId) };
   });
   app.get<{ Params: { id: string }; Querystring: { page?: string } }>('/api/documents/:id/preview.svg', async (request, reply) => {
-    const document = runtime.readDocument(request.params.id);
+    const document = runtime.readDeckDocument(request.params.id);
     return reply.type('image/svg+xml').header('Content-Security-Policy', "default-src 'none'; img-src data:; style-src 'unsafe-inline'")
       .header('X-Document-Revision', document.revision).send(await renderDeckSvg(document, request.query.page, assets.resolve));
   });
-  app.get<{ Params: { id: string } }>('/api/documents/:id/export.pptx', async (request, reply) => {
-    const document = runtime.readDocument(request.params.id);
-    const file = await exportDeckPptx(document, assets.resolve);
-    return reply.type('application/vnd.openxmlformats-officedocument.presentationml.presentation')
-      .header('Content-Disposition', `attachment; filename="deck-r${document.revision}.pptx"`)
-      .header('X-Document-Revision', document.revision).send(Buffer.from(file));
+  app.get<{ Params: { id: string }; Querystring: { page?: string } }>('/api/documents/:id/preview.html', async (request, reply) => {
+    const document = runtime.readWebDocument(request.params.id);
+    // A separate sandboxed document can exercise demo interactions without reaching the editor API.
+    return reply.type('text/html; charset=utf-8')
+      .header('Content-Security-Policy', "sandbox allow-scripts; default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data:; form-action 'none'; base-uri 'none'")
+      .header('X-Content-Type-Options', 'nosniff').header('X-Document-Revision', document.revision)
+      .send(await renderWebHtml(document, request.query.page, assets.resolve, { pageUrl: page => `/api/documents/${encodeURIComponent(document.documentId)}/preview.html?page=${encodeURIComponent(page.id)}` }));
   });
-  for (const format of ['pdf', 'png'] as const) app.get<{ Params: { id: string } }>(`/api/documents/:id/export.${format}`, async (request, reply) => {
+  for (const format of ['pptx', 'pdf', 'png', 'html', 'zip', 'source.zip'] as const) app.get<{ Params: { id: string }; Querystring: { page?: string } }>(`/api/documents/:id/export.${format}`, async (request, reply) => {
     const document = runtime.readDocument(request.params.id);
     const controller = new AbortController();
     const stop = () => { if (!reply.raw.writableEnded) controller.abort(); };
     reply.raw.once('close', stop);
     try {
-      const bytes = format === 'pdf' ? await exportDeckPdf(document, assets.resolve, { signal: controller.signal }) : await renderDeckPng(document, undefined, assets.resolve, { signal: controller.signal });
-      return reply.type(format === 'pdf' ? 'application/pdf' : 'image/png').header('Content-Disposition', `attachment; filename="deck-r${document.revision}.${format}"`)
+      const bytes = await exportDocumentArtifact(document, assets.resolve, format, { signal: controller.signal, pageId: request.query.page });
+      return reply.type(artifactMimeTypes[format]).header('Content-Disposition', `attachment; filename="${document.kind}-r${document.revision}.${format}"`)
         .header('X-Document-Revision', document.revision).send(Buffer.from(bytes));
     } finally { reply.raw.removeListener('close', stop); }
   });

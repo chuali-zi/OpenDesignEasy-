@@ -1,4 +1,4 @@
-import type { CommandEnvelope, DeckDocument } from '@oeydesign/document';
+import type { CommandEnvelope, EditableDocument } from '@oeydesign/document';
 
 export interface ProjectInfo {
   schemaVersion: 1;
@@ -42,7 +42,7 @@ export interface CommandOptions extends Actor {
 export interface HistoryOptions extends CommandOptions {}
 
 export interface StoredDocument {
-  document: DeckDocument;
+  document: EditableDocument;
   undo: string[];
   redo: string[];
 }

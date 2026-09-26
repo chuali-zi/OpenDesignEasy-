@@ -6,7 +6,7 @@ const [root, mode, documentId] = process.argv.slice(2) as [string, string, strin
 try {
   const runtime = ProjectRuntime.open(root);
   if (mode === 'uncommitted') {
-    const state = runtime.readDocument(documentId);
+    const state = runtime.readDeckDocument(documentId);
     state.revision += 1;
     state.nodes.title!.geometry.x = 999;
     const store = new ProjectStore(join(root, 'project.sqlite'));

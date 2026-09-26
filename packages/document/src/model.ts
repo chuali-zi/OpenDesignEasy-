@@ -98,11 +98,13 @@ export type DocumentHeader = {
   assets?: AssetCollection;
   constraints?: DesignConstraints;
 };
-/** Boundary-only Web model. Editing operations for this schema are intentionally not implemented by R1. */
+/** Native, structurally editable Web design model. */
 export type WebLayoutMode = "flow" | "flex" | "grid" | "position";
 export type WebBreakpoint = { id: string; minWidth?: number; maxWidth?: number };
 export type WebLayout = { mode: WebLayoutMode; order?: number; gridColumn?: string; gridRow?: string; position?: "static" | "relative" | "absolute" | "fixed"; [key: string]: JSONValue | undefined };
-export type WebNode = { id: string; parentId: string | null; tag: string; children: string[]; style: Record<string, JSONValue | undefined>; layout: WebLayout; props?: Record<string, JSONValue | undefined> };
+export type WebStyle = Record<string, JSONValue | null | undefined>;
+export type WebComponentBinding = { moduleId: string; exportName: string };
+export type WebNode = { id: string; parentId: string | null; tag: string; children: string[]; style: WebStyle; layout: WebLayout; props?: Record<string, JSONValue | null | undefined>; text?: string; locked?: boolean; hidden?: boolean; responsive?: Record<string, { style?: WebStyle; layout?: Partial<WebLayout> }>; component?: WebComponentBinding };
 export type WebPage = { id: string; name: string; route: string; rootId: string; breakpoints?: WebBreakpoint[] };
 export type WebSourceModule = { id: string; path: string; language: "ts" | "tsx" | "css"; source: string; exports?: string[] };
 export type WebDocument = DocumentHeader & { kind: "web"; pages: WebPage[]; nodes: Record<string, WebNode>; breakpoints?: WebBreakpoint[]; sourceModules?: WebSourceModule[] };
@@ -112,6 +114,8 @@ export type DocPageSettings = { width: number; height: number; marginTop: number
 export type DocSection = { id: string; name: string; content: PMNodeJSON; pageSettings?: DocPageSettings; styleId?: string };
 export type DocDocument = DocumentHeader & { kind: "doc"; content: PMNodeJSON; sections: DocSection[]; pageSettings: DocPageSettings; styles?: Record<string, Record<string, JSONValue | undefined>> };
 export type AnyDocument = DeckDocument | WebDocument | DocDocument;
+/** Document kinds that currently accept document commands. */
+export type EditableDocument = DeckDocument | WebDocument;
 
 export type ActorKind = "human" | "agent" | "system";
 export type EditPrecondition =
@@ -148,7 +152,20 @@ export type ThemePatch = {
   colors?: Partial<Record<DeckThemeColorKey, string | null>>;
 };
 export type DocumentThemeOperation = { type: "document.theme"; theme: ThemePatch };
-export type DocumentOperation = PageInsertOperation | PageUpdateOperation | PageReorderOperation | NodeInsertOperation | NodeRemoveOperation | NodeReorderOperation | NodeReparentOperation | GeometryUpdateOperation | StyleUpdateOperation | FlagsUpdateOperation | TextApplyOperation | ImageUpdateOperation | AssetRegisterOperation | AssetReplaceOperation | TableUpdateOperation | ChartUpdateOperation | DocumentThemeOperation;
+export type WebPageInsertOperation = { type: "web.page.insert"; page: WebPage; root: WebNode; index?: number };
+export type WebPageUpdateOperation = { type: "web.page.update"; pageId: string; page: Partial<Pick<WebPage, "name" | "route">> };
+export type WebNodeInsertOperation = { type: "web.node.insert"; node: WebNode; index?: number };
+export type WebNodeRemoveOperation = { type: "web.node.remove"; nodeId: string };
+export type WebNodeReparentOperation = { type: "web.node.reparent"; nodeId: string; parentId: string; index?: number };
+export type WebNodeUpdateOperation = { type: "web.node.update"; nodeId: string; text?: string | null; props?: Record<string, JSONValue | null>; flags?: { locked?: boolean; hidden?: boolean }; component?: WebComponentBinding | null };
+export type WebStyleUpdateOperation = { type: "web.style.update"; nodeId: string; style: WebStyle; breakpointId?: string };
+export type WebLayoutUpdateOperation = { type: "web.layout.update"; nodeId: string; layout: Partial<WebLayout> & { mode?: WebLayoutMode }; breakpointId?: string };
+export type WebBreakpointsUpdateOperation = { type: "web.breakpoints.update"; breakpoints: WebBreakpoint[] };
+export type SourceUpdateOperation = { type: "source.update"; module: WebSourceModule };
+export type SourceRemoveOperation = { type: "source.remove"; moduleId: string };
+export type DeckOperation = PageInsertOperation | PageUpdateOperation | PageReorderOperation | NodeInsertOperation | NodeRemoveOperation | NodeReorderOperation | NodeReparentOperation | GeometryUpdateOperation | StyleUpdateOperation | FlagsUpdateOperation | TextApplyOperation | ImageUpdateOperation | AssetRegisterOperation | AssetReplaceOperation | TableUpdateOperation | ChartUpdateOperation | DocumentThemeOperation;
+export type WebOperation = WebPageInsertOperation | WebPageUpdateOperation | WebNodeInsertOperation | WebNodeRemoveOperation | WebNodeReparentOperation | WebNodeUpdateOperation | WebStyleUpdateOperation | WebLayoutUpdateOperation | WebBreakpointsUpdateOperation | SourceUpdateOperation | SourceRemoveOperation | AssetRegisterOperation;
+export type DocumentOperation = DeckOperation | WebOperation;
 
 export type CommandEnvelope = {
   commandId: string;

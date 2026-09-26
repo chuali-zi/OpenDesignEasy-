@@ -43,7 +43,7 @@ try {
     ...(['bar', 'line', 'pie'] as const).map((type, index): DocumentOperation => ({ type: 'node.insert', node: { ...base(`chart-${type}`, 'chart', 'page-three', 60 + index * 410, 190, 380, 380), chart: { type, title: type.toUpperCase(), categories: ['第一阶段', '第二阶段', '第三阶段'], series: [{ id: 'series-main', name: '覆盖能力', values: [12, 24, 38], color: '#315646' }], legend: true, dataLabels: true } } })),
   ];
   runtime.submit(runtime.makeCommand(document.documentId, operations, { label: 'Three-page acceptance fixture' }));
-  const final = runtime.readDocument(document.documentId);
+  const final = runtime.readDeckDocument(document.documentId);
   await mkdir(join(root, 'exports'), { recursive: true });
   await writeFile(join(root, 'exports', 'mixed.pptx'), await exportDeckPptx(final, assets.resolve));
   await writeFile(join(root, 'exports', 'mixed.pdf'), await exportDeckPdf(final, assets.resolve));

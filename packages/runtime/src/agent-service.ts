@@ -9,6 +9,7 @@ import type { ProjectRuntime } from './project-runtime.ts';
 import type { ProjectStore } from './storage/project-store.ts';
 import type { AgentDesignServices } from './design-services.ts';
 import { RuntimeError } from './errors.ts';
+import { webOperationSchema } from './web-schema.ts';
 import type {
   AgentAcceptedInputOptions, AgentInputKind, AgentInputRecord, AgentProviderConfig, AgentQuestionRecord,
   AgentRunRecord, AgentRunStart, AgentSelection, AgentServiceEvent, AgentSessionOptions, AgentSessionRecord,
@@ -723,7 +724,7 @@ export class AgentService {
       parameters: Type.Object({}), ...sequential,
       async execute() {
         const project = thisService.runtime.project;
-        const documents = thisService.runtime.listDocuments().map(document => ({ documentId: document.documentId, name: document.name, revision: document.revision, pages: document.pages.map(page => ({ id: page.id, name: page.name })) }));
+        const documents = thisService.runtime.listDocuments().map(document => ({ documentId: document.documentId, kind: document.kind, name: document.name, revision: document.revision, pages: document.pages.map(page => ({ id: page.id, name: page.name })) }));
         const assets = thisService.runtime.listRecords<{ id: string; kind: string; name: string; mimeType: string; sizeBytes: number }>('assets').map(record => record.value);
         return textResult(JSON.stringify({ project, documents, assets }, null, 2), { project, documents, assets });
       },
@@ -752,9 +753,11 @@ export class AgentService {
     }));
     tools.push(define({
       name: 'document_schema', label: 'Read document operation schema',
-      description: 'Read exact Deck node and edit operation fields plus examples before constructing or modifying design content.',
-      parameters: Type.Object({}), ...sequential,
-      async execute() {
+      description: 'Read exact node and operation fields for a document kind. Pass documentId or kind:web for Web nodes, layouts and managed source modules. Defaults to Deck.',
+      parameters: Type.Object({ documentId: Type.Optional(Type.String()), kind: Type.Optional(Type.Union([Type.Literal('deck'), Type.Literal('web')])) }), ...sequential,
+      async execute(_id, args) {
+        const kind = args.documentId ? thisService.runtime.readDocument(args.documentId).kind : args.kind ?? 'deck';
+        if (kind === 'web') return textResult(JSON.stringify(webOperationSchema, null, 2), webOperationSchema);
         const exampleTextNode = { id: 'title-1', kind: 'text', parentId: 'page-id-from-document_read', geometry: { x: 80, y: 60, width: 900, height: 140, rotation: 0 }, style: {}, locked: false, hidden: false, content: { type: 'doc', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Headline' }] }] } };
         const cellDoc = { type: 'doc', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Cell' }] }] };
         const nodeExamples = {
@@ -877,8 +880,8 @@ export class AgentService {
       },
     }));
     tools.push(define({
-      name: 'artifact_export', label: 'Export artifact', description: 'Export the requested current document revision as PPTX, PDF or PNG.',
-      parameters: Type.Object({ documentId: Type.String(), format: Type.Union([Type.Literal('pptx'), Type.Literal('pdf'), Type.Literal('png')]) }), ...sequential,
+      name: 'artifact_export', label: 'Export artifact', description: 'Export the committed revision. Deck: pptx/pdf/png. Web: html/zip/source.zip/pdf/png.',
+      parameters: Type.Object({ documentId: Type.String(), format: Type.Union([Type.Literal('pptx'), Type.Literal('pdf'), Type.Literal('png'), Type.Literal('html'), Type.Literal('zip'), Type.Literal('source.zip')]) }), ...sequential,
       async execute(_id, args, signal) {
         const result = await thisService.requireServices().exportArtifact({ documentId: args.documentId, format: args.format }, signal ?? new AbortController().signal);
         return textResult(JSON.stringify(result), result);
@@ -951,7 +954,7 @@ export class AgentService {
 
   private async contextText(sessionId: string): Promise<string> {
     const project = this.runtime.project;
-    const documents = this.runtime.listDocuments().map(document => ({ documentId: document.documentId, name: document.name, revision: document.revision, pages: document.pages.map(page => ({ id: page.id, name: page.name })) }));
+    const documents = this.runtime.listDocuments().map(document => ({ documentId: document.documentId, kind: document.kind, name: document.name, revision: document.revision, pages: document.pages.map(page => ({ id: page.id, name: page.name })) }));
     const selection = this.selections.get(sessionId) ?? this.store.getRecord<AgentSelection>('agent-selections', sessionId);
     const decisions = this.runtime.listRecords<DecisionRecord>('agent-decisions').map(record => record.value).filter(item => item.sessionId === sessionId).slice(-20);
     const recentHumanChanges = this.runtime.events().filter(event => event.type === 'document.changed' && event.payload.actorKind === 'human')

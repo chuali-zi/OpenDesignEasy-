@@ -45,21 +45,21 @@ test('unified human/agent history, retries, branches and versions survive reopen
     runtime.submit(runtime.makeCommand(documentId, [{ type: 'style.update', nodeId: 'title', style: { fill: '#ff0000' } }], { actorKind: 'agent', actorId: 'design-agent' }));
     const undoId = 'undo-agent';
     const undone = runtime.undo(documentId, { commandId: undoId });
-    assert.equal(runtime.readDocument(documentId).nodes.title!.style.fill, '#111827');
+    assert.equal(runtime.readDeckDocument(documentId).nodes.title!.style.fill, '#111827');
     assert.deepEqual(runtime.undo(documentId, { commandId: undoId }), undone);
     runtime.close();
     runtime = ProjectRuntime.open(directory);
     runtime.redo(documentId);
-    assert.equal(runtime.readDocument(documentId).nodes.title!.style.fill, '#ff0000');
+    assert.equal(runtime.readDeckDocument(documentId).nodes.title!.style.fill, '#ff0000');
     runtime.restoreVersion(version.versionId);
-    assert.equal(runtime.readDocument(documentId).nodes.title!.geometry.x, 80);
-    assert.equal(runtime.readDocument(documentId).nodes.title!.style.fill, '#111827');
+    assert.equal(runtime.readDeckDocument(documentId).nodes.title!.geometry.x, 80);
+    assert.equal(runtime.readDeckDocument(documentId).nodes.title!.style.fill, '#111827');
     runtime.undo(documentId);
-    assert.equal(runtime.readDocument(documentId).nodes.title!.style.fill, '#ff0000');
+    assert.equal(runtime.readDeckDocument(documentId).nodes.title!.style.fill, '#ff0000');
     runtime.submit(runtime.makeCommand(documentId, [{ type: 'geometry.update', nodeId: 'title', geometry: { y: 45 } }]));
     assert.throws(() => runtime.redo(documentId), { code: 'invalid' });
     assert.equal(runtime.listVersions(documentId)[0]!.revision, moved.revision);
-    assert.equal(textToString(runtime.readDocument(documentId).nodes.title!.content!), '原始标题');
+    assert.equal(textToString(runtime.readDeckDocument(documentId).nodes.title!.content!), '原始标题');
     const events = runtime.events();
     assert.deepEqual(events.map(event => event.seq), events.map((_event, index) => index + 1));
     assert.ok(events.some(event => event.payload.actorKind === 'agent'));
@@ -70,22 +70,22 @@ test('unified human/agent history, retries, branches and versions survive reopen
 test('stale independent edits merge, conflicting and partial batches leave no state or events', t => {
   const { runtime, documentId } = withTitle(temporaryProject(t));
   try {
-    const baseRevision = runtime.readDocument(documentId).revision;
+    const baseRevision = runtime.readDeckDocument(documentId).revision;
     const staleColor = runtime.makeCommand(documentId, [{ type: 'style.update', nodeId: 'title', style: { fill: '#123456' } }]);
     const staleMove = runtime.makeCommand(documentId, [{ type: 'geometry.update', nodeId: 'title', geometry: { x: 90 } }]);
     runtime.submit(runtime.makeCommand(documentId, [{ type: 'geometry.update', nodeId: 'title', geometry: { x: 40 } }]));
     runtime.submit(staleColor);
     assert.throws(() => runtime.submit(staleMove), { code: 'conflict' });
-    assert.equal(runtime.readDocument(documentId).nodes.title!.geometry.x, 40);
-    assert.equal(runtime.readDocument(documentId).nodes.title!.style.fill, '#123456');
-    assert.equal(runtime.readDocument(documentId, baseRevision).nodes.title!.geometry.x, 10);
-    const before = runtime.readDocument(documentId);
+    assert.equal(runtime.readDeckDocument(documentId).nodes.title!.geometry.x, 40);
+    assert.equal(runtime.readDeckDocument(documentId).nodes.title!.style.fill, '#123456');
+    assert.equal(runtime.readDeckDocument(documentId, baseRevision).nodes.title!.geometry.x, 10);
+    const before = runtime.readDeckDocument(documentId);
     const events = runtime.events();
     assert.throws(() => runtime.submit(runtime.makeCommand(documentId, [
       { type: 'geometry.update', nodeId: 'title', geometry: { x: 100 } },
       { type: 'node.remove', nodeId: 'missing' },
     ])));
-    assert.deepEqual(runtime.readDocument(documentId), before);
+    assert.deepEqual(runtime.readDeckDocument(documentId), before);
     assert.deepEqual(runtime.events(), events);
     runtime.subscribe(() => { throw new Error('Disconnected client'); });
     const result = runtime.submit(runtime.makeCommand(documentId, [{ type: 'geometry.update', nodeId: 'title', geometry: { x: 60 } }]));
@@ -117,23 +117,23 @@ test('OS owner lock rejects another process and recovers committed state after f
   }
   const reopened = ProjectRuntime.open(directory);
   try {
-    assert.equal(reopened.readDocument(documentId).nodes.title!.geometry.x, 55);
+    assert.equal(reopened.readDeckDocument(documentId).nodes.title!.geometry.x, 55);
     reopened.undo(documentId);
-    assert.equal(reopened.readDocument(documentId).nodes.title!.geometry.x, 10);
+    assert.equal(reopened.readDeckDocument(documentId).nodes.title!.geometry.x, 10);
   } finally { reopened.close(); }
 });
 
 test('process exit during SQLite transaction rolls back partial snapshot writes', t => {
   const directory = temporaryProject(t);
   const { runtime, documentId } = withTitle(directory);
-  const before = runtime.readDocument(documentId);
+  const before = runtime.readDeckDocument(documentId);
   const events = runtime.events();
   runtime.close();
   const child = spawnSync(process.execPath, ['--import', 'tsx', fixturePath, directory, 'uncommitted', documentId], { encoding: 'utf8', windowsHide: true });
   assert.equal(child.status, 23, child.stderr + child.stdout);
   const reopened = ProjectRuntime.open(directory);
   try {
-    assert.deepEqual(reopened.readDocument(documentId), before);
+    assert.deepEqual(reopened.readDeckDocument(documentId), before);
     assert.deepEqual(reopened.events(), events);
   } finally { reopened.close(); }
 });

@@ -35,12 +35,12 @@ test('CLI agent through the Web owner shares durable input, document changes and
     assert.equal(result.session.status, 'idle');
     assert.equal(result.inputs[0].inputId, 'cli-shared-input');
     assert.equal(result.runs[0].status, 'completed');
-    assert.equal(runtime.readDocument(document.documentId).nodes['shared-shape']?.geometry.x, 40);
+    assert.equal(runtime.readDeckDocument(document.documentId).nodes['shared-shape']?.geometry.x, 40);
     const snapshot = (await app.inject({ url: `/api/agent/sessions/${result.session.sessionId}` })).json();
     assert.equal(snapshot.messages.at(-1).content[0].text, 'Shared object created.');
     const undo = await app.inject({ method: 'POST', url: `/api/documents/${document.documentId}/undo`, payload: { baseRevision: 1 } });
     assert.equal(undo.statusCode, 200, undo.body);
-    assert.equal(runtime.readDocument(document.documentId).nodes['shared-shape'], undefined);
+    assert.equal(runtime.readDeckDocument(document.documentId).nodes['shared-shape'], undefined);
     assert.ok(runtime.events().some(event => event.payload.actorKind === 'agent'));
   } finally {
     await app.close(); runtime.close();

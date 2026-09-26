@@ -1,12 +1,13 @@
 import { readFile, rename, unlink, writeFile } from "node:fs/promises";
-import { existsSync, writeFileSync } from "node:fs";
+import { existsSync } from "node:fs";
 import { pathToFileURL } from "node:url";
 import { basename, dirname, extname, resolve } from "node:path";
 import { randomUUID } from "node:crypto";
 import { Fragment, Slice } from "prosemirror-model";
 import { ReplaceStep } from "prosemirror-transform";
 import { textFromString, textSchema } from "@oeydesign/document";
-import { exportDeckPptx, exportDeckPdf, renderDeckPng, renderDeckSvg } from "@oeydesign/media";
+import { exportDocumentArtifact, renderDeckSvg, renderWebHtml } from "@oeydesign/media";
+import type { ArtifactFormat } from "@oeydesign/media";
 import { ProjectAssets, ProjectRuntime } from "@oeydesign/runtime";
 import { executeAgent } from './agent-cli.ts';
 
@@ -20,11 +21,11 @@ const HELP = {
     agent: ["run <dir> --text <prompt> [--session <id>] [--document <id>] [--asset <id>]", "create|list|status|config <dir> [--session <id>] [--file <config.json>]", "send|steer|follow-up|answer|cancel --host <local-url> --session <id> [--text <text>] [--question <id>] [--wait]"],
     asset: ["import <dir> <file>", "list <dir>"],
     document: [
-      "create <dir> [--name <name>]",
+      "create <dir> [--kind deck|web] [--name <name>]",
       "read <dir> [documentId]",
       "apply <dir> <command.json>",
-      "render <dir> <documentId> --output <file.svg> [--page <id>]",
-      "export <dir> <documentId> --output <file.pptx|file.pdf|file.png>",
+      "render <dir> <documentId> --output <file.svg|file.html> [--page <id>]",
+      "export <dir> <documentId> --output <file.pptx|file.pdf|file.png|file.html|file.zip|file.source.zip> [--page <id>]",
     ],
     node: [
       "insert <dir> <documentId> --page <id> --kind text|shape --text <text> --x <n> --y <n> --width <n> --height <n> [--id <id>]",
@@ -197,9 +198,11 @@ export async function execute(argv: string[]): Promise<unknown> {
   }
 
   if (area === "document" && action === "create") {
-    const { values, positional } = parseFlags(rest, ["name"]);
+    const { values, positional } = parseFlags(rest, ["name", "kind"]);
     expectPositionals(positional, 1, "document create");
-    return withRuntime(positional[0]!, (runtime) => ({ document: runtime.createDocument(optionalFlag(values, "name") === undefined ? {} : { name: optionalFlag(values, "name") }) }));
+    const kind = optionalFlag(values, "kind") ?? 'deck';
+    if (kind !== 'deck' && kind !== 'web') usage('option --kind must be deck or web');
+    return withRuntime(positional[0]!, (runtime) => ({ document: runtime.createDocument({ name: optionalFlag(values, 'name'), kind }) }));
   }
 
   if (area === "document" && action === "read") {
@@ -230,23 +233,26 @@ export async function execute(argv: string[]): Promise<unknown> {
     const runtime = ProjectRuntime.open(positional[0]!);
     try {
       const document = runtime.readDocument(positional[1]!);
-      const svg = await renderDeckSvg(document, page, new ProjectAssets(runtime).resolve);
-      writeFileSync(output, svg, "utf8");
-      return { documentId: document.documentId, revision: document.revision, format: "svg", output };
+      const format = document.kind === 'web' ? 'html' : 'svg';
+      if (extname(output).toLowerCase() !== `.${format}`) usage(`this document renders as .${format}`);
+      const resolver = new ProjectAssets(runtime).resolve;
+      const content = document.kind === 'web' ? await renderWebHtml(document, page, resolver) : await renderDeckSvg(document, page, resolver);
+      await writeFileAtomically(output, new TextEncoder().encode(content));
+      return { documentId: document.documentId, revision: document.revision, format, output };
     } finally { runtime.close(); }
   }
 
   if (area === "document" && action === "export") {
-    const { values, positional } = parseFlags(rest, ["output"]);
+    const { values, positional } = parseFlags(rest, ["output", "page"]);
     expectPositionals(positional, 2, "document export");
     const output = resolve(requiredFlag(values, "output"));
-    const format = extname(output).toLowerCase().slice(1);
-    if (!['pptx', 'pdf', 'png'].includes(format)) usage('option --output must have a .pptx, .pdf or .png extension');
+    const format = output.toLowerCase().endsWith('.source.zip') ? 'source.zip' : extname(output).toLowerCase().slice(1);
+    if (!['pptx', 'pdf', 'png', 'html', 'zip', 'source.zip'].includes(format)) usage('option --output must have a .pptx, .pdf, .png, .html, .zip or .source.zip extension');
     const runtime = ProjectRuntime.open(positional[0]!);
     try {
       const document = runtime.readDocument(positional[1]!);
       const resolver = new ProjectAssets(runtime).resolve;
-      const data = format === 'pptx' ? await exportDeckPptx(document, resolver) : format === 'pdf' ? await exportDeckPdf(document, resolver) : await renderDeckPng(document, undefined, resolver);
+      const data = await exportDocumentArtifact(document, resolver, format as ArtifactFormat, { pageId: optionalFlag(values, 'page') });
       await writeFileAtomically(output, data);
       return { documentId: document.documentId, revision: document.revision, format, output };
     } finally { runtime.close(); }
@@ -292,6 +298,9 @@ export async function execute(argv: string[]): Promise<unknown> {
     const text = requiredFlag(values, "text");
     return withRuntime(positional[0]!, (runtime) => {
       const document = runtime.readDocument(documentId);
+      if (document.kind === 'web') {
+        return { result: submitOperations(runtime, documentId, [{ type: 'web.node.update', nodeId, text }], 'Edit Web text') };
+      }
       const node = document.nodes[nodeId];
       if (!node?.content) throw new CliError("invalid", `node ${nodeId} has no editable text content`);
       const current = textSchema.nodeFromJSON(node.content);

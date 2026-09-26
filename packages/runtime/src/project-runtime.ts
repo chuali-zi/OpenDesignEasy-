@@ -1,8 +1,8 @@
 import { randomUUID } from 'node:crypto';
 import { existsSync, mkdirSync, realpathSync } from 'node:fs';
 import { basename, join, resolve } from 'node:path';
-import { applyCommand, createDeckDocument, restoreDocument, validateDocument } from '@oeydesign/document';
-import type { CommandEnvelope, DeckDocument } from '@oeydesign/document';
+import { applyEditableCommand, createDeckDocument, createWebDocument, restoreEditableDocument, validateEditableDocument } from '@oeydesign/document';
+import type { CommandEnvelope, DeckDocument, EditableDocument, WebDocument } from '@oeydesign/document';
 import { RuntimeError } from './errors.ts';
 import { AgentService } from './agent-service.ts';
 import type { AgentServiceOptions } from './agent-service.ts';
@@ -88,7 +88,7 @@ export class ProjectRuntime {
 
   get project(): ProjectInfo { this.ensureOpen(); return structuredClone(this.info); }
 
-  listDocuments(): DeckDocument[] { this.ensureOpen(); return this.store.listDocuments(); }
+  listDocuments(): EditableDocument[] { this.ensureOpen(); return this.store.listDocuments(); }
 
   getRecord<T>(namespace: string, id: string): T | undefined {
     this.ensureOpen();
@@ -110,26 +110,43 @@ export class ProjectRuntime {
   getAgentInputs(sessionId: string): AgentInputRecord[] { this.ensureOpen(); return this.agent.listInputs(sessionId); }
   getAgentQuestions(sessionId: string): AgentQuestionRecord[] { this.ensureOpen(); return this.agent.listQuestions(sessionId); }
 
-  readDocument(documentId: string, revision?: number): DeckDocument {
+  readDocument(documentId: string, revision?: number): EditableDocument {
     this.ensureOpen();
     const document = revision === undefined ? this.store.document(documentId).document : this.store.snapshot(documentId, revision);
-    validateDocument(document);
+    validateEditableDocument(document);
     return document;
   }
 
-  createDocument(options: { name?: string; documentId?: string } = {}, commandOptions: CommandOptions = {}): DeckDocument {
+  readDeckDocument(documentId: string, revision?: number): DeckDocument {
+    const document = this.readDocument(documentId, revision);
+    if (document.kind !== 'deck') throw new RuntimeError('invalid', `Document ${documentId} is not a Deck.`);
+    return document;
+  }
+
+  readWebDocument(documentId: string, revision?: number): WebDocument {
+    const document = this.readDocument(documentId, revision);
+    if (document.kind !== 'web') throw new RuntimeError('invalid', `Document ${documentId} is not a Web document.`);
+    return document;
+  }
+
+  createDocument(options?: { name?: string; documentId?: string; kind?: 'deck' }, commandOptions?: CommandOptions): DeckDocument;
+  createDocument(options: { name?: string; documentId?: string; kind: 'web' }, commandOptions?: CommandOptions): WebDocument;
+  createDocument(options: { name?: string; documentId?: string; kind?: 'deck' | 'web' } = {}, commandOptions: CommandOptions = {}): EditableDocument {
     this.ensureOpen();
+    if (options.kind !== undefined && options.kind !== 'deck' && options.kind !== 'web') throw new RuntimeError('invalid', 'Document kind must be deck or web.');
     const commandId = commandOptions.commandId ?? randomUUID();
     const documentId = options.documentId ?? `document-${commandId}`;
     const request = canonicalJson({ type: 'document.create', commandId, options, actor: actor(commandOptions) });
     const previous = this.retry(commandId, request);
     if (previous) return this.readDocument(previous.documentId, previous.revision);
     if (this.store.listDocuments().some(document => document.documentId === documentId)) throw new RuntimeError('invalid', 'Document ID already exists.', { documentId });
-    const document = createDeckDocument({ documentId, name: options.name ?? 'Untitled deck', pageId: `page-${documentId}` });
-    validateDocument(document);
+    const document = options.kind === 'web'
+      ? createWebDocument({ documentId, name: options.name ?? 'Untitled website', pageId: `page-${documentId}`, rootId: `root-${documentId}` })
+      : createDeckDocument({ documentId, name: options.name ?? 'Untitled deck', pageId: `page-${documentId}` });
+    validateEditableDocument(document);
     const event = this.store.transaction(() => {
       this.store.saveDocument({ document, undo: [], redo: [] });
-      const event = this.changeEvent(document, commandId, 'Create deck', actor(commandOptions), []);
+      const event = this.changeEvent(document, commandId, document.kind === 'web' ? 'Create website' : 'Create deck', actor(commandOptions), []);
       this.store.saveCommand(request, { commandId, documentId, revision: document.revision, changedNodeIds: [], seq: event.seq }, null);
       return event;
     });
@@ -159,9 +176,9 @@ export class ProjectRuntime {
     if (!Number.isSafeInteger(command.baseRevision) || command.baseRevision < 0) throw new RuntimeError('invalid', 'baseRevision must be a non-negative integer.');
     const state = this.store.document(command.documentId);
     const base = this.store.snapshot(command.documentId, command.baseRevision);
-    let next: ReturnType<typeof applyCommand>;
+    let next: ReturnType<typeof applyEditableCommand>;
     try {
-      next = applyCommand(state.document, command, base);
+      next = applyEditableCommand(state.document, command, base);
     } catch (error) {
       if (error && typeof error === 'object') Object.assign(error, { revision: state.document.revision });
       throw error;
@@ -188,7 +205,7 @@ export class ProjectRuntime {
     const target = this.store.command(targetId)!;
     const targetRevision = direction === 'undo' ? target.beforeRevision : target.afterRevision;
     if (targetRevision === null) throw new RuntimeError('invalid', 'Document creation cannot be undone.');
-    const document = restoreDocument(state.document, this.store.snapshot(documentId, targetRevision));
+    const document = restoreEditableDocument(state.document, this.store.snapshot(documentId, targetRevision));
     const next = direction === 'undo'
       ? { document, undo: state.undo.slice(0, -1), redo: [...state.redo, targetId] }
       : { document, undo: [...state.undo, targetId], redo: state.redo.slice(0, -1) };
@@ -220,7 +237,7 @@ export class ProjectRuntime {
     if (options.runId && !this.agent.canWrite(options.runId, version.documentId)) throw new RuntimeError('cancelled', 'No active agent run owns this version restore.', { runId: options.runId });
     const state = this.store.document(version.documentId);
     this.checkHistoryBase(state.document, options);
-    const document = restoreDocument(state.document, this.store.snapshot(version.documentId, version.revision));
+    const document = restoreEditableDocument(state.document, this.store.snapshot(version.documentId, version.revision));
     return this.commit({ document, undo: [...state.undo, commandId], redo: [] }, state.document, commandId, request, `Restore ${version.name}`, actor(options));
   }
 
@@ -244,7 +261,7 @@ export class ProjectRuntime {
     try { this.store.close(); } finally { this.owner.close(); }
   }
 
-  private commit(state: StoredDocument, before: DeckDocument, commandId: string, request: string, label: string,
+  private commit(state: StoredDocument, before: EditableDocument, commandId: string, request: string, label: string,
     who: ReturnType<typeof actor>, changedNodeIds = [...new Set([...Object.keys(before.nodes), ...Object.keys(state.document.nodes)])]): CommandResult {
     const { result, event } = this.store.transaction(() => {
       this.store.saveDocument(state);
@@ -257,7 +274,7 @@ export class ProjectRuntime {
     return result;
   }
 
-  private changeEvent(document: DeckDocument, commandId: string, label: string, who: ReturnType<typeof actor>, changedNodeIds: string[]): ProjectEvent {
+  private changeEvent(document: EditableDocument, commandId: string, label: string, who: ReturnType<typeof actor>, changedNodeIds: string[]): ProjectEvent {
     return this.store.appendEvent({ projectId: this.info.projectId, eventId: randomUUID(), type: 'document.changed',
       documentId: document.documentId, revision: document.revision,
       payload: { commandId, label, ...who, changedNodeIds }, createdAt: new Date().toISOString() });
@@ -269,7 +286,7 @@ export class ProjectRuntime {
     return existing?.result;
   }
 
-  private checkHistoryBase(document: DeckDocument, options: HistoryOptions): void {
+  private checkHistoryBase(document: EditableDocument, options: HistoryOptions): void {
     if (options.baseRevision !== undefined && options.baseRevision !== document.revision) throw new RuntimeError('conflict', 'History changed. Read the current document before restoring.', { revision: document.revision });
   }
 

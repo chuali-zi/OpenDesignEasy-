@@ -1,7 +1,9 @@
 import { applyTextSteps, validateTextContent } from "./text.ts";
 import { geometryMatrix, normalizeRotation, parentToWorld, worldToParent, type Matrix } from "./geometry.ts";
 import { KernelError, invalid } from "./errors.ts";
-import type { AssetCollection, ChartData, CommandEnvelope, DeckDocument, DeckNode, DeckPage, DocumentAsset, DocumentOperation, EditPrecondition, Geometry, ImageAsset, ImageSettings, Style, TableData, ThemePatch } from "./model.ts";
+import type { AssetCollection, ChartData, CommandEnvelope, DeckDocument, DeckNode, DeckPage, DocumentAsset, DocumentOperation, EditPrecondition, EditableDocument, Geometry, ImageAsset, ImageSettings, Style, TableData, ThemePatch, WebDocument } from "./model.ts";
+import { applyWebCommand, restoreWebDocument, validateWebDocument } from "./web-kernel.ts";
+export { applyWebCommand, createWebDocument, restoreWebDocument, validateWebDocument } from "./web-kernel.ts";
 
 const clone = <T>(value: T): T => structuredClone(value);
 const equal = (a: unknown, b: unknown): boolean => JSON.stringify(a) === JSON.stringify(b);
@@ -539,4 +541,26 @@ export function restoreDocument(current: DeckDocument, snapshot: DeckDocument): 
   validateDocument(current); validateDocument(snapshot);
   if (current.documentId !== snapshot.documentId) throw new KernelError("invalid", "snapshot belongs to another document");
   const restored = clone(snapshot); restored.revision = current.revision + 1; validateDocument(restored); return restored;
+}
+
+export function validateEditableDocument(document: EditableDocument): void {
+  if (document.kind === "deck") validateDocument(document);
+  else if (document.kind === "web") validateWebDocument(document);
+  else invalid("document kind is not currently editable");
+}
+
+export function applyEditableCommand(current: EditableDocument, command: CommandEnvelope, base: EditableDocument): { document: EditableDocument; changedNodeIds: string[] } {
+  if (current.kind !== base.kind) throw new KernelError("invalid", "base and current document kinds differ");
+  if (current.kind === "web" && base.kind === "web") return applyWebCommand(current, command, base);
+  if (current.kind === "deck" && base.kind === "deck") {
+    return applyCommand(current, command, base);
+  }
+  invalid("document kind is not currently editable");
+}
+
+export function restoreEditableDocument(current: EditableDocument, snapshot: EditableDocument): EditableDocument {
+  if (current.kind !== snapshot.kind) throw new KernelError("invalid", "snapshot document kinds differ");
+  if (current.kind === "deck" && snapshot.kind === "deck") return restoreDocument(current, snapshot);
+  if (current.kind === "web" && snapshot.kind === "web") return restoreWebDocument(current, snapshot);
+  invalid("document kind is not currently editable");
 }

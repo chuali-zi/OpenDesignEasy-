@@ -2,6 +2,7 @@
 
 > 当前有效路线：**D / 全 TypeScript / Pi SDK / 直接编辑 / 多客户端**。用户于 2026-09-12 明确采用。
 > 状态截至 2026-09-20：R1 已完成 Windows 开发基线验证；R2 Deck 编辑与原生导出已完成本轮验收；R3 产品 Pi 会话已接入，现有兼容服务的共同创作、恢复与图片链路已实测通过，原生 K3 的文本、工具及截图识别也已实测通过。见[本轮验收](spec/r2-r3-validation.md)与[实施计划](spec/implementation-plan.md)。跨平台干净安装留在 R7。
+> 2026-09-26：R4 Web 文档与无头生产已进入实现，阶段检查见 [R4 记录](spec/r4-web-validation.md)。R5–R7 尚未完成。
 
 ## 阅读顺序与效力
 
@@ -27,6 +28,7 @@
 | [实施计划](spec/implementation-plan.md) | 全量替换阶段、依赖、完成标准、风险与退役 |
 | [R1 兼容性与状态](spec/r1-compatibility.md) | Node/SQLite、Pi faux、Konva/ProseMirror 验证与当前未完成项 |
 | [R2/R3 实现与验收](spec/r2-r3-validation.md) | Deck 编辑、实际 Office、产品 agent、真实兼容服务与使用入口 |
+| [R4 Web 实现与验证](spec/r4-web-validation.md) | Web 文档、无头生产、源码和 DOM 编辑的阶段进度与边界 |
 
 ## 实施状态
 
@@ -40,6 +42,7 @@
 | Node 24.21.0 与 Electron 44.3.0 utilityProcess/SQLite | R1 Windows x64 实际宿主验证通过；跨平台干净安装留到 R7 |
 | Web host、React/Vite、Konva/ProseMirror Deck 编辑与原生导出 | 完整编辑与图片/表格/图表路径通过 Chrome 4/4；实际 Office 打开及视觉复验通过 |
 | TUI、Desktop 完整产品及 Web/Deck/Doc 全部生产能力 | 后续阶段未完成 |
+| Web 文档、统一历史、CLI/host/agent、静态与 React 源码生产 | R4 进行中；2026-09-26 实际源码构建与浏览器交互/响应式检查通过，完整可视编辑和产品构建/导入继续推进 |
 | 旧数据导入与 Python 退役 | 尚未实施 |
 
 2026-09-20 已补齐图片裁切与原件、富文本、吸附/对齐、表格图表、PDF/PNG 和实际 PowerPoint 打开路径。真实兼容服务完成了讨论、生成三页、保留人工标题改动并扩展第四页、提问重启回答，以及一次实际图片生成/识图/插入/截图检查。开发检查还覆盖共享历史、输入幂等、取消、Pi 压缩、恢复和 CLI 连接 Web owner。最终完成条件与待验项见本轮验收及实施计划。

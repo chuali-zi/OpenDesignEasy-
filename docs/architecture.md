@@ -2,6 +2,7 @@
 
 > 当前采用：D 路线，2026-09-12。状态截至 2026-09-20：R1 Windows 开发基线已验证；R2 Deck 编辑/导出与 R3 产品 Pi 接入已实现，最终验收见[本轮记录](spec/r2-r3-validation.md)。完整目标架构及跨平台干净安装仍按 R4–R7 推进。
 > 依据：[PRD](prd.md)、[ADR-0006](adr/0006-full-typescript-design-platform.md)。本文替代旧分层架构。
+> 2026-09-26：Web 文档开始接入同一 runtime、历史与媒介生产链；当前 R4 交付与剩余工作见 [R4 记录](spec/r4-web-validation.md)。
 
 ## 1. 核心决策
 
@@ -43,10 +44,10 @@ apps/
   cli/                  # 项目、文档、素材、导出、agent 与 owner 接续；JSON 输出
   tui/                  # 终端交互（待 R6）
 packages/
-  document/             # Deck 模型、富文本、图片/表格/图表、命令、校验、反向操作
+  document/             # Deck / Web 模型、命令、校验、几何与历史恢复；Doc 待 R5
   runtime/              # SQLite、统一历史、可靠输入、Pi AgentSession、素材与工具服务
   editor/               # Konva 几何交互、ProseMirror 富文本与共享属性/图层控件
-  media/                # Deck SVG/PNG/PDF 与原生 PPTX；实际 Office 验证脚本
+  media/                # Deck SVG/PNG/PDF/PPTX；Web HTML/ZIP/React 源码/PNG/PDF
 ```
 
 R1 已在 Node 24.21.0 与 Electron 44.3.0 utility process 上完成 Windows x64 宿主验证。R2/R3 的当前运行路径包含 Deck 编辑、导出和 Pi 产品会话，既可由 CLI 独立使用，也可由 Web owner 提供服务。实际兼容模型完成三页生成、人工修改接续、提问重启和图片链路验证；原生 K3 的文本、工具及截图识别也已实测通过。Deck 的 Chrome 4/4 与完整视觉回归已通过。TUI、Desktop 与其他媒介能力按后续阶段推进，不调用旧 Python 填补范围。

@@ -19,7 +19,7 @@ test('uploaded image originals remain addressable independently of document revi
     const bytes = await app.inject({ url: `/api/assets/${asset.id}` });
     assert.equal(bytes.headers['content-type'], 'image/png');
     assert.equal(bytes.rawPayload.toString('base64'), base64);
-    assert.equal(runtime.readDocument(document.documentId).revision, 0);
+    assert.equal(runtime.readDeckDocument(document.documentId).revision, 0);
     assert.equal((await app.inject({ url: '/api/assets' })).json().assets.length, 1);
   } finally { await app.close(); runtime.close(); rmSync(directory, { recursive: true, force: true }); }
 });
@@ -43,15 +43,15 @@ test('Web commits share CLI state, revisions, conflicts and undo after reopen', 
     assert.deepEqual(retry.json().result, edited.json().result);
     const conflict = await app.inject({ method: 'POST', url: '/api/commands', payload: { ...move, commandId: 'stale-move', operations: [{ type: 'geometry.update', nodeId: 'shape', geometry: { x: 500 } }] } });
     assert.equal(conflict.statusCode, 409);
-    assert.equal(runtime.readDocument(document.documentId).nodes.shape!.geometry.x, 250);
+    assert.equal(runtime.readDeckDocument(document.documentId).nodes.shape!.geometry.x, 250);
     const undo = await app.inject({ method: 'POST', url: `/api/documents/${document.documentId}/undo`, payload: { baseRevision: 2 } });
     assert.equal(undo.statusCode, 200);
     assert.equal(undo.json().document.nodes.shape.geometry.x, 10);
     await app.close();
     runtime.close();
     runtime = ProjectRuntime.open(directory);
-    assert.equal(runtime.readDocument(document.documentId).revision, 3);
-    assert.equal(runtime.readDocument(document.documentId).nodes.shape!.geometry.x, 10);
+    assert.equal(runtime.readDeckDocument(document.documentId).revision, 3);
+    assert.equal(runtime.readDeckDocument(document.documentId).nodes.shape!.geometry.x, 10);
   } finally {
     await app.close(); runtime.close();
     assert.ok(resolve(directory).startsWith(resolve(tmpdir()) + sep));
