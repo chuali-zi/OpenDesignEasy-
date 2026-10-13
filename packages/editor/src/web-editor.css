@@ -77,6 +77,11 @@
 .web-editor-add { min-width: 0; margin: 0; border: 0; }
 .web-editor-add legend { color: #77837a; font-size: 10px; padding-top: 14px; }
 .web-editor-draft { min-width: 0; }
+.web-editor-multi-align { display: grid; gap: 9px; border-top: 1px solid #edf0ec; padding-top: 12px; }
+.web-editor-multi-align > strong { font-size: 11px; color: #496052; }
+.web-editor-multi-align > div { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; }
+.web-editor-multi-align button { padding: 8px 4px; border: 1px solid #dce4dc; border-radius: 4px; background: white; color: #496052; font-size: 10px; }
+.web-editor-multi-align small { color: #8d998f; font-size: 10px; line-height: 1.6; }
 .web-editor-draft-conflict { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 5px; }
 .web-editor-draft-conflict small { width: 100%; color: #965c4b; }
 .web-editor-draft-conflict button { font-size: 9px; padding: 4px; }

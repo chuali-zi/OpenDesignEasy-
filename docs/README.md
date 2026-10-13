@@ -35,6 +35,7 @@
 | [R2/R3 实现与验收](spec/r2-r3-validation.md) | Deck 编辑、实际 Office、产品 agent、真实兼容服务与使用入口 |
 | [R4 Web 实现与验证](spec/r4-web-validation.md) | Web 文档、无头生产、源码和 DOM 编辑的阶段进度与边界 |
 | [Web 源码导入与往返](spec/web-source-import.md) | OEY source ZIP 回到新可编辑文档、外部模块修改、安全边界与一般工程导入未完成项 |
+| [Web 多选与定位对齐](spec/web-selection.md) | 修饰键多选、批量样式/历史/断点、真实DOM定位对齐与测量冲突保护 |
 
 ## 实施状态
 

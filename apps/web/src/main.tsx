@@ -1,7 +1,7 @@
 import { createRoot } from 'react-dom/client';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { DeckEditor, WebEditor } from '@oeydesign/editor';
-import type { EditableDocument, DocumentOperation } from '@oeydesign/document';
+import type { EditableDocument, DocumentOperation, EditPrecondition } from '@oeydesign/document';
 import type { DesignVersion } from '@oeydesign/runtime';
 import * as api from './api.ts';
 import './style.css';
@@ -100,10 +100,10 @@ function App() {
       throw error;
     } finally { activeRequests.current -= 1; setSaving(false); }
   };
-  const apply = async (operations: DocumentOperation[], label: string, baseRevision: number) => {
+  const apply = async (operations: DocumentOperation[], label: string, baseRevision: number, preconditions: EditPrecondition[] = []) => {
     if (!project || !current.current) return;
     const documentId = current.current.documentId;
-    await act(() => api.submitOperations(project.project.projectId, documentId, operations, label, baseRevision));
+    await act(() => api.submitOperations(project.project.projectId, documentId, operations, label, baseRevision, preconditions));
   };
   const history = (direction: 'undo' | 'redo') => {
     if (current.current) {

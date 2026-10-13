@@ -1,4 +1,4 @@
-import type { CommandEnvelope, DeckDocument, EditableDocument, DocumentOperation, DocumentAsset } from '@oeydesign/document';
+import type { CommandEnvelope, DeckDocument, EditableDocument, DocumentOperation, DocumentAsset, EditPrecondition } from '@oeydesign/document';
 import type { DesignVersion, ProjectInfo } from '@oeydesign/runtime';
 
 export interface ProjectSnapshot { project: ProjectInfo; documents: EditableDocument[]; seq: number }
@@ -45,8 +45,8 @@ export const restoreVersion = (id: string, baseRevision: number): Promise<{ docu
 export const moveHistory = (id: string, direction: 'undo' | 'redo', baseRevision: number): Promise<{ document: EditableDocument }> =>
   request(`/api/documents/${encodeURIComponent(id)}/${direction}`, { baseRevision, commandId: crypto.randomUUID() });
 
-export function submitOperations(projectId: string, documentId: string, operations: DocumentOperation[], label: string, baseRevision: number): Promise<{ document: EditableDocument }> {
+export function submitOperations(projectId: string, documentId: string, operations: DocumentOperation[], label: string, baseRevision: number, preconditions: EditPrecondition[] = []): Promise<{ document: EditableDocument }> {
   const command: CommandEnvelope = { commandId: crypto.randomUUID(), projectId, documentId, actorId: 'local-user', actorKind: 'human',
-    clientId: 'web', baseRevision, preconditions: [], operations, label };
+    clientId: 'web', baseRevision, preconditions, operations, label };
   return request('/api/commands', command);
 }

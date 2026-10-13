@@ -125,7 +125,7 @@ export type EditPrecondition =
   | { type: "page.children"; pageId: string; children: string[] }
   | { type: "page.property"; pageId: string; path: "name" | "width" | "height"; value: unknown }
   | { type: "asset.exists"; assetId: string; exists?: boolean }
-  | { type: "document.property"; path: "name" | "theme"; value: unknown }
+  | { type: "document.property"; path: "name" | "theme" | "sourceModules" | "breakpoints"; value: unknown }
   | { type: "text.version"; nodeId: string; value: unknown };
 
 export type PageInsertOperation = { type: "page.insert"; page: DeckPage; index?: number };

@@ -235,6 +235,9 @@ function checkPreconditions(doc: WebDocument, command: CommandEnvelope): void {
     else if (p.type === "node.property") { if (typeof p.path !== "string" || !p.path) invalid("Web node.property requires a path"); const actual = p.path.split(".").reduce((v: any, k) => v?.[k], doc.nodes[p.nodeId]); if (!equal(actual, p.value)) throw new KernelError("conflict", "Web node property precondition failed", p.nodeId, { path: p.path, actual }); }
     else if (p.type === "node.parent") { if (doc.nodes[p.nodeId]?.parentId !== p.parentId) throw new KernelError("conflict", "Web parent precondition failed", p.nodeId); }
     else if (p.type === "document.property" && p.path === "name") { if (doc.name !== p.value) throw new KernelError("conflict", "Web document precondition failed", "name"); }
+    else if (p.type === 'document.property' && ['sourceModules', 'breakpoints'].includes(p.path)) {
+      if (!equal(doc[p.path as 'sourceModules' | 'breakpoints'], p.value)) throw new KernelError('conflict', 'Web projection changed since measurement', p.path);
+    }
     else if (p.type === "asset.exists") { if (Boolean(asset(doc, p.assetId)) !== (p.exists ?? true)) throw new KernelError("conflict", "Web asset precondition failed", p.assetId); }
     else invalid(`unsupported Web precondition: ${p.type}`);
   }
