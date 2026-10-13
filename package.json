@@ -24,6 +24,7 @@
     "check:host": "tsx scripts/ts/check-runtime-compatibility.ts",
     "check:kimi": "tsx scripts/ts/check-kimi-smoke.ts",
     "test:kimi": "tsx --test scripts/ts/kimi-smoke.test.ts",
+    "check:native-tools": "node --use-env-proxy --use-system-ca --import tsx scripts/ts/check-r3-native.ts",
     "web": "tsx apps/web/src/server/main.ts",
     "dev:web": "vite --config apps/web/vite.config.ts",
     "build:web": "vite build --config apps/web/vite.config.ts",

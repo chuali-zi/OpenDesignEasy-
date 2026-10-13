@@ -22,6 +22,7 @@
 | [系统规范](spec/system-spec.md) | 概念、命令/事件、运行入口、项目状态 |
 | [编辑文档规范](spec/editor-document-spec.md) | 三媒介模型、拖拽/缩放/图层、人机同步、冲突和撤销 |
 | [Agent 引擎](spec/agent-engine-spec.md) | Pi 公共 SDK、工具、消息、取消、上下文 |
+| [有界 Agent 验证与云交接](spec/agent-budget-validation.md) | K2.8 只读 live 范围、代理/CA 启动、预算保护、usage 与剩余验收 |
 | [设计智能](spec/design-intelligence-spec.md) | 自主创作、视觉方向、确认、参考使用与连续修改 |
 | [资料与上下文](spec/context-evidence-baseline.md) | TS 解析、原件、风格、事实、模板及模型上下文 |
 | [产物生产](spec/artifact-production-spec.md) | Web/PPTX/DOCX/PDF 生产、导入、可编辑性和格式边界 |
