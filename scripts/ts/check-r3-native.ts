@@ -1,14 +1,17 @@
 import assert from 'node:assert/strict';
+import { existsSync } from 'node:fs';
 import { writeFile } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 import { ProjectRuntime, createDesignServices } from '@oeydesign/runtime';
 
-// Separate opt-in: native Pi Kimi endpoint, only after authorization for /coding.
-process.loadEnvFile(resolve('.env'));
+// This legacy tool/vision acceptance has no whole-run token budget. Never use it
+// as a connectivity probe; check-kimi-smoke.ts is the bounded text-only entrypoint.
+if (!process.argv.includes('--live-tools')) throw new Error('Legacy tool acceptance requires separate budget authorization and --live-tools. Use check-kimi-smoke.ts for offline preflight or a bounded text probe.');
+if (existsSync(resolve('.env'))) process.loadEnvFile(resolve('.env'));
 const root = resolve(`.tmp/r3-native-${Date.now()}`);
 const runtime = ProjectRuntime.create(root, { name: 'Synthetic native protocol acceptance' });
 try {
-  runtime.agent.configure({ providerId: 'kimi-coding', modelId: 'k3', baseUrl: '', apiKeyEnv: 'API_KEY', thinkingLevel: 'low' });
+  runtime.agent.configure({ providerId: 'kimi-coding', modelId: 'k3', baseUrl: '', apiKeyEnv: process.env.KIMI_API_KEY ? 'KIMI_API_KEY' : 'API_KEY', thinkingLevel: 'low' });
   assert.equal(runtime.agent.getConfig().baseUrl, undefined, 'Native validation must not inherit the compatible BASE_URL.');
   runtime.agent.configureTools(createDesignServices(runtime));
   const document = runtime.createDocument({ name: 'Synthetic red square' });

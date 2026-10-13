@@ -18,10 +18,12 @@
   "scripts": {
     "oey": "tsx apps/cli/src/index.ts",
     "typecheck": "tsc --noEmit",
-    "test": "tsx --test packages/*/test/*.test.ts apps/*/test/*.test.ts",
+    "test": "tsx --test packages/*/test/*.test.ts apps/*/test/*.test.ts scripts/ts/*.test.ts",
     "build": "npm run typecheck && tsx scripts/ts/build.ts",
     "check:compat": "tsx scripts/ts/check-compatibility.ts",
     "check:host": "tsx scripts/ts/check-runtime-compatibility.ts",
+    "check:kimi": "tsx scripts/ts/check-kimi-smoke.ts",
+    "test:kimi": "tsx --test scripts/ts/kimi-smoke.test.ts",
     "web": "tsx apps/web/src/server/main.ts",
     "dev:web": "vite --config apps/web/vite.config.ts",
     "build:web": "vite build --config apps/web/vite.config.ts",
