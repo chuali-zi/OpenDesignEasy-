@@ -6,6 +6,7 @@ import type { DesignVersion } from '@oeydesign/runtime';
 import * as api from './api.ts';
 import './style.css';
 import { AgentPanel } from './AgentPanel.tsx';
+import { ApplicationPreview } from './ApplicationPreview.tsx';
 
 function includeDocument(documents: EditableDocument[], next: EditableDocument): EditableDocument[] {
   const index = documents.findIndex(item => item.documentId === next.documentId);
@@ -29,6 +30,7 @@ function App() {
   const [versions, setVersions] = useState<DesignVersion[] | null>(null);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [chatOpen, setChatOpen] = useState(true);
+  const [applicationPreview, setApplicationPreview] = useState(false);
   const current = useRef<EditableDocument | null>(null);
   const sequence = useRef(0);
   const snapshotSequence = useRef(-1);
@@ -40,6 +42,7 @@ function App() {
     setProject(snapshot => snapshot ? preserveCurrentDocument(snapshot, next) : snapshot);
     if (previous?.documentId === next.documentId && previous.revision >= next.revision) return;
     if (previous?.documentId !== next.documentId) {
+      setApplicationPreview(false);
       setSelectedIds([]);
       setVersions(null);
     }
@@ -164,8 +167,10 @@ function App() {
         {document?.kind === 'web' ? <><option value="build.zip">构建应用 ZIP</option><option value="html">单页 HTML</option><option value="zip">静态站点 ZIP</option><option value="pdf">PDF</option><option value="png">PNG 预览</option></> : <><option value="pdf">PDF 全部页面</option><option value="png">PNG 首页</option></>}
       </select>
       <button className="export-button" disabled={!document || saving || exporting} onClick={() => { void download(); }}>{exporting ? '正在导出…' : document?.kind === 'web' ? '导出源码 ZIP' : '导出 PPTX'} <span>↗</span></button>
+      {document?.kind === 'web' && <button disabled={saving} onClick={() => setApplicationPreview(true)}>运行应用</button>}
     </header>
     {notice && <div role="alert" className="notice">{notice}<button aria-label="关闭提示" onClick={() => setNotice('')}>×</button></div>}
+    {applicationPreview && document?.kind === 'web' && <ApplicationPreview key={document.documentId} documentId={document.documentId} revision={document.revision} onClose={() => setApplicationPreview(false)} />}
     {versions && document && <section className="version-panel" aria-label="文档版本"><div><strong>保存的版本</strong><button onClick={() => setVersions(null)}>关闭</button></div>
       <button onClick={() => { const name = window.prompt('版本名称', `版本 ${document.revision}`); if (name) void api.createVersion(document.documentId, name).then(() => loadVersions(document.documentId)).catch(error => setNotice(error.message)); }}>＋ 保存当前版本</button>
       {!versions.length && <p>将值得保留的设计存为一个版本。</p>}

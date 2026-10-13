@@ -5,6 +5,8 @@
 > 2026-09-26：R4 Web 文档、无头生产、DOM 编辑基础与受管源码构建已实现，阶段检查见 [R4 记录](spec/r4-web-validation.md)。R4 完整验收与 R5–R7 尚未完成。
 > 2026-10-13：修复媒体浏览器选择与测试清理；使用缓存 Node 24.21.0 完整离线套件 81/81、Web E2E 11/11 通过。按用户指定核实 K2.8 的 `kimi-for-coding` ID；网络配置发布后的一次有界文本探针在传输阶段失败，无模型响应，未重试。见 [云环境检查](spec/cloud-kimi-validation.md)。
 
+> 后续进展：父会话报告新任务 K2.8 文本探针成功（HTTP 200，33 tokens）；本容器未复测。已补整轮 Agent 预算/超时/失败清理及离线 mock，见[有界验收](spec/agent-budget-validation.md)；R4 内置应用预览已通过实际浏览器交互检查，审美待用户审核。
+
 ## 阅读顺序与效力
 
 用户当前指令优先；产品范围由 [PRD](prd.md)规定，技术决策见 [ADR-0006](adr/0006-full-typescript-design-platform.md)，职责与依赖见 [架构](architecture.md)，详细行为由本页列出的当前 Spec 承接。实施状态只以 [实施计划](spec/implementation-plan.md)中的状态表为准。
@@ -43,7 +45,7 @@
 | Node 24.21.0 与 Electron 44.3.0 utilityProcess/SQLite | R1 Windows x64 实际宿主验证通过；跨平台干净安装留到 R7 |
 | Web host、React/Vite、Konva/ProseMirror Deck 编辑与原生导出 | 完整编辑与图片/表格/图表路径通过 Chrome 4/4；实际 Office 打开及视觉复验通过 |
 | TUI、Desktop 完整产品及 Web/Deck/Doc 全部生产能力 | 后续阶段未完成 |
-| Web 文档、统一历史、CLI/host/agent、静态与 React 源码生产 | R4 进行中；DOM 编辑基础、源码/组件绑定和生产应用 ZIP 构建已实现；完整编辑、内置组件交互预览及导入继续推进，检查见 R4 记录 |
+| Web 文档、统一历史、CLI/host/agent、静态与 React 源码生产 | R4 进行中；DOM 编辑基础、源码/组件绑定和生产应用 ZIP 构建已实现；内置组件交互预览已接入，完整编辑及导入继续推进，检查见 R4 记录 |
 | 旧数据导入与 Python 退役 | 尚未实施 |
 
 2026-09-20 已补齐图片裁切与原件、富文本、吸附/对齐、表格图表、PDF/PNG 和实际 PowerPoint 打开路径。真实兼容服务完成了讨论、生成三页、保留人工标题改动并扩展第四页、提问重启回答，以及一次实际图片生成/识图/插入/截图检查。开发检查还覆盖共享历史、输入幂等、取消、Pi 压缩、恢复和 CLI 连接 Web owner。最终完成条件与待验项见本轮验收及实施计划。

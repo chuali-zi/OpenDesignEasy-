@@ -7,9 +7,10 @@ import type { CommandEnvelope } from '@oeydesign/document';
 import { KernelError } from '@oeydesign/document';
 import { ProjectAssets, ProjectRuntime, RuntimeError } from '@oeydesign/runtime';
 import type { ProjectEvent, CommandOptions } from '@oeydesign/runtime';
-import { renderDeckSvg, renderWebHtml, exportDocumentArtifact, artifactMimeTypes } from '@oeydesign/media';
+import { renderDeckSvg, renderWebHtml, exportDocumentArtifact, artifactMimeTypes, buildWebProject } from '@oeydesign/media';
 import type { ArtifactFormat } from '@oeydesign/media';
 import { registerAgentRoutes } from './agent-routes.ts';
+import { startApplicationPreview } from './application-preview.ts';
 
 export interface WebHostOptions {
   staticRoot?: string;
@@ -23,6 +24,9 @@ export async function createWebHost(runtime: ProjectRuntime, options: WebHostOpt
   const app = Fastify({ logger: false, bodyLimit: 2 * 1024 * 1024 });
   const streams = new Set<ServerResponse>();
   const assets = new ProjectAssets(runtime);
+  let applicationPreview: Awaited<ReturnType<typeof startApplicationPreview>> | undefined;
+  let previewBuild: AbortController | undefined;
+  app.addHook('onClose', async () => { previewBuild?.abort(); await applicationPreview?.close(); });
   registerAgentRoutes(app, runtime, streams);
   const statusCodes: Record<string, number> = { invalid: 400, conflict: 409, locked: 423, not_found: 404, busy: 409, cancelled: 409 };
   app.setErrorHandler((error, _request, reply) => {
@@ -46,6 +50,23 @@ export async function createWebHost(runtime: ProjectRuntime, options: WebHostOpt
     return { project: runtime.project, documents: runtime.listDocuments(), seq: events.at(-1)?.seq ?? 0 };
   });
   app.get('/api/assets', () => ({ assets: assets.list() }));
+  app.post<{ Params: { id: string } }>('/api/documents/:id/application-preview', async (request, reply) => {
+    if (previewBuild) throw new RuntimeError('busy', 'An application preview is already building.');
+    const document = runtime.readWebDocument(request.params.id);
+    const controller = new AbortController(); previewBuild = controller;
+    const stop = () => { if (!reply.raw.writableEnded) controller.abort(); };
+    reply.raw.once('close', stop);
+    try {
+      const build = await buildWebProject(document, assets.resolve, { signal: controller.signal });
+      controller.signal.throwIfAborted();
+      const next = await startApplicationPreview(build, document.pages.map(page => page.route.replace(/\/$/, '') || '/'));
+      if (controller.signal.aborted) { await next.close(); controller.signal.throwIfAborted(); }
+      await applicationPreview?.close();
+      if (controller.signal.aborted) { await next.close(); controller.signal.throwIfAborted(); }
+      applicationPreview = next;
+      return { url: next.url, documentId: build.documentId, revision: build.revision };
+    } finally { previewBuild = undefined; reply.raw.removeListener('close', stop); }
+  });
   app.get('/api/exports', () => ({ exports: runtime.listRecords('exports').map(record => record.value) }));
   app.get<{ Params: { id: string } }>('/api/exports/:id', async (request, reply) => {
     const result = runtime.getRecord<{ filename: string; format: string }>('exports', request.params.id);

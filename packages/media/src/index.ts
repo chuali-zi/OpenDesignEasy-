@@ -271,4 +271,5 @@ export { exportDeckPdf, renderDeckPng } from "./raster.ts";
 export { renderWebHtml, exportWebZip, buildWebSource, exportWebSourceZip, renderWebPng, exportWebPdf } from "./web.ts";
 export { renderWebMarkup, renderWebStyles } from "./web-markup.ts";
 export { buildWebProject, exportWebBuildZip } from "./web-build.ts";
+export type { WebProjectBuild } from './web-build.ts';
 export * from "./artifact.ts";

@@ -75,3 +75,11 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .app-header > select[aria-label="其他导出格式"] { max-width: 100px; font-size: 11px; padding: 8px 4px; border: 1px solid #dce2db; border-radius: 5px; }
 @media(max-width: 1250px) { .agent-panel { width: 260px; flex-basis: 260px; } .app-header { gap: 9px; padding: 0 15px; } }
 @media(max-width: 1080px) { .project-name, .save-state { display: none; } .app-header { gap: 12px; } .document-select { margin-right: auto; } }
+
+.application-preview { position: fixed; inset: 0; width: 92vw; height: 90vh; max-width: none; max-height: none; box-sizing: border-box; flex-direction: column; padding: 18px; background: #fff; border: 1px solid #c9d4cb; border-radius: 12px; box-shadow: 0 12px 80px #193b3455; }
+.application-preview[open] { display: flex; }
+.application-preview::backdrop { background: #193b3455; }
+.application-preview header { display: flex; gap: 12px; align-items: center; margin-bottom: 12px; }
+.application-preview header div { flex: 1; }
+.application-preview p { margin: 6px 0; }
+.application-preview iframe { width: 100%; flex: 1; min-height: 0; border: 1px solid #d8e0da; border-radius: 6px; }
