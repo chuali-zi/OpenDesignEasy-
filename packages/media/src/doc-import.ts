@@ -437,5 +437,5 @@ export function prepareDocxImport(bytes: Uint8Array, options: {
     source.stylesSnapshot = structuredClone(doc.styles);
     source.fingerprint = docFingerprint(doc);
     validateDocDocument(doc);
-    return { document: doc, images, warnings: ['支持正文/样式/平面列表/矩形表格/章节/默认页眉页脚/行内PNG/JPEG；复杂域、合并格和浮动对象明确拒绝。原始模板完整保留。'] };
+    return { document: doc, images, warnings: ['支持正文/样式/平面列表/矩形表格/章节/默认页眉页脚/PNG/JPEG及有限浮动图片/矩形椭圆文字框；复杂域、合并格与其他锚点/环绕拒绝。原始模板完整保留。'] };
 }

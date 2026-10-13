@@ -1,3 +1,5 @@
+import {DocPageFrames,type DocPaginationOptions} from './DocPageFrames.tsx';
+import {createDocFieldView} from './doc-page-layout.ts';
 import { createDocFloatingView } from './DocFloatingView.ts';
 import { baseKeymap, setBlockType } from 'prosemirror-commands';
 import { keymap } from 'prosemirror-keymap';
@@ -12,6 +14,7 @@ import { editorTextSchema } from './editor-text-schema.ts';
 
 export type RichTextEditorProps = {
   schema?: Schema;
+  docPagination?: DocPaginationOptions;
   assetUrl?: (id:string)=>string;
   onImportImage?: (file: File) => Promise<ImageAsset>;
   documentId: string;
@@ -29,7 +32,7 @@ export type RichTextEditorProps = {
 const FONT_CHOICES = ['Noto Sans CJK SC', 'Segoe UI', 'Arial', 'Georgia', 'Aptos', 'Microsoft YaHei', 'Noto Sans'];
 type PendingFocusRestore = { view: EditorView; selection: Selection; moved: boolean; cleanup: () => void };
 
-export function RichTextEditor({ schema = editorTextSchema, assetUrl, onImportImage, documentId, nodeId, content, revision, disabled, focused = false, baseStyle, onCommit, onConflict, onDraftChange }: RichTextEditorProps) {
+export function RichTextEditor({ schema = editorTextSchema, docPagination, assetUrl, onImportImage, documentId, nodeId, content, revision, disabled, focused = false, baseStyle, onCommit, onConflict, onDraftChange }: RichTextEditorProps) {
   const docJson = (value: PMNodeJSON) => schema.nodeFromJSON(value);
   const docMode = !!schema.nodes.table;
   const plugins = () => docMode ? [keymap({'Enter':splitListItem(schema.nodes.list_item!),'Mod-[':liftListItem(schema.nodes.list_item!)}),keymap(baseKeymap)] : [];
@@ -135,7 +138,7 @@ export function RichTextEditor({ schema = editorTextSchema, assetUrl, onImportIm
     const state = EditorState.create({ schema, doc, plugins: plugins() });
     const view = new EditorView(host, {
       state,
-      ...(docMode?{nodeViews:{floating_image:(node,view,getPos)=>createDocFloatingView(node,view,getPos,assetUrl ?? (()=>''),()=>{if(stepsRef.current.length){void flush();return false;}return !savingRef.current;}),floating_shape:(node,view,getPos)=>createDocFloatingView(node,view,getPos,assetUrl ?? (()=>''),()=>{if(stepsRef.current.length){void flush();return false;}return !savingRef.current;})}}:{}),
+      ...(docMode?{nodeViews:{doc_field:createDocFieldView,floating_image:(node,view,getPos)=>createDocFloatingView(node,view,getPos,assetUrl ?? (()=>''),()=>{if(stepsRef.current.length){void flush();return false;}return !savingRef.current;}),floating_shape:(node,view,getPos)=>createDocFloatingView(node,view,getPos,assetUrl ?? (()=>''),()=>{if(stepsRef.current.length){void flush();return false;}return !savingRef.current;})}}:{}),
       editable: () => !propsRef.current.disabled && !savingRef.current,
       attributes: { class: 'editor-rich-text-surface', 'aria-label': '富文本内容' },
       handleDOMEvents: {
@@ -153,7 +156,7 @@ export function RichTextEditor({ schema = editorTextSchema, assetUrl, onImportIm
           next.doc.descendants((node,pos)=>{ if (!node.type.spec.attrs?.id) return; const current=node.attrs.id; if (!current || ids.has(current)) { const id=crypto.randomUUID(); ids.add(id); fix.setNodeMarkup(pos,undefined,{...node.attrs,id}); } else ids.add(current); });
           if (fix.steps.length) { next=next.apply(fix); stepsRef.current.push(...transaction.steps.map(step=>step.toJSON())); transaction=fix; }
         }
-        view.updateState(next);
+        view.updateState(next);view.dom.dispatchEvent(new CustomEvent('doc-pagination-content',{bubbles:true}));
         syncToolbar(next);
         if (transaction.steps.length) {
           stepsRef.current.push(...transaction.steps.map(step => step.toJSON()));
@@ -187,7 +190,7 @@ export function RichTextEditor({ schema = editorTextSchema, assetUrl, onImportIm
     };
     // nodeId intentionally owns an editor instance; external document changes are synchronized below.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [documentId, nodeId, flush]);
+  }, [documentId, nodeId, flush, schema]);
 
   const editorDocumentIdRef = useRef(documentId);
   useEffect(() => {
@@ -391,7 +394,7 @@ export function RichTextEditor({ schema = editorTextSchema, assetUrl, onImportIm
       <label><input aria-label="锁定浮动对象" type="checkbox" checked={objectAttrs.locked} disabled={disabled||saving} onChange={e=>updateObject('locked',e.currentTarget.checked)} />锁定</label>
       {objectAttrs.kind==='floating_shape'&&<><textarea key={`${objectAttrs.id}-${objectAttrs.text}`} aria-label="浮动文字" defaultValue={objectAttrs.text} disabled={disabled||saving||objectAttrs.locked} onBlur={e=>{if(e.currentTarget.value!==objectAttrs.text)updateObject('text',e.currentTarget.value);}} />{['fill','stroke','color'].map(key=><label key={key}>{key}<input aria-label={`浮动${key}`} type="color" value={objectAttrs[key]} disabled={disabled||saving||objectAttrs.locked} onChange={e=>updateObject(key,e.currentTarget.value)} /></label>)}</>}
     </div>}
-    <div ref={hostRef} className="editor-rich-host" onBlur={event => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) void flush(); }} />
+    <DocPageFrames hostRef={hostRef} schema={schema} options={docPagination}/>
     <small className="editor-rich-status">{saving ? '正在保存文字…' : '支持段落、中文输入和所选文字格式'}</small>
   </section>;
 }
