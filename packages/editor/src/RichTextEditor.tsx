@@ -1,3 +1,5 @@
+import {DocPageFrames,type DocPaginationOptions} from './DocPageFrames.tsx';
+import {createDocFieldView} from './doc-page-layout.ts';
 import { createDocFloatingView } from './DocFloatingView.ts';
 import { baseKeymap, setBlockType } from 'prosemirror-commands';
 import { keymap } from 'prosemirror-keymap';
@@ -5,13 +7,13 @@ import { wrapInList, splitListItem, liftListItem } from 'prosemirror-schema-list
 import type { Schema } from 'prosemirror-model';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { PMNodeJSON, ImageAsset } from '@oeydesign/document';
-import { EditorState, NodeSelection } from 'prosemirror-state';
-import type { Selection } from 'prosemirror-state';
+import { EditorState, NodeSelection, Selection } from 'prosemirror-state';
 import { EditorView } from 'prosemirror-view';
 import { editorTextSchema } from './editor-text-schema.ts';
 
 export type RichTextEditorProps = {
   schema?: Schema;
+  docPagination?: DocPaginationOptions;
   assetUrl?: (id:string)=>string;
   onImportImage?: (file: File) => Promise<ImageAsset>;
   documentId: string;
@@ -29,7 +31,9 @@ export type RichTextEditorProps = {
 const FONT_CHOICES = ['Noto Sans CJK SC', 'Segoe UI', 'Arial', 'Georgia', 'Aptos', 'Microsoft YaHei', 'Noto Sans'];
 type PendingFocusRestore = { view: EditorView; selection: Selection; moved: boolean; cleanup: () => void };
 
-export function RichTextEditor({ schema = editorTextSchema, assetUrl, onImportImage, documentId, nodeId, content, revision, disabled, focused = false, baseStyle, onCommit, onConflict, onDraftChange }: RichTextEditorProps) {
+export function RichTextEditor({ schema: requestedSchema = editorTextSchema, docPagination, assetUrl, onImportImage, documentId, nodeId, content, revision, disabled, focused = false, baseStyle, onCommit, onConflict, onDraftChange }: RichTextEditorProps) {
+  const [schema,setSchema]=useState(requestedSchema);
+  const selectionSnapshot=useRef<{documentId:string;nodeId:string;json:unknown;expectedDoc:string;focused:boolean}|null>(null);
   const docJson = (value: PMNodeJSON) => schema.nodeFromJSON(value);
   const docMode = !!schema.nodes.table;
   const plugins = () => docMode ? [keymap({'Enter':splitListItem(schema.nodes.list_item!),'Mod-[':liftListItem(schema.nodes.list_item!)}),keymap(baseKeymap)] : [];
@@ -41,6 +45,7 @@ export function RichTextEditor({ schema = editorTextSchema, assetUrl, onImportIm
   const [importingImage, setImportingImage] = useState(false);
   const hostRef = useRef<HTMLDivElement | null>(null);
   const viewRef = useRef<EditorView | null>(null);
+  useEffect(()=>{if(schema===requestedSchema)return;const view=viewRef.current;let frame=0;const apply=()=>{frame=requestAnimationFrame(()=>setSchema(requestedSchema));};if(view?.composing){view.dom.addEventListener('compositionend',apply,{once:true});return()=>{view.dom.removeEventListener('compositionend',apply);if(frame)cancelAnimationFrame(frame);};}setSchema(requestedSchema);},[requestedSchema,schema]);
   const stepsRef = useRef<unknown[]>([]);
   const committedDocRef = useRef(docJson(content));
   const baseRevisionRef = useRef(revision);
@@ -132,10 +137,11 @@ export function RichTextEditor({ schema = editorTextSchema, assetUrl, onImportIm
     const doc = docJson(content);
     committedDocRef.current = doc;
     baseRevisionRef.current = revision;
-    const state = EditorState.create({ schema, doc, plugins: plugins() });
+    let selection:Selection|undefined;const previousSelection=selectionSnapshot.current;if(previousSelection?.documentId===documentId&&previousSelection.nodeId===nodeId){try{selection=Selection.fromJSON(doc,previousSelection.json);}catch{}}
+    const state = EditorState.create({ schema, doc,selection, plugins: plugins() });
     const view = new EditorView(host, {
       state,
-      ...(docMode?{nodeViews:{floating_image:(node,view,getPos)=>createDocFloatingView(node,view,getPos,assetUrl ?? (()=>''),()=>{if(stepsRef.current.length){void flush();return false;}return !savingRef.current;}),floating_shape:(node,view,getPos)=>createDocFloatingView(node,view,getPos,assetUrl ?? (()=>''),()=>{if(stepsRef.current.length){void flush();return false;}return !savingRef.current;})}}:{}),
+      ...(docMode?{nodeViews:{doc_field:createDocFieldView,floating_image:(node,view,getPos)=>createDocFloatingView(node,view,getPos,assetUrl ?? (()=>''),()=>{if(stepsRef.current.length){void flush();return false;}return !savingRef.current;}),floating_shape:(node,view,getPos)=>createDocFloatingView(node,view,getPos,assetUrl ?? (()=>''),()=>{if(stepsRef.current.length){void flush();return false;}return !savingRef.current;})}}:{}),
       editable: () => !propsRef.current.disabled && !savingRef.current,
       attributes: { class: 'editor-rich-text-surface', 'aria-label': '富文本内容' },
       handleDOMEvents: {
@@ -153,7 +159,7 @@ export function RichTextEditor({ schema = editorTextSchema, assetUrl, onImportIm
           next.doc.descendants((node,pos)=>{ if (!node.type.spec.attrs?.id) return; const current=node.attrs.id; if (!current || ids.has(current)) { const id=crypto.randomUUID(); ids.add(id); fix.setNodeMarkup(pos,undefined,{...node.attrs,id}); } else ids.add(current); });
           if (fix.steps.length) { next=next.apply(fix); stepsRef.current.push(...transaction.steps.map(step=>step.toJSON())); transaction=fix; }
         }
-        view.updateState(next);
+        view.updateState(next);view.dom.dispatchEvent(new CustomEvent('doc-pagination-content',{bubbles:true}));
         syncToolbar(next);
         if (transaction.steps.length) {
           stepsRef.current.push(...transaction.steps.map(step => step.toJSON()));
@@ -164,12 +170,14 @@ export function RichTextEditor({ schema = editorTextSchema, assetUrl, onImportIm
         if (stepsRef.current.length) scheduleFlush();
       },
     });
-    viewRef.current = view;
+    viewRef.current = view;if(previousSelection?.documentId===documentId&&previousSelection.nodeId===nodeId&&previousSelection.focused)view.focus();
+    if(previousSelection?.expectedDoc===JSON.stringify(doc.toJSON())&&(!previousSelection.focused||view.hasFocus()))selectionSnapshot.current=null;
     syncToolbar(view.state);
     const onBlur = () => { if (timerRef.current) { clearTimeout(timerRef.current); timerRef.current = null; } void flush(); };
     view.dom.addEventListener('blur', onBlur, true);
     view.dom.addEventListener('compositionend', scheduleFlush);
     return () => {
+      selectionSnapshot.current={documentId,nodeId,json:view.state.selection.toJSON(),expectedDoc:JSON.stringify(view.state.doc.toJSON()),focused:view.hasFocus()};
       if (timerRef.current) clearTimeout(timerRef.current);
       timerRef.current = null;
       // Selection changes can unmount this editor before the debounce fires. Start
@@ -187,7 +195,7 @@ export function RichTextEditor({ schema = editorTextSchema, assetUrl, onImportIm
     };
     // nodeId intentionally owns an editor instance; external document changes are synchronized below.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [documentId, nodeId, flush]);
+  }, [documentId, nodeId, flush, schema]);
 
   const editorDocumentIdRef = useRef(documentId);
   useEffect(() => {
@@ -228,7 +236,9 @@ export function RichTextEditor({ schema = editorTextSchema, assetUrl, onImportIm
     stepsRef.current = [];
     committedDocRef.current = incoming;
     baseRevisionRef.current = revision;
-    view.updateState(EditorState.create({ schema, doc: incoming, plugins: plugins() }));
+    let restoredSelection:Selection|undefined;const pendingSelection=selectionSnapshot.current;
+    if(pendingSelection?.documentId===documentId&&pendingSelection.nodeId===nodeId&&pendingSelection.expectedDoc===incomingJson){try{restoredSelection=Selection.fromJSON(incoming,pendingSelection.json);if(!pendingSelection.focused)selectionSnapshot.current=null;}catch{}}
+    view.updateState(EditorState.create({ schema, doc: incoming, selection:restoredSelection, plugins: plugins() }));
     syncToolbar(view.state);
     propsRef.current.onConflict();
   }, [content, documentId, revision, schema]);
@@ -236,7 +246,7 @@ export function RichTextEditor({ schema = editorTextSchema, assetUrl, onImportIm
   useEffect(() => { if (focused) viewRef.current?.focus(); }, [focused]);
 
   function syncToolbar(state: EditorState) {
-    const selected=(state.selection as Selection & {node?: typeof state.doc}).node;setObjectAttrs(selected && ['floating_image','floating_shape'].includes(selected.type.name)?{...selected.attrs,kind:selected.type.name}:null);
+    const selected=(state.selection as Selection & {node?: typeof state.doc}).node;setObjectAttrs(selected && ['inline_image','floating_image','floating_shape'].includes(selected.type.name)?{...selected.attrs,kind:selected.type.name}:null);
     const marks = state.storedMarks ?? state.selection.$from.marks();
     const style = marks.find(mark => mark.type === schema.marks.textStyle);
     const font = style?.attrs.fontFamily;
@@ -265,6 +275,11 @@ export function RichTextEditor({ schema = editorTextSchema, assetUrl, onImportIm
   useEffect(() => {
     const view = viewRef.current;
     view?.setProps({ editable: () => !propsRef.current.disabled && !savingRef.current });
+    const snapshot=selectionSnapshot.current;
+    if(view&&!disabled&&!saving&&!savingRef.current&&snapshot?.focused&&snapshot.documentId===documentId&&snapshot.nodeId===nodeId&&snapshot.expectedDoc===JSON.stringify(view.state.doc.toJSON())){
+      const active=view.dom.ownerDocument.activeElement;selectionSnapshot.current=null;
+      if(!active||active===view.dom.ownerDocument.body||view.dom.contains(active)){try{view.dispatch(view.state.tr.setSelection(Selection.fromJSON(view.state.doc,snapshot.json)));view.focus();}catch{}}
+    }
     const pending = focusRestoreRef.current;
     if (!pending || disabled || saving) return;
     pending.cleanup();
@@ -277,7 +292,7 @@ export function RichTextEditor({ schema = editorTextSchema, assetUrl, onImportIm
     if (!view.state.selection.eq(pending.selection)) {
       view.dispatch(view.state.tr.setSelection(pending.selection));
     }
-  }, [disabled, saving]);
+  }, [disabled, saving, revision, schema]);
 
   function toggleMark(name: 'strong' | 'em' | 'underline' | 'strike') {
     const view = viewRef.current;
@@ -341,7 +356,7 @@ export function RichTextEditor({ schema = editorTextSchema, assetUrl, onImportIm
     view.dispatch(view.state.tr.replaceSelectionWith(schema.nodes.table!.create(null,[row(),row(),row()])));view.focus();
   }
   function insertFloating(type:'floating_image'|'floating_shape',attrs:Record<string,unknown>={}){const view=viewRef.current;if(!view)return;const $from=view.state.selection.$from;let pos=$from.pos;for(let d=$from.depth;d>0;d--)if(['paragraph','heading'].includes($from.node(d).type.name)){pos=$from.start(d);break;}view.dispatch(view.state.tr.insert(pos,schema.nodes[type]!.create(attrs)));view.focus();}
-  function updateObject(key:string,value:unknown){const view=viewRef.current;if(!view||!objectAttrs)return;const selected=(view.state.selection as Selection & {node?:typeof view.state.doc}).node;if(!selected||!['floating_image','floating_shape'].includes(selected.type.name)||selected.attrs.locked&&key!=='locked')return;const pos=view.state.selection.from,tr=view.state.tr.setNodeMarkup(pos,undefined,{...selected.attrs,[key]:value});tr.setSelection(NodeSelection.create(tr.doc,pos));view.dispatch(tr);view.focus();}
+  function updateObject(key:string,value:unknown){const view=viewRef.current;if(!view||!objectAttrs)return;const selected=(view.state.selection as Selection & {node?:typeof view.state.doc}).node;if(!selected||!['inline_image','floating_image','floating_shape'].includes(selected.type.name)||selected.attrs.locked&&key!=='locked')return;const pos=view.state.selection.from,tr=view.state.tr.setNodeMarkup(pos,undefined,{...selected.attrs,[key]:value});tr.setSelection(NodeSelection.create(tr.doc,pos));view.dispatch(tr);view.focus();}
   function blockType(type:string) { const view=viewRef.current;if(!view)return;setBlockType(schema.nodes[type==='p'?'paragraph':'heading']!,type==='p'?{}:{level:Number(type)})(view.state,tr=>view.dispatch(tr));view.focus(); }
   return <section className="editor-rich-text" aria-label="富文本编辑器">
     <div className="editor-rich-toolbar" role="toolbar" aria-label="文字格式">
@@ -385,13 +400,14 @@ export function RichTextEditor({ schema = editorTextSchema, assetUrl, onImportIm
       <input ref={imageInput} hidden aria-label="插入文档图片" type="file" accept="image/png,image/jpeg" onChange={e=>{const file=e.currentTarget.files?.[0];e.currentTarget.value='';const view=viewRef.current;if(!file||!view)return;setImportingImage(true);void onImportImage(file).then(asset=>{if(view.isDestroyed||viewRef.current!==view)return;assetsRef.current.push(asset);const width=Math.min(360,asset.width);if(floatingImage)insertFloating('floating_image',{assetId:asset.id,width,height:width*asset.height/asset.width,alt:asset.name ?? ''});else view.dispatch(view.state.tr.replaceSelectionWith(schema.nodes.inline_image!.create({assetId:asset.id,width,height:width*asset.height/asset.width,alt:asset.name ?? ''})));view.focus();}).catch(()=>propsRef.current.onConflict()).finally(()=>setImportingImage(false));}} /></>}
     </div>}
     {objectAttrs&&<div className="doc-object-properties" aria-label="浮动对象属性">
-      <strong>{objectAttrs.kind==='floating_image'?'浮动图片':'浮动图形 / 文字框'}</strong>
-      {['x','y','width','height','rotation'].map(key=><label key={`${objectAttrs.id}-${key}-${objectAttrs[key]}`}>{({x:'X',y:'Y',width:'宽',height:'高',rotation:'旋转'} as Record<string,string>)[key]}<input aria-label={`浮动${key}`} type="number" defaultValue={objectAttrs[key]} disabled={disabled||saving||objectAttrs.locked} onBlur={e=>{const value=Number(e.currentTarget.value);if(Number.isFinite(value)&&value!==objectAttrs[key])updateObject(key,value);}} /></label>)}
-      <select aria-label="浮动环绕" value={objectAttrs.wrap} disabled={disabled||saving||objectAttrs.locked} onChange={e=>updateObject('wrap',e.currentTarget.value)}><option value="topBottom">上下环绕</option><option value="none">覆盖正文</option></select>
-      <label><input aria-label="锁定浮动对象" type="checkbox" checked={objectAttrs.locked} disabled={disabled||saving} onChange={e=>updateObject('locked',e.currentTarget.checked)} />锁定</label>
-      {objectAttrs.kind==='floating_shape'&&<><textarea key={`${objectAttrs.id}-${objectAttrs.text}`} aria-label="浮动文字" defaultValue={objectAttrs.text} disabled={disabled||saving||objectAttrs.locked} onBlur={e=>{if(e.currentTarget.value!==objectAttrs.text)updateObject('text',e.currentTarget.value);}} />{['fill','stroke','color'].map(key=><label key={key}>{key}<input aria-label={`浮动${key}`} type="color" value={objectAttrs[key]} disabled={disabled||saving||objectAttrs.locked} onChange={e=>updateObject(key,e.currentTarget.value)} /></label>)}</>}
+      <strong>{objectAttrs.kind==='inline_image'?'行内图片':objectAttrs.kind==='floating_image'?'浮动图片':'浮动图形 / 文字框'}</strong>
+      {(objectAttrs.kind==='inline_image'?['width','height']:['x','y','width','height','rotation']).map(key=><label key={`${objectAttrs.id}-${key}-${objectAttrs[key]}`}>{({x:'X',y:'Y',width:'宽',height:'高',rotation:'旋转'} as Record<string,string>)[key]}<input aria-label={`${objectAttrs.kind==='inline_image'?'行内图片':'浮动'}${key}`} type="number" defaultValue={objectAttrs[key]} disabled={disabled||saving||objectAttrs.locked} onBlur={e=>{const value=Number(e.currentTarget.value);if(Number.isFinite(value)&&value!==objectAttrs[key])updateObject(key,value);}} /></label>)}
+      {objectAttrs.kind!=='inline_image'&&<><select aria-label="浮动环绕" value={objectAttrs.wrap} disabled={disabled||saving||objectAttrs.locked} onChange={e=>updateObject('wrap',e.currentTarget.value)}><option value="topBottom">上下环绕</option><option value="none">覆盖正文</option></select>
+      <label><input aria-label="锁定浮动对象" type="checkbox" checked={objectAttrs.locked} disabled={disabled||saving} onChange={e=>updateObject('locked',e.currentTarget.checked)} />锁定</label></>}
+      {['inline_image','floating_image'].includes(objectAttrs.kind)&&<label>图片说明<input key={`${objectAttrs.id}-${objectAttrs.alt}`} aria-label="图片说明" defaultValue={objectAttrs.alt} disabled={disabled||saving||objectAttrs.locked} onBlur={e=>{if(e.currentTarget.value!==objectAttrs.alt)updateObject('alt',e.currentTarget.value);}}/></label>}
+      {objectAttrs.kind==='floating_shape'&&<><textarea key={`${objectAttrs.id}-${objectAttrs.text}`} aria-label="浮动文字" defaultValue={objectAttrs.text} disabled={disabled||saving||objectAttrs.locked} onBlur={e=>{if(e.currentTarget.value!==objectAttrs.text)updateObject('text',e.currentTarget.value);}} />{['fill','stroke','color'].map(key=><label key={key}>{key}<input aria-label={`${objectAttrs.kind==='inline_image'?'行内图片':'浮动'}${key}`} type="color" value={objectAttrs[key]} disabled={disabled||saving||objectAttrs.locked} onChange={e=>updateObject(key,e.currentTarget.value)} /></label>)}</>}
     </div>}
-    <div ref={hostRef} className="editor-rich-host" onBlur={event => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) void flush(); }} />
+    <DocPageFrames hostRef={hostRef} schema={schema} options={docPagination}/>
     <small className="editor-rich-status">{saving ? '正在保存文字…' : '支持段落、中文输入和所选文字格式'}</small>
   </section>;
 }

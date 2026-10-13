@@ -359,6 +359,7 @@ export function prepareDocxImport(bytes: Uint8Array, options: {
     let headerPart: string | undefined, footerPart: string | undefined;
     const locate=(root:XmlNode,target:XmlNode,path:number[]=[]):number[]|undefined=>{if(root===target)return path;for(let i=0;i<root.children.length;i++){const found=locate(root.children[i]!,target,[...path,i]);if(found)return found;}};
     const finish = (props: XmlNode | undefined) => {
+        if(props&&descendants(props,'cols').some(n=>Number(attr(n,'num')??'1')!==1||children(n,'col').length>0))reject('multiple text columns/custom column widths are outside editable template support');
         const id = key('section'), page = { ...doc.pageSettings }, size = props && child(props, 'pgSz'), margin = props && child(props, 'pgMar');
         for (const [a, b] of [['w', 'width'], ['h', 'height']] as const) {
             const n = real(attr(size, a));
@@ -437,5 +438,5 @@ export function prepareDocxImport(bytes: Uint8Array, options: {
     source.stylesSnapshot = structuredClone(doc.styles);
     source.fingerprint = docFingerprint(doc);
     validateDocDocument(doc);
-    return { document: doc, images, warnings: ['支持正文/样式/平面列表/矩形表格/章节/默认页眉页脚/行内PNG/JPEG；复杂域、合并格和浮动对象明确拒绝。原始模板完整保留。'] };
+    return { document: doc, images, warnings: ['支持正文/样式/平面列表/矩形表格/章节/默认页眉页脚/PNG/JPEG及有限浮动图片/矩形椭圆文字框；复杂域、合并格与其他锚点/环绕拒绝。原始模板完整保留。'] };
 }
