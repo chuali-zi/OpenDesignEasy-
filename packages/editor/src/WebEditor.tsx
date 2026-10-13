@@ -5,7 +5,7 @@ import { escapeWebText, renderWebMarkup, renderWebStyles, webVoidTags } from '@o
 import { WebDraftField } from './WebDraftField.tsx';
 import { WebRichTextEditor } from './WebRichTextEditor.tsx';
 import { WEB_RICH_TEXT_TAGS } from '@oeydesign/document';
-import { nextWebSelection, webBatchStyles, webAlignmentOperations, webAlignmentPreconditions, webPixelCoordinate, webNodeLocked } from './web-selection.ts';
+import { nextWebSelection, webBatchStyles, webAlignmentOperations, webAlignmentPreconditions, webPixelCoordinate, webNodeLocked, webRangeSelection, webSelectionRoots, webDuplicateSelection, webDeleteSelection } from './web-selection.ts';
 import type { WebAlignment, WebBounds } from './web-selection.ts';
 import './web-editor.css';
 
@@ -54,6 +54,8 @@ export function WebEditor({ document, onApply, onUndo, onRedo, onImportAsset, di
   const [previewDocument, setPreviewDocument] = useState(document);
   const [sourceOpen, setSourceOpen] = useState(false);
   const [richOpen, setRichOpen] = useState(false);
+  const [boxMode, setBoxMode] = useState(false);
+  const selectionAnchor = useRef('');
   const [sourceId, setSourceId] = useState('');
   const [sourceDraft, setSourceDraft] = useState('');
   const [sourceDirty, setSourceDirty] = useState(false);
@@ -78,8 +80,32 @@ export function WebEditor({ document, onApply, onUndo, onRedo, onImportAsset, di
     catch (error) { setEditorError(error instanceof Error ? error.message : String(error)); return false; }
     finally { pending.current = false; setBusy(false); }
   }, [disabled, document.revision, document.documentId, onApply]);
-  const live = useRef({ act, selection, blocked, breakpoint, overrideEnabled });
-  live.current = { act, selection, blocked, breakpoint, overrideEnabled };
+  const selectionAction = useCallback((action: 'duplicate' | 'delete') => {
+    if (blocked || !selectedIds.length) return;
+    try {
+      if (action === 'duplicate') {
+        const batch = webDuplicateSelection(document, selectedIds, uid);
+        void act(batch.operations, '复制选中元素', document.revision, batch.preconditions).then(ok => { if (ok) setSelectedIds(batch.selectedIds); });
+      } else void act(webDeleteSelection(document, selectedIds), '删除选中元素').then(ok => { if (ok) setSelection(''); });
+    } catch (error) { setEditorError(error instanceof Error ? error.message : String(error)); }
+  }, [document, selectedIds, blocked, act, setSelection]);
+  const handleKey = (event: { key: string; shiftKey: boolean; ctrlKey: boolean; metaKey: boolean; altKey: boolean; target: EventTarget | null; preventDefault: () => void }) => {
+    const target = event.target as HTMLElement | null;
+    if (target?.closest('input,textarea,select,[contenteditable="true"],.ProseMirror') || event.altKey || blocked) return;
+    const modifier = event.ctrlKey || event.metaKey;
+    if (event.key === 'Escape') { setSelection(''); setBoxMode(false); event.preventDefault(); }
+    else if (modifier && event.key.toLowerCase() === 'd') { selectionAction('duplicate'); event.preventDefault(); }
+    else if (event.key === 'Delete' || event.key === 'Backspace') { selectionAction('delete'); event.preventDefault(); }
+    else if (modifier && event.key.toLowerCase() === 'a' && page) { setSelectedIds(flatNodes.filter(item => item.node.id !== page.rootId).map(item => item.node.id)); event.preventDefault(); }
+    else if (['ArrowUp', 'ArrowDown', 'Home', 'End'].includes(event.key)) {
+      const order = flatNodes.map(item => item.node.id), current = Math.max(0, order.indexOf(selection));
+      const next = event.key === 'Home' ? 0 : event.key === 'End' ? order.length - 1 : Math.max(0, Math.min(order.length - 1, current + (event.key === 'ArrowDown' ? 1 : -1)));
+      if (order[next]) { if (event.shiftKey) setSelectedIds(webRangeSelection(order, selectionAnchor.current || selection, order[next]!)); else { setSelection(order[next]!); selectionAnchor.current = order[next]!; } }
+      event.preventDefault();
+    }
+  };
+  const live = useRef({ act, selection, selectedIds, blocked, breakpoint, overrideEnabled, handleKey });
+  live.current = { act, selection, selectedIds, blocked, breakpoint, overrideEnabled, handleKey };
   useEffect(() => { if (!dragging) setPreviewDocument(document); }, [document, dragging]);
   useEffect(() => {
     if (!document.pages.some(item => item.id === pageId)) setPageId(document.pages[0]?.id ?? '');
@@ -114,14 +140,17 @@ export function WebEditor({ document, onApply, onUndo, onRedo, onImportAsset, di
   useEffect(() => {
     const frame = iframe.current, dom = frame?.contentDocument, body = dom?.body;
     if (!frame || !dom || !body || !previewPage) return;
+    body.tabIndex = -1;
     type Gesture = { id: string; target: HTMLElement; pointerId: number; x: number; y: number; moved: boolean; resize: boolean; width: number; height: number; left: number; top: number; breakpoint?: string; originalStyle: string | null };
     let gesture: Gesture | undefined;
+    let box: { x: number; y: number; overlay: HTMLElement; additive: boolean; selected: string[]; pointerId: number } | undefined;
     let suppressClick = false;
     const restore = (done: Gesture) => { if (done.originalStyle === null) done.target.removeAttribute('style'); else done.target.setAttribute('style', done.originalStyle); };
-    const cancel = () => { if (gesture) restore(gesture); gesture = undefined; setDragging(false); };
+    const cancel = () => { if (gesture) restore(gesture); gesture = undefined; box?.overlay.remove(); if (box && body.hasPointerCapture(box.pointerId)) body.releasePointerCapture(box.pointerId); box = undefined; setDragging(false); };
     const click = (event: MouseEvent) => {
       if ((event.target as Element)?.closest('a,button,input,select,textarea')) event.preventDefault();
       if (suppressClick) { suppressClick = false; return; }
+      body.focus({ preventScroll: true });
       const target = (event.target as Element)?.closest<HTMLElement>('[data-web-id]');
       selectNode(target?.dataset.webId ?? '', event.shiftKey || event.ctrlKey || event.metaKey);
     };
@@ -132,7 +161,15 @@ export function WebEditor({ document, onApply, onUndo, onRedo, onImportAsset, di
       event.preventDefault(); setSelection(id); setRichOpen(true);
     };
     const start = (event: PointerEvent) => {
-      if (event.button !== 0 || live.current.blocked || event.shiftKey || event.ctrlKey || event.metaKey) return;
+      if (event.button !== 0 || live.current.blocked) return;
+      body.focus({ preventScroll: true });
+      if (boxMode) {
+        const overlay = dom.createElement('div'); overlay.setAttribute('data-oey-selection-box', '');
+        overlay.style.cssText = `position:fixed;pointer-events:none;z-index:2147483647;border:1px solid #398568;background:#39856822;left:${event.clientX}px;top:${event.clientY}px`;
+        body.append(overlay); box = { x: event.clientX, y: event.clientY, overlay, additive: event.shiftKey || event.ctrlKey || event.metaKey, selected: [...live.current.selectedIds], pointerId: event.pointerId };
+        body.setPointerCapture(event.pointerId); setDragging(true); event.preventDefault(); return;
+      }
+      if (event.shiftKey || event.ctrlKey || event.metaKey) return;
       const handle = (event.target as Element)?.closest<HTMLElement>('[data-oey-resize-handle]');
       const target = handle ? dom.querySelector<HTMLElement>(`[data-web-id="${CSS.escape(handle.dataset.nodeId!)}"]`) : (event.target as Element)?.closest<HTMLElement>('[data-web-id]');
       const id = target?.dataset.webId, current = id ? previewDocument.nodes[id] : undefined;
@@ -145,6 +182,11 @@ export function WebEditor({ document, onApply, onUndo, onRedo, onImportAsset, di
       setDragging(true); setSelection(id); event.preventDefault();
     };
     const move = (event: PointerEvent) => {
+      if (box) {
+        box.overlay.style.left = `${Math.min(box.x, event.clientX)}px`; box.overlay.style.top = `${Math.min(box.y, event.clientY)}px`;
+        box.overlay.style.width = `${Math.abs(event.clientX - box.x)}px`; box.overlay.style.height = `${Math.abs(event.clientY - box.y)}px`;
+        event.preventDefault(); return;
+      }
       if (!gesture) return;
       const dx = event.clientX - gesture.x, dy = event.clientY - gesture.y;
       if (Math.abs(dx) + Math.abs(dy) < 5 && !gesture.moved) return;
@@ -157,6 +199,15 @@ export function WebEditor({ document, onApply, onUndo, onRedo, onImportAsset, di
       event.preventDefault();
     };
     const end = (event: PointerEvent) => {
+      if (box) {
+        const left = Math.min(box.x, event.clientX), right = Math.max(box.x, event.clientX), top = Math.min(box.y, event.clientY), bottom = Math.max(box.y, event.clientY);
+        const inside = Array.from(dom.querySelectorAll<HTMLElement>('[data-web-id]')).filter(el => {
+          const rect = el.getBoundingClientRect(); return el.dataset.webId !== previewPage.rootId && rect.width > 0 && rect.height > 0 && rect.left >= left && rect.right <= right && rect.top >= top && rect.bottom <= bottom;
+        }).map(el => el.dataset.webId!);
+        const ids = webSelectionRoots(previewDocument, inside.length ? inside : [previewPage.rootId]).filter(node => node.id !== previewPage.rootId).map(node => node.id);
+        setSelectedIds(box.additive ? [...new Set([...box.selected, ...ids])] : ids);
+        suppressClick = true; cancel(); return;
+      }
       const done = gesture; if (!done) return;
       gesture = undefined; restore(done); setDragging(false);
       if (done.target.hasPointerCapture(done.pointerId)) done.target.releasePointerCapture(done.pointerId);
@@ -187,14 +238,17 @@ export function WebEditor({ document, onApply, onUndo, onRedo, onImportAsset, di
       }
     };
     const submit = (event: Event) => event.preventDefault();
+    const keydown = (event: KeyboardEvent) => live.current.handleKey(event);
+    body.addEventListener('keydown', keydown);
     body.addEventListener('click', click); body.addEventListener('dblclick', editText); body.addEventListener('submit', submit);
     body.addEventListener('pointerdown', start); body.addEventListener('pointermove', move); body.addEventListener('pointerup', end); body.addEventListener('pointercancel', cancel);
     return () => {
+      body.removeEventListener('keydown', keydown); box?.overlay.remove();
       body.removeEventListener('click', click); body.removeEventListener('dblclick', editText); body.removeEventListener('submit', submit);
       body.removeEventListener('pointerdown', start); body.removeEventListener('pointermove', move); body.removeEventListener('pointerup', end); body.removeEventListener('pointercancel', cancel);
       if (gesture) restore(gesture);
     };
-  }, [sourceDoc, frameEpoch, previewDocument, previewPage]);
+  }, [sourceDoc, frameEpoch, previewDocument, previewPage, boxMode]);
   useEffect(() => {
     const dom = iframe.current?.contentDocument, win = iframe.current?.contentWindow;
     if (!dom || !win) return;
@@ -245,16 +299,6 @@ export function WebEditor({ document, onApply, onUndo, onRedo, onImportAsset, di
     const module: WebSourceModule = { id: uid('source'), path, language: moduleLanguage, source: moduleLanguage === 'css' ? '/* 页面样式 */\n' : moduleLanguage === 'tsx' ? 'export function Component() {\n  return <div>新组件</div>;\n}\n' : 'export const pageTitle = "New page";\n', ...(moduleLanguage === 'tsx' ? { exports: ['Component'] } : {}) };
     void act([{ type: 'source.update', module }], '创建受管源码').then(ok => { if (ok) { setSourceId(module.id); setSourceDraft(module.source); sourceChanged.current = false; setSourceDirty(false); } });
   };
-  const duplicateNode = (source: WebNode) => {
-    if (!source.parentId) return;
-    const operations: WebOperation[] = [];
-    const copyTree = (original: WebNode, parentId: string): string => {
-      const id = uid(original.tag); operations.push({ type: 'web.node.insert', node: { ...original, id, parentId, children: [] } });
-      original.children.forEach(child => copyTree(document.nodes[child]!, id)); return id;
-    };
-    const id = copyTree(source, source.parentId);
-    void act(operations, '复制元素').then(ok => { if (ok) setSelection(id); });
-  };
   const editable = node && !locked(document, node.id) && !blocked;
   const projected = node ? projection(node, breakpoint) : undefined;
   const field = (label: string, value: string, commit: (value: string, base: number) => Promise<boolean>, options: { multiline?: boolean; disabled?: boolean; placeholder?: string; type?: 'text' | 'color' } = {}) =>
@@ -300,13 +344,16 @@ export function WebEditor({ document, onApply, onUndo, onRedo, onImportAsset, di
       void act(webAlignmentOperations(document, selectedIds, bounds, alignment, breakpoint), '对齐网页元素', document.revision, webAlignmentPreconditions(document, selectedIds));
     } catch (error) { setEditorError(error instanceof Error ? error.message : String(error)); }
   };
-  return <main className="web-editor" aria-label="Web 编辑器">
+  return <main className="web-editor" aria-label="Web 编辑器" tabIndex={-1} onKeyDown={handleKey}>
     <aside className="web-editor-side web-editor-structure">
       <div className="web-editor-heading"><div><span>DOCUMENT</span><strong>页面与图层</strong></div><button onClick={addPage} disabled={blocked}>＋ 页面</button></div>
       <div className="web-editor-pages">{document.pages.map((item, i) => <button key={item.id} className={item.id === page.id ? 'is-active' : ''} disabled={blocked || dragging} onClick={() => { setPageId(item.id); setSelection(''); }}><i>{String(i + 1).padStart(2, '0')}</i><span>{item.name}</span><small>{item.route}</small></button>)}</div>
       <div className="web-editor-heading web-editor-layer-heading"><div><span>STRUCTURE</span><strong>页面图层</strong></div><span>{flatNodes.length}</span></div>
       <div className="web-editor-tree">{flatNodes.map(({ node: item, depth }) => <div key={item.id} className={`web-editor-tree-row ${selectedIds.includes(item.id) ? 'is-selected' : ''}`} style={{ '--depth': depth } as CSSProperties}>
-        <button className="web-editor-tree-select" aria-pressed={selectedIds.includes(item.id)} disabled={blocked} onClick={event => selectNode(item.id, event.shiftKey || event.ctrlKey || event.metaKey)}><i>{item.tag.slice(0, 1).toUpperCase()}</i><span>{labelFor(item)}</span></button>
+        <button className="web-editor-tree-select" aria-pressed={selectedIds.includes(item.id)} disabled={blocked} onClick={event => {
+          if (event.shiftKey && !event.ctrlKey && !event.metaKey) setSelectedIds(webRangeSelection(flatNodes.map(row => row.node.id), selectionAnchor.current || selection, item.id));
+          else { selectNode(item.id, event.ctrlKey || event.metaKey); selectionAnchor.current = item.id; }
+        }}><i>{item.tag.slice(0, 1).toUpperCase()}</i><span>{labelFor(item)}</span></button>
         <button aria-label={`${item.hidden ? '显示' : '隐藏'} ${labelFor(item)}`} onClick={() => void act([{ type: 'web.node.update', nodeId: item.id, flags: { hidden: !item.hidden } }], '切换显示')} disabled={blocked || locked(document, item.id)}>{item.hidden ? '◌' : '◉'}</button>
         <button aria-label={`${item.locked ? '解锁' : '锁定'} ${labelFor(item)}`} onClick={() => void act([{ type: 'web.node.update', nodeId: item.id, flags: { locked: !item.locked } }], '切换锁定')} disabled={blocked || Boolean(item.parentId && locked(document, item.parentId))}>{item.locked ? '▣' : '▢'}</button>
       </div>)}</div>
@@ -315,7 +362,7 @@ export function WebEditor({ document, onApply, onUndo, onRedo, onImportAsset, di
     <section className="web-editor-stage">
       <div className="web-editor-toolbar"><div><span className="web-editor-live-dot"/>网页预览 <small>· 修订 {document.revision}</small></div><div className="web-editor-stage-controls"><label>视口 <input aria-label="预览宽度" type="range" min="320" max="1440" value={width} disabled={dragging} onChange={event => setWidth(Number(event.currentTarget.value))}/><strong>{width}px</strong></label><button aria-label="撤销" onClick={onUndo} disabled={blocked}>↶</button><button aria-label="重做" onClick={onRedo} disabled={blocked}>↷</button></div></div>
       <div className="web-editor-browser"><div className="web-editor-browser-bar"><i/><i/><i/><span>{page.route}</span><small>{breakpoint ?? '基础'}</small></div><div className="web-editor-viewport" style={{ '--preview-width': `${width}px` } as CSSProperties}><iframe ref={iframe} title="隔离网页预览" sandbox="allow-same-origin" srcDoc={sourceDoc} onLoad={() => setFrameEpoch(epoch => epoch + 1)} /></div></div>
-      <div className="web-editor-stage-foot"><span><b>提示</b> 拖动重排 · 右下角缩放 · 定位元素自由移动</span><button onClick={() => setSourceOpen(!sourceOpen)}>{sourceOpen ? '关闭源码' : '源码模块'}</button></div>
+      <div className="web-editor-stage-foot"><span><b>提示</b> {boxMode ? '拖出矩形选中完整包含的对象 · 修饰键追加' : '拖动重排 · 右下角缩放 · 定位元素自由移动'}</span><button aria-pressed={boxMode} disabled={blocked || dragging} onClick={() => setBoxMode(!boxMode)}>框选</button><button onClick={() => setSourceOpen(!sourceOpen)}>{sourceOpen ? '关闭源码' : '源码模块'}</button></div>
       {editorError && <div className="web-editor-error" role="status">{editorError}</div>}
       {richOpen && selectedIds.length === 1 && node && !node.component && WEB_RICH_TEXT_TAGS.has(node.tag) &&
         <WebRichTextEditor key={`${document.documentId}/${node.id}`} document={document} node={node} disabled={blocked || locked(document, node.id)}
@@ -326,7 +373,7 @@ export function WebEditor({ document, onApply, onUndo, onRedo, onImportAsset, di
     </section>
     <aside className="web-editor-side web-editor-inspector"><div className="web-editor-heading"><div><span>INSPECTOR</span><strong>{selectedIds.length > 1 ? `已选择 ${selectedIds.length} 个元素` : node ? labelFor(node) : '页面属性'}</strong></div></div>
       <div className="web-editor-fields">{selectedIds.length > 1 ? <>
-        <small className="web-editor-breakpoint-note">Shift / Ctrl / ⌘ 点选可添加或移除。一次批量修改对应一次撤销。</small>
+        <small className="web-editor-breakpoint-note">图层 Shift 范围选择，Ctrl / ⌘ 切换选择；画布 Shift 追加。一次批量修改对应一次撤销。</small>
         {selectedIds.some(id => webNodeLocked(document, id)) && <p role="status">选择包含锁定元素，批量修改已禁用。</p>}
         {!overrideEnabled && <button className="web-editor-override" onClick={enableOverride} disabled={blocked}>为 {breakpoint} 创建样式覆盖</button>}
         {batchField('批量文字颜色', 'color')}{batchField('批量背景色', 'backgroundColor')}
@@ -335,6 +382,7 @@ export function WebEditor({ document, onApply, onUndo, onRedo, onImportAsset, di
           <div>{([['left', '左对齐'], ['center-x', '水平居中'], ['right', '右对齐'], ['top', '顶对齐'], ['center-y', '垂直居中'], ['bottom', '底对齐'], ['distribute-x', '水平等间距'], ['distribute-y', '垂直等间距']] as const).map(([value, label]) => <button key={value} disabled={!batchEditable || !overrideEnabled || !alignmentReady || value.startsWith('distribute') && selectedIds.length < 3} onClick={() => alignSelection(value)}>{label}</button>)}</div>
           <small>同父级、绝对定位、像素尺寸且无变换。流式布局保持原样。</small>
         </section>
+        <div className="web-editor-node-actions"><button disabled={!batchEditable} onClick={() => selectionAction('duplicate')}>复制选中元素</button><button className="is-danger" disabled={!batchEditable} onClick={() => selectionAction('delete')}>删除选中元素</button></div>
         <button className="web-editor-override" onClick={() => setSelection('')}>清除选择</button>
         <small className="web-editor-breakpoint-note">{breakpoint ?? '基础样式'} · {width}px</small>
       </> : !node ? <>
@@ -371,7 +419,7 @@ export function WebEditor({ document, onApply, onUndo, onRedo, onImportAsset, di
         </>}
         {node.parentId && <label>父级容器<select aria-label="父级容器" value={node.parentId} disabled={!editable} onChange={event => void act([{ type: 'web.node.reparent', nodeId: node.id, parentId: event.currentTarget.value }], '移动到容器')}>{flatNodes.filter(item => containers.has(item.node.tag) && !item.node.component && !contains(document, node.id, item.node.id)).map(item => <option key={item.node.id} value={item.node.id}>{labelFor(item.node)}</option>)}</select></label>}
         <div className="web-editor-node-actions"><button onClick={() => moveLayer(-1)} disabled={!editable || !node.parentId}>上移</button><button onClick={() => moveLayer(1)} disabled={!editable || !node.parentId}>下移</button></div>
-        <div className="web-editor-node-actions"><button onClick={() => duplicateNode(node)} disabled={!editable || !node.parentId}>复制</button><button className="is-danger" onClick={() => void act([{ type: 'web.node.remove', nodeId: node.id }], '删除元素').then(ok => { if (ok) setSelection(''); })} disabled={!editable || !node.parentId}>删除</button></div>
+        <div className="web-editor-node-actions"><button onClick={() => selectionAction('duplicate')} disabled={!editable || !node.parentId}>复制</button><button className="is-danger" onClick={() => selectionAction('delete')} disabled={!editable || !node.parentId}>删除</button></div>
         <small className="web-editor-breakpoint-note">{breakpoint ? `${breakpoint} · ${overrideEnabled ? '保存到此断点' : '继承基础样式'}` : '基础样式'} · {width}px</small>
       </>}</div>
     </aside>

@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { createWebDocument, applyWebCommand } from '@oeydesign/document';
 import type { CommandEnvelope } from '@oeydesign/document';
-import { nextWebSelection, webBatchStyles, webAlignmentOperations, webAlignmentPreconditions } from '../src/web-selection.ts';
+import { nextWebSelection, webBatchStyles, webAlignmentOperations, webAlignmentPreconditions, webRangeSelection, webDuplicateSelection, webDeleteSelection } from '../src/web-selection.ts';
 
 function fixture() {
   const doc = createWebDocument({ documentId: 'web-selection', name: 'Selection' });
@@ -20,6 +20,25 @@ test('additive selection toggles membership and ordinary selection replaces it',
   assert.deepEqual(nextWebSelection(['a', 'b'], 'a', true), ['b']);
   assert.deepEqual(nextWebSelection(['a', 'b'], 'c'), ['c']);
   assert.deepEqual(nextWebSelection(['a'], ''), []);
+});
+
+test('range selection follows tree order and subtree copy/removal deduplicates nested selections', () => {
+  assert.deepEqual(webRangeSelection(['a', 'child', 'b', 'c'], 'b', 'a'), ['a', 'child', 'b']);
+  const doc = fixture(); doc.nodes.a!.props = { id: 'card' }; doc.nodes.a!.children = ['child'];
+  doc.nodes.child = { id: 'child', parentId: 'a', tag: 'a', children: [], text: 'Child', content: undefined, style: {}, layout: { mode: 'flow' }, props: { href: '#card', 'aria-labelledby': 'card external-label' } };
+  let count = 0; const batch = webDuplicateSelection(doc, ['a', 'child', 'b'], tag => `copy-${tag}-${++count}`);
+  const command: CommandEnvelope = { commandId: 'copy', projectId: 'project', documentId: doc.documentId, actorId: 'human', actorKind: 'human', clientId: 'test', baseRevision: 0, preconditions: batch.preconditions, label: 'Copy trees', operations: batch.operations };
+  const result = applyWebCommand(doc, command, doc).document;
+  assert.equal(batch.selectedIds.length, 2); assert.equal(Object.keys(result.nodes).length, Object.keys(doc.nodes).length + 3);
+  const a = result.nodes[batch.selectedIds[0]!]!, child = result.nodes[a.children[0]!]!;
+  assert.equal(child.parentId, a.id); assert.equal(child.props!.href, `#${a.props!.id}`); assert.equal(child.props!['aria-labelledby'], `${a.props!.id} external-label`);
+  assert.deepEqual(result.nodes[doc.pages[0]!.rootId]!.children, ['a', a.id, 'b', batch.selectedIds[1], 'c']);
+  assert.deepEqual(webDeleteSelection(doc, ['a', 'child', 'b']), [{ type: 'web.node.remove', nodeId: 'a' }, { type: 'web.node.remove', nodeId: 'b' }]);
+  const changed = structuredClone(doc); changed.revision = 1; changed.nodes.child!.text = 'Latest human draft';
+  assert.throws(() => applyWebCommand(changed, command, doc), /precondition/i);
+  doc.nodes.child!.locked = true;
+  assert.throws(() => webDeleteSelection(doc, ['a', 'b']), /锁定/); assert.throws(() => webDuplicateSelection(doc, ['a'], () => 'unused'), /锁定/);
+  assert.throws(() => webDeleteSelection(doc, [doc.pages[0]!.rootId]), /页面根/);
 });
 
 test('alignment and distribution preserve layout/dimensions and form one document command', () => {

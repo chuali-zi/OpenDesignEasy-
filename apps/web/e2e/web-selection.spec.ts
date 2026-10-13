@@ -42,20 +42,20 @@ test('Web multi-select batches styles and local alignment in one history step, s
   expect((await read()).nodes.b!.style.left).toBe(210);
   // Modifier selection is local, persists through document updates, and can toggle off.
   await page.locator('.web-editor-tree-select').filter({ hasText: 'A card' }).click();
-  await page.locator('.web-editor-tree-select').filter({ hasText: 'B card' }).click({ modifiers: ['Shift'] });
-  await page.locator('.web-editor-tree-select').filter({ hasText: 'C card' }).click({ modifiers: ['Shift'] });
+  await page.locator('.web-editor-tree-select').filter({ hasText: 'B card' }).click({ modifiers: ['Control'] });
+  await page.locator('.web-editor-tree-select').filter({ hasText: 'C card' }).click({ modifiers: ['Control'] });
   await page.getByLabel('预览宽度').focus(); await page.getByLabel('预览宽度').press('Home');
   await page.getByRole('button', { name: '为 mobile 创建样式覆盖' }).click();
   await page.getByLabel('批量文字颜色').fill('#112233'); await page.getByLabel('批量文字颜色').blur();
   await expect.poll(async () => (await read()).nodes.a!.responsive?.mobile?.style?.color).toBe('#112233');
   expect((await read()).nodes.a!.style.color).toBe('#ffffff');
-  await page.locator('.web-editor-tree-select').filter({ hasText: 'C card' }).click({ modifiers: ['Shift'] });
+  await page.locator('.web-editor-tree-select').filter({ hasText: 'C card' }).click({ modifiers: ['Control'] });
   await expect(page.getByText('已选择 2 个元素', { exact: true })).toBeVisible();
-  await page.locator('.web-editor-tree-select').filter({ hasText: 'Flow stays flow' }).click({ modifiers: ['Shift'] });
+  await page.locator('.web-editor-tree-select').filter({ hasText: 'Flow stays flow' }).click({ modifiers: ['Control'] });
   const beforeFlow = await read(); await page.getByRole('button', { name: '左对齐', exact: true }).click();
   await expect(page.getByRole('status')).toContainText('流式布局保持原样');
   expect((await read()).revision).toBe(beforeFlow.revision); expect((await read()).nodes.flow!.layout.mode).toBe('flow');
-  await page.locator('.web-editor-tree-select').filter({ hasText: 'Flow stays flow' }).click({ modifiers: ['Shift'] });
+  await page.locator('.web-editor-tree-select').filter({ hasText: 'Flow stays flow' }).click({ modifiers: ['Control'] });
   await page.getByRole('button', { name: '锁定 A card' }).click();
   await expect(page.getByLabel('批量文字颜色')).toBeDisabled();
   await page.getByRole('button', { name: '解锁 A card' }).click();
@@ -64,7 +64,7 @@ test('Web multi-select batches styles and local alignment in one history step, s
   const latest = await read(); await page.request.post('/api/commands', { data: { commandId: 'remove-' + id, projectId: project.projectId, documentId: id, actorId: 'human', actorKind: 'human', clientId: 'test', baseRevision: latest.revision, preconditions: [], label: 'Remove selected', operations: [{ type: 'web.node.remove', nodeId: 'b' }] } });
   await expect(page.getByLabel('元素标签')).toBeVisible();
   await page.getByLabel('预览宽度').focus(); await page.getByLabel('预览宽度').press('End');
-  await page.locator('.web-editor-tree-select').filter({ hasText: 'C card' }).click({ modifiers: ['Shift'] });
+  await page.locator('.web-editor-tree-select').filter({ hasText: 'C card' }).click({ modifiers: ['Control'] });
   await expect(page.getByText('已选择 2 个元素', { exact: true })).toBeVisible();
   await mkdir('.tmp', { recursive: true }); await page.screenshot({ path: '.tmp/r4-web-multiselect.png', fullPage: true });
   expect(errors).toEqual([]);

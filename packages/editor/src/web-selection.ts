@@ -6,6 +6,55 @@ export function nextWebSelection(ids: string[], id: string, additive = false): s
   return ids.includes(id) ? ids.filter(item => item !== id) : [...ids, id];
 }
 
+export function webRangeSelection(order: string[], anchor: string, target: string): string[] {
+  const a = order.indexOf(anchor), b = order.indexOf(target);
+  return b < 0 ? [] : a < 0 ? [target] : order.slice(Math.min(a, b), Math.max(a, b) + 1);
+}
+
+/** Nested selections operate on their outermost tree once. */
+export function webSelectionRoots(document: WebDocument, ids: string[]): WebNode[] {
+  const nodes = selectedWebNodes(document, ids), chosen = new Set(ids);
+  return nodes.filter(node => {
+    for (let parent = node.parentId; parent; parent = document.nodes[parent]?.parentId ?? null) if (chosen.has(parent)) return false;
+    return true;
+  });
+}
+
+function editableTrees(document: WebDocument, ids: string[]): { roots: WebNode[]; trees: WebNode[] } {
+  const roots = webSelectionRoots(document, ids), trees: WebNode[] = [];
+  const visit = (node: WebNode) => { trees.push(node); node.children.forEach(id => visit(document.nodes[id]!)); };
+  roots.forEach(visit);
+  if (roots.some(node => !node.parentId) || trees.some(node => webNodeLocked(document, node.id))) throw new Error('选择包含页面根或锁定子树，未修改任何元素。');
+  return { roots, trees };
+}
+
+export function webDeleteSelection(document: WebDocument, ids: string[]): WebOperation[] {
+  return editableTrees(document, ids).roots.map(node => ({ type: 'web.node.remove', nodeId: node.id }));
+}
+
+export function webDuplicateSelection(document: WebDocument, ids: string[], makeId: (tag: string) => string): { operations: WebOperation[]; selectedIds: string[]; preconditions: EditPrecondition[] } {
+  const { roots, trees } = editableTrees(document, ids);
+  const mapping = new Map(trees.map(node => [node.id, makeId(node.tag)]));
+  if (new Set(mapping.values()).size !== trees.length || [...mapping.values()].some(id => document.nodes[id])) throw new Error('复制元素 ID 必须唯一。');
+  const htmlIds = new Map(trees.filter(node => typeof node.props?.id === 'string').map(node => [node.props!.id as string, `copy-${mapping.get(node.id)!}`]));
+  const preconditions: EditPrecondition[] = trees.flatMap(node => ['id', 'parentId', 'tag', 'children', 'style', 'layout', 'props', 'text', 'content', 'locked', 'hidden', 'responsive', 'component'].map(path => ({ type: 'node.property' as const, nodeId: node.id, path, value: structuredClone(node[path as keyof WebNode]) })));
+  const operations: WebOperation[] = [];
+  const copy = (original: WebNode, parentId: string, index?: number) => {
+    const node = structuredClone(original); node.id = mapping.get(original.id)!; node.parentId = parentId; node.children = [];
+    if (node.props) for (const [key, value] of Object.entries(node.props)) {
+      if (typeof value !== 'string') continue;
+      if (key === 'id') node.props[key] = htmlIds.get(value) ?? value;
+      else if (['for', 'htmlFor', 'aria-labelledby', 'aria-describedby', 'aria-controls', 'headers'].includes(key)) node.props[key] = value.split(/\s+/).map(id => htmlIds.get(id) ?? id).join(' ');
+      else if (key === 'href' && value.startsWith('#') && htmlIds.has(value.slice(1))) node.props[key] = `#${htmlIds.get(value.slice(1))}`;
+    }
+    operations.push({ type: 'web.node.insert', node, ...(index === undefined ? {} : { index }) });
+    original.children.forEach(id => copy(document.nodes[id]!, node.id));
+  };
+  // Descending indices keep every copy directly after its source sibling.
+  [...roots].sort((a, b) => a.parentId === b.parentId ? document.nodes[a.parentId!]!.children.indexOf(b.id) - document.nodes[a.parentId!]!.children.indexOf(a.id) : a.parentId!.localeCompare(b.parentId!)).forEach(node => copy(node, node.parentId!, document.nodes[node.parentId!]!.children.indexOf(node.id) + 1));
+  return { operations, selectedIds: roots.map(node => mapping.get(node.id)!), preconditions };
+}
+
 export function webNodeLocked(document: WebDocument, id: string): boolean {
   const seen = new Set<string>();
   for (let node = document.nodes[id]; node; node = document.nodes[node.parentId ?? '']!) {
