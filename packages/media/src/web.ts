@@ -1,5 +1,6 @@
 import JSZip from 'jszip';
 import { chromium } from 'playwright';
+import { browserLaunchOptions } from './browser.ts';
 import type { Page } from 'playwright';
 import { validateWebDocument } from '@oeydesign/document';
 import type { WebDocument, WebNode } from '@oeydesign/document';
@@ -136,7 +137,7 @@ export async function exportWebSourceZip(document: WebDocument, resolveAsset?: A
 
 async function withBrowser<T>(options: WebRenderOptions, render: (browser: Awaited<ReturnType<typeof chromium.launch>>) => Promise<T>): Promise<T> {
   options.signal?.throwIfAborted();
-  const browser = await chromium.launch({ channel: process.platform === 'win32' ? 'chrome' : undefined, headless: true });
+  const browser = await chromium.launch(browserLaunchOptions());
   const abort = () => { void browser.close(); };
   options.signal?.addEventListener('abort', abort, { once: true });
   try { options.signal?.throwIfAborted(); return await render(browser); }

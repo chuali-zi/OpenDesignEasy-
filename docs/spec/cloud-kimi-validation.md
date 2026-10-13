@@ -35,6 +35,31 @@ npm run check:kimi -- --live
 - 完整 `npm test` 基线：浏览器缺失导致多项失败，且 180 秒整体截止前没有结束。终止了该轮残留测试进程，未将其记为通过。
 - 发现系统已有 `/usr/bin/chromium`。新增 `OEY_BROWSER_EXECUTABLE` Playwright 配置入口后，4 项真实浏览器测试通过，覆盖 Deck 改字/几何/撤销/重开/PPTX 下载、拖拽/缩放/旋转，以及 Web 文档创建、响应式、撤销/重开、DOM 拖拽/缩放/旋转/图片插入。
 
+### 后续修复：完整离线套件 80/80
+
+已将 `OEY_BROWSER_EXECUTABLE` / `OEY_BROWSER_CHANNEL` 统一到媒体层和浏览器测试，指定路径优先；Windows 继续默认使用 Chrome，其他平台默认使用 Playwright Chromium。复用系统 `/usr/bin/chromium`，未安装软件。现在 PNG/PDF 实际导出和测试均可使用现有浏览器，而不只是 Web E2E。
+
+修复前独立重现了 5 项失败（媒体子集 11 项中 6 通过、5 失败）：
+
+| 文件/检查 | 原因 |
+|---|---|
+| `raster.test.ts`：精确尺寸 PNG 与多页 PDF | 固定 `channel: chrome`，系统无 `/opt/google/chrome/chrome` |
+| `raster.test.ts`：中英文字实际换行 | 同上 |
+| `web-browser.test.ts`：源码构建后的路由/资源/交互/响应式 | 同上 |
+| `web-build.test.ts`：生产构建与组件交互 | Playwright 下载浏览器不存在 |
+| `web.test.ts`：Web 图片栅格化与多页 PDF | 同上 |
+
+此外，`web-build.test.ts` 在启动浏览器后才注册 HTTP 服务清理；浏览器启动失败就遗留服务，解释了初轮整套 180 秒超时。该代码和浏览器选择问题均可在基准提交 `6f754fe` 查到，早于本次改动。清理现在于启动浏览器之前注册，并在关闭浏览器异常时也关闭 HTTP 连接。
+
+修复后，使用不包含模型凭据的子进程和系统浏览器运行全部 `npm test` 文件（未排除文件、未跳过测试、未用强制退出），**80/80 通过，46.6 秒正常结束**。日志：`.tmp/full-offline-tests.log`。故意指定不存在的浏览器运行构建用例时，预期失败状态 1，12.7 秒正常退出、未超时，日志：`.tmp/missing-browser-cleanup.log`。类型检查再次通过。
+
+随后完整 Web E2E **11/11 通过，24.0 秒**，含并发文本/源码冲突恢复、生产应用导出和全部 Deck/Web 编辑用例；日志：`.tmp/full-web-e2e.log`。两张界面截图也随该轮测试重新生成。
+
+```sh
+OEY_BROWSER_EXECUTABLE=/usr/bin/chromium npm test
+OEY_BROWSER_EXECUTABLE=/usr/bin/chromium npm run test:web
+```
+
 本轮测试子进程只继承 PATH/HOME/TMPDIR/LANG 等启动必需项，没有模型凭据；没有新建密钥文件或安装软件。系统浏览器验证命令：
 
 ```sh
@@ -49,4 +74,6 @@ node --import tsx --test packages/document/test/*.test.ts packages/editor/test/*
 
 实际截图保存为 `.tmp/deck-editor-verified.png`、`.tmp/web-editor-review.png`。它们是测试操作后的真实界面，供用户审核，不是最终审美验收或模型生成作品。核心测试记录在 `.tmp/offline-core-tests.log`。
 
-环境 Node 为 24.19.0，低于仓库声明的 `>=24.21.0 <25`；未修改安装。媒体层部分代码/测试仍固定 Chrome 或 Playwright 下载浏览器，此轮只补 Web E2E 可执行路径入口。Linux 验证不覆盖 Windows Office、Desktop/AppContainer 或旧 Python Phase 6 全链路。
+环境 Node 为 **24.19.0**，仓库要求 **`>=24.21.0 <25`**，实际版本比最低要求低两个 minor 版本；未修改安装。此次完整测试通过不等于满足声明的运行时版本要求。Linux 验证不覆盖 Windows Office、Desktop/AppContainer 或旧 Python Phase 6 全链路。
+
+两张截图已目视检查，仅含合成测试内容和编辑器界面，未见密钥或个人资料。按用户请求尝试批量保存到 Library 时，当前环境返回网络失败，未获得任何 Library 文件 ID；停止该路线，未重试、换通道或改变网络配置。截图尚不能作为父会话可访问的 Library 附件交付。

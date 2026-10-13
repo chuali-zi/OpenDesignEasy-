@@ -6,6 +6,7 @@ import { join, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import { build, preview } from "vite";
 import { chromium } from "playwright";
+import { browserLaunchOptions } from '../src/browser.ts';
 import type { WebDocument } from "@oeydesign/document";
 import { buildWebSource } from "../src/web.ts";
 
@@ -61,7 +62,7 @@ test("built source project runs in Chrome with routes, assets, interactions and 
   server = await preview({ root, logLevel: "silent", preview: { host: "127.0.0.1", port: 0 } });
   const addr = server.httpServer.address();
   assert.ok(addr && typeof addr !== "string");
-  browser = await chromium.launch({ channel: "chrome", headless: true });
+  browser = await chromium.launch(browserLaunchOptions());
   const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
   page.on("pageerror", error => browserErrors.push(error.message));
   page.on("console", message => { if (message.type() === "error") browserErrors.push(`${message.location().url}: ${message.text()}`); });

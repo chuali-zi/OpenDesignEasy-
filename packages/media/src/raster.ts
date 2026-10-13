@@ -3,6 +3,7 @@ import { validateDocument } from "@oeydesign/document";
 import type { DeckDocument } from "@oeydesign/document";
 import type { AssetResolver } from "./assets.ts";
 import { renderDeckSvg } from "./index.ts";
+import { browserLaunchOptions } from './browser.ts';
 
 export type RenderOptions = { signal?: AbortSignal };
 
@@ -15,7 +16,7 @@ function abortError(signal: AbortSignal): Error {
 
 async function withChrome<T>(options: RenderOptions, render: (browser: Awaited<ReturnType<typeof chromium.launch>>) => Promise<T>): Promise<T> {
   if (options.signal?.aborted) throw abortError(options.signal);
-  const browser = await chromium.launch({ channel: "chrome", headless: true });
+  const browser = await chromium.launch(browserLaunchOptions());
   const onAbort = () => { void browser.close(); };
   options.signal?.addEventListener("abort", onAbort, { once: true });
   try {

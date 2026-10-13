@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { createServer } from 'node:http';
 import JSZip from 'jszip';
 import { chromium } from 'playwright';
+import { browserLaunchOptions } from '../src/browser.ts';
 import type { AddressInfo } from 'node:net';
 import type { WebDocument } from '@oeydesign/document';
 import { buildWebProject } from '../src/web-build.ts';
@@ -43,9 +44,17 @@ test('Vite production build returns only dist files and the built component work
     if (!bytes) { response.writeHead(404).end(); return; }
     response.writeHead(200, { 'content-type': contentType(path) }).end(bytes);
   });
+  // Register cleanup before launch: a missing browser must not leave HTTP open.
+  let browser: Awaited<ReturnType<typeof chromium.launch>> | undefined;
+  t.after(async () => {
+    try { await browser?.close(); }
+    finally {
+      server.closeAllConnections();
+      if (server.listening) await new Promise<void>(resolve => server.close(() => resolve()));
+    }
+  });
   await new Promise<void>(resolve => server.listen(0, '127.0.0.1', resolve));
-  const browser = await chromium.launch({ channel: process.platform === 'win32' ? 'chrome' : undefined, headless: true });
-  t.after(async () => { await browser.close(); await new Promise<void>(resolve => server.close(() => resolve())); });
+  browser = await chromium.launch(browserLaunchOptions());
   const address = server.address() as AddressInfo;
   const page = await browser.newPage();
   const errors: string[] = [];

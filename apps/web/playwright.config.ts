@@ -1,5 +1,6 @@
 import { defineConfig } from '@playwright/test';
 import { fileURLToPath } from 'node:url';
+import { browserLaunchOptions } from '@oeydesign/media/browser';
 
 export default defineConfig({
   testDir: './e2e',
@@ -8,10 +9,8 @@ export default defineConfig({
   workers: 1,
   use: {
     baseURL: 'http://127.0.0.1:4329',
-    channel: process.env.OEY_BROWSER_CHANNEL ?? (process.platform === 'win32' ? 'chrome' : undefined),
     headless: true,
-    // Reuse an existing browser in managed/offline Linux environments.
-    launchOptions: process.env.OEY_BROWSER_EXECUTABLE ? { executablePath: process.env.OEY_BROWSER_EXECUTABLE } : {},
+    launchOptions: browserLaunchOptions(),
     viewport: { width: 1440, height: 1000 },
     screenshot: 'only-on-failure',
   },

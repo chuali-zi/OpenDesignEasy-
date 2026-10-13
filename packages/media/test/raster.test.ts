@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { chromium } from "playwright";
+import { browserLaunchOptions } from '../src/browser.ts';
 import { createDeckDocument, textFromString, type DeckNode } from "@oeydesign/document";
 import { exportDeckPdf, renderDeckPng, renderDeckSvg } from "../src/index.ts";
 
@@ -57,7 +58,7 @@ test("SVG rich text wraps CJK and Latin runs at the actual logical text-box widt
       { type: "text", text: "A long English phrase that wraps and continues 中文自动换行测试", marks: [{ type: "textStyle", attrs: { color: "#315646" } }] },
     ] }] } };
   const svg = await renderDeckSvg(document);
-  const browser = await chromium.launch({ channel: "chrome", headless: true });
+  const browser = await chromium.launch(browserLaunchOptions());
   try {
     const page = await browser.newPage({ viewport: { width: 240, height: 180 } });
     await page.setContent(`<html><body style="margin:0">${svg}</body></html>`);
