@@ -19,7 +19,7 @@ const HELP = {
   commands: {
     project: ["create <dir> [--name <name>]", "show <dir>"],
     agent: ["run <dir> --text <prompt> [--session <id>] [--document <id>] [--asset <id>]", "create|list|status|config <dir> [--session <id>] [--file <config.json>]", "send|steer|follow-up|answer|cancel --host <local-url> --session <id> [--text <text>] [--question <id>] [--wait]"],
-    asset: ["import <dir> <file>", "list <dir>"],
+    asset: ["import <dir> <file>", "list <dir>", "read <dir> <assetId> [--offset <n>] [--limit <n>] [--ocr true] [--language eng|chi_sim]"],
     document: [
       "create <dir> [--kind deck|web|doc] [--name <name>]",
       "read <dir> [documentId]",
@@ -276,6 +276,12 @@ export async function execute(argv: string[]): Promise<unknown> {
       await writeFileAtomically(output, data);
       return { documentId: document.documentId, revision: document.revision, format, output };
     } finally { runtime.close(); }
+  }
+
+  if (area === 'asset' && action === 'read') {
+    const {values,positional}=parseFlags(rest,['offset','limit','ocr','language']);expectPositionals(positional,2,'asset read');
+    if(values.ocr!==undefined&&!['true','false'].includes(values.ocr))usage('--ocr must be true or false');
+    return withRuntime(positional[0]!,runtime=>new ProjectAssets(runtime).readReference(positional[1]!,values.offset===undefined?0:Number(values.offset),values.limit===undefined?12000:Number(values.limit),{ocr:values.ocr==='true',ocrLanguage:values.language}));
   }
 
   if (area === "node" && action === "insert") {

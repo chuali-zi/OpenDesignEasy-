@@ -882,11 +882,11 @@ export class AgentService {
       },
     }));
     tools.push(define({
-      name: 'reference_read', label: 'Read reference', description: 'Read an imported text or image reference by asset ID. Image references are returned visually.',
-      parameters: Type.Object({ assetId: Type.String(), offset: Type.Optional(Type.Integer()), limit: Type.Optional(Type.Integer()) }), ...sequential,
+      name: 'reference_read', label: 'Read reference', description: 'Read imported text/source, PDF, DOCX, PPTX, XLSX/CSV or image reference. Image references return visually by default. ocr:true uses local language data only; inferred OCR must be verified, and no language data is downloaded.',
+      parameters: Type.Object({ assetId: Type.String(), offset: Type.Optional(Type.Integer()), limit: Type.Optional(Type.Integer()), ocr: Type.Optional(Type.Boolean()), ocrLanguage: Type.Optional(Type.Union([Type.Literal('eng'),Type.Literal('chi_sim')])) }), ...sequential,
       async execute(_id, args, signal) {
         const service = thisService.requireServices().readReference;
-        const result = await service({ assetId: args.assetId, offset: args.offset, limit: args.limit }, signal ?? new AbortController().signal) as { asset?: unknown; mimeType?: string; data?: string; text?: string };
+        const result = await service({ assetId: args.assetId, offset: args.offset, limit: args.limit, ocr: args.ocr, ocrLanguage: args.ocrLanguage }, signal ?? new AbortController().signal) as { asset?: unknown; mimeType?: string; data?: string; text?: string };
         if (result.mimeType && result.data) {
           const image = toImageContent(result.mimeType, result.data);
           return { content: [image, { type: 'text', text: JSON.stringify(result.asset ?? { assetId: args.assetId }) }], details: result.asset ?? { assetId: args.assetId } };

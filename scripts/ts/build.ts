@@ -5,7 +5,7 @@ await build({
   entryPoints: ['apps/cli/src/index.ts'],
   outfile,
   bundle: true,
-  external: ['@earendil-works/*', 'playwright', 'playwright-core', 'typescript'],
+  external: ['@earendil-works/*', 'playwright', 'playwright-core', 'typescript', 'pdfjs-dist/*', 'tesseract.js'],
   platform: 'node',
   target: 'node24',
   format: 'esm',

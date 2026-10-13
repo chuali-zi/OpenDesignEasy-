@@ -278,3 +278,5 @@ export { prepareWebStructureImport, WEB_STRUCTURE_LIMITS } from './web-structure
 export * from "./artifact.ts";
 
 export * from './doc.ts';
+
+export * from './references.ts';

@@ -8,7 +8,7 @@ import type { ProjectRuntime } from './project-runtime.ts';
 import { RuntimeError } from './errors.ts';
 
 export interface AgentDesignServices {
-  readReference(args: { assetId: string; offset?: number; limit?: number }, signal: AbortSignal): Promise<unknown>;
+  readReference(args: { assetId: string; offset?: number; limit?: number; ocr?: boolean; ocrLanguage?: string }, signal: AbortSignal): Promise<unknown>;
   importAsset(args: { path: string }, signal: AbortSignal): Promise<unknown>;
   generateAsset(args: { prompt: string }, signal: AbortSignal): Promise<unknown>;
   preview(args: { documentId: string; pageId?: string }, signal: AbortSignal): Promise<{ revision: number; mimeType: 'image/png'; data: string }>;
@@ -21,8 +21,8 @@ export function createDesignServices(runtime: ProjectRuntime): AgentDesignServic
     async readReference(args, signal) {
       signal.throwIfAborted();
       const { asset, bytes } = await assets.read(args.assetId);
-      if (asset.kind === 'image') return { asset, mimeType: asset.mimeType, data: Buffer.from(bytes).toString('base64') };
-      return assets.readReference(args.assetId, args.offset, args.limit);
+      if (asset.kind === 'image' && !args.ocr) return { asset, mimeType: asset.mimeType, data: Buffer.from(bytes).toString('base64') };
+      return assets.readReference(args.assetId, args.offset, args.limit, { signal, ocr: args.ocr, ocrLanguage: args.ocrLanguage });
     },
     async importAsset(args, signal) {
       const directory = join(runtime.root, 'references');

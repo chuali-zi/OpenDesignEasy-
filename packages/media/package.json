@@ -11,11 +11,14 @@
   "dependencies": {
     "@oeydesign/document": "0.1.0",
     "docx": "9.10.0",
+    "fast-xml-parser": "5.11.2",
     "jszip": "3.10.2",
+    "pdfjs-dist": "6.4.299",
     "playwright": "1.63.0",
     "pptxgenjs": "4.0.1",
     "react": "19.3.0",
     "react-dom": "19.3.0",
+    "tesseract.js": "7.0.0",
     "typescript": "5.9.3",
     "vite": "7.3.6"
   }

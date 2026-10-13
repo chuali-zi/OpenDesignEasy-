@@ -19,7 +19,7 @@ function crc32(bytes: Uint8Array): number {
 }
 
 /** Bounded, in-memory ZIP reader. Never extracts files or follows links. */
-export function readSourceArchive(input: Uint8Array): Map<string, Uint8Array> {
+export function readSourceArchive(input: Uint8Array, options: { allowOfficeRelationships?: boolean } = {}): Map<string, Uint8Array> {
   if (input.length < 22 || input.length > WEB_IMPORT_LIMITS.archive) fail('archive must be at most 8 MiB');
   const b = Buffer.from(input); const files = new Map<string, Uint8Array>();
   const bounds = (start: number, size: number) => { if (start < 0 || size < 0 || start + size > b.length) fail('truncated ZIP'); };
@@ -40,7 +40,7 @@ export function readSourceArchive(input: Uint8Array): Map<string, Uint8Array> {
     const local = b.readUInt32LE(offset + 42); bounds(offset + 46, nameSize + extraSize + commentSize);
     const name = text(b.subarray(offset + 46, offset + 46 + nameSize));
     const directory = name.endsWith('/'); const parts = (directory ? name.slice(0, -1) : name).split('/');
-    if (!name || name.length > 240 || /[\\:\x00-\x1f]/.test(name) || parts.some(p => !p || p === '.' || p === '..' || p.startsWith('.')) || names.has(name.toLowerCase())) fail('unsafe or duplicate ZIP path');
+    if (!name || name.length > 240 || /[\\:\x00-\x1f]/.test(name) || parts.some(p => !p || p === '.' || p === '..' || p.startsWith('.') && !(options.allowOfficeRelationships && name === '_rels/.rels')) || names.has(name.toLowerCase())) fail('unsafe or duplicate ZIP path');
     names.add(name.toLowerCase());
     const mode = (b.readUInt32LE(offset + 38) >>> 16) & 0xf000;
     if (mode && mode !== 0x8000 && mode !== 0x4000 || b.readUInt16LE(offset + 34) || flags & ~0x0808 || ![0, 8].includes(method)) fail('links, encryption or unsupported compression');

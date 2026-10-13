@@ -1,3 +1,4 @@
+import { parseReference } from '@oeydesign/media';
 import { randomUUID } from 'node:crypto';
 import { mkdir, readFile, rename, unlink, writeFile } from 'node:fs/promises';
 import { basename, join } from 'node:path';
@@ -35,9 +36,9 @@ export class ProjectAssets {
   async importReference(bytes: Uint8Array, name: string, signal?: AbortSignal): Promise<StoredAsset> {
     if (!bytes.length || bytes.length > MAX_BYTES) throw new RuntimeError('invalid', 'References must be between 1 byte and 20 MiB.');
     const extension = name.split('.').at(-1)?.toLowerCase();
-    if (!['txt', 'md', 'csv', 'json'].includes(extension ?? '')) throw new RuntimeError('invalid', 'Reference reading currently accepts TXT, Markdown, CSV and JSON. Images use image import.');
+    if (!['txt', 'md', 'csv', 'json', 'pdf', 'docx', 'pptx', 'xlsx', 'ts', 'tsx', 'js', 'jsx', 'css', 'html', 'py'].includes(extension ?? '')) throw new RuntimeError('invalid', 'Unsupported reference format; use text/source, CSV, PDF, DOCX, PPTX or XLSX. Images use image import.');
     const asset: StoredAsset = { id: `reference-${randomUUID()}`, kind: 'reference', name: basename(name).slice(0, 240),
-      mimeType: extension === 'json' ? 'application/json' : extension === 'csv' ? 'text/csv' : 'text/plain', sizeBytes: bytes.length, createdAt: new Date().toISOString() };
+      mimeType: ({pdf:'application/pdf',docx:'application/vnd.openxmlformats-officedocument.wordprocessingml.document',pptx:'application/vnd.openxmlformats-officedocument.presentationml.presentation',xlsx:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',json:'application/json',csv:'text/csv'} as Record<string,string>)[extension!] ?? 'text/plain', sizeBytes: bytes.length, createdAt: new Date().toISOString() };
     await this.store(asset, bytes, signal);
     return asset;
   }
@@ -53,12 +54,16 @@ export class ProjectAssets {
 
   readonly resolve = async (id: string): Promise<Uint8Array> => (await this.read(id)).bytes;
 
-  async readReference(id: string, offset = 0, limit = 12000) {
+  async readReference(id: string, offset = 0, limit = 12000, options: { signal?: AbortSignal; ocr?: boolean; ocrLanguage?: string } = {}) {
     if (!Number.isSafeInteger(offset) || offset < 0 || !Number.isSafeInteger(limit) || limit < 1 || limit > 50000) throw new RuntimeError('invalid', 'Use a non-negative offset and a limit between 1 and 50000.');
     const { asset, bytes } = await this.read(id);
-    if (asset.kind !== 'reference') throw new RuntimeError('invalid', 'Use the image asset as a visual reference.');
-    const text = new TextDecoder('utf-8', { fatal: true }).decode(bytes);
-    return { asset, offset, text: text.slice(offset, offset + limit), totalCharacters: text.length, hasMore: offset + limit < text.length };
+    if (asset.kind !== 'reference' && !options.ocr) throw new RuntimeError('invalid', 'Use the image asset visually or request OCR.');
+    options.signal?.throwIfAborted();
+    const cacheId=`${asset.id}:${options.ocr ? options.ocrLanguage ?? 'eng' : 'text'}:v1`;
+    let parsed=this.runtime.getRecord<{format:string;text:string;warnings:string[];pages?:number;truncated?:boolean}>('reference-text',cacheId);
+    try { if (!parsed) { const name=asset.kind==='image' ? `image.${asset.mimeType==='image/jpeg'?'jpg':asset.mimeType==='image/webp'?'webp':'png'}` : asset.name; const result=await parseReference(bytes,name,options); parsed={format:result.format,text:result.text,warnings:result.warnings,pages:result.pages,truncated:result.truncated}; options.signal?.throwIfAborted(); this.runtime.putRecord('reference-text',cacheId,parsed); } } catch(error) { throw new RuntimeError('invalid', error instanceof Error ? error.message : 'Reference parsing failed'); }
+    const text = parsed.text;
+    return { asset, offset, text: text.slice(offset, offset + limit), totalCharacters: text.length, hasMore: offset + limit < text.length, format: parsed.format, warnings: parsed.warnings, pages: parsed.pages, truncated: parsed.truncated };
   }
 
   private async store(asset: StoredAsset, bytes: Uint8Array, signal?: AbortSignal) {
