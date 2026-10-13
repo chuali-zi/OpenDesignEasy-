@@ -39,6 +39,7 @@ test('group resize scales child boxes with margin correction and guards children
   const grouped = apply(doc, batch.operations, batch.preconditions);
   const local = { a: { ...bounds.a, x: 10, y: 15, marginLeft: 10, marginTop: 15 }, b: { ...bounds.b, x: 160, y: 60 } };
   const resize = webResizeGroup(grouped, 'group', 560, 280, local);
+  assert.throws(() => webResizeGroup(grouped, 'group', 560, 280, { ...local, a: { ...local.a, width: 124 } }), /框尺寸/);
   const result = apply(grouped, resize.operations, resize.preconditions);
   assert.equal(result.nodes.a!.style.left, 10); assert.equal(result.nodes.a!.style.top, 15);
   assert.equal(result.nodes.b!.style.left, 320); assert.equal(result.nodes.b!.style.top, 120); assert.equal(result.nodes.b!.style.width, 240);

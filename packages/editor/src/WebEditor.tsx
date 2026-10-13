@@ -6,9 +6,11 @@ import { WebDraftField } from './WebDraftField.tsx';
 import { WebRichTextEditor } from './WebRichTextEditor.tsx';
 import { WebImageProperties } from './WebImageProperties.tsx';
 import { WEB_RICH_TEXT_TAGS } from '@oeydesign/document';
-import { nextWebSelection, webBatchStyles, webAlignmentOperations, webAlignmentPreconditions, webPixelCoordinate, webNodeLocked, webNodeTreeLocked, webRangeSelection, webSelectionRoots, webDuplicateSelection, webDeleteSelection } from './web-selection.ts';
+import { nextWebSelection, webBatchStyles, webAlignmentOperations, webAlignmentPreconditions, webPixelCoordinate, webNodeLocked, webNodeTreeLocked, webRangeSelection, webSelectionRoots, webDuplicateSelection, webDeleteSelection, webPositionedMoveOperations } from './web-selection.ts';
 import type { WebAlignment, WebBounds } from './web-selection.ts';
 import { webGroupSelection, webGroupFlowSelection, webUngroup, webResizeGroup, webGroupResizeMembers, isWebFlowGroup, webFlowGroupMembers } from './web-groups.ts';
+import { snapWebMove } from './web-snap.ts';
+import type { SnapTarget } from './web-snap.ts';
 import './web-editor.css';
 
 type Props = {
@@ -49,6 +51,10 @@ export function WebEditor({ document, onApply, onUndo, onRedo, onImportAsset, di
   const setSelection = useCallback((id: string) => setSelectedIds(id ? [id] : []), []);
   const selectNode = useCallback((id: string, additive = false) => setSelectedIds(ids => nextWebSelection(ids, id, additive)), []);
   const [width, setWidth] = useState(1200);
+  const [viewZoom, setViewZoom] = useState<number | 'fit'>(1);
+  const [viewportSize, setViewportSize] = useState({ width: 0, height: 420 });
+  const [panMode, setPanMode] = useState(false);
+  const [snapping, setSnapping] = useState(false);
   const [busy, setBusy] = useState(false);
   const [editorError, setEditorError] = useState('');
   const [frameEpoch, setFrameEpoch] = useState(0);
@@ -68,6 +74,8 @@ export function WebEditor({ document, onApply, onUndo, onRedo, onImportAsset, di
   const pending = useRef(false);
   const imagePicker = useRef<HTMLInputElement>(null);
   const iframe = useRef<HTMLIFrameElement>(null);
+  const viewport = useRef<HTMLDivElement>(null);
+  const zoom = viewZoom === 'fit' ? Math.min(1, Math.max(.25, viewportSize.width / width)) : viewZoom;
   const page = document.pages.find(item => item.id === pageId) ?? document.pages[0];
   const node = document.nodes[selection];
   const matching = document.breakpoints?.filter(item => (item.minWidth === undefined || width >= item.minWidth) && (item.maxWidth === undefined || width <= item.maxWidth)).at(-1);
@@ -95,7 +103,7 @@ export function WebEditor({ document, onApply, onUndo, onRedo, onImportAsset, di
     const target = event.target as HTMLElement | null;
     if (target?.closest('input,textarea,select,[contenteditable="true"],.ProseMirror') || event.altKey || blocked) return;
     const modifier = event.ctrlKey || event.metaKey;
-    if (event.key === 'Escape') { setSelection(''); setBoxMode(false); event.preventDefault(); }
+    if (event.key === 'Escape') { setSelection(''); setBoxMode(false); setPanMode(false); event.preventDefault(); }
     else if (modifier && event.key.toLowerCase() === 'd') { selectionAction('duplicate'); event.preventDefault(); }
     else if (modifier && event.key.toLowerCase() === 'g') { groupAction(event.shiftKey ? 'ungroup' : 'group'); event.preventDefault(); }
     else if (event.key === 'Delete' || event.key === 'Backspace') { selectionAction('delete'); event.preventDefault(); }
@@ -107,8 +115,17 @@ export function WebEditor({ document, onApply, onUndo, onRedo, onImportAsset, di
       event.preventDefault();
     }
   };
-  const live = useRef({ act, selection, selectedIds, blocked, breakpoint, overrideEnabled, handleKey });
-  live.current = { act, selection, selectedIds, blocked, breakpoint, overrideEnabled, handleKey };
+  const live = useRef({ act, selection, selectedIds, blocked, breakpoint, overrideEnabled, handleKey, snapping, zoom });
+  live.current = { act, selection, selectedIds, blocked, breakpoint, overrideEnabled, handleKey, snapping, zoom };
+  useEffect(() => {
+    const element = viewport.current; if (!element) return;
+    const update = () => setViewportSize(previous => {
+      const next = { width: element.clientWidth, height: Math.max(420, element.clientHeight) };
+      return next.width === previous.width && next.height === previous.height ? previous : next;
+    });
+    const observer = new ResizeObserver(update); observer.observe(element); update();
+    return () => observer.disconnect();
+  }, []);
   useEffect(() => { if (!dragging) setPreviewDocument(document); }, [document, dragging]);
   useEffect(() => {
     if (!document.pages.some(item => item.id === pageId)) setPageId(document.pages[0]?.id ?? '');
@@ -133,7 +150,7 @@ export function WebEditor({ document, onApply, onUndo, onRedo, onImportAsset, di
     try {
       const imageUrls = Object.fromEntries(Object.values(previewDocument.assets ?? {}).map(asset => [asset.id, `/api/assets/${encodeURIComponent(asset.id)}`]));
       const markup = renderWebMarkup(previewDocument, previewPage.id, imageUrls, { editing: true });
-      return `<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><style>${renderWebStyles(previewDocument)}</style><style>html,body{min-height:100%;font-family:Georgia,serif}[data-page-root]{min-height:420px}[data-web-id]{cursor:pointer}[data-selected=true]{outline:2px solid #398568;outline-offset:2px}[data-flow-group-selected=true]{outline:1px dashed #398568;outline-offset:2px}[data-oey-resize-handle]{position:fixed;width:12px;height:12px;background:#398568;border:2px solid white;z-index:2147483647;cursor:nwse-resize;padding:0}a{color:#39745e}button,input{font:inherit}</style></head><body data-preview-revision="${previewDocument.revision}" data-preview-page="${escapeWebText(previewPage.id)}">${markup}</body></html>`;
+      return `<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><style>${renderWebStyles(previewDocument)}</style><style>html,body{min-height:100%;font-family:Georgia,serif}[data-page-root]{min-height:420px}[data-web-id]{cursor:pointer}[data-pan-mode=true],[data-pan-mode=true] [data-web-id]{cursor:grab}[data-selected=true]{outline:2px solid #398568;outline-offset:2px}[data-flow-group-selected=true]{outline:1px dashed #398568;outline-offset:2px}[data-oey-resize-handle]{position:fixed;width:12px;height:12px;background:#398568;border:2px solid white;z-index:2147483647;cursor:nwse-resize;padding:0}a{color:#39745e}button,input{font:inherit}</style></head><body data-preview-revision="${previewDocument.revision}" data-preview-page="${escapeWebText(previewPage.id)}">${markup}</body></html>`;
     } catch (error) {
       return `<!doctype html><html><body><p role="alert">无法显示预览：${escapeWebText(error instanceof Error ? error.message : String(error))}</p></body></html>`;
     }
@@ -164,21 +181,44 @@ export function WebEditor({ document, onApply, onUndo, onRedo, onImportAsset, di
     const frame = iframe.current, dom = frame?.contentDocument, body = dom?.body;
     if (!frame || !dom || !body || !previewPage) return;
     body.tabIndex = -1;
-    type Gesture = { id: string; target: HTMLElement; pointerId: number; x: number; y: number; moved: boolean; resize: boolean; width: number; height: number; left: number; top: number; breakpoint?: string; originalStyle: string | null; groupBounds?: Record<string, WebBounds>; memberStyles?: Map<HTMLElement, string | null> };
+    body.dataset.panMode = String(panMode);
+    type Gesture = { id: string; target: HTMLElement; pointerId: number; x: number; y: number; moved: boolean; resize: boolean; width: number; height: number; left: number; top: number; breakpoint?: string; originalStyle: string | null; groupBounds?: Record<string, WebBounds>; memberStyles?: Map<HTMLElement, string | null>; moveIds?: string[]; moveBounds?: Record<string, WebBounds>; snapTargets?: SnapTarget[]; coordinateParent?: HTMLElement; dependencies?: EditPrecondition[]; viewportWidth: number; viewportHeight: number; tolerance: number };
     let gesture: Gesture | undefined;
     let box: { x: number; y: number; overlay: HTMLElement; additive: boolean; selected: string[]; pointerId: number } | undefined;
+    let pan: { x: number; y: number; left: number; top: number; pointerId: number } | undefined;
     let suppressClick = false;
+    let guides: HTMLElement[] = [];
+    const clearGuides = () => { guides.forEach(el => el.remove()); guides = []; };
+    const delta = (done: Gesture, event: PointerEvent, draw = false) => {
+      const dx = event.clientX - done.x, dy = event.clientY - done.y;
+      if (event.altKey || !done.moveIds || !done.moveBounds || !done.snapTargets) { if (draw) clearGuides(); return { dx, dy }; }
+      const result = snapWebMove(done.moveIds.map(id => done.moveBounds![id]!), done.snapTargets, dx, dy, done.tolerance);
+      if (draw && done.coordinateParent) {
+        clearGuides(); const parent = done.coordinateParent, rect = parent.getBoundingClientRect();
+        result.guides.forEach(guide => {
+          const el = dom.createElement('div'); el.dataset.oeySnapGuide = guide.axis;
+          el.style.cssText = 'position:fixed;pointer-events:none;z-index:2147483646;background:#b47eab;';
+          if (guide.axis === 'x') { el.style.left = `${rect.left + parent.clientLeft - parent.scrollLeft + guide.coordinate}px`; el.style.top = `${rect.top}px`; el.style.width = '1px'; el.style.height = `${rect.height}px`; }
+          else { el.style.top = `${rect.top + parent.clientTop - parent.scrollTop + guide.coordinate}px`; el.style.left = `${rect.left}px`; el.style.height = '1px'; el.style.width = `${rect.width}px`; }
+          body.append(el); guides.push(el);
+        });
+      }
+      return result;
+    };
     const restore = (done: Gesture) => {
       if (done.originalStyle === null) done.target.removeAttribute('style'); else done.target.setAttribute('style', done.originalStyle);
       done.memberStyles?.forEach((style, el) => { if (style === null) el.removeAttribute('style'); else el.setAttribute('style', style); });
     };
     const cancel = () => {
       if (gesture) { restore(gesture); if (gesture.target.hasPointerCapture(gesture.pointerId)) gesture.target.releasePointerCapture(gesture.pointerId); }
+      clearGuides();
       gesture = undefined; box?.overlay.remove(); if (box && body.hasPointerCapture(box.pointerId)) body.releasePointerCapture(box.pointerId); box = undefined; setDragging(false);
+      if (pan && body.hasPointerCapture(pan.pointerId)) body.releasePointerCapture(pan.pointerId); pan = undefined;
     };
     const click = (event: MouseEvent) => {
       if ((event.target as Element)?.closest('a,button,input,select,textarea')) event.preventDefault();
       if (suppressClick) { suppressClick = false; return; }
+      if (panMode) return;
       body.focus({ preventScroll: true });
       const target = (event.target as Element)?.closest<HTMLElement>('[data-web-id]');
       selectNode(target?.dataset.webId ?? '', event.shiftKey || event.ctrlKey || event.metaKey);
@@ -194,8 +234,12 @@ export function WebEditor({ document, onApply, onUndo, onRedo, onImportAsset, di
       // This iframe is an object selection surface. A refused design gesture
       // must not fall through into the browser's native text/image drag.
       event.preventDefault();
-      if (live.current.blocked) return;
+      if (live.current.blocked || gesture || box || pan) return;
       body.focus({ preventScroll: true });
+      if (panMode && viewport.current) {
+        pan = { x: event.screenX, y: event.screenY, left: viewport.current.scrollLeft, top: viewport.current.scrollTop, pointerId: event.pointerId };
+        body.setPointerCapture(event.pointerId); setDragging(true); return;
+      }
       if (boxMode) {
         const overlay = dom.createElement('div'); overlay.setAttribute('data-oey-selection-box', '');
         overlay.style.cssText = `position:fixed;pointer-events:none;z-index:2147483647;border:1px solid #398568;background:#39856822;left:${event.clientX}px;top:${event.clientY}px`;
@@ -207,12 +251,18 @@ export function WebEditor({ document, onApply, onUndo, onRedo, onImportAsset, di
       let target = handle ? dom.querySelector<HTMLElement>(`[data-web-id="${CSS.escape(handle.dataset.nodeId!)}"]`) : (event.target as Element)?.closest<HTMLElement>('[data-web-id]');
       const chosen = previewDocument.nodes[live.current.selection];
       if (!handle && chosen?.group && live.current.selectedIds.length === 1 && target?.dataset.webId && contains(previewDocument, chosen.id, target.dataset.webId)) target = dom.querySelector<HTMLElement>(`[data-web-id="${CSS.escape(chosen.id)}"]`);
+      let moveIds: string[] | undefined;
+      if (!handle && live.current.selectedIds.length > 1 && target?.dataset.webId) {
+        const roots = webSelectionRoots(previewDocument, live.current.selectedIds), hit = roots.find(node => contains(previewDocument, node.id, target!.dataset.webId!));
+        if (hit) { if (roots.length > 1) moveIds = roots.map(node => node.id); target = dom.querySelector<HTMLElement>(`[data-web-id="${CSS.escape(hit.id)}"]`); }
+      }
       const id = target?.dataset.webId, current = id ? previewDocument.nodes[id] : undefined;
       if (!target || !id || !current || id === previewPage.rootId || locked(previewDocument, id)) return;
       const projected = projection(current, live.current.breakpoint);
       if ((handle || projected.layout.mode === 'position') && !live.current.overrideEnabled) return;
       const bounds = target.getBoundingClientRect();
       let groupBounds: Record<string, WebBounds> | undefined, memberStyles: Map<HTMLElement, string | null> | undefined;
+      let moveBounds: Record<string, WebBounds> | undefined, snapTargets: SnapTarget[] | undefined, coordinateParent: HTMLElement | undefined, dependencies: EditPrecondition[] | undefined;
       if (current.group) {
         try {
           webDeleteSelection(previewDocument, [id]);
@@ -229,18 +279,49 @@ export function WebEditor({ document, onApply, onUndo, onRedo, onImportAsset, di
           } else measurePositions([id], false, true);
         } catch (error) { setEditorError(error instanceof Error ? error.message : String(error)); return; }
       }
-      gesture = { id, target, pointerId: event.pointerId, x: event.clientX, y: event.clientY, moved: false, resize: Boolean(handle), width: bounds.width, height: bounds.height, left: target.offsetLeft, top: target.offsetTop, breakpoint: live.current.breakpoint, originalStyle: target.getAttribute('style'), groupBounds, memberStyles };
+      if (!handle && (moveIds || live.current.snapping && projected.layout.mode === 'position')) {
+        const multi = Boolean(moveIds); moveIds ??= [id];
+        try {
+          moveBounds = measurePositions(moveIds); webPositionedMoveOperations(previewDocument, moveIds, moveBounds, 0, 0, live.current.breakpoint);
+          memberStyles ??= new Map();
+          moveIds.forEach(id => { const el = dom.querySelector<HTMLElement>(`[data-web-id="${CSS.escape(id)}"]`)!; memberStyles!.set(el, el.getAttribute('style')); });
+          const dependencyIds = [...moveIds];
+          if (live.current.snapping) {
+            coordinateParent = target.offsetParent as HTMLElement;
+            const candidates = Object.values(previewDocument.nodes).filter(node => node.parentId === current.parentId && !moveIds!.includes(node.id) && !node.hidden && projection(node, live.current.breakpoint).layout.mode === 'position');
+            snapTargets = [{ x: 0, y: 0, width: coordinateParent.clientWidth, height: coordinateParent.clientHeight }];
+            for (const node of candidates) {
+              try { const measured = measurePositions([node.id])[node.id]!; const el = dom.querySelector<HTMLElement>(`[data-web-id="${CSS.escape(node.id)}"]`)!; if (el.offsetParent === coordinateParent) { snapTargets.push(measured); dependencyIds.push(node.id); } } catch {}
+            }
+          }
+          dependencies = webAlignmentPreconditions(previewDocument, dependencyIds);
+        } catch (error) {
+          if (multi) { setEditorError('多选拖动仅支持同父级、无变换的像素绝对定位对象；流式对象请先分组重排。'); return; }
+          moveIds = undefined; moveBounds = undefined; snapTargets = undefined;
+        }
+      }
+      const css = dom.defaultView!.getComputedStyle(target), position = css.position;
+      const left = Number.isFinite(parseFloat(css.left)) ? parseFloat(css.left) : position === 'relative' ? 0 : target.offsetLeft - (parseFloat(css.marginLeft) || 0);
+      const top = Number.isFinite(parseFloat(css.top)) ? parseFloat(css.top) : position === 'relative' ? 0 : target.offsetTop - (parseFloat(css.marginTop) || 0);
+      gesture = { id, target, pointerId: event.pointerId, x: event.clientX, y: event.clientY, moved: false, resize: Boolean(handle), width: bounds.width, height: bounds.height, left, top, breakpoint: live.current.breakpoint, originalStyle: target.getAttribute('style'), groupBounds, memberStyles, moveIds, moveBounds, snapTargets, coordinateParent, dependencies, viewportWidth: dom.defaultView!.innerWidth, viewportHeight: dom.defaultView!.innerHeight, tolerance: 6 / live.current.zoom };
       target.setPointerCapture(event.pointerId);
-      setDragging(true); setSelection(id); event.preventDefault();
+      setDragging(true); if (!moveIds || moveIds.length === 1) setSelection(id); event.preventDefault();
     };
     const move = (event: PointerEvent) => {
+      if (pan) {
+        if (event.pointerId !== pan.pointerId || !viewport.current) return;
+        viewport.current.scrollLeft = pan.left - (event.screenX - pan.x); viewport.current.scrollTop = pan.top - (event.screenY - pan.y);
+        event.preventDefault(); return;
+      }
       if (box) {
+        if (event.pointerId !== box.pointerId) return;
         box.overlay.style.left = `${Math.min(box.x, event.clientX)}px`; box.overlay.style.top = `${Math.min(box.y, event.clientY)}px`;
         box.overlay.style.width = `${Math.abs(event.clientX - box.x)}px`; box.overlay.style.height = `${Math.abs(event.clientY - box.y)}px`;
         event.preventDefault(); return;
       }
       if (!gesture) return;
-      const dx = event.clientX - gesture.x, dy = event.clientY - gesture.y;
+      if (event.pointerId !== gesture.pointerId) return;
+      const { dx, dy } = delta(gesture, event, true);
       if (Math.abs(dx) + Math.abs(dy) < 5 && !gesture.moved) return;
       gesture.moved = true;
       gesture.target.style.opacity = '.7';
@@ -253,13 +334,22 @@ export function WebEditor({ document, onApply, onUndo, onRedo, onImportAsset, di
           for (const [key, value] of Object.entries(op.style)) if (value != null) el.style.setProperty(key, typeof value === 'number' ? `${value}px` : String(value)); else el.style.removeProperty(key);
         }
       }
+      else if (gesture.moveIds && gesture.moveBounds) {
+        for (const op of webPositionedMoveOperations(previewDocument, gesture.moveIds, gesture.moveBounds, dx, dy, gesture.breakpoint)) {
+          if (op.type !== 'web.style.update') continue;
+          const el = dom.querySelector<HTMLElement>(`[data-web-id="${CSS.escape(op.nodeId)}"]`)!;
+          el.style.left = `${op.style.left}px`; el.style.top = `${op.style.top}px`; el.style.right = 'auto'; el.style.bottom = 'auto'; el.style.opacity = '.7';
+        }
+      }
       else if (projection(previewDocument.nodes[gesture.id]!, gesture.breakpoint).layout.mode === 'position') {
         gesture.target.style.left = `${gesture.left + dx}px`; gesture.target.style.top = `${gesture.top + dy}px`;
       }
       event.preventDefault();
     };
     const end = (event: PointerEvent) => {
+      if (pan) { if (event.pointerId !== pan.pointerId) return; suppressClick = true; cancel(); return; }
       if (box) {
+        if (event.pointerId !== box.pointerId) return;
         const left = Math.min(box.x, event.clientX), right = Math.max(box.x, event.clientX), top = Math.min(box.y, event.clientY), bottom = Math.max(box.y, event.clientY);
         const inside = Array.from(dom.querySelectorAll<HTMLElement>('[data-web-id]')).filter(el => {
           const rect = el.getBoundingClientRect(); return el.dataset.webId !== previewPage.rootId && rect.width > 0 && rect.height > 0 && rect.left >= left && rect.right <= right && rect.top >= top && rect.bottom <= bottom;
@@ -269,18 +359,21 @@ export function WebEditor({ document, onApply, onUndo, onRedo, onImportAsset, di
         suppressClick = true; cancel(); return;
       }
       const done = gesture; if (!done) return;
-      gesture = undefined; restore(done); setDragging(false);
+      if (event.pointerId !== done.pointerId) return;
+      gesture = undefined; restore(done); clearGuides(); setDragging(false);
       if (done.target.hasPointerCapture(done.pointerId)) done.target.releasePointerCapture(done.pointerId);
       if (!done.moved) return;
+      if (dom.defaultView!.innerWidth !== done.viewportWidth || dom.defaultView!.innerHeight !== done.viewportHeight) { setEditorError('视口已变化，拖动未保存，请重新操作。'); return; }
       suppressClick = true;
       const current = previewDocument.nodes[done.id]!;
-      const dx = event.clientX - done.x, dy = event.clientY - done.y;
+      const { dx, dy } = delta(done, event);
       const submit = (operations: WebOperation[], label: string) => void live.current.act(operations, label, previewDocument.revision);
       if (done.resize && done.groupBounds) {
         const batch = webResizeGroup(previewDocument, done.id, Math.max(16, Math.round(done.width + dx)), Math.max(16, Math.round(done.height + dy)), done.groupBounds);
         void live.current.act(batch.operations, '调整组尺寸', previewDocument.revision, batch.preconditions);
       }
       else if (done.resize) submit([{ type: 'web.style.update', nodeId: done.id, breakpointId: done.breakpoint, style: { width: Math.max(16, Math.round(done.width + dx)), height: Math.max(16, Math.round(done.height + dy)) } }], '调整网页元素尺寸');
+      else if (done.moveIds && done.moveBounds) void live.current.act(webPositionedMoveOperations(previewDocument, done.moveIds, done.moveBounds, dx, dy, done.breakpoint), done.moveIds.length > 1 ? '移动选中定位元素' : '移动并吸附网页元素', previewDocument.revision, done.dependencies ?? []);
       else if (current.group && !isWebFlowGroup(current)) void live.current.act([{ type: 'web.style.update', nodeId: done.id, style: { left: Math.round(done.left + dx), top: Math.round(done.top + dy) } }], '移动原生组', previewDocument.revision, webAlignmentPreconditions(previewDocument, [done.id]));
       else if (projection(current, done.breakpoint).layout.mode === 'position') submit([{ type: 'web.style.update', nodeId: done.id, breakpointId: done.breakpoint, style: { left: Math.round(done.left + dx), top: Math.round(done.top + dy) } }], '移动网页元素');
       else {
@@ -304,7 +397,7 @@ export function WebEditor({ document, onApply, onUndo, onRedo, onImportAsset, di
       }
     };
     const submit = (event: Event) => event.preventDefault();
-    const keydown = (event: KeyboardEvent) => { if (event.key === 'Escape' && (gesture || box)) { cancel(); suppressClick = true; } live.current.handleKey(event); };
+    const keydown = (event: KeyboardEvent) => { if (event.key === 'Escape' && (gesture || box || pan)) { if (pan && viewport.current) { viewport.current.scrollLeft = pan.left; viewport.current.scrollTop = pan.top; } cancel(); suppressClick = true; setPanMode(false); } live.current.handleKey(event); };
     body.addEventListener('keydown', keydown);
     body.addEventListener('click', click); body.addEventListener('dblclick', editText); body.addEventListener('submit', submit); body.addEventListener('dragstart', submit);
     body.addEventListener('pointerdown', start); body.addEventListener('pointermove', move); body.addEventListener('pointerup', end); body.addEventListener('pointercancel', cancel);
@@ -313,7 +406,7 @@ export function WebEditor({ document, onApply, onUndo, onRedo, onImportAsset, di
       body.removeEventListener('click', click); body.removeEventListener('dblclick', editText); body.removeEventListener('submit', submit); body.removeEventListener('dragstart', submit);
       body.removeEventListener('pointerdown', start); body.removeEventListener('pointermove', move); body.removeEventListener('pointerup', end); body.removeEventListener('pointercancel', cancel);
     };
-  }, [sourceDoc, frameEpoch, previewDocument, previewPage, boxMode]);
+  }, [sourceDoc, frameEpoch, previewDocument, previewPage, boxMode, panMode]);
   useEffect(() => {
     const dom = iframe.current?.contentDocument, win = iframe.current?.contentWindow;
     if (!dom || !win) return;
@@ -441,8 +534,17 @@ export function WebEditor({ document, onApply, onUndo, onRedo, onImportAsset, di
     </aside>
     <section className="web-editor-stage">
       <div className="web-editor-toolbar"><div><span className="web-editor-live-dot"/>网页预览 <small>· 修订 {document.revision}</small></div><div className="web-editor-stage-controls"><label>视口 <input aria-label="预览宽度" type="range" min="320" max="1440" value={width} disabled={dragging} onChange={event => setWidth(Number(event.currentTarget.value))}/><strong>{width}px</strong></label><button aria-label="撤销" onClick={onUndo} disabled={blocked}>↶</button><button aria-label="重做" onClick={onRedo} disabled={blocked}>↷</button></div></div>
-      <div className="web-editor-browser"><div className="web-editor-browser-bar"><i/><i/><i/><span>{page.route}</span><small>{breakpoint ?? '基础'}</small></div><div className="web-editor-viewport" style={{ '--preview-width': `${width}px` } as CSSProperties}><iframe ref={iframe} title="隔离网页预览" sandbox="allow-same-origin" srcDoc={sourceDoc} onLoad={() => setFrameEpoch(epoch => epoch + 1)} /></div></div>
-      <div className="web-editor-stage-foot"><span><b>提示</b> {boxMode ? '拖出矩形选中完整包含的对象 · 修饰键追加' : '拖动重排 · 右下角缩放 · 定位元素自由移动'}</span><button aria-pressed={boxMode} disabled={blocked || dragging} onClick={() => setBoxMode(!boxMode)}>框选</button><button onClick={() => setSourceOpen(!sourceOpen)}>{sourceOpen ? '关闭源码' : '源码模块'}</button></div>
+      <div className="web-editor-browser"><div className="web-editor-browser-bar"><i/><i/><i/><span>{page.route}</span>
+        <div className="web-editor-view-controls"><select aria-label="网页缩放" value={viewZoom} disabled={dragging} onChange={event => setViewZoom(event.currentTarget.value === 'fit' ? 'fit' : Number(event.currentTarget.value))}>
+          {[.25, .5, .75, 1, 1.25, 1.5, 2].map(value => <option key={value} value={value}>{value * 100}%</option>)}<option value="fit">适应视口</option>
+        </select>{viewZoom === 'fit' && <span>{Math.round(zoom * 100)}%</span>}</div><small>{breakpoint ?? '基础'}</small></div>
+        <div ref={viewport} className="web-editor-viewport"><div className="web-editor-canvas" style={{ width: width * zoom, height: viewportSize.height * zoom }}>
+          <iframe ref={iframe} title="隔离网页预览" style={{ width, height: viewportSize.height, transform: `scale(${zoom})` }} sandbox="allow-same-origin" srcDoc={sourceDoc} onLoad={() => setFrameEpoch(epoch => epoch + 1)} />
+        </div></div></div>
+      <div className="web-editor-stage-foot"><span><b>提示</b> {panMode ? '拖动平移视图 · Esc 退出' : boxMode ? '框选完整包含的对象 · 修饰键追加' : '拖动重排 · 右下角缩放'}</span>
+        <button aria-pressed={snapping} disabled={dragging} onClick={() => setSnapping(!snapping)}>吸附</button>
+        <button aria-pressed={panMode} disabled={blocked || dragging} onClick={() => { setPanMode(!panMode); setBoxMode(false); }}>平移</button>
+        <button aria-pressed={boxMode} disabled={blocked || dragging} onClick={() => { setBoxMode(!boxMode); setPanMode(false); }}>框选</button><button onClick={() => setSourceOpen(!sourceOpen)}>{sourceOpen ? '关闭源码' : '源码模块'}</button></div>
       {editorError && <div className="web-editor-error" role="status">{editorError}</div>}
       {richOpen && selectedIds.length === 1 && node && !node.component && !node.group && WEB_RICH_TEXT_TAGS.has(node.tag) &&
         <WebRichTextEditor key={`${document.documentId}/${node.id}`} document={document} node={node} disabled={blocked || locked(document, node.id)}

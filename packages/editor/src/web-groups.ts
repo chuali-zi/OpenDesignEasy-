@@ -100,6 +100,7 @@ export function webResizeGroup(document: WebDocument, id: string, width: number,
       const child = document.nodes[id]!, b = box(document, child);
       const measured = bounds[id];
       if (!measured || !Object.values(measured).every(Number.isFinite) || measured.width <= 0 || measured.height <= 0) throw new Error('无法可靠测量组内元素。');
+      if (Math.abs(measured.width - b.width) > .51 || Math.abs(measured.height - b.height) > .51) throw new Error('组缩放需要框尺寸与像素样式一致；带额外边框/内边距的content-box请先调整尺寸模型。');
       if (child.group) { groupBox(document, child); groups.push(child.id); visit(child); }
       operations.push({ type: 'web.style.update', nodeId: id, style: { left: round(measured.x * sx - measured.marginLeft), top: round(measured.y * sy - measured.marginTop), width: round(b.width * sx), height: round(b.height * sy), right: null, bottom: null } });
     }

@@ -46,7 +46,12 @@
 .web-editor-browser-bar span { margin-left: 9px; color: #88938b; font-size: 9px; }
 .web-editor-browser-bar small { margin-left: auto; padding: 3px 7px; border-radius: 3px; background: #edf3ed; color: #557462; font-size: 8px; letter-spacing: .4px; text-transform: uppercase; }
 .web-editor-viewport { min-height: 0; flex: 1; overflow: auto; display: flex; background: #e8ebe7; }
-.web-editor-viewport iframe { display: block; flex: 0 0 var(--preview-width); width: var(--preview-width); min-width: 320px; margin: 0 auto; max-width: none; height: 100%; min-height: 420px; border: 0; background: #fff; box-shadow: 0 0 22px #22352b12; }
+.web-editor-canvas { flex: 0 0 auto; margin: 0 auto; overflow: hidden; background: #fff; box-shadow: 0 0 22px #22352b12; }
+.web-editor-viewport iframe { display: block; max-width: none; border: 0; background: #fff; transform-origin: top left; }
+.web-editor-view-controls { margin-left: auto; display: flex; align-items: center; gap: 5px; }
+.web-editor-view-controls select { border: 1px solid #dce4dc; border-radius: 4px; color: #506458; background: white; padding: 3px 5px; font-size: 10px; }
+.web-editor-view-controls span { font-size: 9px; }
+.web-editor-browser-bar small { margin-left: 8px; }
 .web-editor-stage-foot { flex: 0 0 35px; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; color: #879289; font-size: 9px; }
 .web-editor-stage-foot b { color: #596b5d; font-weight: 550; }
 .web-editor-source { flex: 0 0 210px; display: flex; flex-direction: column; border-top: 1px solid #dce3dc; background: #f8f9f6; }

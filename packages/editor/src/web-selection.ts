@@ -98,13 +98,10 @@ export function webAlignmentPreconditions(document: WebDocument, ids: string[]):
   return result;
 }
 
-/** Preserve CSS layout semantics: only absolute siblings with explicit pixel
- * sizes can be positioned together. Coordinates are local border-box bounds. */
-export function webAlignmentOperations(document: WebDocument, ids: string[], bounds: Record<string, WebBounds>, alignment: WebAlignment, breakpointId?: string): WebOperation[] {
+export function webPositionedNodes(document: WebDocument, ids: string[], bounds: Record<string, WebBounds>, breakpointId?: string): WebNode[] {
   const nodes = selectedWebNodes(document, ids);
-  if (nodes.length < (alignment.startsWith('distribute') ? 3 : 2)) throw new Error('对齐需要至少两个元素，分布需要至少三个元素。');
   const parent = nodes[0]!.parentId;
-  if (!parent || nodes.some(node => node.parentId !== parent || webNodeLocked(document, node.id) || node.hidden)) throw new Error('请选择同一父级内未锁定、可见的定位元素。');
+  if (!parent || nodes.some(node => node.parentId !== parent || (node.group ? webNodeTreeLocked(document, node.id) : webNodeLocked(document, node.id)) || node.hidden)) throw new Error('请选择同一父级内未锁定、可见的定位元素。');
   for (const node of nodes) {
     const override = breakpointId ? node.responsive?.[breakpointId] : undefined;
     const layout = { ...node.layout, ...override?.layout }, style = { ...node.style, ...override?.style };
@@ -113,6 +110,20 @@ export function webAlignmentOperations(document: WebDocument, ids: string[], bou
     const box = bounds[node.id];
     if (!box || !Object.values(box).every(Number.isFinite) || box.width <= 0 || box.height <= 0) throw new Error('无法取得可靠的元素边界，请等待预览载入。');
   }
+  return nodes;
+}
+
+export function webPositionedMoveOperations(document: WebDocument, ids: string[], bounds: Record<string, WebBounds>, dx: number, dy: number, breakpointId?: string): WebOperation[] {
+  if (!Number.isFinite(dx) || !Number.isFinite(dy)) throw new Error('移动坐标必须有限。');
+  return webPositionedNodes(document, ids, bounds, breakpointId).map(node => ({ type: 'web.style.update', nodeId: node.id, breakpointId,
+    style: { left: round(bounds[node.id]!.x + dx - bounds[node.id]!.marginLeft), top: round(bounds[node.id]!.y + dy - bounds[node.id]!.marginTop), right: null, bottom: null } }));
+}
+
+/** Preserve CSS layout semantics: only absolute siblings with explicit pixel
+ * sizes can be positioned together. Coordinates are local border-box bounds. */
+export function webAlignmentOperations(document: WebDocument, ids: string[], bounds: Record<string, WebBounds>, alignment: WebAlignment, breakpointId?: string): WebOperation[] {
+  const nodes = webPositionedNodes(document, ids, bounds, breakpointId);
+  if (nodes.length < (alignment.startsWith('distribute') ? 3 : 2)) throw new Error('对齐需要至少两个元素，分布需要至少三个元素。');
   const horizontal = ['left', 'center-x', 'right', 'distribute-x'].includes(alignment);
   const position = horizontal ? 'x' : 'y', length = horizontal ? 'width' : 'height';
   const margin = horizontal ? 'marginLeft' : 'marginTop';
