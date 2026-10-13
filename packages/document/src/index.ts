@@ -5,3 +5,5 @@ export * from "./text.ts";
 export * from "./geometry.ts";
 
 export * from './doc-kernel.ts';
+
+export * from './doc-page-map.ts';

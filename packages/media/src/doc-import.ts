@@ -359,6 +359,7 @@ export function prepareDocxImport(bytes: Uint8Array, options: {
     let headerPart: string | undefined, footerPart: string | undefined;
     const locate=(root:XmlNode,target:XmlNode,path:number[]=[]):number[]|undefined=>{if(root===target)return path;for(let i=0;i<root.children.length;i++){const found=locate(root.children[i]!,target,[...path,i]);if(found)return found;}};
     const finish = (props: XmlNode | undefined) => {
+        const numbering=props&&child(props,'pgNumType');if(numbering&&(attr(numbering,'start')!==undefined||attr(numbering,'fmt')!==undefined&&attr(numbering,'fmt')!=='decimal'))reject('page-number restarts/custom formats are outside editable template support');
         if(props&&descendants(props,'cols').some(n=>Number(attr(n,'num')??'1')!==1||children(n,'col').length>0))reject('multiple text columns/custom column widths are outside editable template support');
         const id = key('section'), page = { ...doc.pageSettings }, size = props && child(props, 'pgSz'), margin = props && child(props, 'pgMar');
         for (const [a, b] of [['w', 'width'], ['h', 'height']] as const) {
@@ -376,6 +377,8 @@ export function prepareDocxImport(bytes: Uint8Array, options: {
             if (refs?.some(n => attr(n, 'type') !== 'default'))
                 return reject('first/even-page headers not yet supported');
             const ref = refs?.[0], rel = ref && rels.get(ref.attrs['r:id'] ?? '');
+            if(ref&&!rel)reject('missing header/footer relationship');
+            if(refs&&refs.length>1)reject('duplicate header/footer relationship');
             if (rel) {
                 if (rel.external)
                     return reject('external header/footer');

@@ -36,6 +36,7 @@
 | [运行与恢复](spec/runtime-recovery.md) | SQLite、会话、输入、版本、重启、数据导入 |
 | [质量规范](spec/quality-governance-spec.md) | 编辑正确性、设计质量、实际导出与必要验证 |
 | [客户端规范](spec/clients-spec.md) | Web、CLI、TUI、Desktop、进程与分发 |
+| [Doc 章节分节与验收门](spec/doc-section-rules.md) | 奇偶空白页/全书字段、四类原生往返、官方 Library 交付与明确停止门 |
 | [Doc 分页直接编辑](spec/doc-paged-editing.md) | 同一光标的跨页编辑、原生中文 IME、表格/图片/浮动、章节页码与明确范围 |
 | [Doc 分页控制与原生 PDF](spec/doc-pagination.md) | 段落分页、修订明确的预览、有界本地 Office 渲染与实测边界 |
 | [Doc 浮动对象与原生锚点](spec/doc-floating.md) | 段落锚点、拖拽/旋转缩放、锁定/取消、原生图形与支持边界 |

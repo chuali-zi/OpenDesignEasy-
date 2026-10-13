@@ -175,7 +175,7 @@ export type WebOperation = WebPageInsertOperation | WebPageUpdateOperation | Web
 export type DocOperation =
   | { type: 'doc.text.apply'; sectionId: string; part?: 'content' | 'header' | 'footer'; steps: unknown[] }
   | { type: 'doc.section.insert'; section: DocSection; index?: number }
-  | { type: 'doc.section.update'; sectionId: string; name?: string; styleId?: string | null }
+  | { type: 'doc.section.update'; sectionId: string; name?: string; styleId?: string | null; breakType?: DocSection['breakType'] | null }
   | { type: 'doc.section.remove'; sectionId: string }
   | { type: 'doc.section.reorder'; sectionId: string; index: number }
   | { type: 'doc.page.update'; sectionId?: string; settings: Partial<DocPageSettings> }

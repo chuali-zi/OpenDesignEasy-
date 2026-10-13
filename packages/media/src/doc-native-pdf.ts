@@ -15,7 +15,7 @@ export async function renderNativeDocPdf(bytes:Uint8Array,executable:string,sign
   // Language/font/runtime search variables only. Model keys and provider configuration are irrelevant here.
   const env:NodeJS.ProcessEnv={};for(const key of ['PATH','LANG','LC_ALL','TMPDIR','TEMP','TMP','SYSTEMROOT','SystemRoot','LD_LIBRARY_PATH','FONTCONFIG_PATH','FONTCONFIG_FILE'])if(process.env[key]!==undefined)env[key]=process.env[key];
   await new Promise<void>((accept,reject)=>{
-   const child=spawn(executable,[`-env:UserInstallation=${pathToFileURL(join(root,'profile')).href}`,'--headless','--convert-to','pdf:writer_pdf_Export','--outdir',output,input],{env,stdio:'ignore',detached:process.platform!=='win32'});
+   const child=spawn(executable,[`-env:UserInstallation=${pathToFileURL(join(root,'profile')).href}`,'--headless','--convert-to','pdf:writer_pdf_Export:{"IsSkipEmptyPages":{"type":"boolean","value":"false"}}','--outdir',output,input],{env,stdio:'ignore',detached:process.platform!=='win32'});
    let settled=false;const abort=()=>{if(child.pid){try{process.platform==='win32'?child.kill('SIGKILL'):process.kill(-child.pid,'SIGKILL');}catch{}}};
    const done=(error?:Error)=>{if(settled)return;settled=true;bounded.removeEventListener('abort',abort);error?reject(error):accept();};
    bounded.addEventListener('abort',abort,{once:true});if(bounded.aborted)abort();
