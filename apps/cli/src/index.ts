@@ -175,12 +175,17 @@ export async function execute(argv: string[]): Promise<unknown> {
   const [area, action, ...rest] = argv;
   if (area === 'agent') return executeAgent(argv.slice(1));
   if (area === 'asset') {
-    const { positional } = parseFlags(rest, []);
-    expectPositionals(positional, action === 'import' ? 2 : 1, `asset ${action}`);
+    const { values, positional } = parseFlags(rest, action === 'read' ? ['offset', 'limit', 'ocr', 'language'] : []);
+    expectPositionals(positional, action === 'import' || action === 'read' ? 2 : 1, `asset ${action}`);
     const runtime = ProjectRuntime.open(positional[0]!);
     try {
       const assets = new ProjectAssets(runtime);
       if (action === 'list') return { assets: assets.list() };
+      if (action === 'read') {
+        if (values.ocr !== undefined && !['true', 'false'].includes(values.ocr)) usage('--ocr must be true or false');
+        if (values.language !== undefined && !['eng', 'chi_sim'].includes(values.language)) usage('--language must be eng or chi_sim');
+        return await assets.readReference(positional[1]!, values.offset === undefined ? 0 : Number(values.offset), values.limit === undefined ? 12000 : Number(values.limit), { ocr: values.ocr === 'true', ocrLanguage: values.language });
+      }
       if (action !== 'import') usage('Unknown asset action');
       const file = positional[1]!;
       const bytes = await readFile(file);
@@ -276,12 +281,6 @@ export async function execute(argv: string[]): Promise<unknown> {
       await writeFileAtomically(output, data);
       return { documentId: document.documentId, revision: document.revision, format, output };
     } finally { runtime.close(); }
-  }
-
-  if (area === 'asset' && action === 'read') {
-    const {values,positional}=parseFlags(rest,['offset','limit','ocr','language']);expectPositionals(positional,2,'asset read');
-    if(values.ocr!==undefined&&!['true','false'].includes(values.ocr))usage('--ocr must be true or false');
-    return withRuntime(positional[0]!,runtime=>new ProjectAssets(runtime).readReference(positional[1]!,values.offset===undefined?0:Number(values.offset),values.limit===undefined?12000:Number(values.limit),{ocr:values.ocr==='true',ocrLanguage:values.language}));
   }
 
   if (area === "node" && action === "insert") {

@@ -891,7 +891,7 @@ export class AgentService {
           const image = toImageContent(result.mimeType, result.data);
           return { content: [image, { type: 'text', text: JSON.stringify(result.asset ?? { assetId: args.assetId }) }], details: result.asset ?? { assetId: args.assetId } };
         }
-        return textResult(result.text ?? JSON.stringify(result), result);
+        return textResult(JSON.stringify(result), result);
       },
     }));
     tools.push(define({
@@ -983,10 +983,10 @@ export class AgentService {
       if (!read) throw new RuntimeError('invalid', 'Asset attachments are unavailable until design services are configured.');
       for (const assetId of input.assetIds.slice(0, 10)) {
         signal?.throwIfAborted();
-        const result = await read({ assetId, limit: 12000 }, signal ?? new AbortController().signal) as { asset?: { name?: string }; mimeType?: string; data?: string; text?: string };
+        const result = await read({ assetId, limit: 12000 }, signal ?? new AbortController().signal) as { asset?: { name?: string }; mimeType?: string; data?: string; text?: string; warnings?: string[] };
         signal?.throwIfAborted();
         if (result.mimeType && result.data) images.push(toImageContent(result.mimeType, result.data));
-        else if (result.text) text += `\n\nReference: ${result.asset?.name ?? assetId}\n${result.text}`;
+        else if (result.text) text += `\n\nReference: ${result.asset?.name ?? assetId}${result.warnings?.length ? `\nReading limits: ${result.warnings.join(' ')}` : ''}\n${result.text}`;
       }
     }
     return { text, images };

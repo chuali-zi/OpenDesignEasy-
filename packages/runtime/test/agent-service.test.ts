@@ -1,3 +1,4 @@
+import { exportDocDocx } from '@oeydesign/media';
 import assert from 'node:assert/strict';
 import { mkdtempSync, realpathSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -7,7 +8,7 @@ import { textFromString } from '@oeydesign/document';
 import type { DeckNode } from '@oeydesign/document';
 import { InMemoryCredentialStore, fauxAssistantMessage, fauxProvider, fauxToolCall } from '@earendil-works/pi-ai';
 import { ModelRuntime } from '@earendil-works/pi-coding-agent';
-import { createDesignServices, ProjectRuntime } from '../src/index.ts';
+import { createDesignServices, ProjectAssets, ProjectRuntime } from '../src/index.ts';
 
 function within<T>(promise: Promise<T>, label: string, timeoutMs = 12_000): Promise<T> {
   return new Promise((resolvePromise, reject) => {
@@ -411,4 +412,14 @@ test('Pi Doc tools read human text, expose section schema and export the same co
   const session=await fixture.runtime.agent.createSession();const accepted=await fixture.runtime.agent.send(session.sessionId,'保留人工报告，调整页边距并导出。',{documentId:id});await within(fixture.runtime.agent.waitForIdle(session.sessionId),'Doc offline run');
   assert.equal(fixture.runtime.agent.getRun(accepted.runId)?.status,'completed');const latest=fixture.runtime.readDocDocument(id);assert.match(JSON.stringify(latest.content),/人工确认报告/);assert.equal(latest.pageSettings.marginLeft,80);
   const exported=fixture.runtime.listRecords<{documentId:string;revision:number;format:string}>('exports');assert.equal(exported.length,1);assert.equal(exported[0]!.value.revision,latest.revision);assert.equal(exported[0]!.value.format,'docx');assert.match(JSON.stringify(await fixture.runtime.agent.getMessages(session.sessionId)),/doc\.section\.insert/);
+});
+
+
+test('native DOCX references enter Pi as extracted content and reading limits, retaining original and using the cache offline', async t => {
+  const fixture=makeFixture(t),doc=fixture.runtime.createDocument({kind:'doc',name:'Synthetic native reference'}),sectionId=doc.sections[0]!.id;
+  fixture.runtime.submit(fixture.runtime.makeCommand(doc.documentId,[{type:'doc.text.apply',sectionId,steps:[{stepType:'replace',from:1,to:1,slice:{content:[{type:'text',text:'Synthetic source evidence 42 / 合成资料'}]}}]}]));
+  const original=await exportDocDocx(fixture.runtime.readDocDocument(doc.documentId)),assets=new ProjectAssets(fixture.runtime),reference=await assets.importReference(original,'synthetic.docx');
+  fixture.faux.setResponses([fauxAssistantMessage(fauxToolCall('reference_read',{assetId:reference.id,limit:1000},{id:'reference-text'}),{stopReason:'toolUse'}),fauxAssistantMessage('Read synthetic evidence.',{stopReason:'stop'})]);
+  const session=await fixture.runtime.agent.createSession();const accepted=await fixture.runtime.agent.send(session.sessionId,'只读取合成材料，不修改设计。',{documentId:doc.documentId,assetIds:[reference.id]});await within(fixture.runtime.agent.waitForIdle(session.sessionId),'native reference offline run');
+  assert.equal(fixture.runtime.agent.getRun(accepted.runId)?.status,'completed');assert.equal(fixture.faux.state.callCount,2);const messages=JSON.stringify(await fixture.runtime.agent.getMessages(session.sessionId));assert.match(messages,/Synthetic source evidence 42/);assert.match(messages,/not interpreted/);assert.match(messages,/docx/);assert.equal(fixture.runtime.listRecords('reference-text').length,1);assert.deepEqual(Buffer.from(await assets.resolve(reference.id)),Buffer.from(original));assert.equal(fixture.runtime.readDocDocument(doc.documentId).revision,1);
 });

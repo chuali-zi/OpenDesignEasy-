@@ -7,3 +7,5 @@
 已知待修：CLI asset read 误用同步 withRuntime，类型错误且异步解析前 runtime 会提前关闭，应改为直接 open/await/finally close；宏与 XML entity 拒绝测试错误地传入 ZIP 生成 Promise，应先 await 字节再断言具体原因。断连前最后一次修复脚本未执行，parsers-second.log 不存在。本地 chi_sim 数据缺失，不声称中文 OCR 通过。OCR 初始化的 45 秒取消覆盖须继续核实。
 
 恢复后在新的验证分支继续，保持本检查点引用不动；验证完成才普通 fast-forward 推进功能分支，不改主分支、远端默认设置或 force push。不要开第二个写入执行器。若本地工作区丢失，可从这个已保存检查点恢复；即使只能取得 `7c7b741`，也可以仅重做资料解析切片，R4 和 Doc 核心已推成果不会丢失。完整 R5 模板/浮动对象/分页/Word 验收仍未完成。
+
+恢复后的上述已知问题已在验证分支修正；当前结果与支持边界见 [TS 资料读取](material-readers.md)。本检查点 SHA 本身仍保留未验收状态，不移动引用。
