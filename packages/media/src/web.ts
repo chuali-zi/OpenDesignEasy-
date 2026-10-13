@@ -73,6 +73,7 @@ export async function buildWebSource(document: WebDocument, resolveAsset?: Asset
     'README.md': '# Exported Web design\n\nRun `npm install` and `npm run build`. Run `npm run dev` for local development. Serve `dist` with an SPA fallback to `index.html` for page routes.\n\nThe snapshot in `oey-document.json` records the editable source revision.\n',
   };
   const reserved = new Set([...Object.keys(files), 'src/App.tsx'].map(path => path.toLowerCase()));
+  if (document.originalSource) files[`original/source.${document.originalSource.format}`] = document.originalSource.source;
   for (const module of document.sourceModules ?? []) {
     const path = `src/${module.path}`;
     if (reserved.has(path.toLowerCase())) throw new Error(`Source module collides with a generated source path: ${module.path}`);

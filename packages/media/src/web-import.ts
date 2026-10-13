@@ -156,7 +156,7 @@ export async function prepareWebSourceImport(bytes: Uint8Array): Promise<Prepare
   for (const [path, expected] of Object.entries(generated)) {
     const actual = files.get(path); if (!actual) fail(`missing required file: ${path}`);
     if (modules.has(path)) continue;
-    if (['src/App.tsx', 'src/main.tsx', 'src/style.css', 'index.html'].includes(path) && text(actual!) !== expected) fail(`generated entry changed: ${path}; edit native content in OEY or modify a managed source module`);
+    if ((['src/App.tsx', 'src/main.tsx', 'src/style.css', 'index.html'].includes(path) || path.startsWith('original/')) && text(actual!) !== expected) fail(`generated entry changed: ${path}; edit native content in OEY or modify a managed source module`);
   }
   for (const module of document.sourceModules ?? []) {
     const source = text(files.get(`src/${module.path}`)!);

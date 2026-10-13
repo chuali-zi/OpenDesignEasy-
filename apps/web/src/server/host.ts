@@ -55,6 +55,11 @@ export async function createWebHost(runtime: ProjectRuntime, options: WebHostOpt
     if (typeof body?.base64 !== 'string' || body.base64.length > 11200000 || body.base64.length % 4 || !/^[A-Za-z0-9+/]*={0,2}$/.test(body.base64)) throw new RuntimeError('invalid', 'Expected a source ZIP no larger than 8 MiB.');
     return runtime.importWebSource(Buffer.from(body.base64, 'base64'), { name: body.name }, { ...human, clientId: 'web' });
   });
+  app.post<{ Body: { source: string; format: 'html' | 'tsx'; fileName: string; commandId?: string } }>('/api/documents/import-structure', { bodyLimit: 2 * 1024 * 1024 }, async request => {
+    const body = request.body;
+    if (typeof body?.source !== 'string' || !['html', 'tsx'].includes(body.format) || typeof body.fileName !== 'string' || body.commandId !== undefined && (typeof body.commandId !== 'string' || !body.commandId)) throw new RuntimeError('invalid', 'Expected a static HTML or TSX file.');
+    return runtime.importWebStructure(body.source, body.format, body.fileName, { ...human, clientId: 'web', commandId: body.commandId });
+  });
   app.post<{ Params: { id: string } }>('/api/documents/:id/application-preview', async (request, reply) => {
     if (previewBuild) throw new RuntimeError('busy', 'An application preview is already building.');
     const document = runtime.readWebDocument(request.params.id);

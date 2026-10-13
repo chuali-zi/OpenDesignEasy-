@@ -3,10 +3,12 @@
 > 当前有效路线：**D / 全 TypeScript / Pi SDK / 直接编辑 / 多客户端**。用户于 2026-09-12 明确采用。
 > 状态截至 2026-09-20：R1 已完成 Windows 开发基线验证；R2 Deck 编辑与原生导出已完成本轮验收；R3 产品 Pi 会话已接入，现有兼容服务的共同创作、恢复与图片链路已实测通过，原生 K3 的文本、工具及截图识别也已实测通过。见[本轮验收](spec/r2-r3-validation.md)与[实施计划](spec/implementation-plan.md)。跨平台干净安装留在 R7。
 > 2026-09-26：R4 Web 文档、无头生产、DOM 编辑基础与受管源码构建已实现，阶段检查见 [R4 记录](spec/r4-web-validation.md)。R4 完整验收与 R5–R7 尚未完成。
-> 2026-10-13：用户已认可此前两张编辑器截图的视觉方向。R4 新增 OEY 源码 ZIP 的安全导入、外部受管模块同步与继续编辑/往返导出，见[支持边界](spec/web-source-import.md)；一般 React/HTML 工程解析与完整 R4 仍未完成。
+> 2026-10-13：用户已认可此前两张编辑器截图的视觉方向。R4 新增 OEY 源码 ZIP 的安全导入、外部受管模块同步与继续编辑/往返导出，见[支持边界](spec/web-source-import.md)；后续有限静态 HTML/React 导入与原生编辑完成，支持边界见下方验收记录。
 > 2026-10-13：修复媒体浏览器选择与测试清理；使用缓存 Node 24.21.0 完整离线套件 81/81、Web E2E 11/11 通过。按用户指定核实 K2.8 的 `kimi-for-coding` ID；网络配置发布后的一次有界文本探针在传输阶段失败，无模型响应，未重试。见 [云环境检查](spec/cloud-kimi-validation.md)。
 
 > 后续进展：父会话报告新任务 K2.8 文本探针成功（HTTP 200，33 tokens）；本容器未复测。已补整轮 Agent 预算/超时/失败清理及离线 mock，见[有界验收](spec/agent-budget-validation.md)；R4 内置应用预览已通过实际浏览器交互检查，审美待用户审核。
+
+> 2026-10-13 最新：R4 支持范围内逻辑验收完成，接续 R5 Doc 编辑产品；[完成门槛](spec/web-completion.md)列明边界与未验事项。
 
 ## 阅读顺序与效力
 
@@ -54,7 +56,7 @@
 | Node 24.21.0 与 Electron 44.3.0 utilityProcess/SQLite | R1 Windows x64 实际宿主验证通过；跨平台干净安装留到 R7 |
 | Web host、React/Vite、Konva/ProseMirror Deck 编辑与原生导出 | 完整编辑与图片/表格/图表路径通过 Chrome 4/4；实际 Office 打开及视觉复验通过 |
 | TUI、Desktop 完整产品及 Web/Deck/Doc 全部生产能力 | 后续阶段未完成 |
-| Web 文档、统一历史、CLI/host/agent、静态与 React 源码生产 | R4 进行中；DOM 编辑基础、源码/组件绑定和生产应用 ZIP 构建已实现；内置组件交互预览已接入，完整编辑及导入继续推进，检查见 R4 记录 |
+| Web 文档、统一历史、CLI/host/agent、静态与 React 源码生产 | R4 支持范围内逻辑验收完成，129/129 Node、23/23 Chromium；有限静态导入、原生编辑和恢复通过，审美反馈待用户 |
 | 旧数据导入与 Python 退役 | 尚未实施 |
 
 2026-09-20 已补齐图片裁切与原件、富文本、吸附/对齐、表格图表、PDF/PNG 和实际 PowerPoint 打开路径。真实兼容服务完成了讨论、生成三页、保留人工标题改动并扩展第四页、提问重启回答，以及一次实际图片生成/识图/插入/截图检查。开发检查还覆盖共享历史、输入幂等、取消、Pi 压缩、恢复和 CLI 连接 Web owner。最终完成条件与待验项见本轮验收及实施计划。
@@ -69,3 +71,5 @@ R2/R3 的交付面向交互式 Deck。Web 文档生产、Doc、TUI、Desktop、�
 - [历史归档](archive/README.md)：原始产品愿景、旧规范与调查。
 - [旧竞品分析](competitive-analysis/opendesign-vs-oeydesign-2026-08-06.md)：日期受限的研究，不决定当前技术路线。
 - 仓库中的 deepseek-harness-adapter 和 spikes 仅作历史研究；其中的 Python sidecar 推荐与冻结口径已被 D 路线替代。
+
+- [Web 有限结构导入与 IME 验收](spec/web-structure-import.md)

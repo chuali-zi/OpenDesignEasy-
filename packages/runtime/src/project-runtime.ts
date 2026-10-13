@@ -3,7 +3,7 @@ import { existsSync, mkdirSync, realpathSync } from 'node:fs';
 import { basename, join, resolve } from 'node:path';
 import { open, unlink } from 'node:fs/promises';
 import { imageSize } from 'image-size';
-import { prepareWebSourceImport } from '@oeydesign/media';
+import { prepareWebSourceImport, prepareWebStructureImport } from '@oeydesign/media';
 import type { StoredAsset } from './assets.ts';
 import { applyEditableCommand, createDeckDocument, createWebDocument, restoreEditableDocument, validateEditableDocument } from '@oeydesign/document';
 import type { CommandEnvelope, DeckDocument, EditableDocument, WebDocument, ImageAsset } from '@oeydesign/document';
@@ -211,6 +211,31 @@ export class ProjectRuntime {
       this.broadcast(event);
       return { document, ...provenance };
     } catch (error) { await Promise.all(written.map(path => unlink(path).catch(() => {}))); throw error; }
+  }
+
+  async importWebStructure(source: string, format: 'html' | 'tsx', fileName: string, commandOptions: CommandOptions = {}) {
+    this.ensureOpen();
+    const commandId = commandOptions.commandId ?? randomUUID();
+    const request = canonicalJson({ type: 'document.import-structure', source, format, fileName, commandId, actor: actor(commandOptions) });
+    const previous = this.retry(commandId, request);
+    if (previous) return { document: this.readWebDocument(previous.documentId), warnings: ['重复导入请求已复用现有文档。'] };
+    let document: WebDocument;
+    try { document = await prepareWebStructureImport(source, format, fileName); }
+    catch (error) { throw new RuntimeError('invalid', error instanceof Error ? error.message : 'Unsupported static structure.'); }
+    document.documentId = `document-${commandId}`;
+    this.ensureOpen();
+    const concurrent = this.retry(commandId, request);
+    if (concurrent) return { document: this.readWebDocument(concurrent.documentId), warnings: ['重复导入请求已复用现有文档。'] };
+    if (this.store.listDocuments().some(item => item.documentId === document.documentId)) throw new RuntimeError('invalid', 'Imported document ID already exists.');
+    validateEditableDocument(document);
+    const event = this.store.transaction(() => {
+      this.store.saveDocument({ document, undo: [], redo: [] });
+      const event = this.changeEvent(document, commandId, 'Import static website structure', actor(commandOptions), Object.keys(document.nodes));
+      this.store.saveCommand(request, { commandId, documentId: document.documentId, revision: 0, changedNodeIds: Object.keys(document.nodes), seq: event.seq }, null);
+      return event;
+    });
+    this.broadcast(event);
+    return { document, warnings: ['仅导入静态原生结构；源文件与React导入均未执行，原文保存在源码导出的original目录。'] };
   }
 
   submit(command: CommandEnvelope): CommandResult {

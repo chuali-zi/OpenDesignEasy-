@@ -35,6 +35,13 @@ export async function importSource(file: File) {
   });
   return request<{ document: EditableDocument; changedModules: string[]; warnings: string[] }>('/api/documents/import-source', { base64 });
 }
+export async function importStructure(file: File, commandId = crypto.randomUUID()) {
+  if (file.size > 1024 * 1024) throw new Error('静态结构文件不能超过 1 MiB');
+  const format = /\.html?$/i.test(file.name) ? 'html' : /\.(?:tsx|jsx)$/i.test(file.name) ? 'tsx' : undefined;
+  if (!format) throw new Error('请选择 HTML、TSX 或 JSX 文件。');
+  let source: string; try { source = new TextDecoder('utf-8', { fatal: true }).decode(await file.arrayBuffer()); } catch { throw new Error('结构文件必须为 UTF-8 文本。'); }
+  return request<{ document: EditableDocument; warnings: string[] }>('/api/documents/import-structure', { source, format, fileName: file.name, commandId });
+}
 
 export const readProject = (): Promise<ProjectSnapshot> => request('/api/project');
 export const readDocument = (id: string): Promise<{ document: EditableDocument }> => request(`/api/documents/${encodeURIComponent(id)}`);

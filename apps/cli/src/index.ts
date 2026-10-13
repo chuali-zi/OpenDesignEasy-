@@ -27,6 +27,7 @@ const HELP = {
       "render <dir> <documentId> --output <file.svg|file.html> [--page <id>]",
       "export <dir> <documentId> --output <file.pptx|file.pdf|file.png|file.html|file.zip|file.source.zip|file.build.zip> [--page <id>]",
       "import-source <dir> <file.source.zip> [--name <name>]",
+      "import-structure <dir> <file.html|file.tsx|file.jsx>",
     ],
     node: [
       "insert <dir> <documentId> --page <id> --kind text|shape --text <text> --x <n> --y <n> --width <n> --height <n> [--id <id>]",
@@ -223,6 +224,13 @@ export async function execute(argv: string[]): Promise<unknown> {
     const runtime = ProjectRuntime.open(positional[0]!);
     try { return await runtime.importWebSource(bytes, { name: optionalFlag(values, 'name') }, { clientId: 'cli' }); }
     finally { runtime.close(); }
+  }
+  if (area === 'document' && action === 'import-structure') {
+    const { positional } = parseFlags(rest, []); expectPositionals(positional, 2, 'document import-structure');
+    const format = /\.html?$/i.test(positional[1]!) ? 'html' : /\.(?:tsx|jsx)$/i.test(positional[1]!) ? 'tsx' : undefined;
+    if (!format || (await stat(positional[1]!)).size > 1024 * 1024) throw new CliError('invalid', 'Expected static HTML/TSX/JSX at most 1 MiB.');
+    const source = new TextDecoder('utf-8', { fatal: true }).decode(await readFile(positional[1]!)), runtime = ProjectRuntime.open(positional[0]!);
+    try { return await runtime.importWebStructure(source, format, basename(positional[1]!), { clientId: 'cli' }); } finally { runtime.close(); }
   }
 
   if (area === "document" && action === "apply") {

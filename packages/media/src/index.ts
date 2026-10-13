@@ -274,4 +274,5 @@ export { buildWebProject, exportWebBuildZip } from "./web-build.ts";
 export type { WebProjectBuild } from './web-build.ts';
 export { prepareWebSourceImport, readSourceArchive, WEB_IMPORT_LIMITS } from './web-import.ts';
 export type { PreparedWebImport } from './web-import.ts';
+export { prepareWebStructureImport, WEB_STRUCTURE_LIMITS } from './web-structure-import.ts';
 export * from "./artifact.ts";

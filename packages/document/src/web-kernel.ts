@@ -23,6 +23,7 @@ export function createWebDocument(input: { documentId: string; name: string; pag
 
 export function validateWebDocument(doc: WebDocument): void {
   if (!rec(doc) || doc.schemaVersion !== 1 || doc.kind !== "web" || !id(doc.documentId) || !id(doc.name) || !Number.isInteger(doc.revision) || doc.revision < 0 || !Array.isArray(doc.pages) || !doc.pages.length || !rec(doc.nodes)) invalid("invalid Web document header");
+  if (doc.originalSource !== undefined && (!rec(doc.originalSource) || !['html', 'tsx'].includes(doc.originalSource.format) || typeof doc.originalSource.fileName !== 'string' || !doc.originalSource.fileName || doc.originalSource.fileName.length > 160 || /[\\/\x00-\x1f]/.test(doc.originalSource.fileName) || typeof doc.originalSource.source !== 'string' || new TextEncoder().encode(doc.originalSource.source).length > 1024 * 1024)) invalid('invalid preserved Web source');
   const nodeIds = new Set(Object.keys(doc.nodes));
   const pageIds = new Set<string>(); const roots = new Set<string>(); const rootRefs = new Set<string>(); const routes = new Set<string>();
   for (const page of doc.pages) {

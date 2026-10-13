@@ -182,7 +182,7 @@ export function WebEditor({ document, onApply, onUndo, onRedo, onImportAsset, di
     if (!frame || !dom || !body || !previewPage) return;
     body.tabIndex = -1;
     body.dataset.panMode = String(panMode);
-    type Gesture = { id: string; target: HTMLElement; pointerId: number; x: number; y: number; moved: boolean; resize: boolean; width: number; height: number; left: number; top: number; breakpoint?: string; originalStyle: string | null; groupBounds?: Record<string, WebBounds>; memberStyles?: Map<HTMLElement, string | null>; moveIds?: string[]; moveBounds?: Record<string, WebBounds>; snapTargets?: SnapTarget[]; coordinateParent?: HTMLElement; dependencies?: EditPrecondition[]; viewportWidth: number; viewportHeight: number; tolerance: number };
+    type Gesture = { id: string; target: HTMLElement; pointerId: number; x: number; y: number; moved: boolean; resize: boolean; width: number; height: number; left: number; top: number; breakpoint?: string; originalStyle: string | null; groupBounds?: Record<string, WebBounds>; memberStyles?: Map<HTMLElement, string | null>; moveIds?: string[]; moveBounds?: Record<string, WebBounds>; snapTargets?: SnapTarget[]; coordinateParent?: HTMLElement; dependencies?: EditPrecondition[]; viewportWidth: number; viewportHeight: number; tolerance: number; angle: number; anchorResize: boolean };
     let gesture: Gesture | undefined;
     let box: { x: number; y: number; overlay: HTMLElement; additive: boolean; selected: string[]; pointerId: number } | undefined;
     let pan: { x: number; y: number; left: number; top: number; pointerId: number } | undefined;
@@ -191,6 +191,7 @@ export function WebEditor({ document, onApply, onUndo, onRedo, onImportAsset, di
     const clearGuides = () => { guides.forEach(el => el.remove()); guides = []; };
     const delta = (done: Gesture, event: PointerEvent, draw = false) => {
       const dx = event.clientX - done.x, dy = event.clientY - done.y;
+      if (done.resize) return { dx: dx * Math.cos(done.angle) + dy * Math.sin(done.angle), dy: -dx * Math.sin(done.angle) + dy * Math.cos(done.angle) };
       if (event.altKey || !done.moveIds || !done.moveBounds || !done.snapTargets) { if (draw) clearGuides(); return { dx, dy }; }
       const result = snapWebMove(done.moveIds.map(id => done.moveBounds![id]!), done.snapTargets, dx, dy, done.tolerance);
       if (draw && done.coordinateParent) {
@@ -209,6 +210,11 @@ export function WebEditor({ document, onApply, onUndo, onRedo, onImportAsset, di
       if (done.originalStyle === null) done.target.removeAttribute('style'); else done.target.setAttribute('style', done.originalStyle);
       done.memberStyles?.forEach((style, el) => { if (style === null) el.removeAttribute('style'); else el.setAttribute('style', style); });
     };
+    const resizedStyle = (done: Gesture, dx: number, dy: number) => {
+      const width = Math.max(16, Math.round(done.width + dx)), height = Math.max(16, Math.round(done.height + dy));
+      const dw = (width - done.width) / 2, dh = (height - done.height) / 2;
+      return { width, height, ...(done.anchorResize ? { left: done.left + Math.cos(done.angle) * dw - Math.sin(done.angle) * dh - dw, top: done.top + Math.sin(done.angle) * dw + Math.cos(done.angle) * dh - dh, right: null, bottom: null } : {}) };
+    };
     const cancel = () => {
       if (gesture) { restore(gesture); if (gesture.target.hasPointerCapture(gesture.pointerId)) gesture.target.releasePointerCapture(gesture.pointerId); }
       clearGuides();
@@ -226,7 +232,7 @@ export function WebEditor({ document, onApply, onUndo, onRedo, onImportAsset, di
     const editText = (event: MouseEvent) => {
       const target = (event.target as Element)?.closest<HTMLElement>('[data-web-id]');
       const id = target?.dataset.webId, item = id ? previewDocument.nodes[id] : undefined;
-      if (!id || !item || item.component || item.group || !WEB_RICH_TEXT_TAGS.has(item.tag) || locked(previewDocument, id)) return;
+      if (!id || !item || item.component || item.group || item.children.length && !item.content && item.text === undefined || !WEB_RICH_TEXT_TAGS.has(item.tag) || locked(previewDocument, id)) return;
       event.preventDefault(); setSelection(id); setRichOpen(true);
     };
     const start = (event: PointerEvent) => {
@@ -301,9 +307,21 @@ export function WebEditor({ document, onApply, onUndo, onRedo, onImportAsset, di
         }
       }
       const css = dom.defaultView!.getComputedStyle(target), position = css.position;
+      let angle = 0;
+      if (handle && !current.group) {
+        const rotation = css.rotate === 'none' ? ['0', '0', 'deg'] : css.rotate.match(/^(-?\d+(?:\.\d+)?)(deg|rad|turn)$/);
+        if (!rotation || css.transform !== 'none' || !['none', '1'].includes(css.scale) || css.translate !== 'none') { setEditorError('复杂变换暂不支持此缩放手势，原尺寸保留。'); return; }
+        angle = Number(rotation[1]) * (rotation[2] === 'rad' ? 1 : rotation[2] === 'turn' ? 2 * Math.PI : Math.PI / 180);
+        for (let ancestor = target.parentElement; ancestor; ancestor = ancestor.parentElement) {
+          const style = dom.defaultView!.getComputedStyle(ancestor);
+          if (style.transform !== 'none' || !['none', '0deg'].includes(style.rotate) || !['none', '1'].includes(style.scale)) { setEditorError('祖先变换下的缩放暂不支持，原尺寸保留。'); return; }
+        }
+        const origin = css.transformOrigin.split(' ').map(parseFloat);
+        if (angle && (projected.style.transformOrigin && !['center', '50% 50%'].includes(String(projected.style.transformOrigin)) || Math.abs(origin[0]! - target.offsetWidth / 2) > .51 || Math.abs(origin[1]! - target.offsetHeight / 2) > .51)) { setEditorError('自定义旋转中心暂不支持此缩放手势。'); return; }
+      }
       const left = Number.isFinite(parseFloat(css.left)) ? parseFloat(css.left) : position === 'relative' ? 0 : target.offsetLeft - (parseFloat(css.marginLeft) || 0);
       const top = Number.isFinite(parseFloat(css.top)) ? parseFloat(css.top) : position === 'relative' ? 0 : target.offsetTop - (parseFloat(css.marginTop) || 0);
-      gesture = { id, target, pointerId: event.pointerId, x: event.clientX, y: event.clientY, moved: false, resize: Boolean(handle), width: bounds.width, height: bounds.height, left, top, breakpoint: live.current.breakpoint, originalStyle: target.getAttribute('style'), groupBounds, memberStyles, moveIds, moveBounds, snapTargets, coordinateParent, dependencies, viewportWidth: dom.defaultView!.innerWidth, viewportHeight: dom.defaultView!.innerHeight, tolerance: 6 / live.current.zoom };
+      gesture = { id, target, pointerId: event.pointerId, x: event.clientX, y: event.clientY, moved: false, resize: Boolean(handle), width: Number.isFinite(parseFloat(css.width)) ? parseFloat(css.width) : bounds.width, height: Number.isFinite(parseFloat(css.height)) ? parseFloat(css.height) : bounds.height, left, top, breakpoint: live.current.breakpoint, originalStyle: target.getAttribute('style'), groupBounds, memberStyles, moveIds, moveBounds, snapTargets, coordinateParent, dependencies, viewportWidth: dom.defaultView!.innerWidth, viewportHeight: dom.defaultView!.innerHeight, tolerance: 6 / live.current.zoom, angle, anchorResize: Boolean(angle && ['absolute', 'fixed'].includes(position)) };
       target.setPointerCapture(event.pointerId);
       setDragging(true); if (!moveIds || moveIds.length === 1) setSelection(id); event.preventDefault();
     };
@@ -327,7 +345,8 @@ export function WebEditor({ document, onApply, onUndo, onRedo, onImportAsset, di
       gesture.target.style.opacity = '.7';
       if (isWebFlowGroup(previewDocument.nodes[gesture.id]!)) gesture.memberStyles?.forEach((_style, el) => { el.style.opacity = '.7'; });
       if (gesture.resize) {
-        gesture.target.style.width = `${Math.max(16, gesture.width + dx)}px`; gesture.target.style.height = `${Math.max(16, gesture.height + dy)}px`;
+        const style = resizedStyle(gesture, dx, dy); gesture.target.style.width = `${style.width}px`; gesture.target.style.height = `${style.height}px`;
+        if (style.left !== undefined) { gesture.target.style.left = `${style.left}px`; gesture.target.style.top = `${style.top}px`; gesture.target.style.right = 'auto'; gesture.target.style.bottom = 'auto'; }
         if (gesture.groupBounds) for (const op of webResizeGroup(previewDocument, gesture.id, Math.max(16, gesture.width + dx), Math.max(16, gesture.height + dy), gesture.groupBounds).operations) {
           if (op.type !== 'web.style.update' || op.nodeId === gesture.id) continue;
           const el = dom.querySelector<HTMLElement>(`[data-web-id="${CSS.escape(op.nodeId)}"]`)!;
@@ -372,7 +391,7 @@ export function WebEditor({ document, onApply, onUndo, onRedo, onImportAsset, di
         const batch = webResizeGroup(previewDocument, done.id, Math.max(16, Math.round(done.width + dx)), Math.max(16, Math.round(done.height + dy)), done.groupBounds);
         void live.current.act(batch.operations, '调整组尺寸', previewDocument.revision, batch.preconditions);
       }
-      else if (done.resize) submit([{ type: 'web.style.update', nodeId: done.id, breakpointId: done.breakpoint, style: { width: Math.max(16, Math.round(done.width + dx)), height: Math.max(16, Math.round(done.height + dy)) } }], '调整网页元素尺寸');
+      else if (done.resize) void live.current.act([{ type: 'web.style.update', nodeId: done.id, breakpointId: done.breakpoint, style: resizedStyle(done, dx, dy) }], '调整网页元素尺寸', previewDocument.revision, webAlignmentPreconditions(previewDocument, [done.id]));
       else if (done.moveIds && done.moveBounds) void live.current.act(webPositionedMoveOperations(previewDocument, done.moveIds, done.moveBounds, dx, dy, done.breakpoint), done.moveIds.length > 1 ? '移动选中定位元素' : '移动并吸附网页元素', previewDocument.revision, done.dependencies ?? []);
       else if (current.group && !isWebFlowGroup(current)) void live.current.act([{ type: 'web.style.update', nodeId: done.id, style: { left: Math.round(done.left + dx), top: Math.round(done.top + dy) } }], '移动原生组', previewDocument.revision, webAlignmentPreconditions(previewDocument, [done.id]));
       else if (projection(current, done.breakpoint).layout.mode === 'position') submit([{ type: 'web.style.update', nodeId: done.id, breakpointId: done.breakpoint, style: { left: Math.round(done.left + dx), top: Math.round(done.top + dy) } }], '移动网页元素');
@@ -417,7 +436,16 @@ export function WebEditor({ document, onApply, onUndo, onRedo, onImportAsset, di
     const target = Array.from(elements).find(item => item.dataset.webId === selection);
     if (selectedIds.length !== 1 || !target || !node || !page || node.id === page.rootId || (node.group ? webNodeTreeLocked(document, node.id) : locked(document, node.id)) || isWebFlowGroup(node) || !overrideEnabled || blocked) return;
     const handle = dom.createElement('button'); handle.dataset.oeyResizeHandle = ''; handle.dataset.nodeId = node.id; handle.setAttribute('aria-label', '调整元素尺寸');
-    const position = () => { const rect = target.getBoundingClientRect(); handle.style.left = `${rect.right - 6}px`; handle.style.top = `${rect.bottom - 6}px`; };
+    const position = () => {
+      const rect = target.getBoundingClientRect(), css = win.getComputedStyle(target), rotation = css.rotate.match(/^(-?\d+(?:\.\d+)?)(deg|rad|turn)$/);
+      let x = rect.right, y = rect.bottom;
+      if (rotation && css.transform === 'none' && ['none', '1'].includes(css.scale)) {
+        const angle = Number(rotation[1]) * (rotation[2] === 'rad' ? 1 : rotation[2] === 'turn' ? 2 * Math.PI : Math.PI / 180);
+        x = rect.x + rect.width / 2 + Math.cos(angle) * target.offsetWidth / 2 - Math.sin(angle) * target.offsetHeight / 2;
+        y = rect.y + rect.height / 2 + Math.sin(angle) * target.offsetWidth / 2 + Math.cos(angle) * target.offsetHeight / 2;
+      }
+      handle.style.left = `${x - 6}px`; handle.style.top = `${y - 6}px`;
+    };
     dom.body.append(handle); position();
     win.addEventListener('scroll', position); win.addEventListener('resize', position);
     const observer = new ResizeObserver(position); observer.observe(target);
@@ -546,7 +574,7 @@ export function WebEditor({ document, onApply, onUndo, onRedo, onImportAsset, di
         <button aria-pressed={panMode} disabled={blocked || dragging} onClick={() => { setPanMode(!panMode); setBoxMode(false); }}>平移</button>
         <button aria-pressed={boxMode} disabled={blocked || dragging} onClick={() => { setBoxMode(!boxMode); setPanMode(false); }}>框选</button><button onClick={() => setSourceOpen(!sourceOpen)}>{sourceOpen ? '关闭源码' : '源码模块'}</button></div>
       {editorError && <div className="web-editor-error" role="status">{editorError}</div>}
-      {richOpen && selectedIds.length === 1 && node && !node.component && !node.group && WEB_RICH_TEXT_TAGS.has(node.tag) &&
+      {richOpen && selectedIds.length === 1 && node && !node.component && !node.group && (!node.children.length || node.content || node.text !== undefined) && WEB_RICH_TEXT_TAGS.has(node.tag) &&
         <WebRichTextEditor key={`${document.documentId}/${node.id}`} document={document} node={node} disabled={blocked || locked(document, node.id)}
           commit={(operations, label, base, target) => act(operations, label, base, [], target)} />}
       {sourceOpen && <section className="web-editor-source"><header><strong>源码模块</strong><select aria-label="选择源码模块" value={sourceId} disabled={blocked || sourceDirty} onChange={event => selectSource(event.currentTarget.value)}><option value="">选择已有模块…</option>{document.sourceModules?.map(item => <option key={item.id} value={item.id}>{item.path}</option>)}</select><button disabled={!selectedSource || blocked || !sourceDirty} onClick={saveSource}>保存模块</button>{sourceDirty && <button disabled={blocked} onClick={() => selectSource(sourceId)}>恢复已保存源码</button>}</header>
@@ -576,8 +604,8 @@ export function WebEditor({ document, onApply, onUndo, onRedo, onImportAsset, di
       </> : <>
         <label>元素标签<input value={node.tag} aria-label="元素标签" readOnly /></label>
         {!overrideEnabled && <button className="web-editor-override" onClick={enableOverride} disabled={blocked}>为 {breakpoint} 创建样式覆盖</button>}
-        {!webVoidTags.has(node.tag) && !node.component && !node.group && !node.content && field('元素文案', node.text ?? '', (text, base) => act([{ type: 'web.node.update', nodeId: node.id, text }], '修改网页文案', base), { multiline: true })}
-        {!node.component && !node.group && WEB_RICH_TEXT_TAGS.has(node.tag) && <button className="web-editor-override" disabled={!editable} onClick={() => setRichOpen(!richOpen)}>{richOpen ? '关闭富文本' : '编辑富文本'}</button>}
+        {!webVoidTags.has(node.tag) && !node.component && !node.group && !node.content && (node.text !== undefined || !node.children.length) && field('元素文案', node.text ?? '', (text, base) => act([{ type: 'web.node.update', nodeId: node.id, text }], '修改网页文案', base), { multiline: true })}
+        {!node.component && !node.group && (!node.children.length || node.content || node.text !== undefined) && WEB_RICH_TEXT_TAGS.has(node.tag) && <button className="web-editor-override" disabled={!editable} onClick={() => setRichOpen(!richOpen)}>{richOpen ? '关闭富文本' : '编辑富文本'}</button>}
         {node.group && <button className="web-editor-override" disabled={!editable} onClick={() => groupAction('ungroup')}>解组</button>}
         {isWebFlowGroup(node) && <small className="web-editor-breakpoint-note">流式组保留父级排版，拖动可整组重排；尺寸请编辑成员。</small>}
         <label>布局<select aria-label="布局模式" value={projected!.layout.mode} onChange={event => void act([{ type: 'web.layout.update', nodeId: node.id, breakpointId: breakpoint, layout: { mode: event.currentTarget.value as WebLayout['mode'] } }], '修改布局')} disabled={!editable || !overrideEnabled || isWebFlowGroup(node)}><option value="flow">流式</option><option value="flex">Flex</option><option value="grid">Grid</option><option value="position">定位</option></select></label>

@@ -1,0 +1,43 @@
+import { expect, test } from '@playwright/test';
+import type { WebDocument } from '@oeydesign/document';
+import JSZip from 'jszip';
+
+test('static import, Chinese composition, editing/history/reopen, source roundtrip and rejected input form a complete native workflow', async ({ page }) => {
+  const errors: string[] = []; page.on('pageerror', error => errors.push(error.message));
+  await page.goto('/'); await expect(page.getByRole('button', { name: '导入结构', exact: true })).toBeEnabled();
+  const previous = await page.getByLabel('选择文档').inputValue();
+  const source = '<!doctype html><title>Workshop</title><main style="padding:24px;color:#234d39"><h1>Hello <strong>中文</strong></h1><form><label for="name">Your name</label><input id="name" placeholder="Your name" required><button>Submit</button></form></main>';
+  await page.getByLabel('导入静态网页结构').setInputFiles({ name: 'workshop.html', mimeType: 'text/html', buffer: Buffer.from(source) });
+  await expect(page.getByRole('alert')).toContainText('已导入静态结构'); const id = await page.getByLabel('选择文档').inputValue(); expect(id).not.toBe(previous);
+  const read = async (): Promise<WebDocument> => (await (await page.request.get(`/api/documents/${id}`)).json()).document;
+  const heading = Object.values((await read()).nodes).find(node => node.tag === 'h1')!;
+  const frame = page.frameLocator('iframe[title="隔离网页预览"]'); await expect(frame.locator(`[data-web-id="${heading.id}"] strong`)).toHaveText('中文');
+  await frame.locator(`[data-web-id="${heading.id}"]`).dblclick(); const editor = page.getByLabel('富文本内容'); await expect(editor).toBeVisible();
+  await editor.click(); await page.keyboard.press('ControlOrMeta+A');
+  let saves = 0; page.on('request', request => { if (request.method() === 'POST' && request.url().endsWith('/api/commands')) saves++; });
+  const session = await page.context().newCDPSession(page), beforeIme = await read();
+  await session.send('Input.imeSetComposition', { text: '中', selectionStart: 1, selectionEnd: 1 });
+  await session.send('Input.imeSetComposition', { text: '中文输入', selectionStart: 4, selectionEnd: 4 });
+  // Longer than the idle debounce: an active Blink composition must not save.
+  await page.waitForTimeout(450); expect(saves).toBe(0); expect((await read()).revision).toBe(beforeIme.revision);
+  await session.send('Input.insertText', { text: '中文输入' });
+  await expect.poll(async () => (await read()).nodes[heading.id]!.text).toBe('中文输入'); expect(saves).toBe(1);
+  await page.getByRole('button', { name: '撤销', exact: true }).click(); await expect.poll(async () => (await read()).nodes[heading.id]!.text).toBe('Hello 中文');
+  await page.getByRole('button', { name: '重做', exact: true }).click(); await expect.poll(async () => (await read()).nodes[heading.id]!.text).toBe('中文输入');
+  await page.reload(); await expect(frame.locator(`[data-web-id="${heading.id}"]`)).toHaveText('中文输入');
+  const exported = await page.request.get(`/api/documents/${id}/export.source.zip`), bytes = await exported.body(), zip = await JSZip.loadAsync(bytes);
+  expect(await zip.file('original/source.html')!.async('string')).toBe(source);
+  await page.getByLabel('导入 OEY 源码 ZIP').setInputFiles({ name: 'roundtrip.source.zip', mimeType: 'application/zip', buffer: bytes });
+  await expect.poll(() => page.getByLabel('选择文档').inputValue()).not.toBe(id); await expect(frame.locator(`[data-web-id="${heading.id}"]`)).toHaveText('中文输入');
+  const imported = await page.getByLabel('选择文档').inputValue();
+  await page.getByLabel('导入静态网页结构').setInputFiles({ name: 'bad.tsx', mimeType: 'text/plain', buffer: Buffer.from('export default () => <div') });
+  await expect(page.getByRole('alert')).toContainText('Invalid TSX'); expect(await page.getByLabel('选择文档').inputValue()).toBe(imported);
+  await page.getByRole('button', { name: '关闭提示', exact: true }).click();
+  const react = "import React from 'react'; const title='Static React page'; const Page=()=> <main style={{padding:24}}><h1>{title}</h1><form><input placeholder='Name'/><button>Submit</button></form></main>; export default Page;";
+  await page.getByLabel('导入静态网页结构').setInputFiles({ name: 'static.tsx', mimeType: 'text/plain', buffer: Buffer.from(react) });
+  await expect(page.getByRole('alert')).toContainText('已导入静态结构'); await expect(frame.getByRole('heading', { name: 'Static React page' })).toBeVisible();
+  await page.getByRole('button', { name: '运行应用', exact: true }).click(); const application = page.frameLocator('iframe[title="构建应用预览"]');
+  await expect(application.getByRole('heading', { name: 'Static React page' })).toBeVisible(); await application.getByPlaceholder('Name').fill('Synthetic');
+  await application.getByRole('button', { name: 'Submit', exact: true }).click(); await expect(application.locator('[data-oey-form-status]')).toHaveText('Demo submitted');
+  expect(errors).toEqual([]);
+});

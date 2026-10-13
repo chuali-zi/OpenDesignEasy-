@@ -32,6 +32,7 @@ function App() {
   const [chatOpen, setChatOpen] = useState(true);
   const [applicationPreview, setApplicationPreview] = useState(false);
   const sourceInput = useRef<HTMLInputElement>(null);
+  const structureInput = useRef<HTMLInputElement>(null);
   const current = useRef<EditableDocument | null>(null);
   const sequence = useRef(0);
   const snapshotSequence = useRef(-1);
@@ -161,6 +162,17 @@ function App() {
       }}>{project?.documents.map(item => <option key={item.documentId} value={item.documentId}>{item.name}</option>)}</select>
       <button aria-label="新建 Web 文档" disabled={!project || saving || creatingDocument} onMouseDown={event => event.preventDefault()} onClick={() => void createWebDocument()}>{creatingDocument ? '正在创建…' : '＋ Web'}</button>
       <button title="导入 OEY 源码 ZIP，保留原文档并同步受管模块" disabled={!project || saving || creatingDocument} onClick={() => sourceInput.current?.click()}>导入源码</button>
+      <button title="静态原生HTML/JSX，内联CSS与字面量；不执行源码" disabled={!project || saving || creatingDocument} onClick={() => structureInput.current?.click()}>导入结构</button>
+      <input ref={structureInput} type="file" accept=".html,.htm,.tsx,.jsx" aria-label="导入静态网页结构" hidden onChange={event => {
+        const file = event.currentTarget.files?.[0]; event.currentTarget.value = ''; if (!file || creatingDocumentRef.current || activeRequests.current) return;
+        creatingDocumentRef.current = true; setCreatingDocument(true); setNotice('');
+        void api.importStructure(file).then(result => {
+          selectionEpoch.current += 1; accept(result.document);
+          if (project) localStorage.setItem(`oey:selected-document:${project.project.projectId}`, result.document.documentId);
+          setNotice(`已导入静态结构，原文档保留。${result.warnings.join('')}`);
+        }).catch(error => setNotice(error instanceof Error ? error.message : String(error)))
+          .finally(() => { creatingDocumentRef.current = false; setCreatingDocument(false); });
+      }} />
       <input ref={sourceInput} type="file" accept=".zip" aria-label="导入 OEY 源码 ZIP" hidden onChange={event => {
         const file = event.target.files?.[0]; event.target.value = ''; if (!file || creatingDocumentRef.current || activeRequests.current) return;
         creatingDocumentRef.current = true; setCreatingDocument(true); setNotice('');

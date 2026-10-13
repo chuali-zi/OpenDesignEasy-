@@ -108,7 +108,7 @@ export const WEB_RICH_TEXT_TAGS = new Set('a article aside b blockquote button c
 export type WebNode = { id: string; parentId: string | null; tag: string; children: string[]; style: WebStyle; layout: WebLayout; props?: Record<string, JSONValue | null | undefined>; text?: string; content?: PMNodeJSON; group?: true; locked?: boolean; hidden?: boolean; responsive?: Record<string, { style?: WebStyle; layout?: Partial<WebLayout> }>; component?: WebComponentBinding };
 export type WebPage = { id: string; name: string; route: string; rootId: string; breakpoints?: WebBreakpoint[] };
 export type WebSourceModule = { id: string; path: string; language: "ts" | "tsx" | "css"; source: string; exports?: string[] };
-export type WebDocument = DocumentHeader & { kind: "web"; pages: WebPage[]; nodes: Record<string, WebNode>; breakpoints?: WebBreakpoint[]; sourceModules?: WebSourceModule[] };
+export type WebDocument = DocumentHeader & { kind: "web"; pages: WebPage[]; nodes: Record<string, WebNode>; breakpoints?: WebBreakpoint[]; sourceModules?: WebSourceModule[]; originalSource?: { format: 'html' | 'tsx'; fileName: string; source: string } };
 
 /** Boundary-only Doc model. Full section editing and pagination are intentionally not implemented by R1. */
 export type DocPageSettings = { width: number; height: number; marginTop: number; marginRight: number; marginBottom: number; marginLeft: number; [key: string]: JSONValue | undefined };
