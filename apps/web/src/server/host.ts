@@ -50,6 +50,11 @@ export async function createWebHost(runtime: ProjectRuntime, options: WebHostOpt
     return { project: runtime.project, documents: runtime.listDocuments(), seq: events.at(-1)?.seq ?? 0 };
   });
   app.get('/api/assets', () => ({ assets: assets.list() }));
+  app.post<{ Body: { base64: string; name?: string } }>('/api/documents/import-source', { bodyLimit: 12 * 1024 * 1024 }, async request => {
+    const body = request.body;
+    if (typeof body?.base64 !== 'string' || body.base64.length > 11200000 || body.base64.length % 4 || !/^[A-Za-z0-9+/]*={0,2}$/.test(body.base64)) throw new RuntimeError('invalid', 'Expected a source ZIP no larger than 8 MiB.');
+    return runtime.importWebSource(Buffer.from(body.base64, 'base64'), { name: body.name }, { ...human, clientId: 'web' });
+  });
   app.post<{ Params: { id: string } }>('/api/documents/:id/application-preview', async (request, reply) => {
     if (previewBuild) throw new RuntimeError('busy', 'An application preview is already building.');
     const document = runtime.readWebDocument(request.params.id);

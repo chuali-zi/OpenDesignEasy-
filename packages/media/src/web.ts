@@ -81,7 +81,7 @@ export async function buildWebSource(document: WebDocument, resolveAsset?: Asset
   const urls: Record<string, string> = {};
   const usedFilenames = new Set<string>();
   const referenced = new Set(Object.values(document.nodes).map(node => node.props?.assetId).filter((id): id is string => typeof id === 'string'));
-  for (const id of referenced) {
+  for (const id of new Set([...referenced, ...imageAssets(document).map(asset => asset.id)])) {
     if (!imageAssets(document).some(asset => asset.id === id) || !resolveAsset) throw new Error(`Cannot package referenced image ${id}.`);
     const filename = id.replace(/[^a-zA-Z0-9._-]/g, '_');
     if (usedFilenames.has(filename.toLowerCase())) throw new Error(`Image asset filenames collide for ${id}.`);

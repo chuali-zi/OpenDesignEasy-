@@ -31,6 +31,7 @@ function App() {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [chatOpen, setChatOpen] = useState(true);
   const [applicationPreview, setApplicationPreview] = useState(false);
+  const sourceInput = useRef<HTMLInputElement>(null);
   const current = useRef<EditableDocument | null>(null);
   const sequence = useRef(0);
   const snapshotSequence = useRef(-1);
@@ -159,6 +160,17 @@ function App() {
         const selected = project?.documents.find(item => item.documentId === event.target.value); if (selected && project) { selectionEpoch.current += 1; accept(selected); localStorage.setItem(`oey:selected-document:${project.project.projectId}`, selected.documentId); setVersions(null); }
       }}>{project?.documents.map(item => <option key={item.documentId} value={item.documentId}>{item.name}</option>)}</select>
       <button aria-label="新建 Web 文档" disabled={!project || saving || creatingDocument} onClick={() => void createWebDocument()}>{creatingDocument ? '正在创建…' : '＋ Web'}</button>
+      <button title="导入 OEY 源码 ZIP，保留原文档并同步受管模块" disabled={!project || saving || creatingDocument} onClick={() => sourceInput.current?.click()}>导入源码</button>
+      <input ref={sourceInput} type="file" accept=".zip" aria-label="导入 OEY 源码 ZIP" hidden onChange={event => {
+        const file = event.target.files?.[0]; event.target.value = ''; if (!file || creatingDocumentRef.current || activeRequests.current) return;
+        creatingDocumentRef.current = true; setCreatingDocument(true); setNotice('');
+        void api.importSource(file).then(result => {
+          selectionEpoch.current += 1; accept(result.document);
+          if (project) localStorage.setItem(`oey:selected-document:${project.project.projectId}`, result.document.documentId);
+          setNotice(`已导入 ${result.document.pages.length} 个页面${result.changedModules.length ? `，同步 ${result.changedModules.length} 个外部修改的模块` : ''}。原文档保留；包内安装脚本和构建配置未执行。${result.warnings.filter(warning => warning.includes('图片')).join('')}`);
+        }).catch(error => setNotice(error instanceof Error ? error.message : String(error)))
+          .finally(() => { creatingDocumentRef.current = false; setCreatingDocument(false); });
+      }} />
       <span className={`save-state ${connected ? 'connected' : ''}`}><i/>{saving ? '正在保存' : connected ? '已保存到项目' : '正在连接'}</span>
       <button disabled={!document || saving} onClick={() => { if (document) void loadVersions(document.documentId).catch(error => setNotice(error.message)); }}>版本</button>
       <button disabled={!document} onClick={() => { if (document) window.open(`/api/documents/${encodeURIComponent(document.documentId)}/${document.kind === 'web' ? 'preview.html' : 'preview.svg'}`, '_blank', 'noopener'); }}>{document?.kind === 'web' ? '预览网页' : '预览 SVG'}</button>

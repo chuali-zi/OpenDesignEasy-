@@ -272,4 +272,6 @@ export { renderWebHtml, exportWebZip, buildWebSource, exportWebSourceZip, render
 export { renderWebMarkup, renderWebStyles } from "./web-markup.ts";
 export { buildWebProject, exportWebBuildZip } from "./web-build.ts";
 export type { WebProjectBuild } from './web-build.ts';
+export { prepareWebSourceImport, readSourceArchive, WEB_IMPORT_LIMITS } from './web-import.ts';
+export type { PreparedWebImport } from './web-import.ts';
 export * from "./artifact.ts";

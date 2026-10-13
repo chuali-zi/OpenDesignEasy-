@@ -27,6 +27,14 @@ export async function importAsset(file: File, kind: 'image' | 'reference' = 'ima
   return (await request<{ asset: DocumentAsset }>('/api/assets', { name: file.name, base64, kind })).asset;
 }
 export const assetUrl = (id: string) => `/api/assets/${encodeURIComponent(id)}`;
+export async function importSource(file: File) {
+  if (file.size > 8 * 1024 * 1024) throw new Error('源码 ZIP 不能超过 8 MiB');
+  const base64 = await new Promise<string>((resolve, reject) => {
+    const reader = new FileReader(); reader.onload = () => resolve(String(reader.result).split(',')[1]!);
+    reader.onerror = () => reject(new Error('无法读取源码包')); reader.readAsDataURL(file);
+  });
+  return request<{ document: EditableDocument; changedModules: string[]; warnings: string[] }>('/api/documents/import-source', { base64 });
+}
 
 export const readProject = (): Promise<ProjectSnapshot> => request('/api/project');
 export const readDocument = (id: string): Promise<{ document: EditableDocument }> => request(`/api/documents/${encodeURIComponent(id)}`);

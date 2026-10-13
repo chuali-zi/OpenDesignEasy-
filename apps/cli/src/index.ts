@@ -1,4 +1,4 @@
-import { readFile, rename, unlink, writeFile } from "node:fs/promises";
+import { readFile, rename, stat, unlink, writeFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import { pathToFileURL } from "node:url";
 import { basename, dirname, extname, resolve } from "node:path";
@@ -26,6 +26,7 @@ const HELP = {
       "apply <dir> <command.json>",
       "render <dir> <documentId> --output <file.svg|file.html> [--page <id>]",
       "export <dir> <documentId> --output <file.pptx|file.pdf|file.png|file.html|file.zip|file.source.zip|file.build.zip> [--page <id>]",
+      "import-source <dir> <file.source.zip> [--name <name>]",
     ],
     node: [
       "insert <dir> <documentId> --page <id> --kind text|shape --text <text> --x <n> --y <n> --width <n> --height <n> [--id <id>]",
@@ -212,6 +213,16 @@ export async function execute(argv: string[]): Promise<unknown> {
       if (positional[1] === undefined) return { documents: runtime.listDocuments() };
       return { document: runtime.readDocument(positional[1]) };
     });
+  }
+
+  if (area === 'document' && action === 'import-source') {
+    const { values, positional } = parseFlags(rest, ['name']);
+    expectPositionals(positional, 2, 'document import-source');
+    if ((await stat(positional[1]!)).size > 8 * 1024 * 1024) throw new CliError('invalid', 'Source ZIP exceeds 8 MiB.');
+    const bytes = await readFile(positional[1]!);
+    const runtime = ProjectRuntime.open(positional[0]!);
+    try { return await runtime.importWebSource(bytes, { name: optionalFlag(values, 'name') }, { clientId: 'cli' }); }
+    finally { runtime.close(); }
   }
 
   if (area === "document" && action === "apply") {

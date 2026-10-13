@@ -1,8 +1,12 @@
 import { randomUUID } from 'node:crypto';
 import { existsSync, mkdirSync, realpathSync } from 'node:fs';
 import { basename, join, resolve } from 'node:path';
+import { open, unlink } from 'node:fs/promises';
+import { imageSize } from 'image-size';
+import { prepareWebSourceImport } from '@oeydesign/media';
+import type { StoredAsset } from './assets.ts';
 import { applyEditableCommand, createDeckDocument, createWebDocument, restoreEditableDocument, validateEditableDocument } from '@oeydesign/document';
-import type { CommandEnvelope, DeckDocument, EditableDocument, WebDocument } from '@oeydesign/document';
+import type { CommandEnvelope, DeckDocument, EditableDocument, WebDocument, ImageAsset } from '@oeydesign/document';
 import { RuntimeError } from './errors.ts';
 import { AgentService } from './agent-service.ts';
 import type { AgentServiceOptions } from './agent-service.ts';
@@ -162,6 +166,51 @@ export class ProjectRuntime {
       baseRevision: options.baseRevision ?? document.revision, preconditions: [], operations,
       label: options.label ?? 'Edit document',
     };
+  }
+
+  /** Import a supported source project as a new design, never overwrite a design
+   * or execute archive code. Asset records and the document commit atomically. */
+  async importWebSource(bytes: Uint8Array, options: { name?: string } = {}, commandOptions: CommandOptions = {}) {
+    this.ensureOpen();
+    let prepared: Awaited<ReturnType<typeof prepareWebSourceImport>>;
+    try { prepared = await prepareWebSourceImport(bytes); }
+    catch (error) { throw new RuntimeError('invalid', error instanceof Error && error.message.startsWith('Cannot import source ZIP:') ? error.message : 'Invalid OEY source project structure.'); }
+    const document = structuredClone(prepared.document);
+    const source = { documentId: document.documentId, revision: document.revision };
+    const name = options.name ?? `${document.name.slice(0, 230)}（导入）`;
+    if (typeof name !== 'string' || !name.trim() || name.length > 240) throw new RuntimeError('invalid', 'Imported design name must contain 1–240 characters.');
+    const commandId = randomUUID(); document.documentId = `document-${commandId}`; document.revision = 0; document.name = name;
+    const staged: Array<{ record: StoredAsset; bytes: Uint8Array }> = [];
+    for (const image of prepared.images) {
+      let dimensions: ReturnType<typeof imageSize>;
+      try { dimensions = imageSize(image.bytes); } catch { throw new RuntimeError('invalid', 'Imported image cannot be decoded.'); }
+      const mime = ({ png: 'image/png', jpg: 'image/jpeg', webp: 'image/webp' } as Record<string, string>)[dimensions.type ?? ''];
+      if (!mime || mime !== image.asset.mimeType || dimensions.width !== image.asset.width || dimensions.height !== image.asset.height || dimensions.width * dimensions.height > 100_000_000) throw new RuntimeError('invalid', 'Imported image bytes do not match their metadata.');
+      const id = `asset-${randomUUID()}`;
+      const record: StoredAsset = { id, kind: 'image', name: 'Imported image', mimeType: mime, width: dimensions.width, height: dimensions.height, sizeBytes: image.bytes.length, createdAt: new Date().toISOString() };
+      for (const node of Object.values(document.nodes)) if (node.props?.assetId === image.asset.id) node.props.assetId = id;
+      staged.push({ record, bytes: image.bytes });
+    }
+    document.assets = staged.map(({ record }) => ({ id: record.id, kind: 'image' as const, mimeType: record.mimeType as ImageAsset['mimeType'], width: record.width!, height: record.height! }));
+    validateEditableDocument(document);
+    const written: string[] = [];
+    try {
+      for (const asset of staged) {
+        const path = join(this.root, 'assets', `${asset.record.id}.bin`);
+        const file = await open(path, 'wx'); written.push(path);
+        try { await file.writeFile(asset.bytes); } finally { await file.close(); }
+      }
+      this.ensureOpen();
+      const provenance = { source, changedModules: prepared.changedModules, warnings: prepared.warnings };
+      const event = this.store.transaction(() => {
+        for (const asset of staged) this.store.putRecord('assets', asset.record.id, asset.record);
+        this.store.saveDocument({ document, undo: [], redo: [] });
+        this.store.putRecord('source-imports', document.documentId, provenance);
+        return this.changeEvent(document, commandId, 'Import source project', actor(commandOptions), Object.keys(document.nodes));
+      });
+      this.broadcast(event);
+      return { document, ...provenance };
+    } catch (error) { await Promise.all(written.map(path => unlink(path).catch(() => {}))); throw error; }
   }
 
   submit(command: CommandEnvelope): CommandResult {

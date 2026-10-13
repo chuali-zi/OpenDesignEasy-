@@ -27,6 +27,10 @@ test('CLI creates, edits, reopens and exports a Web document without a Web host'
     const exported = run('document', 'export', directory, document.documentId, '--output', archive);
     assert.equal(exported.format, 'source.zip');
     assert.ok((await JSZip.loadAsync(await readFile(archive))).file('src/App.tsx'));
+    const imported = run('document', 'import-source', directory, archive, '--name', 'Returned website');
+    assert.notEqual(imported.document.documentId, document.documentId);
+    assert.equal(imported.document.nodes.heading.text, '中文与 Web');
+    assert.equal(run('document', 'read', directory, document.documentId).document.nodes.heading.text, '中文与 Web');
     const buildArchive = join(directory, 'site.build.zip');
     const built = run('document', 'export', directory, document.documentId, '--output', buildArchive);
     assert.equal(built.format, 'build.zip');
