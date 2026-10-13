@@ -9,6 +9,8 @@ import type { ProjectRuntime } from './project-runtime.ts';
 import type { ProjectStore } from './storage/project-store.ts';
 import type { AgentDesignServices } from './design-services.ts';
 import { RuntimeError } from './errors.ts';
+import { AgentRunBudget, validateRunLimits } from './agent-budget.ts';
+import type { AgentRunLimits } from './agent-budget.ts';
 import { webOperationSchema } from './web-schema.ts';
 import type {
   AgentAcceptedInputOptions, AgentInputKind, AgentInputRecord, AgentProviderConfig, AgentQuestionRecord,
@@ -18,6 +20,8 @@ import type {
 
 type ConfiguredModel = { modelRuntime: ModelRuntime; model: Model<Api> };
 export interface AgentServiceOptions {
+  /** Optional text/tool acceptance limits. No image or external-service tool budget is implied. */
+  runLimits?: AgentRunLimits;
   /** Public SDK injection point used by deterministic faux-provider integration tests. */
   createModelRuntime?: (config: AgentProviderConfig) => Promise<ConfiguredModel>;
 }
@@ -96,6 +100,7 @@ export class AgentService {
   private readonly queuedInputs = new Map<string, AgentInputRecord[]>();
   private readonly flushingSessions = new Set<string>();
   private readonly runAbortControllers = new Map<string, AbortController>();
+  private readonly runBudgets = new Map<string, AgentRunBudget>();
   private readonly selections = new Map<string, AgentSelection>();
   private readonly listeners = new Set<(event: AgentServiceEvent) => void>();
 
@@ -103,6 +108,7 @@ export class AgentService {
     this.runtime = runtime;
     this.store = store;
     this.options = options;
+    if (options.runLimits) validateRunLimits(options.runLimits);
     const providerId = process.env.PROVIDER_ID || process.env.PROVIDER || 'kimi-coding';
     this.config = {
       providerId,
@@ -319,6 +325,7 @@ export class AgentService {
     if (!run || run.sessionId !== sessionId || !['running', 'waiting_input'].includes(run.status)) throw new RuntimeError('conflict', 'This run is no longer active.', { runId });
     const timestamp = now();
     run.status = 'cancelled'; run.completedAt = timestamp; run.updatedAt = timestamp;
+    this.finishBudget(run);
     const session = this.requireSession(sessionId); session.status = 'idle'; session.updatedAt = timestamp;
     this.store.transaction(() => {
       this.store.saveAgentRun(run);
@@ -366,6 +373,7 @@ export class AgentService {
     this.requireSession(sessionId);
     const task = this.tasks.get(sessionId);
     if (task) await task;
+    if (this.options.runLimits && !this.activeRunBySession.has(sessionId)) return;
     const loaded = this.sessions.get(sessionId);
     if (loaded) await loaded.session.waitForIdle();
   }
@@ -406,6 +414,7 @@ export class AgentService {
       if (activeId) {
         const run = this.store.agentRun<AgentRunRecord>(activeId);
         if (run && run.status === 'running') {
+          this.finishBudget(run);
           run.status = 'interrupted'; run.completedAt = timestamp; run.updatedAt = timestamp;
           this.store.saveAgentRun(run);
           for (const input of this.store.agentInputs<AgentInputRecord>(session.sessionId)) {
@@ -425,6 +434,8 @@ export class AgentService {
     }
     for (const controller of this.runAbortControllers.values()) controller.abort();
     this.runAbortControllers.clear();
+    for (const budget of this.runBudgets.values()) budget.close();
+    this.runBudgets.clear();
     this.sessions.clear();
     this.listeners.clear();
   }
@@ -490,7 +501,14 @@ export class AgentService {
   }
 
   private dispatch(sessionId: string, input: AgentInputRecord, run: AgentRunRecord, afterIdle = false): void {
-    const task = this.executeRun(sessionId, input, run, afterIdle).catch(error => this.failRun(sessionId, run.runId, input.inputId, error));
+    if (this.options.runLimits) this.runBudgets.set(run.runId, new AgentRunBudget(structuredClone(this.options.runLimits), reason => this.failRun(sessionId, run.runId, input.inputId, new Error(reason))));
+    const budget = this.runBudgets.get(run.runId);
+    const execution = this.executeRun(sessionId, input, run, afterIdle);
+    let stop: (() => void) | undefined;
+    const deadline = budget ? new Promise<void>(resolve => { stop = resolve; budget.controller.signal.addEventListener('abort', stop, { once: true }); }) : undefined;
+    const task = (deadline ? Promise.race([execution, deadline]) : execution)
+      .catch(error => this.failRun(sessionId, run.runId, input.inputId, error))
+      .finally(() => { if (stop) budget?.controller.signal.removeEventListener('abort', stop); });
     this.tasks.set(sessionId, task);
     void task.finally(() => { if (this.tasks.get(sessionId) === task) this.tasks.delete(sessionId); });
   }
@@ -505,7 +523,9 @@ export class AgentService {
     this.store.saveAgentSession(sessionRecord);
     const content = await this.inputContent(input, this.runAbortControllers.get(run.runId)?.signal);
     if (this.closed || this.store.agentRun<AgentRunRecord>(run.runId)?.status !== 'running') return;
-    loaded.session.agent.state.systemPrompt = systemPrompt(await this.contextText(sessionId));
+    const currentContext = await this.contextText(sessionId);
+    if (this.closed || this.store.agentRun<AgentRunRecord>(run.runId)?.status !== 'running') return;
+    loaded.session.agent.state.systemPrompt = systemPrompt(currentContext);
     const messages = [{ type: 'text' as const, text: content.text }, ...content.images];
     input.status = 'delivered'; input.deliveredAt = now();
     this.store.saveAgentInput(input);
@@ -519,6 +539,7 @@ export class AgentService {
     await loaded.session.waitForIdle();
     const currentRun = this.store.agentRun<AgentRunRecord>(run.runId);
     if (currentRun?.status === 'waiting_input') {
+      this.finishBudget(currentRun); this.store.saveAgentRun(currentRun);
       this.activeRunBySession.delete(sessionId);
       this.runAbortControllers.delete(run.runId);
       return;
@@ -589,8 +610,10 @@ export class AgentService {
     this.ensureOpen();
     const record = this.requireSession(sessionId);
     const [sdk, configured] = await Promise.all([loadPiSdk(), this.createModelRuntime()]);
+    this.ensureOpen();
     const sessionDir = join(this.runtime.root, 'sessions');
     await mkdir(sessionDir, { recursive: true });
+    this.ensureOpen();
     let manager: SessionManager;
     const sessionPath = record.piSessionFile ? resolve(record.piSessionFile) : '';
     const withinSessions = sessionPath && !relative(sessionDir, sessionPath).startsWith('..') && !isAbsolute(relative(sessionDir, sessionPath));
@@ -600,7 +623,9 @@ export class AgentService {
     record.piSessionFile = sessionFile;
     record.updatedAt = now();
     this.store.saveAgentSession(record);
-    const settingsManager = sdk.SettingsManager.inMemory();
+    const settingsManager = sdk.SettingsManager.inMemory(this.options.runLimits ? {
+      retry: { enabled: false, maxRetries: 0, provider: { maxRetries: 0 } }, compaction: { enabled: false },
+    } : {});
     const resourceLoader = new sdk.DefaultResourceLoader({
       cwd: this.runtime.root,
       agentDir: join(this.runtime.root, 'sessions', '.agent-config-disabled'),
@@ -613,7 +638,9 @@ export class AgentService {
       systemPrompt: SYSTEM_PROMPT,
     });
     await resourceLoader.reload();
-    const tools = await this.createTools(sessionId, sdk);
+    const allTools = await this.createTools(sessionId, sdk);
+    this.ensureOpen();
+    const tools = this.options.runLimits ? allTools.filter(tool => this.options.runLimits!.allowedTools.includes(tool.name)) : allTools;
     const { session } = await sdk.createAgentSession({
       cwd: this.runtime.root,
       agentDir: join(this.runtime.root, 'sessions', '.agent-config-disabled'),
@@ -627,11 +654,20 @@ export class AgentService {
       customTools: tools,
       tools: tools.map(tool => tool.name),
     });
+    if (this.closed) { session.dispose(); this.ensureOpen(); }
     session.agent.toolExecution = 'sequential';
-    session.agent.beforeToolCall = async () => {
+    const stream = session.agent.streamFunction;
+    if (this.options.runLimits) session.agent.streamFunction = (model, context, options) => {
+      const budget = this.runBudgets.get(this.activeRunBySession.get(sessionId) ?? '');
+      if (!budget) throw new Error('No active run budget.');
+      return budget.wrap(stream)(model, context, options);
+    };
+    session.agent.beforeToolCall = async context => {
       const activeRun = this.activeRunBySession.get(sessionId);
       const status = activeRun ? this.store.agentRun<AgentRunRecord>(activeRun)?.status : undefined;
       if (!activeRun || status !== 'running') return { block: true, terminate: true, reason: 'This run is no longer allowed to execute tools.' };
+      try { this.runBudgets.get(activeRun)?.beforeTool(context.toolCall.name); }
+      catch { return { block: true, terminate: true, reason: 'Agent run budget stopped tool execution.' }; }
       return undefined;
     };
     session.agent.shouldStopAfterTurn = async () => {
@@ -984,6 +1020,7 @@ export class AgentService {
     if (this.closed) return;
     const run = this.store.agentRun<AgentRunRecord>(runId);
     if (!run || run.status !== 'running') return;
+    this.finishBudget(run);
     const timestamp = now();
     run.status = errorMessage ? 'failed' : 'completed'; run.error = errorMessage; run.completedAt = timestamp; run.updatedAt = timestamp;
     const session = this.requireSession(sessionId);
@@ -1005,6 +1042,7 @@ export class AgentService {
     if (this.closed) return;
     const run = this.store.agentRun<AgentRunRecord>(runId);
     if (!run || run.status !== 'running') return;
+    this.finishBudget(run);
     const message = error instanceof Error ? error.message : String(error);
     const timestamp = now();
     run.status = 'failed'; run.error = message; run.completedAt = timestamp; run.updatedAt = timestamp;
@@ -1014,10 +1052,26 @@ export class AgentService {
     this.store.transaction(() => {
       this.store.saveAgentRun(run); this.store.saveAgentSession(session);
       if (input) this.store.saveAgentInput(input);
+      for (const pending of this.store.agentInputs<AgentInputRecord>(sessionId)) {
+        if (pending.runId === runId && ['accepted', 'delivered'].includes(pending.status)) { pending.status = 'interrupted'; this.store.saveAgentInput(pending); }
+      }
     });
     this.activeRunBySession.delete(sessionId);
+    this.queuedInputs.delete(sessionId);
+    this.runAbortControllers.get(runId)?.abort();
+    const loaded = this.sessions.get(sessionId);
+    loaded?.session.agent.clearAllQueues();
+    loaded?.session.agent.abort();
     this.runAbortControllers.delete(runId);
     this.persistEvent({ type: 'run.failed', sessionId, runId, inputId, record: run });
+  }
+
+  private finishBudget(run: AgentRunRecord): void {
+    const budget = this.runBudgets.get(run.runId);
+    if (!budget) return;
+    run.budgetUsage = structuredClone(budget.usage);
+    this.runBudgets.delete(run.runId);
+    budget.close();
   }
 
   private emit(event: Omit<AgentServiceEvent, 'createdAt'> & { createdAt?: string }): void {

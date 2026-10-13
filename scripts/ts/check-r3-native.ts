@@ -1,18 +1,30 @@
 import assert from 'node:assert/strict';
-import { existsSync } from 'node:fs';
-import { writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 import { ProjectRuntime, createDesignServices } from '@oeydesign/runtime';
+import type { AgentRunLimits } from '@oeydesign/runtime';
 
-// This legacy tool/vision acceptance has no whole-run token budget. Never use it
-// as a connectivity probe; check-kimi-smoke.ts is the bounded text-only entrypoint.
-if (!process.argv.includes('--live-tools')) throw new Error('Legacy tool acceptance requires separate budget authorization and --live-tools. Use check-kimi-smoke.ts for offline preflight or a bounded text probe.');
-if (existsSync(resolve('.env'))) process.loadEnvFile(resolve('.env'));
-const root = resolve(`.tmp/r3-native-${Date.now()}`);
-const runtime = ProjectRuntime.create(root, { name: 'Synthetic native protocol acceptance' });
+// Explicit authorization is still required; this is not the text-only probe.
+if (process.argv.slice(2).join(' ') !== '--live-tools') throw new Error('Native tool acceptance requires separate budget authorization and --live-tools.');
+if (!process.env.KIMI_API_KEY) throw new Error('KIMI_API_KEY is missing. No credential files are loaded.');
+const limits: AgentRunLimits = {
+  maxRequests: 2, maxInputTokens: 32_000, maxOutputTokens: 1024, maxOutputTokensPerRequest: 512,
+  maxToolCalls: 1, timeoutMs: 45_000, allowedTools: ['document_read'],
+  endpoint: 'https://api.kimi.com/coding/v1/messages', modelId: 'kimi-for-coding',
+};
+await mkdir(resolve('.tmp'), { recursive: true });
+const root = await mkdtemp(join(resolve('.tmp'), 'native-tools-'));
+let runtime: ProjectRuntime | undefined;
+let success = false;
+// Covers setup and code ignoring abort; only this process's fixture is removed.
+const watchdog = setTimeout(() => {
+  runtime?.close();
+  void rm(root, { recursive: true, force: true }).finally(() => { console.error('Native tool acceptance exceeded its process deadline.'); process.exit(1); });
+}, 60_000);
 try {
-  runtime.agent.configure({ providerId: 'kimi-coding', modelId: 'kimi-for-coding', baseUrl: '', apiKeyEnv: process.env.KIMI_API_KEY ? 'KIMI_API_KEY' : 'API_KEY', thinkingLevel: 'low' });
-  assert.equal(runtime.agent.getConfig().baseUrl, undefined, 'Native validation must not inherit the compatible BASE_URL.');
+  runtime = ProjectRuntime.create(root, { name: 'Synthetic bounded native tool acceptance', agentService: { runLimits: limits } });
+  runtime.agent.configure({ providerId: 'kimi-coding', modelId: limits.modelId, baseUrl: '', apiKeyEnv: 'KIMI_API_KEY', thinkingLevel: 'off' });
+  assert.equal(runtime.agent.getConfig().baseUrl, undefined);
   runtime.agent.configureTools(createDesignServices(runtime));
   const document = runtime.createDocument({ name: 'Synthetic red square' });
   runtime.submit(runtime.makeCommand(document.documentId, [{ type: 'node.insert', node: {
@@ -20,24 +32,24 @@ try {
     geometry: { x: 200, y: 150, width: 350, height: 350, rotation: 0 }, style: { fill: '#FF0000' }, locked: false, hidden: false,
   } }]));
   const session = await runtime.agent.createSession();
-  const calls: string[] = [];
-  runtime.agent.subscribe(event => {
-    const detail = event.event as { type?: string; toolName?: string } | undefined;
-    if (detail?.type === 'tool_execution_start' && detail.toolName) { calls.push(detail.toolName); console.log(JSON.stringify({ tool: detail.toolName })); }
-  });
-  const accepted = await runtime.agent.send(session.sessionId, `调用 render_preview 查看当前文档的截图，再用一句中文说出画面中图形的颜色与形状。最后使用 design_decide 记录“保持简洁留白”。不要改动文档或生成图片。`, { documentId: document.documentId });
-  const timeout = setTimeout(() => { void runtime.agent.cancel(session.sessionId).catch(() => {}); }, 120000);
-  try { await runtime.agent.waitForIdle(session.sessionId); } finally { clearTimeout(timeout); }
+  const accepted = await runtime.agent.send(session.sessionId, 'Call document_read exactly once for the current document, then describe the shape and color briefly. Do not call other tools.', { documentId: document.documentId });
+  await runtime.agent.waitForIdle(session.sessionId);
   const run = runtime.agent.getRun(accepted.runId)!;
-  assert.equal(run.status, 'completed', run.error);
-  assert.ok(calls.includes('render_preview'));
-  assert.ok(calls.includes('design_decide'));
+  assert.equal(run.status, 'completed', 'Bounded native tool run did not complete.');
+  assert.equal(run.budgetUsage?.toolCalls, 1);
   assert.equal(runtime.readDocument(document.documentId).revision, 1);
   const messages = await runtime.agent.getMessages(session.sessionId);
   const assistant = messages.findLast(message => message.role === 'assistant');
-  assert.equal(assistant?.api, 'anthropic-messages', 'Verify the protocol actually used, not just the provider name.');
-  const result = { root, protocol: assistant.api, provider: assistant.provider, model: assistant.model, sessionId: session.sessionId, calls,
-    text: assistant.content.filter(part => part.type === 'text').map(part => part.text).join('\n') };
+  assert.equal(assistant?.api, 'anthropic-messages');
+  assert.equal(assistant.model, limits.modelId);
+  const result = { protocol: assistant.api, model: assistant.model, limits, usage: run.budgetUsage, documentUnchanged: true };
   await writeFile(join(root, 'acceptance.json'), JSON.stringify(result, null, 2));
   console.log(JSON.stringify(result));
-} finally { runtime.close(); }
+  success = true;
+} catch {
+  console.error('Bounded native tool acceptance failed. No retry was attempted.'); process.exitCode = 1;
+} finally {
+  runtime?.close();
+  if (!success) await rm(root, { recursive: true, force: true });
+  clearTimeout(watchdog);
+}

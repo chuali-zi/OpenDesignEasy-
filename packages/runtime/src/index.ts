@@ -7,6 +7,7 @@ export type { StoredAsset, ImageGenerationConfig } from './assets.ts';
 export { createDesignServices } from './design-services.ts';
 export type { AgentDesignServices } from './design-services.ts';
 export { AgentService } from './agent-service.ts';
+export type { AgentRunLimits, AgentRunUsage } from './agent-budget.ts';
 export type { AgentServiceOptions } from './agent-service.ts';
 export type {
   AgentAcceptedInputOptions, AgentInputKind, AgentInputRecord, AgentInputStatus, AgentProviderConfig,

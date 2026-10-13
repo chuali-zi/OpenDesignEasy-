@@ -17,6 +17,7 @@ export interface AgentSessionRecord {
 }
 
 export interface AgentRunRecord {
+  budgetUsage?: import('./agent-budget.ts').AgentRunUsage;
   runId: string;
   sessionId: string;
   parentRunId?: string;
