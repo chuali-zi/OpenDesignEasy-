@@ -3,9 +3,9 @@ import { spawnSync } from 'node:child_process';
 import test from 'node:test';
 import { kimiSmokeModel, runKimiSmoke } from './kimi-smoke.ts';
 
-function response(text = 'OK') {
+function response(text = 'OK', model = 'kimi-for-coding') {
   const events = [
-    { type: 'message_start', message: { id: 'synthetic', type: 'message', role: 'assistant', model: 'k3', content: [], usage: { input_tokens: 8, output_tokens: 0 } } },
+    { type: 'message_start', message: { id: 'synthetic', type: 'message', role: 'assistant', model, content: [], usage: { input_tokens: 8, output_tokens: 0 } } },
     { type: 'content_block_start', index: 0, content_block: { type: 'text', text: '' } },
     { type: 'content_block_delta', index: 0, delta: { type: 'text_delta', text } },
     { type: 'content_block_stop', index: 0 },
@@ -19,6 +19,7 @@ function response(text = 'OK') {
 
 test('installed Pi native model matches the approved route', () => {
   const model = kimiSmokeModel();
+  assert.equal(model.id, 'kimi-for-coding');
   assert.equal(model.api, 'anthropic-messages');
   assert.equal(model.baseUrl, 'https://api.kimi.com/coding');
 });
@@ -32,9 +33,9 @@ test('Pi serializes one bounded synthetic request and exposes usage only', async
     assert.equal(request.redirect, 'error');
     const body = await request.json();
     assert.equal(body.max_tokens, 256);
-    assert.equal(body.model, 'k3');
+    assert.equal(body.model, 'kimi-for-coding');
     assert.equal(body.tools, undefined);
-    assert.equal(body.thinking, undefined);
+    assert.deepEqual(body.thinking, { type: 'disabled' });
     assert.deepEqual(body.messages, [{ role: 'user', content: 'Reply with exactly OK and nothing else.' }]);
     return response();
   });
@@ -64,8 +65,31 @@ test('unexpected model text is rejected without echoing it', async () => {
   assert.equal(JSON.stringify(result).includes('private-response-sentinel'), false);
 });
 
+test('a different response model cannot be reported as a successful K2.8 probe', async () => {
+  let calls = 0;
+  const result = await runKimiSmoke('synthetic-test-key', async () => { calls++; return response('OK', 'k3'); });
+  assert.equal(calls, 1);
+  assert.equal(result.ok, false);
+  assert.equal(result.status, 'model_mismatch');
+  assert.equal(result.requestedModel, 'kimi-for-coding');
+  assert.equal(result.model, 'k3');
+});
+
 test('missing credentials fail before transport', async () => {
   await assert.rejects(runKimiSmoke('', async () => { assert.fail('must not send'); }), /missing/);
+});
+
+test('transport failure exposes only a known code, not fabricated zero usage or response metadata', async () => {
+  const result = await runKimiSmoke('synthetic-test-key', async () => {
+    throw Object.assign(new Error('private-transport-sentinel'), { cause: { code: 'ENOTFOUND' } });
+  });
+  assert.equal(result.requests, 1);
+  assert.equal(result.status, 'transport_error');
+  assert.equal(result.transportCode, 'ENOTFOUND');
+  assert.equal(result.responseReceived, false);
+  assert.equal(result.model, undefined);
+  assert.equal(result.usage, null);
+  assert.equal(JSON.stringify(result).includes('private-transport-sentinel'), false);
 });
 
 test('total deadline aborts even a transport that never resolves', async t => {

@@ -11,7 +11,7 @@ if (existsSync(resolve('.env'))) process.loadEnvFile(resolve('.env'));
 const root = resolve(`.tmp/r3-native-${Date.now()}`);
 const runtime = ProjectRuntime.create(root, { name: 'Synthetic native protocol acceptance' });
 try {
-  runtime.agent.configure({ providerId: 'kimi-coding', modelId: 'k3', baseUrl: '', apiKeyEnv: process.env.KIMI_API_KEY ? 'KIMI_API_KEY' : 'API_KEY', thinkingLevel: 'low' });
+  runtime.agent.configure({ providerId: 'kimi-coding', modelId: 'kimi-for-coding', baseUrl: '', apiKeyEnv: process.env.KIMI_API_KEY ? 'KIMI_API_KEY' : 'API_KEY', thinkingLevel: 'low' });
   assert.equal(runtime.agent.getConfig().baseUrl, undefined, 'Native validation must not inherit the compatible BASE_URL.');
   runtime.agent.configureTools(createDesignServices(runtime));
   const document = runtime.createDocument({ name: 'Synthetic red square' });
