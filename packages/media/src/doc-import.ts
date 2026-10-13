@@ -192,12 +192,13 @@ export function prepareDocxImport(bytes: Uint8Array, options: {
             return [{ type: 'doc_field', attrs: { kind: instruction === 'PAGE' ? 'page' : 'pages' } }];
         }
         if (name === 'drawing') {
-            const drawing = descendants(node, 'inline')[0];
-            if (!drawing || descendants(node, 'anchor').length)
-                return reject('floating/complex drawing is not yet supported');
-            const transform = descendants(drawing, 'xfrm')[0];
-            if (descendants(drawing, 'srcRect').some(n => Object.values(n.attrs).some(v => Number(v) !== 0)) || Number(attr(transform, 'rot') ?? 0) !== 0 || flag(transform && child(transform, 'flipH')) || attr(transform, 'flipH') === '1' || attr(transform, 'flipV') === '1')
-                return reject('cropped/transformed inline images are not yet mapped');
+            const inlineDrawing=descendants(node,'inline')[0],anchor=descendants(node,'anchor')[0],drawing=inlineDrawing ?? anchor;
+            if(!drawing)return reject('unsupported drawing group');
+            let floating:Record<string,JSONValue>|undefined;
+            if(anchor){const h=child(anchor,'positionH'),v=child(anchor,'positionV');if(attr(h,'relativeFrom')!=='column'||attr(v,'relativeFrom')!=='paragraph')return reject('floating anchors require column/paragraph relative offsets');const hx=child(h,'posOffset'),vy=child(v,'posOffset');if(!hx||!vy)return reject('aligned/relative-size floating anchors not yet supported');const wrap=child(anchor,'wrapTopAndBottom')?'topBottom':child(anchor,'wrapNone')?'none':undefined;if(!wrap)return reject('side wrapping not yet supported');const extent=child(anchor,'extent'),width=real(attr(extent,'cx')),height=real(attr(extent,'cy')),transform=descendants(anchor,'xfrm')[0];if(!width||!height)return reject('invalid floating extent');floating={x:Number(xmlText(hx))/9525,y:Number(xmlText(vy))/9525,width:width/9525,height:height/9525,rotation:(real(attr(transform,'rot'))??0)/60000,wrap,locked:false};
+                const shape=descendants(anchor,'wsp')[0];if(shape){const props=child(shape,'spPr'),geom=props&&child(props,'prstGeom'),kind=attr(geom,'prst');if(!['rect','ellipse'].includes(kind??''))return reject('unsupported floating shape');const fill=props&&child(props,'solidFill'),line=props&&child(props,'ln'),lineFill=line&&child(line,'solidFill'),run=descendants(shape,'rPr')[0],styles=rMarks(run).find(m=>m.type==='textStyle')?.attrs ?? {};const textBox=descendants(shape,'txbxContent')[0];if(!textBox)return reject('missing shape text box');const text=children(textBox,'p').map(p=>descendants(p,'t').map(xmlText).join('')).join('\n');return [{type:'floating_shape',attrs:{id:key('shape'),...floating,shape:kind==='ellipse'?'ellipse':'rectangle',fill:'#'+(attr(fill&&child(fill,'srgbClr'),'val')??'DDEBDD'),stroke:'#'+(attr(lineFill&&child(lineFill,'srgbClr'),'val')??'355E49'),strokeWidth:(real(attr(line,'w'))??9525)/9525,text,fontFamily:styles.fontFamily??'Noto Sans CJK SC',fontSize:styles.fontSize??16,color:styles.color??'#18231d'}}];}
+            }
+            const transform=descendants(drawing,'xfrm')[0];if(descendants(drawing,'srcRect').some(n=>Object.values(n.attrs).some(v=>Number(v)!==0))||!anchor&&Number(attr(transform,'rot')??0)!==0||['1','true'].includes(attr(transform,'flipH')??'')||['1','true'].includes(attr(transform,'flipV')??''))return reject('cropped/flipped inline images are not yet mapped');
             const blip = descendants(drawing, 'blip')[0], ref = blip && Object.entries(blip.attrs).find(([k]) => local(k) === 'embed')?.[1], rel = ref && relationships(files, part).get(ref);
             if (!rel || rel.external)
                 return reject('external image is unsupported');
@@ -237,7 +238,7 @@ export function prepareDocxImport(bytes: Uint8Array, options: {
             const extent = child(drawing, 'extent'), width = real(attr(extent, 'cx')), height = real(attr(extent, 'cy'));
             if (!width || !height)
                 return reject('invalid inline image size');
-            const id=key('picture'),attrs:Record<string,JSONValue>={id,assetId:asset.id,width:width/9525,height:height/9525,alt:attr(child(drawing,'docPr'),'descr')??''};source.blocks[id]={part,path,type:'inline_image',attrs:structuredClone(attrs)};return [{type:'inline_image',attrs,marks:inherited}];
+            const id=key('picture'),attrs:Record<string,JSONValue>={id,assetId:asset.id,width:width/9525,height:height/9525,alt:attr(child(drawing,'docPr'),'descr')??''};if(floating)Object.assign(attrs,floating);source.blocks[id]={part,path,type:anchor?'floating_image':'inline_image',attrs:structuredClone(attrs)};return [{type:anchor?'floating_image':'inline_image',attrs,marks:inherited}];
         }
         return reject(`unsupported inline element ${name}`);
     };

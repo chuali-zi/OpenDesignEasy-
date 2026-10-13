@@ -1,16 +1,18 @@
+import { createDocFloatingView } from './DocFloatingView.ts';
 import { baseKeymap, setBlockType } from 'prosemirror-commands';
 import { keymap } from 'prosemirror-keymap';
 import { wrapInList, splitListItem, liftListItem } from 'prosemirror-schema-list';
 import type { Schema } from 'prosemirror-model';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { PMNodeJSON, ImageAsset } from '@oeydesign/document';
-import { EditorState } from 'prosemirror-state';
+import { EditorState, NodeSelection } from 'prosemirror-state';
 import type { Selection } from 'prosemirror-state';
 import { EditorView } from 'prosemirror-view';
 import { editorTextSchema } from './editor-text-schema.ts';
 
 export type RichTextEditorProps = {
   schema?: Schema;
+  assetUrl?: (id:string)=>string;
   onImportImage?: (file: File) => Promise<ImageAsset>;
   documentId: string;
   nodeId: string;
@@ -27,12 +29,14 @@ export type RichTextEditorProps = {
 const FONT_CHOICES = ['Noto Sans CJK SC', 'Segoe UI', 'Arial', 'Georgia', 'Aptos', 'Microsoft YaHei', 'Noto Sans'];
 type PendingFocusRestore = { view: EditorView; selection: Selection; moved: boolean; cleanup: () => void };
 
-export function RichTextEditor({ schema = editorTextSchema, onImportImage, documentId, nodeId, content, revision, disabled, focused = false, baseStyle, onCommit, onConflict, onDraftChange }: RichTextEditorProps) {
+export function RichTextEditor({ schema = editorTextSchema, assetUrl, onImportImage, documentId, nodeId, content, revision, disabled, focused = false, baseStyle, onCommit, onConflict, onDraftChange }: RichTextEditorProps) {
   const docJson = (value: PMNodeJSON) => schema.nodeFromJSON(value);
   const docMode = !!schema.nodes.table;
   const plugins = () => docMode ? [keymap({'Enter':splitListItem(schema.nodes.list_item!),'Mod-[':liftListItem(schema.nodes.list_item!)}),keymap(baseKeymap)] : [];
   const assetsRef = useRef<ImageAsset[]>([]);
   const imageInput = useRef<HTMLInputElement>(null);
+  const [floatingImage,setFloatingImage]=useState(false);
+  const [objectAttrs,setObjectAttrs]=useState<Record<string,any>|null>(null);
   const [importingImage, setImportingImage] = useState(false);
   const hostRef = useRef<HTMLDivElement | null>(null);
   const viewRef = useRef<EditorView | null>(null);
@@ -130,6 +134,7 @@ export function RichTextEditor({ schema = editorTextSchema, onImportImage, docum
     const state = EditorState.create({ schema, doc, plugins: plugins() });
     const view = new EditorView(host, {
       state,
+      ...(docMode?{nodeViews:{floating_image:(node,view,getPos)=>createDocFloatingView(node,view,getPos,assetUrl ?? (()=>''),()=>{if(stepsRef.current.length){void flush();return false;}return !savingRef.current;}),floating_shape:(node,view,getPos)=>createDocFloatingView(node,view,getPos,assetUrl ?? (()=>''),()=>{if(stepsRef.current.length){void flush();return false;}return !savingRef.current;})}}:{}),
       editable: () => !propsRef.current.disabled && !savingRef.current,
       attributes: { class: 'editor-rich-text-surface', 'aria-label': '富文本内容' },
       handleDOMEvents: {
@@ -230,6 +235,7 @@ export function RichTextEditor({ schema = editorTextSchema, onImportImage, docum
   useEffect(() => { if (focused) viewRef.current?.focus(); }, [focused]);
 
   function syncToolbar(state: EditorState) {
+    const selected=(state.selection as Selection & {node?: typeof state.doc}).node;setObjectAttrs(selected && ['floating_image','floating_shape'].includes(selected.type.name)?{...selected.attrs,kind:selected.type.name}:null);
     const marks = state.storedMarks ?? state.selection.$from.marks();
     const style = marks.find(mark => mark.type === schema.marks.textStyle);
     const font = style?.attrs.fontFamily;
@@ -332,6 +338,8 @@ export function RichTextEditor({ schema = editorTextSchema, onImportImage, docum
     const row=()=>schema.nodes.table_row!.create(null,[cell(),cell(),cell()]);
     view.dispatch(view.state.tr.replaceSelectionWith(schema.nodes.table!.create(null,[row(),row(),row()])));view.focus();
   }
+  function insertFloating(type:'floating_image'|'floating_shape',attrs:Record<string,unknown>={}){const view=viewRef.current;if(!view)return;const $from=view.state.selection.$from;let pos=$from.pos;for(let d=$from.depth;d>0;d--)if(['paragraph','heading'].includes($from.node(d).type.name)){pos=$from.start(d);break;}view.dispatch(view.state.tr.insert(pos,schema.nodes[type]!.create(attrs)));view.focus();}
+  function updateObject(key:string,value:unknown){const view=viewRef.current;if(!view||!objectAttrs)return;const selected=(view.state.selection as Selection & {node?:typeof view.state.doc}).node;if(!selected||!['floating_image','floating_shape'].includes(selected.type.name)||selected.attrs.locked&&key!=='locked')return;const pos=view.state.selection.from,tr=view.state.tr.setNodeMarkup(pos,undefined,{...selected.attrs,[key]:value});tr.setSelection(NodeSelection.create(tr.doc,pos));view.dispatch(tr);view.focus();}
   function blockType(type:string) { const view=viewRef.current;if(!view)return;setBlockType(schema.nodes[type==='p'?'paragraph':'heading']!,type==='p'?{}:{level:Number(type)})(view.state,tr=>view.dispatch(tr));view.focus(); }
   return <section className="editor-rich-text" aria-label="富文本编辑器">
     <div className="editor-rich-toolbar" role="toolbar" aria-label="文字格式">
@@ -366,10 +374,19 @@ export function RichTextEditor({ schema = editorTextSchema, onImportImage, docum
       <select aria-label="正文样式" defaultValue="p" disabled={disabled||saving} onChange={e=>blockType(e.currentTarget.value)}><option value="p">正文</option>{[1,2,3].map(n=><option key={n} value={n}>标题 {n}</option>)}</select>
       <button disabled={disabled||saving} onMouseDown={e=>e.preventDefault()} onClick={()=>{const view=viewRef.current;if(view){wrapInList(schema.nodes.bullet_list!)(view.state,tr=>view.dispatch(tr));view.focus();}}}>无序列表</button>
       <button disabled={disabled||saving} onMouseDown={e=>e.preventDefault()} onClick={()=>{const view=viewRef.current;if(view){wrapInList(schema.nodes.ordered_list!)(view.state,tr=>view.dispatch(tr));view.focus();}}}>有序列表</button>
+      <button disabled={disabled||saving} onMouseDown={e=>e.preventDefault()} onClick={()=>insertFloating('floating_shape')}>浮动文字框</button>
+      <button disabled={disabled||saving} onMouseDown={e=>e.preventDefault()} onClick={()=>insertFloating('floating_shape',{shape:'ellipse',text:'',width:140,height:140})}>浮动图形</button>
       <button disabled={disabled||saving} onMouseDown={e=>e.preventDefault()} onClick={insertTable}>插入表格</button>
       <button disabled={disabled||saving} onMouseDown={e=>e.preventDefault()} onClick={()=>{const view=viewRef.current;if(view){view.dispatch(view.state.tr.replaceSelectionWith(schema.nodes.page_break!.create()));view.focus();}}}>分页符</button>
-      {onImportImage && <><button disabled={disabled||saving||importingImage} onMouseDown={e=>e.preventDefault()} onClick={()=>imageInput.current?.click()}>{importingImage?'正在插入…':'插入图片'}</button>
-      <input ref={imageInput} hidden aria-label="插入文档图片" type="file" accept="image/png,image/jpeg" onChange={e=>{const file=e.currentTarget.files?.[0];e.currentTarget.value='';const view=viewRef.current;if(!file||!view)return;setImportingImage(true);void onImportImage(file).then(asset=>{if(view.isDestroyed||viewRef.current!==view)return;assetsRef.current.push(asset);const width=Math.min(360,asset.width);view.dispatch(view.state.tr.replaceSelectionWith(schema.nodes.inline_image!.create({assetId:asset.id,width,height:width*asset.height/asset.width,alt:asset.name ?? ''})));view.focus();}).catch(()=>propsRef.current.onConflict()).finally(()=>setImportingImage(false));}} /></>}
+      {onImportImage && <><label><input type="checkbox" aria-label="图片作为浮动对象" checked={floatingImage} onChange={e=>setFloatingImage(e.currentTarget.checked)} />浮动图片</label><button disabled={disabled||saving||importingImage} onMouseDown={e=>e.preventDefault()} onClick={()=>imageInput.current?.click()}>{importingImage?'正在插入…':'插入图片'}</button>
+      <input ref={imageInput} hidden aria-label="插入文档图片" type="file" accept="image/png,image/jpeg" onChange={e=>{const file=e.currentTarget.files?.[0];e.currentTarget.value='';const view=viewRef.current;if(!file||!view)return;setImportingImage(true);void onImportImage(file).then(asset=>{if(view.isDestroyed||viewRef.current!==view)return;assetsRef.current.push(asset);const width=Math.min(360,asset.width);if(floatingImage)insertFloating('floating_image',{assetId:asset.id,width,height:width*asset.height/asset.width,alt:asset.name ?? ''});else view.dispatch(view.state.tr.replaceSelectionWith(schema.nodes.inline_image!.create({assetId:asset.id,width,height:width*asset.height/asset.width,alt:asset.name ?? ''})));view.focus();}).catch(()=>propsRef.current.onConflict()).finally(()=>setImportingImage(false));}} /></>}
+    </div>}
+    {objectAttrs&&<div className="doc-object-properties" aria-label="浮动对象属性">
+      <strong>{objectAttrs.kind==='floating_image'?'浮动图片':'浮动图形 / 文字框'}</strong>
+      {['x','y','width','height','rotation'].map(key=><label key={`${objectAttrs.id}-${key}-${objectAttrs[key]}`}>{({x:'X',y:'Y',width:'宽',height:'高',rotation:'旋转'} as Record<string,string>)[key]}<input aria-label={`浮动${key}`} type="number" defaultValue={objectAttrs[key]} disabled={disabled||saving||objectAttrs.locked} onBlur={e=>{const value=Number(e.currentTarget.value);if(Number.isFinite(value)&&value!==objectAttrs[key])updateObject(key,value);}} /></label>)}
+      <select aria-label="浮动环绕" value={objectAttrs.wrap} disabled={disabled||saving||objectAttrs.locked} onChange={e=>updateObject('wrap',e.currentTarget.value)}><option value="topBottom">上下环绕</option><option value="none">覆盖正文</option></select>
+      <label><input aria-label="锁定浮动对象" type="checkbox" checked={objectAttrs.locked} disabled={disabled||saving} onChange={e=>updateObject('locked',e.currentTarget.checked)} />锁定</label>
+      {objectAttrs.kind==='floating_shape'&&<><textarea key={`${objectAttrs.id}-${objectAttrs.text}`} aria-label="浮动文字" defaultValue={objectAttrs.text} disabled={disabled||saving||objectAttrs.locked} onBlur={e=>{if(e.currentTarget.value!==objectAttrs.text)updateObject('text',e.currentTarget.value);}} />{['fill','stroke','color'].map(key=><label key={key}>{key}<input aria-label={`浮动${key}`} type="color" value={objectAttrs[key]} disabled={disabled||saving||objectAttrs.locked} onChange={e=>updateObject(key,e.currentTarget.value)} /></label>)}</>}
     </div>}
     <div ref={hostRef} className="editor-rich-host" onBlur={event => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) void flush(); }} />
     <small className="editor-rich-status">{saving ? '正在保存文字…' : '支持段落、中文输入和所选文字格式'}</small>

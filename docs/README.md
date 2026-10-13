@@ -34,6 +34,7 @@
 | [运行与恢复](spec/runtime-recovery.md) | SQLite、会话、输入、版本、重启、数据导入 |
 | [质量规范](spec/quality-governance-spec.md) | 编辑正确性、设计质量、实际导出与必要验证 |
 | [客户端规范](spec/clients-spec.md) | Web、CLI、TUI、Desktop、进程与分发 |
+| [Doc 浮动对象与原生锚点](spec/doc-floating.md) | 段落锚点、拖拽/旋转缩放、锁定/取消、原生图形与支持边界 |
 | [DOCX 模板结构与往返](spec/doc-templates.md) | 有限模板可编辑导入、原件/OOXML 保留、事务/历史和真实原生渲染修复 |
 | [TS 资料读取与恢复](spec/material-readers.md) | 实际 Office/PDF/CSV/源码文字、本地 WASM OCR、缓存、CLI/Pi 路径与边界 |
 | [Doc 核心编辑与原生生产](spec/doc-core.md) | 真实 Doc 产品切片、原生 Office 文件与尚待完成的 R5 范围 |
