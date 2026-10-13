@@ -10,9 +10,9 @@ export function createDocFloatingView(node:PMNode,view:EditorView,getPos:()=>num
  let current=node,selected=false,destroyed=false,cleanup:()=>void=()=>{};
  const paint=(attrs=current.attrs)=>{
   dom.dataset.docFloatId=String(attrs.id);dom.dataset.kind=current.type.name;box.style.width=`${attrs.width}px`;box.style.height=`${attrs.height}px`;box.style.left=`${attrs.x}px`;box.style.top=`${attrs.y}px`;box.style.transform=`rotate(${attrs.rotation}deg)`;
-  dom.style.display=attrs.wrap==='topBottom'?'block':'inline-block';const angle=attrs.rotation*Math.PI/180,bounds=Math.abs(Math.sin(angle))*attrs.width+Math.abs(Math.cos(angle))*attrs.height;dom.style.height=attrs.wrap==='topBottom'?`${Math.max(0,attrs.y+(attrs.height+bounds)/2)}px`:'0px';dom.style.width=attrs.wrap==='topBottom'?'100%':'0px';dom.style.position='relative';
+  dom.style.display=attrs.wrap==='topBottom'?'block':'inline-block';const angle=attrs.rotation*Math.PI/180,bounds=Math.abs(Math.sin(angle))*attrs.width+Math.abs(Math.cos(angle))*attrs.height;dom.style.height=attrs.wrap==='topBottom'?`${Math.max(0,attrs.y+(attrs.height+bounds)/2)}px`:'0px';dom.style.width=attrs.wrap==='topBottom'?'100%':'0px';dom.style.position='static';
   // The containing paragraph is the vertical anchor; x is relative to the body's column.
-  const surface=view.dom.getBoundingClientRect(),parent=dom.parentElement?.getBoundingClientRect();const scale=view.dom.clientWidth?surface.width/view.dom.clientWidth:1;
+  const paragraph=dom.closest('p,h1,h2,h3,h4,h5,h6') as HTMLElement|null;const surface=view.dom.getBoundingClientRect(),parent=paragraph?.getBoundingClientRect();const scale=view.dom.clientWidth?surface.width/view.dom.clientWidth:1;
   if(parent&&scale>0)box.style.left=`${attrs.x+(surface.left-parent.left)/scale}px`;
   box.classList.toggle('selected',selected);box.classList.toggle('locked',attrs.locked);
   if(current.type.name==='floating_image'){image.src=assetUrl(String(attrs.assetId));image.alt=String(attrs.alt);image.draggable=false;image.style.width='100%';image.style.height='100%';image.style.objectFit='contain';box.replaceChildren(image,resize);}

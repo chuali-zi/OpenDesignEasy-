@@ -4,7 +4,7 @@ import { editorTextSchema } from './editor-text-schema.ts';
 export function createDocEditorSchema(assetUrl:(id:string)=>string,styles:Record<string,Record<string,unknown>>={}):Schema {
   let nodes=docSchema.spec.nodes;
   nodes.forEach((name,spec)=>{ const view=editorTextSchema.spec.nodes.get(name);if(view)nodes=nodes.update(name,{...view,attrs:spec.attrs} as NodeSpec); });
-  const style=(a:Record<string,unknown>)=>{const s={...(styles[String(a.styleId??'Normal')] ?? {}),...Object.fromEntries(Object.entries(a).filter(([,v])=>v!=null))};const css:string[]=[];
+  const style=(a:Record<string,unknown>)=>{const s={...(styles[String(a.styleId??'Normal')] ?? {}),...Object.fromEntries(Object.entries(a).filter(([,v])=>v!=null))};const css:string[]=['position:relative'];
     for(const [key,name]of Object.entries({fontFamily:'font-family',fontSize:'font-size',color:'color',align:'text-align',lineHeight:'line-height',spaceBefore:'margin-top',spaceAfter:'margin-bottom',indent:'margin-left',firstLineIndent:'text-indent'}))if(s[key]!=null)css.push(`${name}:${typeof s[key]==='number'?`${s[key]}px`:s[key]}`);
     if(s.bold)css.push('font-weight:bold');if(s.italic)css.push('font-style:italic');if(s.underline||s.strike)css.push(`text-decoration:${s.underline?'underline':''} ${s.strike?'line-through':''}`);if(s.pageBreakBefore)css.push('break-before:page');return css.join(';');};
   for(const name of ['paragraph','heading'])nodes=nodes.update(name,{...nodes.get(name),toDOM:n=>[name==='heading'?`h${n.attrs.level}`:'p',{style:style(n.attrs)},0]} as NodeSpec);

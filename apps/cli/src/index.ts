@@ -6,7 +6,7 @@ import { randomUUID } from "node:crypto";
 import { Fragment, Slice } from "prosemirror-model";
 import { ReplaceStep } from "prosemirror-transform";
 import { textFromString, textSchema } from "@oeydesign/document";
-import { exportDocumentArtifact, renderDeckSvg, renderDocHtml, renderWebHtml } from "@oeydesign/media";
+import { exportDocumentArtifact, docPdfEngine, renderDeckSvg, renderDocHtml, renderWebHtml } from "@oeydesign/media";
 import type { ArtifactFormat } from "@oeydesign/media";
 import { ProjectAssets, ProjectRuntime } from "@oeydesign/runtime";
 import { executeAgent } from './agent-cli.ts';
@@ -283,7 +283,7 @@ export async function execute(argv: string[]): Promise<unknown> {
       const resolver = new ProjectAssets(runtime).resolve;
       const data = await exportDocumentArtifact(document, resolver, format as ArtifactFormat, { pageId: optionalFlag(values, 'page') });
       await writeFileAtomically(output, data);
-      return { documentId: document.documentId, revision: document.revision, format, output };
+      return { documentId: document.documentId, revision: document.revision, format, output, ...(document.kind==='doc'&&format==='pdf'?{engine:docPdfEngine()}: {}) };
     } finally { runtime.close(); }
   }
 

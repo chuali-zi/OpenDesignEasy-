@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { mkdir, readFile, realpath, rename, writeFile } from 'node:fs/promises';
 import { basename, isAbsolute, join, relative, resolve } from 'node:path';
-import { exportDocumentArtifact } from '@oeydesign/media';
+import { exportDocumentArtifact, docPdfEngine } from '@oeydesign/media';
 import type { ArtifactFormat } from '@oeydesign/media';
 import { ProjectAssets, generateImage } from './assets.ts';
 import type { ProjectRuntime } from './project-runtime.ts';
@@ -58,7 +58,7 @@ export function createDesignServices(runtime: ProjectRuntime): AgentDesignServic
       await writeFile(`${path}.tmp`, bytes, { signal });
       signal.throwIfAborted();
       await rename(`${path}.tmp`, path);
-      const result = { id, documentId: document.documentId, revision: document.revision, format: args.format, filename: basename(path), sizeBytes: bytes.length, createdAt: new Date().toISOString() };
+      const result = { id, documentId: document.documentId, revision: document.revision, format: args.format, filename: basename(path), sizeBytes: bytes.length, ...(document.kind==='doc'&&args.format==='pdf'?{engine:docPdfEngine()}:{}), createdAt: new Date().toISOString() };
       signal.throwIfAborted();
       runtime.putRecord('exports', id, result);
       return result;

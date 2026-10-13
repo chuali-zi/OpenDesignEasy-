@@ -7,7 +7,7 @@ import type { CommandEnvelope } from '@oeydesign/document';
 import { KernelError } from '@oeydesign/document';
 import { ProjectAssets, ProjectRuntime, RuntimeError } from '@oeydesign/runtime';
 import type { ProjectEvent, CommandOptions } from '@oeydesign/runtime';
-import { renderDeckSvg, renderDocHtml, renderWebHtml, exportDocumentArtifact, artifactMimeTypes, buildWebProject } from '@oeydesign/media';
+import { renderDeckSvg, renderDocHtml, renderWebHtml, exportDocumentArtifact, artifactMimeTypes, buildWebProject, docPdfEngine } from '@oeydesign/media';
 import type { ArtifactFormat } from '@oeydesign/media';
 import { registerAgentRoutes } from './agent-routes.ts';
 import { startApplicationPreview } from './application-preview.ts';
@@ -147,6 +147,11 @@ export async function createWebHost(runtime: ProjectRuntime, options: WebHostOpt
       .header('X-Content-Type-Options', 'nosniff').header('X-Document-Revision', document.revision)
       .send(await renderWebHtml(document, request.query.page, assets.resolve, { pageUrl: page => `/api/documents/${encodeURIComponent(document.documentId)}/preview.html?page=${encodeURIComponent(page.id)}` }));
   });
+  app.get<{Params:{id:string};Querystring:{revision:string}}>('/api/documents/:id/preview.pdf',async(request,reply)=>{
+    const document=runtime.readDocDocument(request.params.id);if(String(document.revision)!==request.query.revision)throw new RuntimeError('conflict','文档已更新，请重新生成分页预览。');
+    const controller=new AbortController(),stop=()=>{if(!reply.raw.writableEnded)controller.abort();};reply.raw.once('close',stop);
+    try{const bytes=await exportDocumentArtifact(document,assets.resolve,'pdf',{signal:controller.signal});return reply.type('application/pdf').header('Content-Disposition','inline').header('Cache-Control','no-store').header('X-Document-Revision',document.revision).header('X-Doc-Pdf-Engine',docPdfEngine()).send(Buffer.from(bytes));}finally{reply.raw.removeListener('close',stop);}
+  });
   for (const format of ['pptx', 'docx', 'pdf', 'png', 'html', 'zip', 'source.zip', 'build.zip'] as const) app.get<{ Params: { id: string }; Querystring: { page?: string } }>(`/api/documents/:id/export.${format}`, async (request, reply) => {
     const document = runtime.readDocument(request.params.id);
     const controller = new AbortController();
@@ -154,6 +159,7 @@ export async function createWebHost(runtime: ProjectRuntime, options: WebHostOpt
     reply.raw.once('close', stop);
     try {
       const bytes = await exportDocumentArtifact(document, assets.resolve, format, { signal: controller.signal, pageId: request.query.page });
+      if(document.kind==='doc'&&format==='pdf')reply.header('X-Doc-Pdf-Engine',docPdfEngine());
       return reply.type(artifactMimeTypes[format]).header('Content-Disposition', `attachment; filename="${document.kind}-r${document.revision}.${format}"`)
         .header('X-Document-Revision', document.revision).send(Buffer.from(bytes));
     } finally { reply.raw.removeListener('close', stop); }

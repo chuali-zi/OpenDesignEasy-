@@ -35,6 +35,7 @@ export function RichTextEditor({ schema = editorTextSchema, assetUrl, onImportIm
   const plugins = () => docMode ? [keymap({'Enter':splitListItem(schema.nodes.list_item!),'Mod-[':liftListItem(schema.nodes.list_item!)}),keymap(baseKeymap)] : [];
   const assetsRef = useRef<ImageAsset[]>([]);
   const imageInput = useRef<HTMLInputElement>(null);
+  const [pagination,setPagination]=useState<Record<string,boolean>>({});
   const [floatingImage,setFloatingImage]=useState(false);
   const [objectAttrs,setObjectAttrs]=useState<Record<string,any>|null>(null);
   const [importingImage, setImportingImage] = useState(false);
@@ -248,6 +249,7 @@ export function RichTextEditor({ schema = editorTextSchema, assetUrl, onImportIm
     if (typeof color === 'string' && /^#[0-9a-f]{6}$/i.test(color)) setFontColor(color);
     else if (baseStyle?.color) setFontColor(baseStyle.color);
     const block = state.selection.$from.parent;
+    setPagination(Object.fromEntries(['pageBreakBefore','keepNext','keepLines','widowControl'].map(key=>[key,block.attrs[key]===true])));
     const currentAlign = block.attrs.align;
     if (currentAlign === 'left' || currentAlign === 'center' || currentAlign === 'right' || currentAlign === 'justify') setAlign(currentAlign);
     else setAlign('left');
@@ -308,7 +310,7 @@ export function RichTextEditor({ schema = editorTextSchema, assetUrl, onImportIm
     view.dispatch(transaction);
   }
 
-  function applyParagraphAttr(key: 'align' | 'lineHeight' | 'spaceBefore' | 'spaceAfter' | 'indent' | 'firstLineIndent', value: string | number) {
+  function applyParagraphAttr(key: 'align' | 'lineHeight' | 'spaceBefore' | 'spaceAfter' | 'indent' | 'firstLineIndent' | 'pageBreakBefore' | 'keepNext' | 'keepLines' | 'widowControl', value: string | number | boolean) {
     const view = viewRef.current;
     if (!view) return;
     const { from, to } = view.state.selection;
@@ -371,6 +373,7 @@ export function RichTextEditor({ schema = editorTextSchema, assetUrl, onImportIm
       </div></details>
     </div>
     {docMode && <div className="editor-rich-toolbar" aria-label="文档结构">
+      {(['pageBreakBefore','keepNext','keepLines','widowControl'] as const).map((key,i)=><label key={key}><input aria-label={['段前分页','与下段同页','段内不分页','孤行控制'][i]} type="checkbox" checked={!!pagination[key]} disabled={disabled||saving} onChange={e=>applyParagraphAttr(key,e.currentTarget.checked)} />{['段前分页','与下段同页','段内不分页','孤行控制'][i]}</label>)}
       <select aria-label="正文样式" defaultValue="p" disabled={disabled||saving} onChange={e=>blockType(e.currentTarget.value)}><option value="p">正文</option>{[1,2,3].map(n=><option key={n} value={n}>标题 {n}</option>)}</select>
       <button disabled={disabled||saving} onMouseDown={e=>e.preventDefault()} onClick={()=>{const view=viewRef.current;if(view){wrapInList(schema.nodes.bullet_list!)(view.state,tr=>view.dispatch(tr));view.focus();}}}>无序列表</button>
       <button disabled={disabled||saving} onMouseDown={e=>e.preventDefault()} onClick={()=>{const view=viewRef.current;if(view){wrapInList(schema.nodes.ordered_list!)(view.state,tr=>view.dispatch(tr));view.focus();}}}>有序列表</button>

@@ -59,7 +59,7 @@ export async function preserveTemplateXml(doc: DocDocument, original: Uint8Array
         const scan=(node:XmlNode,inherited?:DocXmlBinding,inheritedImage?:DocXmlBinding)=>{
             let active=inherited,imageActive=inheritedImage;
             for(const c of node.children){
-                if(local(c.name)==='bookmarkStart'){const value=bindings.get(attr(c,'name')??'');if(value?.kind==='run')active=value;else if(value?.kind==='block'&&value.type==='inline_image')imageActive=value;}
+                if(local(c.name)==='bookmarkStart'){const value=bindings.get(attr(c,'name')??'');if(value?.kind==='run')active=value;else if(value?.kind==='block'&&['inline_image','floating_image','floating_shape'].includes(value.type))imageActive=value;}
                 else if(local(c.name)==='bookmarkEnd'){active=inherited;imageActive=inheritedImage;}
                 if(local(c.name)==='r'&&active?.kind==='run')runBindings.set(c,active);
                 if(local(c.name)==='drawing'&&imageActive)imageBindings.set(c,imageActive);
@@ -71,7 +71,21 @@ export async function preserveTemplateXml(doc: DocDocument, original: Uint8Array
             for (const c of node.children)
                 visit(c);
             if(local(node.name)==='drawing'){
-                const binding=imageBindings.get(node);if(binding?.kind==='block'){const item=source.blocks[binding.id];if(item&&item.type==='inline_image'&&equal(item.attrs.assetId,binding.attrs.assetId)){const originalDrawing=structuredClone(pathAt(oldXml(item.part),item.path));const oldBlip=descendants(originalDrawing,'blip')[0],newBlip=descendants(node,'blip')[0];if(oldBlip&&newBlip){for(const k of Object.keys(oldBlip.attrs))if(local(k)==='embed')delete oldBlip.attrs[k];const entry=Object.entries(newBlip.attrs).find(([k])=>local(k)==='embed');if(entry)oldBlip.attrs[entry[0]]=entry[1];}const oldInline=descendants(originalDrawing,'inline')[0],newInline=descendants(node,'inline')[0];if(oldInline&&newInline){setXmlChild(oldInline,'extent',child(newInline,'extent'));const oldProps=child(oldInline,'docPr'),newProps=child(newInline,'docPr');if(oldProps&&newProps){oldProps.attrs.id=newProps.attrs.id!;if(!equal(item.attrs.alt,binding.attrs.alt))oldProps.attrs.descr=String(binding.attrs.alt ?? '');}const xfrm=descendants(originalDrawing,'xfrm')[0],newXfrm=descendants(node,'xfrm')[0];if(xfrm&&newXfrm)setXmlChild(xfrm,'ext',child(newXfrm,'ext'));}node.children=originalDrawing.children;node.attrs=originalDrawing.attrs;} }return;
+                const binding=imageBindings.get(node);if(binding?.kind!=='block')return;const item=source.blocks[binding.id];
+                if(!item||item.type!==binding.type||binding.type==='floating_shape'&&!equal(item.attrs,binding.attrs)||binding.type!=='floating_shape'&&!equal(item.attrs.assetId,binding.attrs.assetId))return;
+                const originalDrawing=structuredClone(pathAt(oldXml(item.part),item.path)),oldBlip=descendants(originalDrawing,'blip')[0],newBlip=descendants(node,'blip')[0];
+                if(oldBlip&&newBlip){for(const k of Object.keys(oldBlip.attrs))if(local(k)==='embed')delete oldBlip.attrs[k];const entry=Object.entries(newBlip.attrs).find(([k])=>local(k)==='embed');if(entry)oldBlip.attrs[entry[0]]=entry[1];}
+                const frameName=binding.type==='inline_image'?'inline':'anchor',oldFrame=descendants(originalDrawing,frameName)[0],newFrame=descendants(node,frameName)[0];
+                if(oldFrame&&newFrame){
+                    const oldProps=child(oldFrame,'docPr'),newProps=child(newFrame,'docPr');if(oldProps&&newProps){oldProps.attrs.id=newProps.attrs.id!;if(!equal(item.attrs.alt,binding.attrs.alt))oldProps.attrs.descr=String(binding.attrs.alt ?? '');}
+                    if(!equal(item.attrs.width,binding.attrs.width)||!equal(item.attrs.height,binding.attrs.height)){setXmlChild(oldFrame,'extent',child(newFrame,'extent'));const before=descendants(originalDrawing,'xfrm')[0],now=descendants(node,'xfrm')[0];if(before&&now)setXmlChild(before,'ext',child(now,'ext'));}
+                    if(frameName==='anchor'){
+                        if(!equal(item.attrs.x,binding.attrs.x))setXmlChild(oldFrame,'positionH',child(newFrame,'positionH'));if(!equal(item.attrs.y,binding.attrs.y))setXmlChild(oldFrame,'positionV',child(newFrame,'positionV'));
+                        if(!equal(item.attrs.rotation,binding.attrs.rotation)){const before=descendants(originalDrawing,'xfrm')[0],now=descendants(node,'xfrm')[0];if(before&&now)setXmlAttr(before,'rot',attr(now,'rot'));}
+                        if(!equal(item.attrs.wrap,binding.attrs.wrap)){const name=binding.attrs.wrap==='none'?'wrapNone':'wrapTopAndBottom',wrap=child(newFrame,name)!;oldFrame.children=oldFrame.children.map(n=>['wrapNone','wrapTopAndBottom'].includes(local(n.name))?structuredClone(wrap):n);}
+                    }
+                }
+                node.children=originalDrawing.children;node.attrs=originalDrawing.attrs;return;
             }
             if (local(node.name) === 'tbl') {
                 const pBinding = descendants(node, 'bookmarkStart').map(m => bindings.get(attr(m, 'name') ?? '')).find(b => b?.kind === 'block');
