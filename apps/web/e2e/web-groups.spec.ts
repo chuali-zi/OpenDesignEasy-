@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test';
 import type { WebDocument } from '@oeydesign/document';
+import { mkdir } from 'node:fs/promises';
 
 test('native groups preserve visual placement through grouping, drag, proportional resize, undo, ungroup and source import', async ({ page }) => {
   const errors: string[] = []; page.on('pageerror', error => errors.push(error.message));
@@ -28,15 +29,38 @@ test('native groups preserve visual placement through grouping, drag, proportion
   expect((await read()).nodes[groupId]!.style.top).toBe(60); expect((await read()).revision).toBe(beforeDrag.revision + 1);
   await expect(group).toHaveCSS('left', '60px'); expect((await read()).nodes.b!.style.left).toBe(160);
   const handle = frame.getByRole('button', { name: '调整元素尺寸' }); await expect(handle).toBeVisible();
-  const corner = (await handle.boundingBox())!, beforeResize = await read();
+  const visibleHandle = async () => {
+    await expect(handle).toBeVisible();
+    const box = (await handle.boundingBox())!;
+    // The iframe's own viewport is wider than its scrollable outer viewport.
+    // Scrolling inside the iframe does not expose a handle clipped by its host.
+    await page.locator('.web-editor-viewport').evaluate((el, point) => {
+      const rect = el.getBoundingClientRect();
+      el.scrollLeft += Math.max(0, point.x - rect.left - el.clientWidth + 18) + Math.min(0, point.x - rect.left - 18);
+      el.scrollTop += Math.max(0, point.y - rect.top - el.clientHeight + 18) + Math.min(0, point.y - rect.top - 18);
+    }, { x: box.x + box.width / 2, y: box.y + box.height / 2 });
+    const corner = (await handle.boundingBox())!, point = { x: corner.x + corner.width / 2, y: corner.y + corner.height / 2 };
+    expect(await page.evaluate(point => document.elementFromPoint(point.x, point.y)?.tagName, point)).toBe('IFRAME');
+    return corner;
+  };
+  const corner = await visibleHandle(), beforeResize = await read();
   await page.mouse.move(corner.x + 6, corner.y + 6); await page.mouse.down(); await page.mouse.move(corner.x + 286, corner.y + 146, { steps: 8 }); await page.mouse.up();
   await expect.poll(async () => (await read()).nodes[groupId]!.style.width).toBe(560);
   expect((await read()).nodes[groupId]!.style.height).toBe(280); expect((await read()).nodes.b!.style.left).toBe(320); expect((await read()).nodes.b!.style.width).toBe(240);
   expect((await read()).revision).toBe(beforeResize.revision + 1);
+  await mkdir('.tmp', { recursive: true }); await page.screenshot({ path: '.tmp/r4-web-groups.png', fullPage: true });
   await page.getByRole('button', { name: '撤销', exact: true }).click(); await expect.poll(async () => (await read()).nodes.b!.style.width).toBe(120);
   await page.getByRole('button', { name: '重做', exact: true }).click(); await expect.poll(async () => (await read()).nodes.b!.style.width).toBe(240);
+  await expect(group).toHaveCSS('width', '560px');
+  const repeatCorner = await visibleHandle(), beforeRepeat = await read();
+  await page.mouse.move(repeatCorner.x + 6, repeatCorner.y + 6); await page.mouse.down(); await page.mouse.move(repeatCorner.x - 134, repeatCorner.y - 64, { steps: 6 }); await page.mouse.up();
+  await expect.poll(async () => (await read()).nodes[groupId]!.style.width).toBe(420);
+  expect((await read()).nodes[groupId]!.style.height).toBe(210); expect((await read()).nodes.b!.style.width).toBe(180); expect((await read()).nodes.b!.style.left).toBe(240);
+  expect((await read()).revision).toBe(beforeRepeat.revision + 1);
+  await page.getByRole('button', { name: '撤销', exact: true }).click(); await expect.poll(async () => (await read()).nodes.b!.style.width).toBe(240);
   // An interrupted gesture restores all member previews without a history entry.
-  await expect(group).toHaveCSS('width', '560px'); const beforeCancel = await read(), cancelCorner = (await handle.boundingBox())!;
+  await expect(group).toHaveCSS('width', '560px');
+  const beforeCancel = await read(), cancelCorner = await visibleHandle();
   await page.mouse.move(cancelCorner.x + 6, cancelCorner.y + 6); await page.mouse.down(); await page.mouse.move(cancelCorner.x - 30, cancelCorner.y - 20, { steps: 4 });
   await page.keyboard.press('Escape'); await page.mouse.up();
   await expect(b).toHaveCSS('width', '240px'); expect((await read()).revision).toBe(beforeCancel.revision);
@@ -55,5 +79,27 @@ test('native groups preserve visual placement through grouping, drag, proportion
   await expect(group).toHaveCSS('width', '560px'); await page.reload(); await expect(b).toHaveCSS('width', '240px');
   const importedId = await page.getByLabel('选择文档').inputValue();
   expect((await (await page.request.get(`/api/documents/${importedId}`)).json()).document.nodes[groupId].group).toBe(true);
+  await page.locator('.web-editor-tree-select').filter({ hasText: '组' }).click();
+  await page.getByLabel('预览宽度').focus(); await page.getByLabel('预览宽度').press('Home');
+  await page.getByRole('button', { name: '为 mobile 创建样式覆盖' }).click();
+  const importedRead = async (): Promise<WebDocument> => (await (await page.request.get(`/api/documents/${importedId}`)).json()).document;
+  const beforeMobile = await importedRead();
+  await page.getByLabel('样式宽度').fill('600'); await page.getByLabel('样式宽度').blur();
+  await expect(page.locator('.web-editor-error')).toContainText('组尺寸在基础视口操作');
+  expect((await importedRead()).revision).toBe(beforeMobile.revision); expect((await importedRead()).nodes[groupId]!.style.width).toBe(560);
+  await page.getByRole('button', { name: '恢复已保存值', exact: true }).click();
+  const mobileStart = (await a.boundingBox())!;
+  const mobilePoint = { x: mobileStart.x + 20, y: mobileStart.y + 20 };
+  expect(await page.evaluate(point => document.elementFromPoint(point.x, point.y)?.tagName, mobilePoint)).toBe('IFRAME');
+  await page.mouse.move(mobileStart.x + 20, mobileStart.y + 20); await page.mouse.down(); await page.mouse.move(mobileStart.x + 45, mobileStart.y + 35, { steps: 5 }); await page.mouse.up();
+  await expect(page.locator('.web-editor-error')).toContainText('组手势在基础视口操作');
+  expect((await importedRead()).revision).toBe(beforeMobile.revision);
+  expect(await frame.locator('body').evaluate(el => el.ownerDocument.defaultView!.getSelection()?.toString())).toBe('');
+  await page.locator('.web-editor-tree-select').filter({ hasText: '组' }).click();
+  await page.getByLabel('文字颜色').fill('#112233'); await page.getByLabel('文字颜色').blur();
+  await expect.poll(async () => (await importedRead()).nodes[groupId]!.responsive?.mobile?.style?.color).toBe('#112233');
+  expect((await importedRead()).nodes[groupId]!.style.color).toBeUndefined(); expect((await importedRead()).nodes.b!.style.width).toBe(240);
+  await page.reload(); await expect(group).toHaveCSS('width', '560px');
+  expect((await importedRead()).nodes[groupId]!.responsive?.mobile?.style?.color).toBe('#112233');
   expect(errors).toEqual([]);
 });

@@ -60,4 +60,6 @@ test('unsupported grouping never mutates flow, responsive geometry, external CSS
   assert.throws(() => webGroupSelection(fixture(), ['a', 'c'], bounds, 'group'), /连续/);
   const doc = fixture(), batch = webGroupSelection(doc, ['a', 'b'], bounds, 'group'), grouped = apply(doc, batch.operations, batch.preconditions);
   grouped.nodes.group!.style.backgroundColor = '#ffffff'; assert.throws(() => webUngroup(grouped, 'group'), /外观/);
+  grouped.nodes.b!.locked = true;
+  assert.throws(() => apply(grouped, [{ type: 'web.style.update', nodeId: 'group', style: { left: 100 } }], []), /locked/);
 });

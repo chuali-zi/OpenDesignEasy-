@@ -189,7 +189,11 @@ export function WebEditor({ document, onApply, onUndo, onRedo, onImportAsset, di
       event.preventDefault(); setSelection(id); setRichOpen(true);
     };
     const start = (event: PointerEvent) => {
-      if (event.button !== 0 || live.current.blocked) return;
+      if (event.button !== 0) return;
+      // This iframe is an object selection surface. A refused design gesture
+      // must not fall through into the browser's native text/image drag.
+      event.preventDefault();
+      if (live.current.blocked) return;
       body.focus({ preventScroll: true });
       if (boxMode) {
         const overlay = dom.createElement('div'); overlay.setAttribute('data-oey-selection-box', '');
@@ -295,11 +299,11 @@ export function WebEditor({ document, onApply, onUndo, onRedo, onImportAsset, di
     const submit = (event: Event) => event.preventDefault();
     const keydown = (event: KeyboardEvent) => { if (event.key === 'Escape' && (gesture || box)) { cancel(); suppressClick = true; } live.current.handleKey(event); };
     body.addEventListener('keydown', keydown);
-    body.addEventListener('click', click); body.addEventListener('dblclick', editText); body.addEventListener('submit', submit);
+    body.addEventListener('click', click); body.addEventListener('dblclick', editText); body.addEventListener('submit', submit); body.addEventListener('dragstart', submit);
     body.addEventListener('pointerdown', start); body.addEventListener('pointermove', move); body.addEventListener('pointerup', end); body.addEventListener('pointercancel', cancel);
     return () => {
       body.removeEventListener('keydown', keydown); cancel();
-      body.removeEventListener('click', click); body.removeEventListener('dblclick', editText); body.removeEventListener('submit', submit);
+      body.removeEventListener('click', click); body.removeEventListener('dblclick', editText); body.removeEventListener('submit', submit); body.removeEventListener('dragstart', submit);
       body.removeEventListener('pointerdown', start); body.removeEventListener('pointermove', move); body.removeEventListener('pointerup', end); body.removeEventListener('pointercancel', cancel);
     };
   }, [sourceDoc, frameEpoch, previewDocument, previewPage, boxMode]);
