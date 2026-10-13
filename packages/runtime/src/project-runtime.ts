@@ -5,8 +5,8 @@ import { open, unlink } from 'node:fs/promises';
 import { imageSize } from 'image-size';
 import { prepareWebSourceImport, prepareWebStructureImport } from '@oeydesign/media';
 import type { StoredAsset } from './assets.ts';
-import { applyEditableCommand, createDeckDocument, createWebDocument, restoreEditableDocument, validateEditableDocument } from '@oeydesign/document';
-import type { CommandEnvelope, DeckDocument, EditableDocument, WebDocument, ImageAsset } from '@oeydesign/document';
+import { applyEditableCommand, createDocDocument, createDeckDocument, createWebDocument, restoreEditableDocument, validateEditableDocument } from '@oeydesign/document';
+import type { CommandEnvelope, DocDocument, DeckDocument, EditableDocument, WebDocument, ImageAsset } from '@oeydesign/document';
 import { RuntimeError } from './errors.ts';
 import { AgentService } from './agent-service.ts';
 import type { AgentServiceOptions } from './agent-service.ts';
@@ -133,24 +133,32 @@ export class ProjectRuntime {
     return document;
   }
 
+  readDocDocument(documentId: string, revision?: number): DocDocument {
+    const document = this.readDocument(documentId, revision);
+    if (document.kind !== 'doc') throw new RuntimeError('invalid', 'Document is not a Doc.');
+    return document;
+  }
+
+  createDocument(options: { name?: string; documentId?: string; kind: 'doc' }, commandOptions?: CommandOptions): DocDocument;
   createDocument(options?: { name?: string; documentId?: string; kind?: 'deck' }, commandOptions?: CommandOptions): DeckDocument;
   createDocument(options: { name?: string; documentId?: string; kind: 'web' }, commandOptions?: CommandOptions): WebDocument;
-  createDocument(options: { name?: string; documentId?: string; kind?: 'deck' | 'web' } = {}, commandOptions: CommandOptions = {}): EditableDocument {
+  createDocument(options: { name?: string; documentId?: string; kind: 'deck' | 'web' | 'doc' }, commandOptions?: CommandOptions): EditableDocument;
+  createDocument(options: { name?: string; documentId?: string; kind?: 'deck' | 'web' | 'doc' } = {}, commandOptions: CommandOptions = {}): EditableDocument {
     this.ensureOpen();
-    if (options.kind !== undefined && options.kind !== 'deck' && options.kind !== 'web') throw new RuntimeError('invalid', 'Document kind must be deck or web.');
+    if (options.kind !== undefined && options.kind !== 'deck' && options.kind !== 'web' && options.kind !== 'doc') throw new RuntimeError('invalid', 'Document kind must be deck, web or doc.');
     const commandId = commandOptions.commandId ?? randomUUID();
     const documentId = options.documentId ?? `document-${commandId}`;
     const request = canonicalJson({ type: 'document.create', commandId, options, actor: actor(commandOptions) });
     const previous = this.retry(commandId, request);
     if (previous) return this.readDocument(previous.documentId, previous.revision);
     if (this.store.listDocuments().some(document => document.documentId === documentId)) throw new RuntimeError('invalid', 'Document ID already exists.', { documentId });
-    const document = options.kind === 'web'
+    const document = options.kind === 'doc' ? createDocDocument({ documentId, name: options.name ?? 'Untitled document' }) : options.kind === 'web'
       ? createWebDocument({ documentId, name: options.name ?? 'Untitled website', pageId: `page-${documentId}`, rootId: `root-${documentId}` })
       : createDeckDocument({ documentId, name: options.name ?? 'Untitled deck', pageId: `page-${documentId}` });
     validateEditableDocument(document);
     const event = this.store.transaction(() => {
       this.store.saveDocument({ document, undo: [], redo: [] });
-      const event = this.changeEvent(document, commandId, document.kind === 'web' ? 'Create website' : 'Create deck', actor(commandOptions), []);
+      const event = this.changeEvent(document, commandId, document.kind === 'doc' ? 'Create document' : document.kind === 'web' ? 'Create website' : 'Create deck', actor(commandOptions), []);
       this.store.saveCommand(request, { commandId, documentId, revision: document.revision, changedNodeIds: [], seq: event.seq }, null);
       return event;
     });
@@ -336,7 +344,7 @@ export class ProjectRuntime {
   }
 
   private commit(state: StoredDocument, before: EditableDocument, commandId: string, request: string, label: string,
-    who: ReturnType<typeof actor>, changedNodeIds = [...new Set([...Object.keys(before.nodes), ...Object.keys(state.document.nodes)])]): CommandResult {
+    who: ReturnType<typeof actor>, changedNodeIds = [...new Set([...(before.kind === 'doc' ? before.sections.map(s => s.id) : Object.keys(before.nodes)), ...(state.document.kind === 'doc' ? state.document.sections.map(s => s.id) : Object.keys(state.document.nodes))])]): CommandResult {
     const { result, event } = this.store.transaction(() => {
       this.store.saveDocument(state);
       const event = this.changeEvent(state.document, commandId, label, who, changedNodeIds);

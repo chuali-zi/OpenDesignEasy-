@@ -7,12 +7,15 @@
   "dependencies": {
     "@oeydesign/document": "0.1.0",
     "@oeydesign/media": "0.1.0",
-    "react": "19.3.0",
-    "react-dom": "19.3.0",
-    "react-konva": "19.3.0",
     "konva": "10.5.0",
+    "prosemirror-commands": "1.7.2",
+    "prosemirror-keymap": "1.2.3",
+    "prosemirror-schema-list": "1.5.1",
     "prosemirror-state": "1.4.4",
     "prosemirror-transform": "1.12.1",
-    "prosemirror-view": "1.42.4"
+    "prosemirror-view": "1.42.4",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "react-konva": "19.3.0"
   }
 }

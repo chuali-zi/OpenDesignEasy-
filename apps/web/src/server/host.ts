@@ -7,7 +7,7 @@ import type { CommandEnvelope } from '@oeydesign/document';
 import { KernelError } from '@oeydesign/document';
 import { ProjectAssets, ProjectRuntime, RuntimeError } from '@oeydesign/runtime';
 import type { ProjectEvent, CommandOptions } from '@oeydesign/runtime';
-import { renderDeckSvg, renderWebHtml, exportDocumentArtifact, artifactMimeTypes, buildWebProject } from '@oeydesign/media';
+import { renderDeckSvg, renderDocHtml, renderWebHtml, exportDocumentArtifact, artifactMimeTypes, buildWebProject } from '@oeydesign/media';
 import type { ArtifactFormat } from '@oeydesign/media';
 import { registerAgentRoutes } from './agent-routes.ts';
 import { startApplicationPreview } from './application-preview.ts';
@@ -97,13 +97,13 @@ export async function createWebHost(runtime: ProjectRuntime, options: WebHostOpt
     return reply.type(asset.mimeType).send(Buffer.from(bytes));
   });
   app.get<{ Params: { id: string } }>('/api/documents/:id', request => ({ document: runtime.readDocument(request.params.id) }));
-  app.post<{ Body: { name?: string; commandId?: string; kind?: 'deck' | 'web' } }>('/api/documents', request => {
+  app.post<{ Body: { name?: string; commandId?: string; kind?: 'deck' | 'web' | 'doc' } }>('/api/documents', request => {
     const body = request.body ?? {};
     if (body.name !== undefined && typeof body.name !== 'string') throw new RuntimeError('invalid', 'Document name must be text.');
     if (body.commandId !== undefined && (typeof body.commandId !== 'string' || !body.commandId)) throw new RuntimeError('invalid', 'commandId must be a non-empty string.');
-    if (body.kind !== undefined && body.kind !== 'deck' && body.kind !== 'web') throw new RuntimeError('invalid', 'Document kind must be deck or web.');
+    if (body.kind !== undefined && body.kind !== 'deck' && body.kind !== 'web' && body.kind !== 'doc') throw new RuntimeError('invalid', 'Document kind must be deck, web or doc.');
     const command = { ...human, clientId: 'web', commandId: body.commandId };
-    return { document: body.kind === 'web' ? runtime.createDocument({ name: body.name, kind: 'web' }, command) : runtime.createDocument({ name: body.name }, command) };
+    return { document: runtime.createDocument({ name: body.name, kind: body.kind ?? 'deck' }, command) };
   });
   app.post<{ Body: CommandEnvelope }>('/api/commands', request => {
     if (!request.body || typeof request.body !== 'object' || Array.isArray(request.body)) throw new RuntimeError('invalid', 'Expected a document command.');
@@ -134,14 +134,16 @@ export async function createWebHost(runtime: ProjectRuntime, options: WebHostOpt
       .header('X-Document-Revision', document.revision).send(await renderDeckSvg(document, request.query.page, assets.resolve));
   });
   app.get<{ Params: { id: string }; Querystring: { page?: string } }>('/api/documents/:id/preview.html', async (request, reply) => {
-    const document = runtime.readWebDocument(request.params.id);
+    const document = runtime.readDocument(request.params.id);
+    if (document.kind === 'doc') return reply.type('text/html; charset=utf-8').header('Content-Security-Policy', "sandbox; default-src 'none'; style-src 'unsafe-inline'; img-src data:; form-action 'none'; base-uri 'none'").header('X-Document-Revision', document.revision).send(await renderDocHtml(document, assets.resolve));
+    if (document.kind !== 'web') throw new RuntimeError('invalid', 'HTML preview requires Web or Doc.');
     // A separate sandboxed document can exercise demo interactions without reaching the editor API.
     return reply.type('text/html; charset=utf-8')
       .header('Content-Security-Policy', "sandbox allow-scripts; default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data:; form-action 'none'; base-uri 'none'")
       .header('X-Content-Type-Options', 'nosniff').header('X-Document-Revision', document.revision)
       .send(await renderWebHtml(document, request.query.page, assets.resolve, { pageUrl: page => `/api/documents/${encodeURIComponent(document.documentId)}/preview.html?page=${encodeURIComponent(page.id)}` }));
   });
-  for (const format of ['pptx', 'pdf', 'png', 'html', 'zip', 'source.zip', 'build.zip'] as const) app.get<{ Params: { id: string }; Querystring: { page?: string } }>(`/api/documents/:id/export.${format}`, async (request, reply) => {
+  for (const format of ['pptx', 'docx', 'pdf', 'png', 'html', 'zip', 'source.zip', 'build.zip'] as const) app.get<{ Params: { id: string }; Querystring: { page?: string } }>(`/api/documents/:id/export.${format}`, async (request, reply) => {
     const document = runtime.readDocument(request.params.id);
     const controller = new AbortController();
     const stop = () => { if (!reply.raw.writableEnded) controller.abort(); };

@@ -1,0 +1,38 @@
+import { useMemo, useState, useRef, useEffect } from 'react';
+import { Fragment, Slice } from 'prosemirror-model';
+import { ReplaceStep } from 'prosemirror-transform';
+import { docSchema, textFromString, textToString, validateTextContent } from '@oeydesign/document';
+import type { DocDocument, DocumentOperation, EditPrecondition, DocumentAsset, ImageAsset, PMNodeJSON } from '@oeydesign/document';
+import { RichTextEditor } from './RichTextEditor.tsx';
+import { createDocEditorSchema } from './doc-editor-schema.ts';
+type Props={document:DocDocument;disabled:boolean;onApply:(ops:DocumentOperation[],label:string,base:number,preconditions?:EditPrecondition[],target?:string)=>Promise<void>;onUndo:()=>void;onRedo:()=>void;onImportAsset:(file:File)=>Promise<DocumentAsset>;assetUrl:(id:string)=>string;onSelectionChange?:(ids:string[])=>void};
+export function DocEditor({document,disabled,onApply,onUndo,onRedo,onImportAsset,assetUrl,onSelectionChange}:Props) {
+  const [selected,setSelected]=useState(document.sections[0]!.id); const [part,setPart]=useState<'content'|'header'|'footer'>('content'); const [notice,setNotice]=useState(''); const [recovery,setRecovery]=useState<PMNodeJSON|null>(null); const [zoom,setZoom]=useState(80); const lastDraft=useRef<PMNodeJSON|null>(null);
+  const schema=useMemo(()=>createDocEditorSchema(assetUrl),[assetUrl]); const section=document.sections.find(s=>s.id===selected) ?? document.sections[0]!; const content=section[part] ?? textFromString(''); const page=section.pageSettings ?? document.pageSettings; const key=`oey:doc-draft:${document.documentId}:${section.id}:${part}`;
+  const commit=async(ops:DocumentOperation[],label:string,base=document.revision,target=document.documentId)=>{try{await onApply(ops,label,base,[],target);setNotice('');return true;}catch(error){setNotice(error instanceof Error?error.message:String(error));return false;}};
+  const readDraft=()=>{try{const raw=localStorage.getItem(key);if(!raw)return null;const value:PMNodeJSON=JSON.parse(raw);validateTextContent(value,section.id,docSchema);if(JSON.stringify(schema.nodeFromJSON(value).toJSON())===JSON.stringify(schema.nodeFromJSON(content).toJSON())){localStorage.removeItem(key);return null;}return value;}catch{return null;}};
+  const choose=(id:string,nextPart=part)=>{setSelected(id);setPart(nextPart);setRecovery(null);lastDraft.current=null;onSelectionChange?.([id]);};
+  const currentKey=useRef(key);currentKey.current=key;
+  const clear=()=>{try{localStorage.removeItem(key);}catch{}if(currentKey.current===key){setRecovery(null);lastDraft.current=null;}};
+  const remember=(draft:PMNodeJSON)=>{if(currentKey.current===key)lastDraft.current=draft;try{localStorage.setItem(key,JSON.stringify(draft));}catch{setNotice('浏览器草稿存储不可用，请复制未保存正文。');}};
+  useEffect(()=>{setRecovery(readDraft());lastDraft.current=null;},[key]);
+  const draft=recovery;
+  return <main className="doc-editor" aria-label="Doc 编辑器">
+    <aside className="doc-outline"><div className="doc-eyebrow">DOCUMENT</div><h2>章节</h2>{document.sections.map((s,i)=><div className="doc-section-row" key={s.id}><button className={s.id===section.id?'active':''} disabled={disabled} onClick={()=>choose(s.id)}>{String(i+1).padStart(2,'0')} {s.name}</button><button aria-label={`上移 ${s.name}`} disabled={disabled||i===0} onClick={()=>void commit([{type:'doc.section.reorder',sectionId:s.id,index:i-1}],'移动章节')}>↑</button></div>)}
+      <button disabled={disabled} onClick={()=>{const id=crypto.randomUUID();void commit([{type:'doc.section.insert',section:{id,name:`章节 ${document.sections.length+1}`,content:textFromString('')}}],'新增章节').then(ok=>{if(ok)choose(id);});}}>＋ 新增章节</button>
+      <button disabled={disabled||document.sections.length===1} onClick={()=>void commit([{type:'doc.section.remove',sectionId:section.id}],'删除章节').then(ok=>{if(ok)choose(document.sections.find(s=>s.id!==section.id)!.id);})}>删除当前章节</button>
+      <h3>纸张与页边距</h3><select aria-label="文档纸张" disabled={disabled} value={page.width>page.height?'landscape':'portrait'} onChange={e=>{const landscape=e.currentTarget.value==='landscape';void commit([{type:'doc.page.update',sectionId:section.id,settings:{width:landscape?1122.5197:793.7008,height:landscape?793.7008:1122.5197}}],'调整纸张');}}><option value="portrait">A4 纵向</option><option value="landscape">A4 横向</option></select>
+      {(['marginTop','marginRight','marginBottom','marginLeft'] as const).map((k,i)=><label key={`${section.id}-${k}-${page[k]}`}>{['上','右','下','左'][i]} mm<input aria-label={`页边距${['上','右','下','左'][i]}`} type="number" min="0" max="100" disabled={disabled} defaultValue={Number((page[k]*25.4/96).toFixed(2))} onBlur={e=>{const n=Number(e.currentTarget.value);if(Number.isFinite(n)&&n>=0&&n<=100&&Math.abs(n*96/25.4-page[k])>.02)void commit([{type:'doc.page.update',sectionId:section.id,settings:{[k]:n*96/25.4}}],'调整页边距');}} /></label>)}
+      <p>长度按 96 px/in 保存。正文流自动延展，显式分页符进入作品历史。</p>
+    </aside>
+    <section className="doc-workspace"><div className="doc-topbar"><div><strong>{section.name}</strong><span>共同历史 · 修订 {document.revision}</span></div><div><button disabled={disabled} onClick={onUndo}>撤销</button><button disabled={disabled} onClick={onRedo}>重做</button><select aria-label="Doc 编辑区域" value={part} disabled={disabled} onChange={e=>choose(section.id,e.currentTarget.value as typeof part)}><option value="content">正文</option><option value="header">页眉</option><option value="footer">页脚</option></select><select aria-label="Doc 视口缩放" value={zoom} onChange={e=>setZoom(Number(e.currentTarget.value))}>{[50,80,100,125].map(n=><option key={n} value={n}>{n}%</option>)}</select></div></div>
+      {notice&&<p role="alert">{notice}</p>}{draft&&<section role="status" className="doc-draft"><strong>有未保存正文草稿</strong><pre>{textToString(draft)}</pre><button disabled={disabled} onClick={()=>{const old=docSchema.nodeFromJSON(content);const next=docSchema.nodeFromJSON(draft);const step=new ReplaceStep(0,old.content.size,new Slice(Fragment.from(next.content),0,0));void commit([{type:'doc.text.apply',sectionId:section.id,part,steps:[step.toJSON()]}],'恢复正文草稿').then(ok=>{if(ok)clear();});}}>恢复正文草稿</button><button onClick={clear}>丢弃草稿</button></section>}
+      <div className="doc-scroll"><div className="doc-paper" style={{width:page.width,minHeight:page.height,padding:`${page.marginTop}px ${page.marginRight}px ${page.marginBottom}px ${page.marginLeft}px`,zoom:zoom/100}}>
+        <RichTextEditor key={`${section.id}:${part}`} schema={schema} documentId={document.documentId} nodeId={section.id} content={content} revision={document.revision} disabled={disabled||!!draft} baseStyle={{fontFamily:'Noto Sans CJK SC',fontSize:16,lineHeight:24,color:'#18231d'}} onDraftChange={remember}
+          onImportImage={async file=>{const asset=await onImportAsset(file);if(asset.kind!=='image')throw new Error('请选择图片');return asset;}}
+          onCommit={async(id,sectionId,steps,label,base,assets)=>{const ops:DocumentOperation[]=(assets ?? []).map(asset=>({type:'asset.register',asset:asset as ImageAsset}));ops.push({type:'doc.text.apply',sectionId,part,steps});const ok=await commit(ops,label,base,id);if(ok)clear();return ok;}}
+          onConflict={value=>{if(value)remember(value);if(currentKey.current===key)setRecovery(value ?? lastDraft.current);}} />
+      </div></div><small className="doc-page-note">分页与字体将在导出应用中复验；当前为正文流编辑视图。</small>
+    </section>
+  </main>;
+}

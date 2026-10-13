@@ -760,7 +760,7 @@ export class AgentService {
       parameters: Type.Object({}), ...sequential,
       async execute() {
         const project = thisService.runtime.project;
-        const documents = thisService.runtime.listDocuments().map(document => ({ documentId: document.documentId, kind: document.kind, name: document.name, revision: document.revision, pages: document.pages.map(page => ({ id: page.id, name: page.name })) }));
+        const documents = thisService.runtime.listDocuments().map(document => ({ documentId: document.documentId, kind: document.kind, name: document.name, revision: document.revision, pages: (document.kind === 'doc' ? document.sections : document.pages).map(page => ({ id: page.id, name: page.name })) }));
         const assets = thisService.runtime.listRecords<{ id: string; kind: string; name: string; mimeType: string; sizeBytes: number }>('assets').map(record => record.value);
         return textResult(JSON.stringify({ project, documents, assets }, null, 2), { project, documents, assets });
       },
@@ -780,7 +780,7 @@ export class AgentService {
         const document = thisService.runtime.readDocument(args.documentId);
         const selection = thisService.selections.get(sessionId);
         const query = args.query.toLocaleLowerCase();
-        const nodes = Object.values(document.nodes).filter(node => {
+        const nodes = (document.kind === 'doc' ? document.sections : Object.values(document.nodes)).filter(node => {
           if (args.selectedOnly && selection?.documentId === document.documentId && !selection.nodeIds.includes(node.id)) return false;
           return node.id.toLocaleLowerCase().includes(query) || JSON.stringify(node).toLocaleLowerCase().includes(query);
         }).slice(0, 100);
@@ -790,9 +790,13 @@ export class AgentService {
     tools.push(define({
       name: 'document_schema', label: 'Read document operation schema',
       description: 'Read exact node and operation fields for a document kind. Pass documentId or kind:web for Web nodes, layouts and managed source modules. Defaults to Deck.',
-      parameters: Type.Object({ documentId: Type.Optional(Type.String()), kind: Type.Optional(Type.Union([Type.Literal('deck'), Type.Literal('web')])) }), ...sequential,
+      parameters: Type.Object({ documentId: Type.Optional(Type.String()), kind: Type.Optional(Type.Union([Type.Literal('deck'), Type.Literal('web'), Type.Literal('doc')])) }), ...sequential,
       async execute(_id, args) {
         const kind = args.documentId ? thisService.runtime.readDocument(args.documentId).kind : args.kind ?? 'deck';
+        if (kind === 'doc') {
+          const schema = { units:'96 logical px per inch; sections own canonical ProseMirror content; document.content is a derived read projection, never directly replace it', history:'Use current baseRevision; same-section text conflicts reject stale content, separate sections/properties can merge. Stable IDs on existing blocks survive. Insert new blocks with unique id attrs or omit them for kernel assignment.', operations:{'doc.text.apply':{sectionId:'section-id',part:'content|header|footer (default content)',steps:[{stepType:'replace',from:1,to:1,slice:{content:[{type:'text',text:'Hello'}]}}]},'doc.section.insert':{section:{id:'new-section',name:'正文',content:{type:'doc',content:[{type:'paragraph'}]}}},'doc.section.update':{sectionId:'id',name:'Name',styleId:'style-id'},'doc.section.reorder':{sectionId:'id',index:0},'doc.section.remove':{sectionId:'id'},'doc.page.update':{sectionId:'optional; otherwise global',settings:{width:793.7008,height:1122.5197,marginTop:96,marginRight:96,marginBottom:96,marginLeft:96}},'doc.style.update':{styleId:'Body',style:{fontFamily:'Noto Sans CJK SC',fontSize:16,color:'#18231d',lineHeight:24}},'asset.register':{asset:'imported PNG/JPEG metadata; insert reference in same command'}}, nodes:['paragraph','heading attrs.level 1..6','blockquote','bullet_list','ordered_list attrs.order','list_item','table > table_row > table_cell > block; rectangular only; attrs.headerRows','inline_image attrs {assetId,width,height,alt,id}; PNG/JPEG native DOCX','page_break','text','hard_break'], marks:['strong','em','underline','strike','textStyle','link'], boundaries:'Doc core only; template import and floating anchors are still being implemented. Unsupported DOCX color/WebP throws, originals remain.' };
+          return textResult(JSON.stringify(schema,null,2),schema);
+        }
         if (kind === 'web') return textResult(JSON.stringify(webOperationSchema, null, 2), webOperationSchema);
         const exampleTextNode = { id: 'title-1', kind: 'text', parentId: 'page-id-from-document_read', geometry: { x: 80, y: 60, width: 900, height: 140, rotation: 0 }, style: {}, locked: false, hidden: false, content: { type: 'doc', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Headline' }] }] } };
         const cellDoc = { type: 'doc', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Cell' }] }] };
@@ -916,8 +920,8 @@ export class AgentService {
       },
     }));
     tools.push(define({
-      name: 'artifact_export', label: 'Export artifact', description: 'Export the committed revision. Deck: pptx/pdf/png. Web: html/zip/source.zip/build.zip/pdf/png.',
-      parameters: Type.Object({ documentId: Type.String(), format: Type.Union([Type.Literal('pptx'), Type.Literal('pdf'), Type.Literal('png'), Type.Literal('html'), Type.Literal('zip'), Type.Literal('source.zip'), Type.Literal('build.zip')]) }), ...sequential,
+      name: 'artifact_export', label: 'Export artifact', description: 'Export the committed revision. Deck: pptx/pdf/png. Web: html/zip/source.zip/build.zip/pdf/png. Doc: docx/html/pdf/png.',
+      parameters: Type.Object({ documentId: Type.String(), format: Type.Union([Type.Literal('pptx'), Type.Literal('docx'), Type.Literal('pdf'), Type.Literal('png'), Type.Literal('html'), Type.Literal('zip'), Type.Literal('source.zip'), Type.Literal('build.zip')]) }), ...sequential,
       async execute(_id, args, signal) {
         const result = await thisService.requireServices().exportArtifact({ documentId: args.documentId, format: args.format }, signal ?? new AbortController().signal);
         return textResult(JSON.stringify(result), result);
@@ -990,7 +994,7 @@ export class AgentService {
 
   private async contextText(sessionId: string): Promise<string> {
     const project = this.runtime.project;
-    const documents = this.runtime.listDocuments().map(document => ({ documentId: document.documentId, kind: document.kind, name: document.name, revision: document.revision, pages: document.pages.map(page => ({ id: page.id, name: page.name })) }));
+    const documents = this.runtime.listDocuments().map(document => ({ documentId: document.documentId, kind: document.kind, name: document.name, revision: document.revision, pages: (document.kind === 'doc' ? document.sections : document.pages).map(page => ({ id: page.id, name: page.name })) }));
     const selection = this.selections.get(sessionId) ?? this.store.getRecord<AgentSelection>('agent-selections', sessionId);
     const decisions = this.runtime.listRecords<DecisionRecord>('agent-decisions').map(record => record.value).filter(item => item.sessionId === sessionId).slice(-20);
     const recentHumanChanges = this.runtime.events().filter(event => event.type === 'document.changed' && event.payload.actorKind === 'human')

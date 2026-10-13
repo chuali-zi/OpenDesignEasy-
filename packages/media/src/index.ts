@@ -276,3 +276,5 @@ export { prepareWebSourceImport, readSourceArchive, WEB_IMPORT_LIMITS } from './
 export type { PreparedWebImport } from './web-import.ts';
 export { prepareWebStructureImport, WEB_STRUCTURE_LIMITS } from './web-structure-import.ts';
 export * from "./artifact.ts";
+
+export * from './doc.ts';

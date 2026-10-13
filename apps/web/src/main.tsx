@@ -1,6 +1,6 @@
 import { createRoot } from 'react-dom/client';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { DeckEditor, WebEditor } from '@oeydesign/editor';
+import { DeckEditor, DocEditor, WebEditor } from '@oeydesign/editor';
 import type { EditableDocument, DocumentOperation, EditPrecondition } from '@oeydesign/document';
 import type { DesignVersion } from '@oeydesign/runtime';
 import * as api from './api.ts';
@@ -116,14 +116,14 @@ function App() {
     const result = await api.listVersions(documentId);
     if (current.current?.documentId === documentId) setVersions(result.versions);
   };
-  const createWebDocument = async () => {
+  const createWebDocument = async (kind: 'web'|'doc' = 'web') => {
     if (!project || saving || creatingDocumentRef.current) return;
     creatingDocumentRef.current = true;
     setCreatingDocument(true);
     const projectId = project.project.projectId;
     const startedAtSelection = selectionEpoch.current;
     try {
-      const created = await api.createDocument('新建网站', 'web');
+      const created = await api.createDocument(kind === 'doc' ? '新建文档' : '新建网站', kind);
       if (selectionEpoch.current === startedAtSelection) {
         accept(created.document);
         localStorage.setItem(`oey:selected-document:${projectId}`, created.document.documentId);
@@ -136,12 +136,12 @@ function App() {
     } catch (error) { setNotice(error instanceof Error ? error.message : String(error)); }
     finally { creatingDocumentRef.current = false; setCreatingDocument(false); }
   };
-  const download = async (format?: 'pptx' | 'pdf' | 'png' | 'html' | 'zip' | 'source.zip' | 'build.zip') => {
+  const download = async (format?: 'docx' | 'pptx' | 'pdf' | 'png' | 'html' | 'zip' | 'source.zip' | 'build.zip') => {
     if (!current.current) return;
     setExporting(true); setNotice('');
     try {
       const kind = current.current.kind;
-      const selectedFormat = format ?? (kind === 'web' ? 'source.zip' : 'pptx');
+      const selectedFormat = format ?? (kind === 'doc' ? 'docx' : kind === 'web' ? 'source.zip' : 'pptx');
       const response = await fetch(`/api/documents/${encodeURIComponent(current.current.documentId)}/export.${selectedFormat}`);
       if (!response.ok) throw new Error((await response.json()).error?.message ?? '导出失败');
       const objectUrl = URL.createObjectURL(await response.blob());
@@ -161,6 +161,7 @@ function App() {
         const selected = project?.documents.find(item => item.documentId === event.target.value); if (selected && project) { selectionEpoch.current += 1; accept(selected); localStorage.setItem(`oey:selected-document:${project.project.projectId}`, selected.documentId); setVersions(null); }
       }}>{project?.documents.map(item => <option key={item.documentId} value={item.documentId}>{item.name}</option>)}</select>
       <button aria-label="新建 Web 文档" disabled={!project || saving || creatingDocument} onMouseDown={event => event.preventDefault()} onClick={() => void createWebDocument()}>{creatingDocument ? '正在创建…' : '＋ Web'}</button>
+      <button aria-label="新建 Doc 文档" disabled={!project || saving || creatingDocument} onMouseDown={event=>event.preventDefault()} onClick={()=>void createWebDocument('doc')}>＋ Doc</button>
       <button title="导入 OEY 源码 ZIP，保留原文档并同步受管模块" disabled={!project || saving || creatingDocument} onClick={() => sourceInput.current?.click()}>导入源码</button>
       <button title="静态原生HTML/JSX，内联CSS与字面量；不执行源码" disabled={!project || saving || creatingDocument} onClick={() => structureInput.current?.click()}>导入结构</button>
       <input ref={structureInput} type="file" accept=".html,.htm,.tsx,.jsx" aria-label="导入静态网页结构" hidden onChange={event => {
@@ -179,18 +180,18 @@ function App() {
         void api.importSource(file).then(result => {
           selectionEpoch.current += 1; accept(result.document);
           if (project) localStorage.setItem(`oey:selected-document:${project.project.projectId}`, result.document.documentId);
-          setNotice(`已导入 ${result.document.pages.length} 个页面${result.changedModules.length ? `，同步 ${result.changedModules.length} 个外部修改的模块` : ''}。原文档保留；包内安装脚本和构建配置未执行。${result.warnings.filter(warning => warning.includes('图片')).join('')}`);
+          setNotice(`已导入 ${(result.document.kind === 'web' ? result.document.pages.length : 0)} 个页面${result.changedModules.length ? `，同步 ${result.changedModules.length} 个外部修改的模块` : ''}。原文档保留；包内安装脚本和构建配置未执行。${result.warnings.filter(warning => warning.includes('图片')).join('')}`);
         }).catch(error => setNotice(error instanceof Error ? error.message : String(error)))
           .finally(() => { creatingDocumentRef.current = false; setCreatingDocument(false); });
       }} />
       <span className={`save-state ${connected ? 'connected' : ''}`}><i/>{saving ? '正在保存' : connected ? '已保存到项目' : '正在连接'}</span>
       <button disabled={!document || saving} onClick={() => { if (document) void loadVersions(document.documentId).catch(error => setNotice(error.message)); }}>版本</button>
-      <button disabled={!document} onClick={() => { if (document) window.open(`/api/documents/${encodeURIComponent(document.documentId)}/${document.kind === 'web' ? 'preview.html' : 'preview.svg'}`, '_blank', 'noopener'); }}>{document?.kind === 'web' ? '预览网页' : '预览 SVG'}</button>
+      <button disabled={!document} onClick={() => { if (document) window.open(`/api/documents/${encodeURIComponent(document.documentId)}/${document.kind !== 'deck' ? 'preview.html' : 'preview.svg'}`, '_blank', 'noopener'); }}>{document?.kind === 'doc' ? '预览文档' : document?.kind === 'web' ? '预览网页' : '预览 SVG'}</button>
       <select aria-label="其他导出格式" value="" disabled={!document || saving || exporting} onChange={event => { if (event.target.value) void download(event.target.value as 'pdf' | 'png' | 'html' | 'zip' | 'build.zip'); }}>
         <option value="">更多导出</option>
         {document?.kind === 'web' ? <><option value="build.zip">构建应用 ZIP</option><option value="html">单页 HTML</option><option value="zip">静态站点 ZIP</option><option value="pdf">PDF</option><option value="png">PNG 预览</option></> : <><option value="pdf">PDF 全部页面</option><option value="png">PNG 首页</option></>}
       </select>
-      <button className="export-button" disabled={!document || saving || exporting} onClick={() => { void download(); }}>{exporting ? '正在导出…' : document?.kind === 'web' ? '导出源码 ZIP' : '导出 PPTX'} <span>↗</span></button>
+      <button className="export-button" disabled={!document || saving || exporting} onClick={() => { void download(); }}>{exporting ? '正在导出…' : document?.kind === 'doc' ? '导出 DOCX' : document?.kind === 'web' ? '导出源码 ZIP' : '导出 PPTX'} <span>↗</span></button>
       {document?.kind === 'web' && <button disabled={saving} onClick={() => setApplicationPreview(true)}>运行应用</button>}
     </header>
     {notice && <div role="alert" className="notice">{notice}<button aria-label="关闭提示" onClick={() => setNotice('')}>×</button></div>}
@@ -201,8 +202,8 @@ function App() {
       {versions.map(version => <button key={version.versionId} disabled={saving} onClick={() => { void act(() => api.restoreVersion(version.versionId, document.revision)).then(() => setVersions(null)).catch(() => {}); }}>{version.name}<small>修订 {version.revision} · 恢复</small></button>)}
     </section>}
     <div className="workspace-body">{chatOpen && <AgentPanel documentId={document?.documentId} selectedIds={selectedIds} />}
-    {document ? document.kind === 'deck' ? <DeckEditor key={document.documentId} document={document} onApply={apply} onUndo={() => history('undo')} onRedo={() => history('redo')} disabled={saving} onImportAsset={api.importAsset} assetUrl={api.assetUrl} onSelectionChange={setSelectedIds} /> : <WebEditor key={document.documentId} document={document} onApply={apply} onUndo={() => history('undo')} onRedo={() => history('redo')} disabled={saving} onImportAsset={api.importAsset} onSelectionChange={setSelectedIds} /> : <div className="loading">{notice ? '项目暂不可用' : '正在打开设计工作台…'}</div>}</div>
-    <footer className="app-footer"><span>{document?.kind === 'web' ? 'WEB WORKSPACE' : 'DECK WORKSPACE'} <span className="footer-dot">·</span> 人工与 Agent 共享作品历史</span><span>{document?.kind === 'web' ? `${document.pages.length} 页面 · ${Object.keys(document.nodes).length} 元素` : `${document?.pages.length ?? 0} 页`} <span className="footer-dot">·</span> 修订 {document?.revision ?? 0}</span></footer>
+    {document ? document.kind === 'deck' ? <DeckEditor key={document.documentId} document={document} onApply={apply} onUndo={() => history('undo')} onRedo={() => history('redo')} disabled={saving} onImportAsset={api.importAsset} assetUrl={api.assetUrl} onSelectionChange={setSelectedIds} /> : document.kind === 'doc' ? <DocEditor key={document.documentId} document={document} onApply={apply} onUndo={()=>history('undo')} onRedo={()=>history('redo')} disabled={saving} onImportAsset={api.importAsset} assetUrl={api.assetUrl} onSelectionChange={setSelectedIds} /> : <WebEditor key={document.documentId} document={document} onApply={apply} onUndo={() => history('undo')} onRedo={() => history('redo')} disabled={saving} onImportAsset={api.importAsset} onSelectionChange={setSelectedIds} /> : <div className="loading">{notice ? '项目暂不可用' : '正在打开设计工作台…'}</div>}</div>
+    <footer className="app-footer"><span>{document?.kind === 'doc' ? 'DOC WORKSPACE' : document?.kind === 'web' ? 'WEB WORKSPACE' : 'DECK WORKSPACE'} <span className="footer-dot">·</span> 人工与 Agent 共享作品历史</span><span>{document?.kind === 'web' ? `${document.pages.length} 页面 · ${Object.keys(document.nodes).length} 元素` : document?.kind === 'doc' ? `${document.sections.length} 章节` : `${document?.pages.length ?? 0} 页`} <span className="footer-dot">·</span> 修订 {document?.revision ?? 0}</span></footer>
   </div>;
 }
 

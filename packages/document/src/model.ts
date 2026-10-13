@@ -110,13 +110,13 @@ export type WebPage = { id: string; name: string; route: string; rootId: string;
 export type WebSourceModule = { id: string; path: string; language: "ts" | "tsx" | "css"; source: string; exports?: string[] };
 export type WebDocument = DocumentHeader & { kind: "web"; pages: WebPage[]; nodes: Record<string, WebNode>; breakpoints?: WebBreakpoint[]; sourceModules?: WebSourceModule[]; originalSource?: { format: 'html' | 'tsx'; fileName: string; source: string } };
 
-/** Boundary-only Doc model. Full section editing and pagination are intentionally not implemented by R1. */
+/** Doc lengths are logical CSS pixels (96 per inch); sections own canonical content. */
 export type DocPageSettings = { width: number; height: number; marginTop: number; marginRight: number; marginBottom: number; marginLeft: number; [key: string]: JSONValue | undefined };
-export type DocSection = { id: string; name: string; content: PMNodeJSON; pageSettings?: DocPageSettings; styleId?: string };
+export type DocSection = { id: string; name: string; content: PMNodeJSON; pageSettings?: DocPageSettings; styleId?: string; header?: PMNodeJSON; footer?: PMNodeJSON };
 export type DocDocument = DocumentHeader & { kind: "doc"; content: PMNodeJSON; sections: DocSection[]; pageSettings: DocPageSettings; styles?: Record<string, Record<string, JSONValue | undefined>> };
 export type AnyDocument = DeckDocument | WebDocument | DocDocument;
 /** Document kinds that currently accept document commands. */
-export type EditableDocument = DeckDocument | WebDocument;
+export type EditableDocument = DeckDocument | WebDocument | DocDocument;
 
 export type ActorKind = "human" | "agent" | "system";
 export type EditPrecondition =
@@ -166,7 +166,16 @@ export type SourceUpdateOperation = { type: "source.update"; module: WebSourceMo
 export type SourceRemoveOperation = { type: "source.remove"; moduleId: string };
 export type DeckOperation = PageInsertOperation | PageUpdateOperation | PageReorderOperation | NodeInsertOperation | NodeRemoveOperation | NodeReorderOperation | NodeReparentOperation | GeometryUpdateOperation | StyleUpdateOperation | FlagsUpdateOperation | TextApplyOperation | ImageUpdateOperation | AssetRegisterOperation | AssetReplaceOperation | TableUpdateOperation | ChartUpdateOperation | DocumentThemeOperation;
 export type WebOperation = WebPageInsertOperation | WebPageUpdateOperation | WebNodeInsertOperation | WebNodeRemoveOperation | WebNodeReparentOperation | WebNodeUpdateOperation | WebStyleUpdateOperation | WebLayoutUpdateOperation | WebBreakpointsUpdateOperation | SourceUpdateOperation | SourceRemoveOperation | AssetRegisterOperation | TextApplyOperation;
-export type DocumentOperation = DeckOperation | WebOperation;
+export type DocOperation =
+  | { type: 'doc.text.apply'; sectionId: string; part?: 'content' | 'header' | 'footer'; steps: unknown[] }
+  | { type: 'doc.section.insert'; section: DocSection; index?: number }
+  | { type: 'doc.section.update'; sectionId: string; name?: string; styleId?: string | null }
+  | { type: 'doc.section.remove'; sectionId: string }
+  | { type: 'doc.section.reorder'; sectionId: string; index: number }
+  | { type: 'doc.page.update'; sectionId?: string; settings: Partial<DocPageSettings> }
+  | { type: 'doc.style.update'; styleId: string; style: Record<string, JSONValue> | null }
+  | AssetRegisterOperation;
+export type DocumentOperation = DeckOperation | WebOperation | DocOperation;
 
 export type CommandEnvelope = {
   commandId: string;

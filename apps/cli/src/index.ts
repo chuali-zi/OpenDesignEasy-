@@ -6,7 +6,7 @@ import { randomUUID } from "node:crypto";
 import { Fragment, Slice } from "prosemirror-model";
 import { ReplaceStep } from "prosemirror-transform";
 import { textFromString, textSchema } from "@oeydesign/document";
-import { exportDocumentArtifact, renderDeckSvg, renderWebHtml } from "@oeydesign/media";
+import { exportDocumentArtifact, renderDeckSvg, renderDocHtml, renderWebHtml } from "@oeydesign/media";
 import type { ArtifactFormat } from "@oeydesign/media";
 import { ProjectAssets, ProjectRuntime } from "@oeydesign/runtime";
 import { executeAgent } from './agent-cli.ts';
@@ -21,11 +21,11 @@ const HELP = {
     agent: ["run <dir> --text <prompt> [--session <id>] [--document <id>] [--asset <id>]", "create|list|status|config <dir> [--session <id>] [--file <config.json>]", "send|steer|follow-up|answer|cancel --host <local-url> --session <id> [--text <text>] [--question <id>] [--wait]"],
     asset: ["import <dir> <file>", "list <dir>"],
     document: [
-      "create <dir> [--kind deck|web] [--name <name>]",
+      "create <dir> [--kind deck|web|doc] [--name <name>]",
       "read <dir> [documentId]",
       "apply <dir> <command.json>",
       "render <dir> <documentId> --output <file.svg|file.html> [--page <id>]",
-      "export <dir> <documentId> --output <file.pptx|file.pdf|file.png|file.html|file.zip|file.source.zip|file.build.zip> [--page <id>]",
+      "export <dir> <documentId> --output <file.pptx|file.docx|file.pdf|file.png|file.html|file.zip|file.source.zip|file.build.zip> [--page <id>]",
       "import-source <dir> <file.source.zip> [--name <name>]",
       "import-structure <dir> <file.html|file.tsx|file.jsx>",
     ],
@@ -203,7 +203,7 @@ export async function execute(argv: string[]): Promise<unknown> {
     const { values, positional } = parseFlags(rest, ["name", "kind"]);
     expectPositionals(positional, 1, "document create");
     const kind = optionalFlag(values, "kind") ?? 'deck';
-    if (kind !== 'deck' && kind !== 'web') usage('option --kind must be deck or web');
+    if (kind !== 'deck' && kind !== 'web' && kind !== 'doc') usage('option --kind must be deck, web or doc');
     return withRuntime(positional[0]!, (runtime) => ({ document: runtime.createDocument({ name: optionalFlag(values, 'name'), kind }) }));
   }
 
@@ -252,10 +252,10 @@ export async function execute(argv: string[]): Promise<unknown> {
     const runtime = ProjectRuntime.open(positional[0]!);
     try {
       const document = runtime.readDocument(positional[1]!);
-      const format = document.kind === 'web' ? 'html' : 'svg';
+      const format = document.kind !== 'deck' ? 'html' : 'svg';
       if (extname(output).toLowerCase() !== `.${format}`) usage(`this document renders as .${format}`);
       const resolver = new ProjectAssets(runtime).resolve;
-      const content = document.kind === 'web' ? await renderWebHtml(document, page, resolver) : await renderDeckSvg(document, page, resolver);
+      const content = document.kind === 'doc' ? await renderDocHtml(document, resolver) : document.kind === 'web' ? await renderWebHtml(document, page, resolver) : await renderDeckSvg(document, page, resolver);
       await writeFileAtomically(output, new TextEncoder().encode(content));
       return { documentId: document.documentId, revision: document.revision, format, output };
     } finally { runtime.close(); }
@@ -267,7 +267,7 @@ export async function execute(argv: string[]): Promise<unknown> {
     const output = resolve(requiredFlag(values, "output"));
     const outputLower = output.toLowerCase();
     const format = outputLower.endsWith('.source.zip') ? 'source.zip' : outputLower.endsWith('.build.zip') ? 'build.zip' : extname(output).toLowerCase().slice(1);
-    if (!['pptx', 'pdf', 'png', 'html', 'zip', 'source.zip', 'build.zip'].includes(format)) usage('option --output must have a .pptx, .pdf, .png, .html, .zip, .source.zip or .build.zip extension');
+    if (!['pptx', 'docx', 'pdf', 'png', 'html', 'zip', 'source.zip', 'build.zip'].includes(format)) usage('option --output must have a .pptx, .pdf, .png, .html, .zip, .source.zip or .build.zip extension');
     const runtime = ProjectRuntime.open(positional[0]!);
     try {
       const document = runtime.readDocument(positional[1]!);
@@ -321,6 +321,7 @@ export async function execute(argv: string[]): Promise<unknown> {
       if (document.kind === 'web') {
         return { result: submitOperations(runtime, documentId, [{ type: 'web.node.update', nodeId, text }], 'Edit Web text') };
       }
+      if (document.kind === 'doc') throw new Error('Use document apply with doc.text.apply and a sectionId for Doc text.');
       const node = document.nodes[nodeId];
       if (!node?.content) throw new CliError("invalid", `node ${nodeId} has no editable text content`);
       const current = textSchema.nodeFromJSON(node.content);

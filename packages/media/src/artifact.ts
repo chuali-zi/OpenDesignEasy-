@@ -1,3 +1,4 @@
+import { exportDocDocx, exportDocPdf, renderDocHtml, renderDocPng } from './doc.ts';
 import { KernelError } from '@oeydesign/document';
 import type { EditableDocument } from '@oeydesign/document';
 import type { AssetResolver } from './assets.ts';
@@ -7,9 +8,10 @@ import { exportDeckPptx } from './pptx.ts';
 import { exportWebPdf, exportWebSourceZip, exportWebZip, renderWebHtml, renderWebPng } from './web.ts';
 import { exportWebBuildZip } from './web-build.ts';
 
-export type ArtifactFormat = 'pptx' | 'pdf' | 'png' | 'html' | 'zip' | 'source.zip' | 'build.zip';
+export type ArtifactFormat = 'pptx' | 'docx' | 'pdf' | 'png' | 'html' | 'zip' | 'source.zip' | 'build.zip';
 
 export const artifactMimeTypes: Record<ArtifactFormat, string> = {
+  docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
   pptx: 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
   pdf: 'application/pdf', png: 'image/png', html: 'text/html; charset=utf-8',
   zip: 'application/zip', 'source.zip': 'application/zip', 'build.zip': 'application/zip',
@@ -20,7 +22,15 @@ export async function exportDocumentArtifact(document: EditableDocument, resolve
   format: ArtifactFormat, options: RenderOptions & { pageId?: string } = {}): Promise<Uint8Array> {
   options.signal?.throwIfAborted();
   let result: Uint8Array;
-  if (document.kind === 'web') {
+  if (document.kind === 'doc') {
+    switch (format) {
+      case 'docx': result = await exportDocDocx(document, resolveAsset); break;
+      case 'html': result = new TextEncoder().encode(await renderDocHtml(document, resolveAsset)); break;
+      case 'pdf': result = await exportDocPdf(document, resolveAsset, options); break;
+      case 'png': result = await renderDocPng(document, resolveAsset, options); break;
+      default: throw new KernelError('invalid', 'Doc supports DOCX, HTML, PDF and PNG exports.');
+    }
+  } else if (document.kind === 'web') {
     switch (format) {
       case 'html': result = new TextEncoder().encode(await renderWebHtml(document, options.pageId, resolveAsset)); break;
       case 'zip': result = await exportWebZip(document, resolveAsset); break;

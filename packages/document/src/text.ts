@@ -42,9 +42,9 @@ export function textToString(value: PMNodeJSON | PMNode): string {
 }
 
 /** Checks R2 rich-text attributes after the ProseMirror schema validates node structure. */
-export function validateTextContent(value: PMNodeJSON, target = "text"): void {
+export function validateTextContent(value: PMNodeJSON, target = "text", schema: Schema = textSchema): void {
   try {
-    const root = textSchema.nodeFromJSON(value);
+    const root = schema.nodeFromJSON(value);
     root.check();
     root.descendants((node) => {
       if (node.type.name === "paragraph" || node.type.name === "heading") {
@@ -76,13 +76,13 @@ export function createTextReplaceStep(from: number, to: number, text: string): R
   return new ReplaceStep(from, to, new Slice(content, 0, 0)).toJSON() as Record<string, JSONValue>;
 }
 
-export function applyTextSteps(content: PMNodeJSON, steps: unknown[]): PMNodeJSON {
+export function applyTextSteps(content: PMNodeJSON, steps: unknown[], schema: Schema = textSchema): PMNodeJSON {
   try {
-    let node = textSchema.nodeFromJSON(content);
+    let node = schema.nodeFromJSON(content);
     node.check();
     for (const raw of steps) {
       if (!raw || typeof raw !== "object") throw new Error("step must be an object");
-      const step = Step.fromJSON(textSchema, raw as Record<string, unknown>);
+      const step = Step.fromJSON(schema, raw as Record<string, unknown>);
       const result = step.apply(node);
       if (result.failed) throw new Error(result.failed);
       if (!result.doc) throw new Error("step produced no document");

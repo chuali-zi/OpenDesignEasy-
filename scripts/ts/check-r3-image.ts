@@ -22,7 +22,7 @@ try {
   try { await runtime.agent.waitForIdle(session.sessionId); } finally { clearTimeout(timeout); }
   const run = runtime.agent.getRun(accepted.runId)!;
   assert.equal(run.status, 'completed', run.error);
-  const current = runtime.readDocument(document.documentId);
+  const current = runtime.readDeckDocument(document.documentId);
   assert.ok(Object.values(current.nodes).some(node => node.kind === 'image'));
   assert.equal(calls.filter(call => call === 'asset_generate').length, 1);
   assert.ok(calls.includes('reference_read'));

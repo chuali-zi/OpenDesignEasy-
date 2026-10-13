@@ -45,7 +45,7 @@ export async function importStructure(file: File, commandId = crypto.randomUUID(
 
 export const readProject = (): Promise<ProjectSnapshot> => request('/api/project');
 export const readDocument = (id: string): Promise<{ document: EditableDocument }> => request(`/api/documents/${encodeURIComponent(id)}`);
-export const createDocument = (name: string, kind: 'deck' | 'web' = 'deck'): Promise<{ document: EditableDocument }> => request('/api/documents', { name, kind, commandId: crypto.randomUUID() });
+export const createDocument = (name: string, kind: 'deck' | 'web' | 'doc' = 'deck'): Promise<{ document: EditableDocument }> => request('/api/documents', { name, kind, commandId: crypto.randomUUID() });
 export const listVersions = (id: string): Promise<{ versions: DesignVersion[] }> => request(`/api/documents/${encodeURIComponent(id)}/versions`);
 export const createVersion = (id: string, name: string): Promise<{ version: DesignVersion }> => request(`/api/documents/${encodeURIComponent(id)}/versions`, { name });
 export const restoreVersion = (id: string, baseRevision: number): Promise<{ document: EditableDocument }> => request(`/api/versions/${encodeURIComponent(id)}/restore`, { baseRevision, commandId: crypto.randomUUID() });

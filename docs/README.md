@@ -10,6 +10,8 @@
 
 > 2026-10-13 最新：R4 支持范围内逻辑验收完成，接续 R5 Doc 编辑产品；[完成门槛](spec/web-completion.md)列明边界与未验事项。
 
+> 2026-10-13 R5：Doc 正文/章节/表格/行内图像和共同历史已进入产品；原生 DOCX 与实际 LibreOffice 打开合成报告通过，完整模板/浮动对象/资料/Word 仍在推进，见 [Doc 核心](spec/doc-core.md)。
+
 ## 阅读顺序与效力
 
 用户当前指令优先；产品范围由 [PRD](prd.md)规定，技术决策见 [ADR-0006](adr/0006-full-typescript-design-platform.md)，职责与依赖见 [架构](architecture.md)，详细行为由本页列出的当前 Spec 承接。实施状态只以 [实施计划](spec/implementation-plan.md)中的状态表为准。
@@ -32,6 +34,7 @@
 | [运行与恢复](spec/runtime-recovery.md) | SQLite、会话、输入、版本、重启、数据导入 |
 | [质量规范](spec/quality-governance-spec.md) | 编辑正确性、设计质量、实际导出与必要验证 |
 | [客户端规范](spec/clients-spec.md) | Web、CLI、TUI、Desktop、进程与分发 |
+| [Doc 核心编辑与原生生产](spec/doc-core.md) | 真实 Doc 产品切片、原生 Office 文件与尚待完成的 R5 范围 |
 | [实施计划](spec/implementation-plan.md) | 全量替换阶段、依赖、完成标准、风险与退役 |
 | [R1 兼容性与状态](spec/r1-compatibility.md) | Node/SQLite、Pi faux、Konva/ProseMirror 验证与当前未完成项 |
 | [R2/R3 实现与验收](spec/r2-r3-validation.md) | Deck 编辑、实际 Office、产品 agent、真实兼容服务与使用入口 |

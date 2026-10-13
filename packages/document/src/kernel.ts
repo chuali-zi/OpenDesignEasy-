@@ -1,3 +1,4 @@
+import { validateDocDocument, applyDocCommand, restoreDocDocument } from './doc-kernel.ts';
 import { applyTextSteps, validateTextContent } from "./text.ts";
 import { geometryMatrix, normalizeRotation, parentToWorld, worldToParent, type Matrix } from "./geometry.ts";
 import { KernelError, invalid } from "./errors.ts";
@@ -546,11 +547,13 @@ export function restoreDocument(current: DeckDocument, snapshot: DeckDocument): 
 export function validateEditableDocument(document: EditableDocument): void {
   if (document.kind === "deck") validateDocument(document);
   else if (document.kind === "web") validateWebDocument(document);
+  else if (document.kind === "doc") validateDocDocument(document);
   else invalid("document kind is not currently editable");
 }
 
 export function applyEditableCommand(current: EditableDocument, command: CommandEnvelope, base: EditableDocument): { document: EditableDocument; changedNodeIds: string[] } {
   if (current.kind !== base.kind) throw new KernelError("invalid", "base and current document kinds differ");
+  if (current.kind === "doc" && base.kind === "doc") return applyDocCommand(current, command, base);
   if (current.kind === "web" && base.kind === "web") return applyWebCommand(current, command, base);
   if (current.kind === "deck" && base.kind === "deck") {
     return applyCommand(current, command, base);
@@ -560,6 +563,7 @@ export function applyEditableCommand(current: EditableDocument, command: Command
 
 export function restoreEditableDocument(current: EditableDocument, snapshot: EditableDocument): EditableDocument {
   if (current.kind !== snapshot.kind) throw new KernelError("invalid", "snapshot document kinds differ");
+  if (current.kind === "doc" && snapshot.kind === "doc") return restoreDocDocument(current, snapshot);
   if (current.kind === "deck" && snapshot.kind === "deck") return restoreDocument(current, snapshot);
   if (current.kind === "web" && snapshot.kind === "web") return restoreWebDocument(current, snapshot);
   invalid("document kind is not currently editable");

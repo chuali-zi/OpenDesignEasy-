@@ -1414,3 +1414,5 @@ export function DeckEditor({ document, onApply, onUndo, onRedo, onSelectionChang
 export default DeckEditor;
 
 export { WebEditor } from './WebEditor.tsx';
+
+export { DocEditor } from './DocEditor.tsx';

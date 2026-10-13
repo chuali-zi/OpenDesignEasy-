@@ -1,28 +1,39 @@
+import { baseKeymap, setBlockType } from 'prosemirror-commands';
+import { keymap } from 'prosemirror-keymap';
+import { wrapInList, splitListItem, liftListItem } from 'prosemirror-schema-list';
+import type { Schema } from 'prosemirror-model';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import type { PMNodeJSON } from '@oeydesign/document';
+import type { PMNodeJSON, ImageAsset } from '@oeydesign/document';
 import { EditorState } from 'prosemirror-state';
 import type { Selection } from 'prosemirror-state';
 import { EditorView } from 'prosemirror-view';
 import { editorTextSchema } from './editor-text-schema.ts';
 
 export type RichTextEditorProps = {
+  schema?: Schema;
+  onImportImage?: (file: File) => Promise<ImageAsset>;
   documentId: string;
   nodeId: string;
   content: PMNodeJSON;
   revision: number;
   disabled: boolean;
   focused?: boolean;
-  baseStyle?: { fontFamily?: string; fontSize?: number; color?: string };
-  onCommit: (documentId: string, nodeId: string, steps: unknown[], label: string, baseRevision: number) => Promise<boolean>;
+  baseStyle?: { fontFamily?: string; fontSize?: number; color?: string; lineHeight?: number };
+  onCommit: (documentId: string, nodeId: string, steps: unknown[], label: string, baseRevision: number, assets?: ImageAsset[]) => Promise<boolean>;
   onConflict: (draft?: PMNodeJSON) => void;
   onDraftChange?: (draft: PMNodeJSON) => void;
 };
 
-const FONT_CHOICES = ['Segoe UI', 'Arial', 'Georgia', 'Aptos', 'Microsoft YaHei', 'Noto Sans'];
-const docJson = (value: PMNodeJSON) => editorTextSchema.nodeFromJSON(value);
+const FONT_CHOICES = ['Noto Sans CJK SC', 'Segoe UI', 'Arial', 'Georgia', 'Aptos', 'Microsoft YaHei', 'Noto Sans'];
 type PendingFocusRestore = { view: EditorView; selection: Selection; moved: boolean; cleanup: () => void };
 
-export function RichTextEditor({ documentId, nodeId, content, revision, disabled, focused = false, baseStyle, onCommit, onConflict, onDraftChange }: RichTextEditorProps) {
+export function RichTextEditor({ schema = editorTextSchema, onImportImage, documentId, nodeId, content, revision, disabled, focused = false, baseStyle, onCommit, onConflict, onDraftChange }: RichTextEditorProps) {
+  const docJson = (value: PMNodeJSON) => schema.nodeFromJSON(value);
+  const docMode = !!schema.nodes.table;
+  const plugins = () => docMode ? [keymap({'Enter':splitListItem(schema.nodes.list_item!),'Mod-[':liftListItem(schema.nodes.list_item!)}),keymap(baseKeymap)] : [];
+  const assetsRef = useRef<ImageAsset[]>([]);
+  const imageInput = useRef<HTMLInputElement>(null);
+  const [importingImage, setImportingImage] = useState(false);
   const hostRef = useRef<HTMLDivElement | null>(null);
   const viewRef = useRef<EditorView | null>(null);
   const stepsRef = useRef<unknown[]>([]);
@@ -36,7 +47,7 @@ export function RichTextEditor({ documentId, nodeId, content, revision, disabled
   const [fontFamily, setFontFamily] = useState(baseStyle?.fontFamily ?? 'Segoe UI');
   const [fontSize, setFontSize] = useState(String(baseStyle?.fontSize ?? 24));
   const [fontColor, setFontColor] = useState(baseStyle?.color ?? '#244b3a');
-  const [lineHeight, setLineHeight] = useState(String((baseStyle?.fontSize ?? 24) * 1.2));
+  const [lineHeight, setLineHeight] = useState(String(baseStyle?.lineHeight ?? (baseStyle?.fontSize ?? 24) * 1.2));
   const [spaceBefore, setSpaceBefore] = useState('0');
   const [spaceAfter, setSpaceAfter] = useState('0');
   const [indent, setIndent] = useState('0');
@@ -81,7 +92,8 @@ export function RichTextEditor({ documentId, nodeId, content, revision, disabled
       view.setProps({ editable: () => false });
     }
     let ok = false;
-    try { ok = await propsRef.current.onCommit(documentId, nodeId, steps, '编辑富文本', baseRevision); }
+    const assets = assetsRef.current.splice(0);
+    try { ok = await propsRef.current.onCommit(documentId, nodeId, steps, '编辑富文本', baseRevision, assets); }
     catch { ok = false; }
     const stillCurrent = viewRef.current === view && !view.isDestroyed;
     if (!ok && focusRestoreRef.current?.view === view) {
@@ -93,7 +105,7 @@ export function RichTextEditor({ documentId, nodeId, content, revision, disabled
       baseRevisionRef.current = baseRevision + 1;
     } else if (!ok && stillCurrent) {
       stepsRef.current = [];
-      view.updateState(EditorState.create({ schema: editorTextSchema, doc: committedDocRef.current }));
+      view.updateState(EditorState.create({ schema, doc: committedDocRef.current, plugins: plugins() }));
       propsRef.current.onConflict(submittedDoc.toJSON() as PMNodeJSON);
     }
     savingRef.current = false;
@@ -102,7 +114,7 @@ export function RichTextEditor({ documentId, nodeId, content, revision, disabled
     } else if (viewRef.current && !viewRef.current.isDestroyed) {
       setSaving(false);
     }
-  }, [documentId, nodeId]);
+  }, [documentId, nodeId, schema]);
 
   const scheduleFlush = useCallback(() => {
     if (timerRef.current) clearTimeout(timerRef.current);
@@ -115,7 +127,7 @@ export function RichTextEditor({ documentId, nodeId, content, revision, disabled
     const doc = docJson(content);
     committedDocRef.current = doc;
     baseRevisionRef.current = revision;
-    const state = EditorState.create({ schema: editorTextSchema, doc });
+    const state = EditorState.create({ schema, doc, plugins: plugins() });
     const view = new EditorView(host, {
       state,
       editable: () => !propsRef.current.disabled && !savingRef.current,
@@ -129,7 +141,12 @@ export function RichTextEditor({ documentId, nodeId, content, revision, disabled
         },
       },
       dispatchTransaction(transaction) {
-        const next = view.state.apply(transaction);
+        let next = view.state.apply(transaction);
+        if (docMode && transaction.docChanged) {
+          const ids=new Set<string>(); const fix=next.tr;
+          next.doc.descendants((node,pos)=>{ if (!node.type.spec.attrs?.id) return; const current=node.attrs.id; if (!current || ids.has(current)) { const id=crypto.randomUUID(); ids.add(id); fix.setNodeMarkup(pos,undefined,{...node.attrs,id}); } else ids.add(current); });
+          if (fix.steps.length) { next=next.apply(fix); stepsRef.current.push(...transaction.steps.map(step=>step.toJSON())); transaction=fix; }
+        }
         view.updateState(next);
         syncToolbar(next);
         if (transaction.steps.length) {
@@ -182,7 +199,7 @@ export function RichTextEditor({ documentId, nodeId, content, revision, disabled
       editorDocumentIdRef.current = documentId;
       committedDocRef.current = incoming;
       baseRevisionRef.current = revision;
-      view.updateState(EditorState.create({ schema: editorTextSchema, doc: incoming }));
+      view.updateState(EditorState.create({ schema, doc: incoming, plugins: plugins() }));
       syncToolbar(view.state);
       return;
     }
@@ -205,16 +222,16 @@ export function RichTextEditor({ documentId, nodeId, content, revision, disabled
     stepsRef.current = [];
     committedDocRef.current = incoming;
     baseRevisionRef.current = revision;
-    view.updateState(EditorState.create({ schema: editorTextSchema, doc: incoming }));
+    view.updateState(EditorState.create({ schema, doc: incoming, plugins: plugins() }));
     syncToolbar(view.state);
     propsRef.current.onConflict();
-  }, [content, documentId, revision]);
+  }, [content, documentId, revision, schema]);
 
   useEffect(() => { if (focused) viewRef.current?.focus(); }, [focused]);
 
   function syncToolbar(state: EditorState) {
     const marks = state.storedMarks ?? state.selection.$from.marks();
-    const style = marks.find(mark => mark.type === editorTextSchema.marks.textStyle);
+    const style = marks.find(mark => mark.type === schema.marks.textStyle);
     const font = style?.attrs.fontFamily;
     const size = style?.attrs.fontSize;
     const color = style?.attrs.color;
@@ -230,7 +247,7 @@ export function RichTextEditor({ documentId, nodeId, content, revision, disabled
     else setAlign('left');
     const currentLineHeight = block.attrs.lineHeight;
     if (typeof currentLineHeight === 'number') setLineHeight(String(currentLineHeight));
-    else setLineHeight(String((baseStyle?.fontSize ?? 24) * 1.2));
+    else setLineHeight(String(baseStyle?.lineHeight ?? (baseStyle?.fontSize ?? 24) * 1.2));
     setSpaceBefore(typeof block.attrs.spaceBefore === 'number' ? String(block.attrs.spaceBefore) : '0');
     setSpaceAfter(typeof block.attrs.spaceAfter === 'number' ? String(block.attrs.spaceAfter) : '0');
     setIndent(typeof block.attrs.indent === 'number' ? String(block.attrs.indent) : '0');
@@ -256,7 +273,7 @@ export function RichTextEditor({ documentId, nodeId, content, revision, disabled
 
   function toggleMark(name: 'strong' | 'em' | 'underline' | 'strike') {
     const view = viewRef.current;
-    const mark = editorTextSchema.marks[name];
+    const mark = schema.marks[name];
     if (!view || !mark) return;
     const { from, to, empty } = view.state.selection;
     const transaction = view.state.tr;
@@ -273,7 +290,7 @@ export function RichTextEditor({ documentId, nodeId, content, revision, disabled
 
   function applyTextStyle(attrs: Record<string, string | number>) {
     const view = viewRef.current;
-    const mark = editorTextSchema.marks.textStyle;
+    const mark = schema.marks.textStyle;
     if (!view || !mark) return;
     const { from, to, empty } = view.state.selection;
     const transaction = view.state.tr;
@@ -308,6 +325,14 @@ export function RichTextEditor({ documentId, nodeId, content, revision, disabled
     if (blocks.length) view.dispatch(transaction);
   }
 
+  function insertTable() {
+    const view=viewRef.current;if (!view) return;
+    const paragraph=()=>schema.nodes.paragraph!.create();
+    const cell=()=>schema.nodes.table_cell!.create(null,paragraph());
+    const row=()=>schema.nodes.table_row!.create(null,[cell(),cell(),cell()]);
+    view.dispatch(view.state.tr.replaceSelectionWith(schema.nodes.table!.create(null,[row(),row(),row()])));view.focus();
+  }
+  function blockType(type:string) { const view=viewRef.current;if(!view)return;setBlockType(schema.nodes[type==='p'?'paragraph':'heading']!,type==='p'?{}:{level:Number(type)})(view.state,tr=>view.dispatch(tr));view.focus(); }
   return <section className="editor-rich-text" aria-label="富文本编辑器">
     <div className="editor-rich-toolbar" role="toolbar" aria-label="文字格式">
       <select aria-label="字体" title="字体" value={fontFamily} disabled={disabled || saving} onChange={event => { const value = event.currentTarget.value; setFontFamily(value); applyTextStyle({ fontFamily: value }); }}>
@@ -336,6 +361,15 @@ export function RichTextEditor({ documentId, nodeId, content, revision, disabled
         <label>首行 px<input aria-label="首行缩进" type="number" min="-1000" max="1000" value={firstLineIndent} disabled={disabled || saving} onChange={event => setFirstLineIndent(event.currentTarget.value)} onBlur={() => applyParagraphAttr('firstLineIndent', Number(firstLineIndent) || 0)} /></label>
       </div></details>
     </div>
+    {docMode && <div className="editor-rich-toolbar" aria-label="文档结构">
+      <select aria-label="正文样式" defaultValue="p" disabled={disabled||saving} onChange={e=>blockType(e.currentTarget.value)}><option value="p">正文</option>{[1,2,3].map(n=><option key={n} value={n}>标题 {n}</option>)}</select>
+      <button disabled={disabled||saving} onMouseDown={e=>e.preventDefault()} onClick={()=>{const view=viewRef.current;if(view){wrapInList(schema.nodes.bullet_list!)(view.state,tr=>view.dispatch(tr));view.focus();}}}>无序列表</button>
+      <button disabled={disabled||saving} onMouseDown={e=>e.preventDefault()} onClick={()=>{const view=viewRef.current;if(view){wrapInList(schema.nodes.ordered_list!)(view.state,tr=>view.dispatch(tr));view.focus();}}}>有序列表</button>
+      <button disabled={disabled||saving} onMouseDown={e=>e.preventDefault()} onClick={insertTable}>插入表格</button>
+      <button disabled={disabled||saving} onMouseDown={e=>e.preventDefault()} onClick={()=>{const view=viewRef.current;if(view){view.dispatch(view.state.tr.replaceSelectionWith(schema.nodes.page_break!.create()));view.focus();}}}>分页符</button>
+      {onImportImage && <><button disabled={disabled||saving||importingImage} onMouseDown={e=>e.preventDefault()} onClick={()=>imageInput.current?.click()}>{importingImage?'正在插入…':'插入图片'}</button>
+      <input ref={imageInput} hidden aria-label="插入文档图片" type="file" accept="image/png,image/jpeg" onChange={e=>{const file=e.currentTarget.files?.[0];e.currentTarget.value='';const view=viewRef.current;if(!file||!view)return;setImportingImage(true);void onImportImage(file).then(asset=>{if(view.isDestroyed||viewRef.current!==view)return;assetsRef.current.push(asset);const width=Math.min(360,asset.width);view.dispatch(view.state.tr.replaceSelectionWith(schema.nodes.inline_image!.create({assetId:asset.id,width,height:width*asset.height/asset.width,alt:asset.name ?? ''})));view.focus();}).catch(()=>propsRef.current.onConflict()).finally(()=>setImportingImage(false));}} /></>}
+    </div>}
     <div ref={hostRef} className="editor-rich-host" onBlur={event => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) void flush(); }} />
     <small className="editor-rich-status">{saving ? '正在保存文字…' : '支持段落、中文输入和所选文字格式'}</small>
   </section>;

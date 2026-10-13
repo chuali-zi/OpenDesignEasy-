@@ -397,3 +397,18 @@ test('Pi tools expose Web operations and preserve human text while editing and e
   assert.deepEqual({ documentId: exported[0]!.value.documentId, revision: exported[0]!.value.revision, format: exported[0]!.value.format }, { documentId, revision: latest.revision, format: 'html' });
   assert.match(JSON.stringify(await fixture.runtime.agent.getMessages(session.sessionId)), /web\.layout\.update/);
 });
+
+
+test('Pi Doc tools read human text, expose section schema and export the same committed native document offline', async t => {
+  const fixture=makeFixture(t);const doc=fixture.runtime.createDocument({kind:'doc',name:'Shared synthetic report'});const id=doc.documentId,sectionId=doc.sections[0]!.id;
+  fixture.runtime.submit(fixture.runtime.makeCommand(id,[{type:'doc.text.apply',sectionId,steps:[{stepType:'replace',from:1,to:1,slice:{content:[{type:'text',text:'人工确认报告'}]}}]}]));
+  fixture.faux.setResponses([
+    fauxAssistantMessage(fauxToolCall('document_schema',{documentId:id},{id:'doc-schema'}),{stopReason:'toolUse'}),
+    fauxAssistantMessage(fauxToolCall('document_apply',{documentId:id,baseRevision:1,operations:[{type:'doc.page.update',settings:{marginLeft:80}}]},{id:'doc-margin'}),{stopReason:'toolUse'}),
+    fauxAssistantMessage(fauxToolCall('artifact_export',{documentId:id,format:'docx'},{id:'doc-export'}),{stopReason:'toolUse'}),
+    fauxAssistantMessage('Done.',{stopReason:'stop'}),
+  ]);
+  const session=await fixture.runtime.agent.createSession();const accepted=await fixture.runtime.agent.send(session.sessionId,'保留人工报告，调整页边距并导出。',{documentId:id});await within(fixture.runtime.agent.waitForIdle(session.sessionId),'Doc offline run');
+  assert.equal(fixture.runtime.agent.getRun(accepted.runId)?.status,'completed');const latest=fixture.runtime.readDocDocument(id);assert.match(JSON.stringify(latest.content),/人工确认报告/);assert.equal(latest.pageSettings.marginLeft,80);
+  const exported=fixture.runtime.listRecords<{documentId:string;revision:number;format:string}>('exports');assert.equal(exported.length,1);assert.equal(exported[0]!.value.revision,latest.revision);assert.equal(exported[0]!.value.format,'docx');assert.match(JSON.stringify(await fixture.runtime.agent.getMessages(session.sessionId)),/doc\.section\.insert/);
+});
