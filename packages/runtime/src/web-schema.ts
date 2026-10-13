@@ -23,5 +23,6 @@ export const webOperationSchema = {
     'source.remove': { moduleId: 'unbound-module-id' },
   },
   sources: 'TS/TSX/CSS modules live in the document. Edit with source.update, never generated files. Components expose wrapper layout and props; internal code requires source export/build. Static exports report unsupported bound components.',
+  richText: 'Native text containers may have ProseMirror content; text is its plain projection. Use text.apply with ProseMirror steps to preserve marks. web.node.update text explicitly replaces formatting with plain text; content replaces the rich document. Same-content concurrent edits conflict instead of overwriting human changes.',
   exports: 'html (one page), zip (all static pages), source.zip (React/Vite source), pdf, png. Forms are local demos. Null style/props values delete that property.',
 };

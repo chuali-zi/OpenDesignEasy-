@@ -34,8 +34,9 @@ export function textToString(value: PMNodeJSON | PMNode): string {
   const json = typeof candidate.toJSON === "function" ? candidate.toJSON() as PMNodeJSON : value as PMNodeJSON;
   const walk = (node: PMNodeJSON): string => {
     if (node.type === "text") return node.text ?? "";
+    if (node.type === 'hard_break') return '\n';
     const children = (node.content ?? []).map(walk);
-    return node.type === "doc" ? children.join("\n") : node.type === "paragraph" || node.type === "heading" ? children.join("") : children.join("");
+    return ['doc', 'list_item', 'bullet_list', 'ordered_list', 'blockquote'].includes(node.type) ? children.join("\n") : children.join("");
   };
   return walk(json);
 }
@@ -58,8 +59,10 @@ export function validateTextContent(value: PMNodeJSON, target = "text"): void {
         const { color, fontFamily, fontSize, backgroundColor } = mark.attrs;
         for (const [name, candidate] of Object.entries({ color, backgroundColor })) {
           if (candidate !== null && (typeof candidate !== "string" || !candidate.trim())) throw new Error(`textStyle ${name} must be a non-empty color string`);
+          if (typeof candidate === 'string' && (/[;{}<>]/.test(candidate) || /expression\s*\(|javascript\s*:|url\s*\(/i.test(candidate))) throw new Error(`unsafe textStyle ${name}`);
         }
         if (fontFamily !== null && (typeof fontFamily !== "string" || !fontFamily.trim())) throw new Error("textStyle fontFamily must be a non-empty string");
+        if (typeof fontFamily === 'string' && (/[;{}<>]/.test(fontFamily) || /expression\s*\(|javascript\s*:|url\s*\(/i.test(fontFamily))) throw new Error('unsafe textStyle fontFamily');
         if (fontSize !== null && (typeof fontSize !== "number" || !Number.isFinite(fontSize) || fontSize <= 0)) throw new Error("textStyle fontSize must be a positive logical-pixel number");
       }
     });

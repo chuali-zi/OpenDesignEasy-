@@ -1,4 +1,5 @@
 import JSZip from 'jszip';
+import { renderWebRichText } from './web-richtext.ts';
 import { chromium } from 'playwright';
 import { browserLaunchOptions } from './browser.ts';
 import type { Page } from 'playwright';
@@ -117,7 +118,7 @@ export async function buildWebSource(document: WebDocument, resolveAsset?: Asset
     if (tag === 'textarea' && node.text !== undefined) props.defaultValue = node.text;
     const attrs = `{...${JSON.stringify(props)}}`;
     if (webVoidTags.has(tag)) return `${indent}<${tag} ${attrs} />`;
-    let children = [node.text !== undefined && tag !== 'textarea' ? `${indent}  {${JSON.stringify(node.text)}}` : '', ...node.children.map(child => emit(child, `${indent}  `))].filter(Boolean).join('\n');
+    let children = [node.content ? `${indent}  <span data-oey-rich-content dangerouslySetInnerHTML={{__html:${JSON.stringify(renderWebRichText(node.content, !['a', 'button'].includes(tag)))}}} />` : node.text !== undefined && tag !== 'textarea' ? `${indent}  {${JSON.stringify(node.text)}}` : '', ...node.children.map(child => emit(child, `${indent}  `))].filter(Boolean).join('\n');
     const bound = bindings.get(id);
     if (bound) children = `${indent}  <${bound} {...${JSON.stringify(node.props ?? {})}}>\n${children}\n${indent}  </${bound}>`;
     const behavior = tag === 'form' ? ' onSubmit={event => { event.preventDefault(); const status = event.currentTarget.querySelector<HTMLOutputElement>("[data-oey-form-status]"); if (status) status.hidden = false; }}' : '';

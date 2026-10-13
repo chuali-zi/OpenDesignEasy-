@@ -1,4 +1,6 @@
 import { KernelError, invalid } from "./errors.ts";
+import { applyTextSteps, textFromString, textToString, validateTextContent } from './text.ts';
+import { WEB_RICH_TEXT_TAGS } from './model.ts';
 import type { CommandEnvelope, ImageAsset, WebBreakpoint, WebDocument, WebNode, WebOperation, WebPage, WebSourceModule } from "./model.ts";
 
 const clone = <T>(value: T): T => structuredClone(value);
@@ -38,6 +40,11 @@ export function validateWebDocument(doc: WebDocument): void {
       for (const [breakpointId, override] of Object.entries(node.responsive)) if (!doc.breakpoints?.some((b) => b.id === breakpointId) || !rec(override) || override.style !== undefined && (!rec(override.style) || !json(override.style)) || override.layout !== undefined && (!rec(override.layout) || !json(override.layout) || override.layout.mode !== undefined && !["flow", "flex", "grid", "position"].includes(String(override.layout.mode)))) invalid("invalid responsive override", nodeId);
     }
     if (node.component !== undefined && (!rec(node.component) || !id(node.component.moduleId) || typeof node.component.exportName !== 'string' || !/^[A-Za-z_$][\w$]*$/.test(node.component.exportName))) invalid("invalid component binding", nodeId);
+    if (node.content !== undefined) {
+      if (!rec(node.content) || node.content.type !== 'doc' || !WEB_RICH_TEXT_TAGS.has(node.tag)) invalid('rich content requires a supported text container', nodeId);
+      validateTextContent(node.content, nodeId);
+      if (node.text !== undefined && node.text !== textToString(node.content)) invalid('Web plain text must match rich content projection', nodeId);
+    }
     if (['br', 'col', 'hr', 'img', 'input', 'source', 'wbr'].includes(node.tag) && (node.children.length || node.text)) invalid('void HTML nodes cannot have children or text', nodeId);
     visited.add(nodeId); const next = new Set(ancestors).add(nodeId);
     const childIds = new Set<string>();
@@ -186,11 +193,16 @@ function applyOne(doc: WebDocument, op: WebOperation, changed: Set<string>): voi
     }
     case "web.node.update": {
       const current = node(doc, op.nodeId);
-      const unlockingOnly = current.locked === true && op.flags?.locked === false && op.text === undefined && op.props === undefined && op.component === undefined && op.flags.hidden === undefined && Object.keys(op.flags).every(key => key === "locked");
+      const unlockingOnly = current.locked === true && op.flags?.locked === false && op.text === undefined && op.content === undefined && op.props === undefined && op.component === undefined && op.flags.hidden === undefined && Object.keys(op.flags).every(key => key === "locked");
       assertEditable(doc, current.id, false, unlockingOnly);
       if (op.text !== undefined) {
+        delete current.content;
         if (op.text === null) delete current.text;
         else current.text = op.text;
+      }
+      if (op.content !== undefined) {
+        if (op.content === null) delete current.content;
+        else { current.content = clone(op.content); current.text = textToString(current.content); }
       }
       if (op.props) {
         current.props ??= {};
@@ -207,6 +219,12 @@ function applyOne(doc: WebDocument, op: WebOperation, changed: Set<string>): voi
       else if (op.component !== undefined) current.component = clone(op.component);
       changed.add(current.id);
       return;
+    }
+    case 'text.apply': {
+      const current = node(doc, op.nodeId); assertEditable(doc, current.id);
+      if (!Array.isArray(op.steps)) invalid('text.apply requires steps', current.id);
+      current.content = applyTextSteps(current.content ?? textFromString(current.text ?? ''), op.steps);
+      current.text = textToString(current.content); changed.add(current.id); return;
     }
     case "web.style.update":
     case "web.layout.update": {
@@ -286,7 +304,7 @@ function checkStale(current: WebDocument, base: WebDocument, op: WebOperation): 
       }
       const beforeRecord = before as unknown as Record<string, unknown> | undefined;
       const nowRecord = now as unknown as Record<string, unknown> | undefined;
-      for (const key of ["text", "component"] as const) {
+      for (const key of ["text", "content", "component"] as const) {
         if (op[key] !== undefined && !equal(beforeRecord?.[key], nowRecord?.[key])) {
           throw new KernelError("conflict", `Web ${key} changed since base`, op.nodeId);
         }
@@ -298,6 +316,10 @@ function checkStale(current: WebDocument, base: WebDocument, op: WebOperation): 
       }
     }
 
+    if (op.type === 'web.node.update' && (op.text !== undefined || op.content !== undefined)) {
+      if (!equal(before?.content, now?.content) || before?.text !== now?.text) throw new KernelError('conflict', 'Web rich text changed since base', op.nodeId);
+    }
+    if (op.type === 'text.apply' && !equal(before?.content ?? textFromString(before?.text ?? ''), now?.content ?? textFromString(now?.text ?? ''))) throw new KernelError('conflict', 'Web rich text changed since base', op.nodeId);
     if (op.type === "web.node.remove" && existedAtBase) {
       const baseIds = [op.nodeId, ...descendants(base, op.nodeId)].sort();
       const currentIds = [op.nodeId, ...descendants(current, op.nodeId)].sort();
@@ -361,7 +383,7 @@ export function applyWebCommand(current: WebDocument, command: CommandEnvelope, 
   if (!rec(command) || !id(command.commandId) || !id(command.projectId) || !id(command.actorId) || !id(command.clientId) || !["human", "agent", "system"].includes(command.actorKind) || typeof command.label !== "string" || !command.label.trim() || command.runId !== undefined && !id(command.runId) || !Array.isArray(command.preconditions) || command.documentId !== current.documentId || command.documentId !== base.documentId || !Number.isInteger(command.baseRevision) || command.baseRevision !== base.revision || base.revision > current.revision || current.revision === base.revision && !equal(current, base) || !Array.isArray(command.operations) || !command.operations.length) throw new KernelError("invalid", "invalid Web command or base revision");
   checkPreconditions(base, command); if (base.revision !== current.revision) checkPreconditions(current, command);
   const next = clone(current); const changed = new Set<string>();
-  try { for (const raw of command.operations) { if (!("type" in raw) || !raw.type.startsWith("web.") && !raw.type.startsWith("source.") && raw.type !== "asset.register") invalid("operation is not supported by WebDocument"); checkStale(current, base, raw as WebOperation); applyOne(next, raw as WebOperation, changed); } next.revision = current.revision + 1; validateWebDocument(next); return { document: next, changedNodeIds: [...changed] }; }
+  try { for (const raw of command.operations) { if (!("type" in raw) || !raw.type.startsWith("web.") && !raw.type.startsWith("source.") && raw.type !== "asset.register" && raw.type !== "text.apply") invalid("operation is not supported by WebDocument"); checkStale(current, base, raw as WebOperation); applyOne(next, raw as WebOperation, changed); } next.revision = current.revision + 1; validateWebDocument(next); return { document: next, changedNodeIds: [...changed] }; }
   catch (error) { if (error instanceof KernelError) throw error; throw new KernelError("invalid", error instanceof Error ? error.message : String(error)); }
 }
 

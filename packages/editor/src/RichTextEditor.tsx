@@ -14,20 +14,21 @@ export type RichTextEditorProps = {
   focused?: boolean;
   baseStyle?: { fontFamily?: string; fontSize?: number; color?: string };
   onCommit: (documentId: string, nodeId: string, steps: unknown[], label: string, baseRevision: number) => Promise<boolean>;
-  onConflict: () => void;
+  onConflict: (draft?: PMNodeJSON) => void;
+  onDraftChange?: (draft: PMNodeJSON) => void;
 };
 
 const FONT_CHOICES = ['Segoe UI', 'Arial', 'Georgia', 'Aptos', 'Microsoft YaHei', 'Noto Sans'];
 const docJson = (value: PMNodeJSON) => editorTextSchema.nodeFromJSON(value);
 type PendingFocusRestore = { view: EditorView; selection: Selection; moved: boolean; cleanup: () => void };
 
-export function RichTextEditor({ documentId, nodeId, content, revision, disabled, focused = false, baseStyle, onCommit, onConflict }: RichTextEditorProps) {
+export function RichTextEditor({ documentId, nodeId, content, revision, disabled, focused = false, baseStyle, onCommit, onConflict, onDraftChange }: RichTextEditorProps) {
   const hostRef = useRef<HTMLDivElement | null>(null);
   const viewRef = useRef<EditorView | null>(null);
   const stepsRef = useRef<unknown[]>([]);
   const committedDocRef = useRef(docJson(content));
   const baseRevisionRef = useRef(revision);
-  const propsRef = useRef({ onCommit, onConflict, disabled });
+  const propsRef = useRef({ onCommit, onConflict, onDraftChange, disabled });
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const savingRef = useRef(false);
   const focusRestoreRef = useRef<PendingFocusRestore | null>(null);
@@ -42,7 +43,7 @@ export function RichTextEditor({ documentId, nodeId, content, revision, disabled
   const [firstLineIndent, setFirstLineIndent] = useState('0');
   const [align, setAlign] = useState<'left' | 'center' | 'right' | 'justify'>('left');
 
-  propsRef.current = { onCommit, onConflict, disabled };
+  propsRef.current = { onCommit, onConflict, onDraftChange, disabled };
 
   const flush = useCallback(async (closing = false) => {
     const view = viewRef.current;
@@ -93,7 +94,7 @@ export function RichTextEditor({ documentId, nodeId, content, revision, disabled
     } else if (!ok && stillCurrent) {
       stepsRef.current = [];
       view.updateState(EditorState.create({ schema: editorTextSchema, doc: committedDocRef.current }));
-      propsRef.current.onConflict();
+      propsRef.current.onConflict(submittedDoc.toJSON() as PMNodeJSON);
     }
     savingRef.current = false;
     if (stillCurrent) {
@@ -133,6 +134,7 @@ export function RichTextEditor({ documentId, nodeId, content, revision, disabled
         syncToolbar(next);
         if (transaction.steps.length) {
           stepsRef.current.push(...transaction.steps.map(step => step.toJSON()));
+          propsRef.current.onDraftChange?.(next.doc.toJSON() as PMNodeJSON);
         }
         // Selecting recently typed text is still active editing. Do not start
         // an idle save in the middle of keyboard range selection.

@@ -77,6 +77,12 @@
 .web-editor-add { min-width: 0; margin: 0; border: 0; }
 .web-editor-add legend { color: #77837a; font-size: 10px; padding-top: 14px; }
 .web-editor-draft { min-width: 0; }
+.web-editor-rich-panel { flex: 0 0 280px; min-height: 0; overflow: auto; border-top: 1px solid #dce3dc; padding: 10px 14px; background: #f8f9f6; }
+.web-editor-rich-panel .editor-rich-text { border: 0; background: transparent; }
+.web-editor-rich-panel .editor-rich-host { min-height: 100px; background: white; }
+.web-editor-rich-recovery { padding: 9px; border: 1px solid #dbc9a9; border-radius: 5px; background: #fff9ec; font-size: 11px; }
+.web-editor-rich-recovery pre { white-space: pre-wrap; max-height: 90px; overflow: auto; }
+.web-editor-rich-recovery button { padding: 6px 9px; margin-right: 7px; }
 .web-editor-multi-align { display: grid; gap: 9px; border-top: 1px solid #edf0ec; padding-top: 12px; }
 .web-editor-multi-align > strong { font-size: 11px; color: #496052; }
 .web-editor-multi-align > div { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; }

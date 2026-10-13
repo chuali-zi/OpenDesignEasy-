@@ -1,4 +1,5 @@
 import type { JSONValue, WebDocument, WebLayout, WebNode } from '@oeydesign/document';
+import { renderWebRichText } from './web-richtext.ts';
 
 export type WebMarkupOptions = { editing?: boolean; pageUrl?: (page: WebDocument['pages'][number]) => string };
 export const webVoidTags = new Set(['br', 'col', 'hr', 'img', 'input', 'source', 'wbr']);
@@ -108,7 +109,7 @@ export function renderWebMarkup(document: WebDocument, pageId = document.pages[0
     const opening = `<${tag} ${identity} ${attributes(props)}`;
     if (webVoidTags.has(tag)) return `${opening}>`;
     const boundary = node.component ? `<span data-component-boundary>${escapeWebText(node.component.exportName)} · 组件</span>` : '';
-    const content = boundary + (node.text === undefined ? '' : escapeWebText(node.text)) + node.children.map(child => render(child)).join('');
+    const content = boundary + (node.content ? renderWebRichText(node.content, !['a', 'button'].includes(tag)) : node.text === undefined ? '' : escapeWebText(node.text)) + node.children.map(child => render(child)).join('');
     const demo = tag === 'form' ? '<output data-oey-form-status hidden>Demo submitted</output>' : '';
     const behavior = tag === 'form' && !options.editing ? ` onsubmit="event.preventDefault();this.querySelector('[data-oey-form-status]').hidden=false"` : '';
     return `${opening}${behavior}>${content}${demo}</${tag}>`;

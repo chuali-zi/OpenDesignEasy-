@@ -3,13 +3,15 @@ import type { CSSProperties } from 'react';
 import type { DocumentAsset, WebBreakpoint, WebDocument, WebLayout, WebNode, WebOperation, WebSourceModule, EditPrecondition } from '@oeydesign/document';
 import { escapeWebText, renderWebMarkup, renderWebStyles, webVoidTags } from '@oeydesign/media/web-markup';
 import { WebDraftField } from './WebDraftField.tsx';
+import { WebRichTextEditor } from './WebRichTextEditor.tsx';
+import { WEB_RICH_TEXT_TAGS } from '@oeydesign/document';
 import { nextWebSelection, webBatchStyles, webAlignmentOperations, webAlignmentPreconditions, webPixelCoordinate, webNodeLocked } from './web-selection.ts';
 import type { WebAlignment, WebBounds } from './web-selection.ts';
 import './web-editor.css';
 
 type Props = {
   document: WebDocument;
-  onApply: (operations: WebOperation[], label: string, baseRevision: number, preconditions?: EditPrecondition[]) => Promise<void>;
+  onApply: (operations: WebOperation[], label: string, baseRevision: number, preconditions?: EditPrecondition[], documentTarget?: string) => Promise<void>;
   onUndo: () => void;
   onRedo: () => void;
   onImportAsset?: (file: File) => Promise<DocumentAsset>;
@@ -51,6 +53,7 @@ export function WebEditor({ document, onApply, onUndo, onRedo, onImportAsset, di
   const [dragging, setDragging] = useState(false);
   const [previewDocument, setPreviewDocument] = useState(document);
   const [sourceOpen, setSourceOpen] = useState(false);
+  const [richOpen, setRichOpen] = useState(false);
   const [sourceId, setSourceId] = useState('');
   const [sourceDraft, setSourceDraft] = useState('');
   const [sourceDirty, setSourceDirty] = useState(false);
@@ -68,13 +71,13 @@ export function WebEditor({ document, onApply, onUndo, onRedo, onImportAsset, di
   const overrideEnabled = !breakpoint || Boolean(document.breakpoints?.some(item => item.id === breakpoint));
   const selectedSource = document.sourceModules?.find(item => item.id === sourceId);
   const blocked = busy || disabled;
-  const act = useCallback(async (operations: WebOperation[], label: string, base = document.revision, preconditions: EditPrecondition[] = []) => {
+  const act = useCallback(async (operations: WebOperation[], label: string, base = document.revision, preconditions: EditPrecondition[] = [], documentTarget = document.documentId) => {
     if (pending.current || disabled) return false;
     pending.current = true; setBusy(true);
-    try { await onApply(operations, label, base, preconditions); setEditorError(''); return true; }
+    try { await onApply(operations, label, base, preconditions, documentTarget); setEditorError(''); return true; }
     catch (error) { setEditorError(error instanceof Error ? error.message : String(error)); return false; }
     finally { pending.current = false; setBusy(false); }
-  }, [disabled, document.revision, onApply]);
+  }, [disabled, document.revision, document.documentId, onApply]);
   const live = useRef({ act, selection, blocked, breakpoint, overrideEnabled });
   live.current = { act, selection, blocked, breakpoint, overrideEnabled };
   useEffect(() => { if (!dragging) setPreviewDocument(document); }, [document, dragging]);
@@ -121,6 +124,12 @@ export function WebEditor({ document, onApply, onUndo, onRedo, onImportAsset, di
       if (suppressClick) { suppressClick = false; return; }
       const target = (event.target as Element)?.closest<HTMLElement>('[data-web-id]');
       selectNode(target?.dataset.webId ?? '', event.shiftKey || event.ctrlKey || event.metaKey);
+    };
+    const editText = (event: MouseEvent) => {
+      const target = (event.target as Element)?.closest<HTMLElement>('[data-web-id]');
+      const id = target?.dataset.webId, item = id ? previewDocument.nodes[id] : undefined;
+      if (!id || !item || item.component || !WEB_RICH_TEXT_TAGS.has(item.tag) || locked(previewDocument, id)) return;
+      event.preventDefault(); setSelection(id); setRichOpen(true);
     };
     const start = (event: PointerEvent) => {
       if (event.button !== 0 || live.current.blocked || event.shiftKey || event.ctrlKey || event.metaKey) return;
@@ -178,10 +187,10 @@ export function WebEditor({ document, onApply, onUndo, onRedo, onImportAsset, di
       }
     };
     const submit = (event: Event) => event.preventDefault();
-    body.addEventListener('click', click); body.addEventListener('submit', submit);
+    body.addEventListener('click', click); body.addEventListener('dblclick', editText); body.addEventListener('submit', submit);
     body.addEventListener('pointerdown', start); body.addEventListener('pointermove', move); body.addEventListener('pointerup', end); body.addEventListener('pointercancel', cancel);
     return () => {
-      body.removeEventListener('click', click); body.removeEventListener('submit', submit);
+      body.removeEventListener('click', click); body.removeEventListener('dblclick', editText); body.removeEventListener('submit', submit);
       body.removeEventListener('pointerdown', start); body.removeEventListener('pointermove', move); body.removeEventListener('pointerup', end); body.removeEventListener('pointercancel', cancel);
       if (gesture) restore(gesture);
     };
@@ -308,6 +317,9 @@ export function WebEditor({ document, onApply, onUndo, onRedo, onImportAsset, di
       <div className="web-editor-browser"><div className="web-editor-browser-bar"><i/><i/><i/><span>{page.route}</span><small>{breakpoint ?? '基础'}</small></div><div className="web-editor-viewport" style={{ '--preview-width': `${width}px` } as CSSProperties}><iframe ref={iframe} title="隔离网页预览" sandbox="allow-same-origin" srcDoc={sourceDoc} onLoad={() => setFrameEpoch(epoch => epoch + 1)} /></div></div>
       <div className="web-editor-stage-foot"><span><b>提示</b> 拖动重排 · 右下角缩放 · 定位元素自由移动</span><button onClick={() => setSourceOpen(!sourceOpen)}>{sourceOpen ? '关闭源码' : '源码模块'}</button></div>
       {editorError && <div className="web-editor-error" role="status">{editorError}</div>}
+      {richOpen && selectedIds.length === 1 && node && !node.component && WEB_RICH_TEXT_TAGS.has(node.tag) &&
+        <WebRichTextEditor key={`${document.documentId}/${node.id}`} document={document} node={node} disabled={blocked || locked(document, node.id)}
+          commit={(operations, label, base, target) => act(operations, label, base, [], target)} />}
       {sourceOpen && <section className="web-editor-source"><header><strong>源码模块</strong><select aria-label="选择源码模块" value={sourceId} disabled={blocked || sourceDirty} onChange={event => selectSource(event.currentTarget.value)}><option value="">选择已有模块…</option>{document.sourceModules?.map(item => <option key={item.id} value={item.id}>{item.path}</option>)}</select><button disabled={!selectedSource || blocked || !sourceDirty} onClick={saveSource}>保存模块</button>{sourceDirty && <button disabled={blocked} onClick={() => selectSource(sourceId)}>恢复已保存源码</button>}</header>
         <div className="web-editor-new-source"><input aria-label="新模块路径" value={modulePath} onChange={event => setModulePath(event.currentTarget.value)} placeholder="styles/custom.css"/><select aria-label="新模块语言" value={moduleLanguage} onChange={event => setModuleLanguage(event.currentTarget.value as 'ts' | 'tsx' | 'css')}><option value="css">CSS</option><option value="tsx">TSX</option><option value="ts">TS</option></select><button onClick={createSource} disabled={blocked || sourceDirty || !modulePath.trim()}>新建模块</button></div>
         {selectedSource ? <textarea aria-label="源码模块内容" disabled={blocked} value={sourceDraft} onChange={event => { if (!sourceChanged.current) sourceRevision.current = document.revision; sourceChanged.current = true; setSourceDraft(event.currentTarget.value); setSourceDirty(true); }} spellCheck={false} /> : <p>添加 TS、TSX 或 CSS；模块路径相对于源码包的 src 目录。</p>}</section>}
@@ -332,7 +344,8 @@ export function WebEditor({ document, onApply, onUndo, onRedo, onImportAsset, di
       </> : <>
         <label>元素标签<input value={node.tag} aria-label="元素标签" readOnly /></label>
         {!overrideEnabled && <button className="web-editor-override" onClick={enableOverride} disabled={blocked}>为 {breakpoint} 创建样式覆盖</button>}
-        {!webVoidTags.has(node.tag) && !node.component && field('元素文案', node.text ?? '', (text, base) => act([{ type: 'web.node.update', nodeId: node.id, text }], '修改网页文案', base), { multiline: true })}
+        {!webVoidTags.has(node.tag) && !node.component && !node.content && field('元素文案', node.text ?? '', (text, base) => act([{ type: 'web.node.update', nodeId: node.id, text }], '修改网页文案', base), { multiline: true })}
+        {!node.component && WEB_RICH_TEXT_TAGS.has(node.tag) && <button className="web-editor-override" disabled={!editable} onClick={() => setRichOpen(!richOpen)}>{richOpen ? '关闭富文本' : '编辑富文本'}</button>}
         <label>布局<select aria-label="布局模式" value={projected!.layout.mode} onChange={event => void act([{ type: 'web.layout.update', nodeId: node.id, breakpointId: breakpoint, layout: { mode: event.currentTarget.value as WebLayout['mode'] } }], '修改布局')} disabled={!editable || !overrideEnabled}><option value="flow">流式</option><option value="flex">Flex</option><option value="grid">Grid</option><option value="position">定位</option></select></label>
         <div className="web-editor-field-grid">{styleField('样式宽度', 'width')}{styleField('样式高度', 'height')}{styleField('内边距', 'padding')}{styleField('元素间距', 'gap')}{styleField('旋转角度', 'rotate', '0deg')}</div>
         {projected!.layout.mode === 'position' && <div className="web-editor-field-grid">{styleField('定位左侧', 'left', '0')}{styleField('定位顶部', 'top', '0')}</div>}

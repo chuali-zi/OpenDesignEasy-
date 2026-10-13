@@ -3,6 +3,10 @@ import type { MarkSpec, NodeSpec } from 'prosemirror-model';
 import { textSchema } from '@oeydesign/document';
 
 type Attrs = Record<string, unknown>;
+const safeLink = (value: unknown) => {
+  const href = String(value ?? '').replace(/[\u0000-\u0020\u007f-\u009f]/g, '');
+  return /^[a-z][a-z\d+.-]*:/i.test(href) && !/^(https?:|mailto:|tel:)/i.test(href) ? '#' : href;
+};
 
 function readParagraphAttrs(element: HTMLElement, level?: number): Attrs {
   const style = element.style;
@@ -70,7 +74,7 @@ const markSpecs = textSchema.spec.marks
     } }],
     toDOM: mark => ['span', { style: textStyleString(mark.attrs) }, 0],
   } as MarkSpec)
-  .update('link', { ...textSchema.spec.marks.get('link'), parseDOM: [{ tag: 'a[href]', getAttrs: dom => ({ href: (dom as HTMLElement).getAttribute('href') }) }], toDOM: mark => ['a', { href: mark.attrs.href }, 0] } as MarkSpec);
+  .update('link', { ...textSchema.spec.marks.get('link'), parseDOM: [{ tag: 'a[href]', getAttrs: dom => ({ href: safeLink((dom as HTMLElement).getAttribute('href')) }) }], toDOM: mark => ['a', { href: safeLink(mark.attrs.href), rel: 'noopener noreferrer' }, 0] } as MarkSpec);
 
 /** DOM-capable view schema with the same node/mark names and attributes as the headless kernel schema. */
 export const editorTextSchema = new Schema({ nodes: nodeSpecs, marks: markSpecs });

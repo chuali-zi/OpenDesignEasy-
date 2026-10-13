@@ -83,9 +83,9 @@ function App() {
     return () => { active = false; stream?.close(); };
   }, [accept]);
 
-  const act = async (action: () => Promise<{ document: EditableDocument }>) => {
+  const act = async (action: () => Promise<{ document: EditableDocument }>, documentTarget?: string) => {
     if (activeRequests.current) throw new Error('请等待当前修改保存');
-    const targetDocumentId = current.current?.documentId;
+    const targetDocumentId = documentTarget ?? current.current?.documentId;
     activeRequests.current += 1; setSaving(true); setNotice('');
     try {
       const result = await action();
@@ -100,10 +100,10 @@ function App() {
       throw error;
     } finally { activeRequests.current -= 1; setSaving(false); }
   };
-  const apply = async (operations: DocumentOperation[], label: string, baseRevision: number, preconditions: EditPrecondition[] = []) => {
+  const apply = async (operations: DocumentOperation[], label: string, baseRevision: number, preconditions: EditPrecondition[] = [], documentTarget?: string) => {
     if (!project || !current.current) return;
-    const documentId = current.current.documentId;
-    await act(() => api.submitOperations(project.project.projectId, documentId, operations, label, baseRevision, preconditions));
+    const documentId = documentTarget ?? current.current.documentId;
+    await act(() => api.submitOperations(project.project.projectId, documentId, operations, label, baseRevision, preconditions), documentId);
   };
   const history = (direction: 'undo' | 'redo') => {
     if (current.current) {
@@ -159,7 +159,7 @@ function App() {
       <select aria-label="选择文档" className="document-select" value={document?.documentId ?? ''} disabled={saving || creatingDocument} onChange={event => {
         const selected = project?.documents.find(item => item.documentId === event.target.value); if (selected && project) { selectionEpoch.current += 1; accept(selected); localStorage.setItem(`oey:selected-document:${project.project.projectId}`, selected.documentId); setVersions(null); }
       }}>{project?.documents.map(item => <option key={item.documentId} value={item.documentId}>{item.name}</option>)}</select>
-      <button aria-label="新建 Web 文档" disabled={!project || saving || creatingDocument} onClick={() => void createWebDocument()}>{creatingDocument ? '正在创建…' : '＋ Web'}</button>
+      <button aria-label="新建 Web 文档" disabled={!project || saving || creatingDocument} onMouseDown={event => event.preventDefault()} onClick={() => void createWebDocument()}>{creatingDocument ? '正在创建…' : '＋ Web'}</button>
       <button title="导入 OEY 源码 ZIP，保留原文档并同步受管模块" disabled={!project || saving || creatingDocument} onClick={() => sourceInput.current?.click()}>导入源码</button>
       <input ref={sourceInput} type="file" accept=".zip" aria-label="导入 OEY 源码 ZIP" hidden onChange={event => {
         const file = event.target.files?.[0]; event.target.value = ''; if (!file || creatingDocumentRef.current || activeRequests.current) return;
