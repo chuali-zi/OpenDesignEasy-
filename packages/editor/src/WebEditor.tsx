@@ -4,6 +4,7 @@ import type { DocumentAsset, WebBreakpoint, WebDocument, WebLayout, WebNode, Web
 import { escapeWebText, renderWebMarkup, renderWebStyles, webVoidTags } from '@oeydesign/media/web-markup';
 import { WebDraftField } from './WebDraftField.tsx';
 import { WebRichTextEditor } from './WebRichTextEditor.tsx';
+import { WebImageProperties } from './WebImageProperties.tsx';
 import { WEB_RICH_TEXT_TAGS } from '@oeydesign/document';
 import { nextWebSelection, webBatchStyles, webAlignmentOperations, webAlignmentPreconditions, webPixelCoordinate, webNodeLocked, webRangeSelection, webSelectionRoots, webDuplicateSelection, webDeleteSelection } from './web-selection.ts';
 import type { WebAlignment, WebBounds } from './web-selection.ts';
@@ -22,7 +23,7 @@ type Props = {
 const BREAKPOINTS: WebBreakpoint[] = [{ id: 'mobile', maxWidth: 767 }, { id: 'tablet', minWidth: 768, maxWidth: 1199 }];
 const containers = new Set(['main', 'section', 'div', 'article', 'aside', 'header', 'footer', 'nav', 'form', 'figure', 'fieldset']);
 const uid = (prefix: string) => `${prefix}-${crypto.randomUUID()}`;
-const labelFor = (node: WebNode) => String(node.props?.['aria-label'] ?? node.props?.title ?? node.text ?? node.tag).slice(0, 42) || node.tag;
+const labelFor = (node: WebNode) => String(node.props?.['aria-label'] ?? node.props?.title ?? node.props?.alt ?? node.text ?? node.tag).slice(0, 42) || node.tag;
 const cssValue = (value: string) => !value.trim() ? null : /^-?\d+(\.\d+)?$/.test(value.trim()) ? Number(value) : value.trim();
 function locked(doc: WebDocument, id: string): boolean {
   const node = doc.nodes[id];
@@ -341,7 +342,7 @@ export function WebEditor({ document, onApply, onUndo, onRedo, onImportAsset, di
     const parent = insertionParent(); if (!parent) return;
     const asset = await onImportAsset(file), id = uid('image');
     const operations: WebOperation[] = Object.values(document.assets ?? {}).some(item => item.id === asset.id) ? [] : [{ type: 'asset.register', asset }];
-    operations.push({ type: 'web.node.insert', node: { id, parentId: parent.id, tag: 'img', children: [], style: { maxWidth: '100%', height: 'auto' }, layout: { mode: 'flow' }, props: { assetId: asset.id, alt: asset.name ?? '网页图片' } } });
+    operations.push({ type: 'web.node.insert', node: { id, parentId: parent.id, tag: 'img', children: [], style: { maxWidth: '100%', height: 'auto', objectFit: 'contain' }, layout: { mode: 'flow' }, props: { assetId: asset.id, alt: asset.name ?? '网页图片' } } });
     if (await act(operations, '插入网页图片')) setSelection(id);
   };
   const enableOverride = () => {
@@ -372,6 +373,9 @@ export function WebEditor({ document, onApply, onUndo, onRedo, onImportAsset, di
     }
     return act([{ type: 'web.style.update', nodeId: node!.id, breakpointId: breakpoint, style: { [key]: key === 'rotate' && typeof parsed === 'number' ? `${parsed}deg` : parsed } }], `修改${label}`, base);
   }, { disabled: !editable || !overrideEnabled, type });
+  const layoutSelect = (label: string, key: string, options: Array<[string, string]>, fallback: string) => <label>{label}<select aria-label={label} value={String(projected?.layout[key] ?? projected?.style[key] ?? fallback)} disabled={!editable || !overrideEnabled}
+    onChange={event => void act([{ type: 'web.layout.update', nodeId: node!.id, breakpointId: breakpoint, layout: { [key]: event.currentTarget.value } }], `修改${label}`)}>{options.map(([value, text]) => <option key={value} value={value}>{text}</option>)}</select></label>;
+  const layoutField = (label: string, key: string, fallback = '') => field(label, String(projected?.layout[key] ?? projected?.style[key] ?? fallback), (value, base) => act([{ type: 'web.layout.update', nodeId: node!.id, breakpointId: breakpoint, layout: { [key]: cssValue(value) } }], `修改${label}`, base), { disabled: !editable || !overrideEnabled });
   const moveLayer = (direction: number) => {
     if (!node?.parentId) return;
     const siblings = document.nodes[node.parentId]!.children;
@@ -463,12 +467,25 @@ export function WebEditor({ document, onApply, onUndo, onRedo, onImportAsset, di
         {!node.component && !node.group && WEB_RICH_TEXT_TAGS.has(node.tag) && <button className="web-editor-override" disabled={!editable} onClick={() => setRichOpen(!richOpen)}>{richOpen ? '关闭富文本' : '编辑富文本'}</button>}
         {node.group && <button className="web-editor-override" disabled={!editable} onClick={() => groupAction('ungroup')}>解组</button>}
         <label>布局<select aria-label="布局模式" value={projected!.layout.mode} onChange={event => void act([{ type: 'web.layout.update', nodeId: node.id, breakpointId: breakpoint, layout: { mode: event.currentTarget.value as WebLayout['mode'] } }], '修改布局')} disabled={!editable || !overrideEnabled}><option value="flow">流式</option><option value="flex">Flex</option><option value="grid">Grid</option><option value="position">定位</option></select></label>
+        {projected!.layout.mode === 'flex' && <section className="web-editor-layout-properties" aria-label="Flex 布局属性">
+          {layoutSelect('排列方向', 'flexDirection', [['row', '水平'], ['column', '垂直'], ['row-reverse', '水平反向'], ['column-reverse', '垂直反向']], 'row')}
+          {layoutSelect('换行方式', 'flexWrap', [['nowrap', '不换行'], ['wrap', '换行'], ['wrap-reverse', '反向换行']], 'nowrap')}
+          {layoutSelect('主轴排列', 'justifyContent', [['flex-start', '起点'], ['center', '居中'], ['flex-end', '终点'], ['space-between', '两端等距'], ['space-around', '周围等距'], ['space-evenly', '均匀分布']], 'flex-start')}
+          {layoutSelect('交叉轴对齐', 'alignItems', [['stretch', '拉伸'], ['flex-start', '起点'], ['center', '居中'], ['flex-end', '终点'], ['baseline', '基线']], 'stretch')}
+        </section>}
+        {projected!.layout.mode === 'grid' && <section className="web-editor-layout-properties" aria-label="Grid 布局属性">
+          {layoutField('网格列', 'gridTemplateColumns', '1fr')}{layoutField('网格行', 'gridTemplateRows', 'auto')}
+          {layoutSelect('网格项目对齐', 'alignItems', [['stretch', '拉伸'], ['start', '起点'], ['center', '居中'], ['end', '终点']], 'stretch')}
+          {layoutSelect('网格水平对齐', 'justifyItems', [['stretch', '拉伸'], ['start', '起点'], ['center', '居中'], ['end', '终点']], 'stretch')}
+        </section>}
         <div className="web-editor-field-grid">{styleField('样式宽度', 'width')}{styleField('样式高度', 'height')}{styleField('内边距', 'padding')}{styleField('元素间距', 'gap')}{styleField('旋转角度', 'rotate', '0deg')}</div>
         {projected!.layout.mode === 'position' && <div className="web-editor-field-grid">{styleField('定位左侧', 'left', '0')}{styleField('定位顶部', 'top', '0')}</div>}
         <div className="web-editor-field-grid">{styleField('背景色', 'backgroundColor', '#ffffff', 'color')}{styleField('文字颜色', 'color', '#28382f', 'color')}</div>
         {node.tag === 'a' && field('链接地址', String(node.props?.href ?? ''), (href, base) => act([{ type: 'web.node.update', nodeId: node.id, props: { href } }], '修改链接', base))}
         {node.tag === 'input' && field('输入提示', String(node.props?.placeholder ?? ''), (placeholder, base) => act([{ type: 'web.node.update', nodeId: node.id, props: { placeholder } }], '修改输入提示', base))}
         {node.tag === 'img' && field('图片说明', String(node.props?.alt ?? ''), (alt, base) => act([{ type: 'web.node.update', nodeId: node.id, props: { alt } }], '修改图片说明', base))}
+        {node.tag === 'img' && <WebImageProperties key={`${document.documentId}/${node.id}`} document={document} node={node} style={projected!.style} breakpoint={breakpoint}
+          disabled={!editable} scopeEnabled={overrideEnabled} importAsset={onImportAsset} commit={(operations, label, base, target) => act(operations, label, base, [], target)} />}
         {containers.has(node.tag) && !node.group && <label>绑定组件<select aria-label="绑定组件" value={node.component?.moduleId ?? ''} disabled={!editable} onChange={event => {
           const module = document.sourceModules?.find(item => item.id === event.currentTarget.value);
           void act([{ type: 'web.node.update', nodeId: node.id, component: module ? { moduleId: module.id, exportName: module.exports?.[0] ?? 'default' } : null }], '绑定网页组件');

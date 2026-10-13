@@ -97,3 +97,10 @@
 .web-editor-source textarea { font-size: 12px; }
 .web-editor-stage-foot,.web-editor-breakpoint-note { font-size: 10px; }
 @media (max-width: 1120px) { .web-editor { grid-template-columns: 205px minmax(320px,1fr) 218px; } .web-editor-browser { margin-left: 11px; margin-right: 11px; } }
+.web-editor-image-properties, .web-editor-layout-properties { display: grid; gap: 10px; padding: 12px 0; border-top: 1px solid #e4e9e3; }
+.web-editor-image-properties header { display: flex; align-items: center; justify-content: space-between; }
+.web-editor-image-properties header strong { color: #315d4b; font-size: 12px; }
+.web-editor-image-properties header button { padding: 6px 9px; border: 1px solid #dce4dc; border-radius: 4px; background: #fff; color: #496052; font-size: 11px; }
+.web-editor-image-properties header button:disabled { opacity: .5; }
+.web-editor-image-properties small { color: #788579; font-size: 11px; line-height: 1.6; }
+.web-editor-image-properties a { color: #39745e; }

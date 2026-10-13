@@ -37,6 +37,7 @@
 | [Web 源码导入与往返](spec/web-source-import.md) | OEY source ZIP 回到新可编辑文档、外部模块修改、安全边界与一般工程导入未完成项 |
 | [Web 多选与定位对齐](spec/web-selection.md) | 修饰键多选、批量样式/历史/断点、真实DOM定位对齐与测量冲突保护 |
 | [Web 原生定位组](spec/web-groups.md) | 分组/解组、组拖动/缩放、手势取消、锁定树与断点边界；检查点失败定位 |
+| [Web 图片与布局属性](spec/web-image-layout.md) | 原图保留/替换、裁切焦点/透明度、迟到上传归属与 Flex/Grid 响应式属性 |
 | [Web 富文本与草稿恢复](spec/web-richtext.md) | 共享文字命令、格式生产、失败草稿恢复与切换文档保存 |
 | [Web 完成门槛与 R5 接续](spec/web-completion.md) | 用户流程验收、未完成能力和 Web 完成后进入 Doc 编辑模块的顺序 |
 

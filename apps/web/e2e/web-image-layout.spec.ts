@@ -1,0 +1,100 @@
+import { expect, test } from '@playwright/test';
+import type { WebDocument } from '@oeydesign/document';
+import JSZip from 'jszip';
+import { mkdir } from 'node:fs/promises';
+
+test('Web image crop/opacity and replacement preserve originals, history, responsive scope and late-upload document ownership', async ({ page }) => {
+  const errors: string[] = []; page.on('pageerror', error => errors.push(error.message));
+  await page.goto('/'); await page.getByRole('button', { name: '新建 Web 文档' }).click();
+  await expect(page.getByRole('main', { name: 'Web 编辑器' })).toBeVisible();
+  const id = await page.getByLabel('选择文档').inputValue();
+  const read = async (): Promise<WebDocument> => (await (await page.request.get(`/api/documents/${id}`)).json()).document;
+  const png = async (first: string, second: string) => Buffer.from(await page.evaluate(([first, second]) => {
+    const canvas = document.createElement('canvas'); canvas.width = 160; canvas.height = 60; const context = canvas.getContext('2d')!;
+    context.fillStyle = first!; context.fillRect(0, 0, 80, 60); context.fillStyle = second!; context.fillRect(80, 0, 80, 60);
+    return canvas.toDataURL('image/png').split(',')[1]!;
+  }, [first, second]), 'base64');
+  const original = await png('#48755a', '#dbe8d6'), replacement = await png('#cba979', '#efdbb6');
+  await page.locator('.web-editor-add input[type=file]').setInputFiles({ name: 'original.png', mimeType: 'image/png', buffer: original });
+  await expect(page.getByLabel('网页图片适配')).toBeVisible();
+  const imageId = Object.values((await read()).nodes).find(node => node.tag === 'img')!.id;
+  const originalId = (await read()).nodes[imageId]!.props!.assetId;
+  await page.getByLabel('样式宽度').fill('240'); await page.getByLabel('样式宽度').blur();
+  await expect.poll(async () => (await read()).nodes[imageId]!.style.width).toBe(240);
+  await page.getByLabel('样式高度').fill('140'); await page.getByLabel('样式高度').blur();
+  await expect.poll(async () => (await read()).nodes[imageId]!.style.height).toBe(140);
+  await page.getByLabel('网页图片适配').selectOption('cover');
+  await expect.poll(async () => (await read()).nodes[imageId]!.style.objectFit).toBe('cover');
+  await page.getByLabel('图片裁切焦点').fill('25% 75%'); await page.getByLabel('图片裁切焦点').blur();
+  await expect.poll(async () => (await read()).nodes[imageId]!.style.objectPosition).toBe('25% 75%');
+  await page.getByLabel('图片不透明度 %').fill('40'); await page.getByLabel('图片不透明度 %').blur();
+  await expect.poll(async () => (await read()).nodes[imageId]!.style.opacity).toBe(.4);
+  const frame = page.frameLocator('iframe[title="隔离网页预览"]'), image = frame.locator(`[data-web-id="${imageId}"]`);
+  await expect(image).toHaveCSS('object-fit', 'cover'); await expect(image).toHaveCSS('object-position', '25% 75%'); await expect(image).toHaveCSS('opacity', '0.4');
+  await mkdir('.tmp', { recursive: true }); await page.screenshot({ path: '.tmp/r4-web-image.png', fullPage: true });
+  await page.getByRole('button', { name: '撤销', exact: true }).click(); await expect(image).toHaveCSS('opacity', '1');
+  await page.getByRole('button', { name: '重做', exact: true }).click(); await expect(image).toHaveCSS('opacity', '0.4');
+  await page.getByLabel('预览宽度').focus(); await page.getByLabel('预览宽度').press('Home');
+  await page.getByRole('button', { name: '为 mobile 创建样式覆盖' }).click();
+  await page.getByLabel('图片不透明度 %').fill('80'); await page.getByLabel('图片不透明度 %').blur();
+  await expect.poll(async () => (await read()).nodes[imageId]!.responsive?.mobile?.style?.opacity).toBe(.8);
+  expect((await read()).nodes[imageId]!.style.opacity).toBe(.4); await expect(image).toHaveCSS('opacity', '0.8');
+  await page.getByLabel('预览宽度').focus(); await page.getByLabel('预览宽度').press('End'); await expect(image).toHaveCSS('opacity', '0.4');
+  const beforeReplace = await read();
+  await page.getByLabel('替换网页图片文件').setInputFiles({ name: 'replacement.png', mimeType: 'image/png', buffer: replacement });
+  await expect.poll(async () => (await read()).nodes[imageId]!.props!.assetId).not.toBe(originalId);
+  const replacementId = (await read()).nodes[imageId]!.props!.assetId;
+  expect((await read()).revision).toBe(beforeReplace.revision + 1); expect((await read()).nodes[imageId]!.style.objectPosition).toBe('25% 75%');
+  expect(await (await page.request.get(`/api/assets/${originalId}`)).body()).toEqual(original);
+  await page.getByRole('button', { name: '撤销', exact: true }).click(); await expect.poll(async () => (await read()).nodes[imageId]!.props!.assetId).toBe(originalId);
+  await page.getByRole('button', { name: '重做', exact: true }).click(); await expect.poll(async () => (await read()).nodes[imageId]!.props!.assetId).toBe(replacementId);
+  const source = await JSZip.loadAsync(await (await page.request.get(`/api/documents/${id}/export.source.zip`)).body());
+  const originals = await Promise.all(Object.values(source.files).filter(file => !file.dir && file.name.startsWith('public/assets/')).map(file => file.async('nodebuffer')));
+  expect(originals.some(bytes => bytes.equals(original))).toBe(true); expect(originals.some(bytes => bytes.equals(replacement))).toBe(true);
+  await page.reload(); await expect(image).toHaveCSS('object-position', '25% 75%');
+  await page.locator('.web-editor-tree-select').filter({ hasText: 'original.png' }).click();
+  const beforeInvalid = await read(); await page.getByLabel('图片不透明度 %').fill('120'); await page.getByLabel('图片不透明度 %').blur();
+  await expect(page.getByRole('status')).toContainText('0–100%'); expect((await read()).revision).toBe(beforeInvalid.revision);
+  await page.getByRole('button', { name: '恢复已保存值', exact: true }).click();
+  let release!: () => void, arrived!: () => void;
+  const hold = new Promise<void>(resolve => { release = resolve; }), started = new Promise<void>(resolve => { arrived = resolve; });
+  await page.route('**/api/assets', async route => { if (route.request().method() !== 'POST') return route.continue(); const response = await route.fetch(); arrived(); await hold; await route.fulfill({ response }); });
+  await page.getByLabel('替换网页图片文件').setInputFiles({ name: 'late.png', mimeType: 'image/png', buffer: original }); await started;
+  await page.getByRole('button', { name: '新建 Web 文档' }).click(); await expect.poll(() => page.getByLabel('选择文档').inputValue()).not.toBe(id);
+  const other = await page.getByLabel('选择文档').inputValue(); release();
+  await expect.poll(async () => (await read()).nodes[imageId]!.props!.assetId).not.toBe(replacementId);
+  expect(await page.getByLabel('选择文档').inputValue()).toBe(other);
+  expect((await (await page.request.get(`/api/documents/${other}`)).json()).document.nodes[imageId]).toBeUndefined();
+  expect(errors).toEqual([]);
+});
+
+test('Flex/Grid inspector preserves native flow children and keeps responsive layout properties isolated', async ({ page }) => {
+  await page.goto('/'); await page.getByRole('button', { name: '新建 Web 文档' }).click();
+  const id = await page.getByLabel('选择文档').inputValue(), read = async (): Promise<WebDocument> => (await (await page.request.get(`/api/documents/${id}`)).json()).document;
+  const initial = await read(), root = initial.pages[0]!.rootId, project = (await (await page.request.get('/api/project')).json()).project;
+  const response = await page.request.post('/api/commands', { data: { commandId: 'flow-' + id, projectId: project.projectId, documentId: id, actorId: 'human', actorKind: 'human', clientId: 'test', baseRevision: 0, preconditions: [], label: 'Synthetic responsive layout', operations: [
+    { type: 'web.style.update', nodeId: root, style: { padding: 0 } },
+    { type: 'web.node.insert', node: { id: 'row', parentId: root, tag: 'section', props: { 'aria-label': 'Responsive row' }, children: [], layout: { mode: 'flow' }, style: { width: 500, height: 240, padding: 16, gap: 12 } } },
+    ...['first', 'second'].map(nodeId => ({ type: 'web.node.insert', node: { id: nodeId, parentId: 'row', tag: 'div', text: nodeId, children: [], layout: { mode: 'flow' }, style: { width: 100, height: 60, margin: 0, backgroundColor: '#cfe1d4' } } })),
+  ] } }); expect(response.ok()).toBe(true);
+  await page.locator('.web-editor-tree-select').filter({ hasText: 'Responsive row' }).click();
+  await page.getByLabel('布局模式').selectOption('flex'); await expect(page.getByLabel('排列方向')).toBeVisible();
+  await page.getByLabel('主轴排列').selectOption('space-between'); await expect.poll(async () => (await read()).nodes.row!.layout.justifyContent).toBe('space-between');
+  await page.getByLabel('交叉轴对齐').selectOption('center'); await expect.poll(async () => (await read()).nodes.row!.layout.alignItems).toBe('center');
+  await page.getByLabel('换行方式').selectOption('wrap'); await expect.poll(async () => (await read()).nodes.row!.layout.flexWrap).toBe('wrap');
+  const frame = page.frameLocator('iframe[title="隔离网页预览"]'), row = frame.locator('[data-web-id="row"]'), first = frame.locator('[data-web-id="first"]'), second = frame.locator('[data-web-id="second"]');
+  await expect(row).toHaveCSS('display', 'flex'); await expect(row).toHaveCSS('justify-content', 'space-between');
+  const box1 = (await first.boundingBox())!, box2 = (await second.boundingBox())!; expect(box2.x - box1.x).toBeCloseTo(368); expect(box2.y).toBeCloseTo(box1.y);
+  const baseLayout = (await read()).nodes.row!.layout;
+  await page.getByLabel('预览宽度').focus(); await page.getByLabel('预览宽度').press('Home'); await page.getByRole('button', { name: '为 mobile 创建样式覆盖' }).click();
+  await page.getByLabel('排列方向').selectOption('column'); await expect.poll(async () => (await read()).nodes.row!.responsive?.mobile?.layout?.flexDirection).toBe('column');
+  expect((await read()).nodes.row!.layout).toEqual(baseLayout); await expect(row).toHaveCSS('flex-direction', 'column');
+  expect((await second.boundingBox())!.y).toBeGreaterThan((await first.boundingBox())!.y);
+  await page.getByLabel('预览宽度').focus(); await page.getByLabel('预览宽度').press('End'); await expect(row).toHaveCSS('flex-direction', 'row');
+  await page.getByLabel('布局模式').selectOption('grid'); await expect(page.getByLabel('网格列')).toBeVisible();
+  await page.getByLabel('网格列').fill('repeat(2, 1fr)'); await page.getByLabel('网格列').blur(); await expect.poll(async () => (await read()).nodes.row!.layout.gridTemplateColumns).toBe('repeat(2, 1fr)');
+  await page.getByLabel('网格水平对齐').selectOption('center'); await expect.poll(async () => (await read()).nodes.row!.layout.justifyItems).toBe('center');
+  await expect(row).toHaveCSS('display', 'grid'); expect((await read()).nodes.first!.layout.mode).toBe('flow'); expect((await read()).nodes.first!.style.left).toBeUndefined();
+  const html = await (await page.request.get(`/api/documents/${id}/export.html`)).text(); expect(html).toContain('grid-template-columns:repeat(2, 1fr)');
+  await page.reload(); await expect(row).toHaveCSS('display', 'grid'); await expect(row).toHaveCSS('justify-items', 'center');
+});
