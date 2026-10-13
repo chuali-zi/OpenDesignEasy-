@@ -2,7 +2,8 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { applyWebCommand, createWebDocument } from '@oeydesign/document';
 import type { CommandEnvelope, EditPrecondition, WebDocument, WebOperation } from '@oeydesign/document';
-import { webGroupSelection, webResizeGroup, webUngroup } from '../src/web-groups.ts';
+import { webGroupSelection, webGroupFlowSelection, webResizeGroup, webUngroup } from '../src/web-groups.ts';
+import { webBatchStyles } from '../src/web-selection.ts';
 
 function fixture() {
   const doc = createWebDocument({ documentId: 'groups', name: 'Groups' }), root = doc.pages[0]!.rootId;
@@ -62,4 +63,28 @@ test('unsupported grouping never mutates flow, responsive geometry, external CSS
   grouped.nodes.group!.style.backgroundColor = '#ffffff'; assert.throws(() => webUngroup(grouped, 'group'), /外观/);
   grouped.nodes.b!.locked = true;
   assert.throws(() => apply(grouped, [{ type: 'web.style.update', nodeId: 'group', style: { left: 100 } }], []), /locked/);
+});
+
+test('flow groups retain child layout/responsive values and permit concurrent text while protecting structural dependencies', () => {
+  const doc = fixture(); doc.nodes[doc.pages[0]!.rootId]!.layout = { mode: 'grid', gridTemplateColumns: '1fr 1fr' };
+  doc.breakpoints = [{ id: 'mobile', maxWidth: 767 }];
+  for (const id of ['a', 'b', 'c']) { doc.nodes[id]!.layout = { mode: 'flow' }; doc.nodes[id]!.responsive = { mobile: { style: { width: '100%' } } }; }
+  const batch = webGroupFlowSelection(doc, ['b', 'a'], 'flow-group'), grouped = apply(doc, batch.operations, batch.preconditions);
+  assert.equal(grouped.nodes['flow-group']!.style.display, 'contents');
+  assert.throws(() => webBatchStyles(grouped, ['flow-group', 'c'], { width: 200 }), /流式组/);
+  for (const id of ['a', 'b']) { assert.deepEqual(grouped.nodes[id]!.layout, doc.nodes[id]!.layout); assert.deepEqual(grouped.nodes[id]!.responsive, doc.nodes[id]!.responsive); }
+  const changedText = structuredClone(doc); changedText.revision++; changedText.nodes.a!.text = 'New human content';
+  assert.equal(apply(changedText, batch.operations, batch.preconditions, doc).nodes.a!.text, 'New human content');
+  const ungroup = webUngroup(grouped, 'flow-group'), restored = apply(grouped, ungroup.operations, ungroup.preconditions);
+  for (const id of ['a', 'b', 'c']) assert.deepEqual(restored.nodes[id], doc.nodes[id]);
+  const changedOrder = structuredClone(doc); changedOrder.revision++; changedOrder.nodes[doc.pages[0]!.rootId]!.children.reverse();
+  assert.throws(() => apply(changedOrder, batch.operations, batch.preconditions, doc), /precondition/);
+  doc.nodes.a!.responsive!.mobile!.layout = { mode: 'position' }; assert.throws(() => webGroupFlowSelection(doc, ['a', 'b'], 'flow-group'), /断点/);
+});
+
+test('flow group decoration and invalid HTML parent refuse lossless grouping or ungrouping', () => {
+  const doc = fixture(); for (const id of ['a', 'b', 'c']) doc.nodes[id]!.layout = { mode: 'flow' };
+  const batch = webGroupFlowSelection(doc, ['a', 'b'], 'flow-group'), grouped = apply(doc, batch.operations, batch.preconditions);
+  grouped.nodes['flow-group']!.style.color = '#123456'; assert.throws(() => webUngroup(grouped, 'flow-group'), /外观/);
+  doc.nodes[doc.pages[0]!.rootId]!.tag = 'table'; assert.throws(() => webGroupFlowSelection(doc, ['a', 'b'], 'flow-group'), /HTML父级/);
 });

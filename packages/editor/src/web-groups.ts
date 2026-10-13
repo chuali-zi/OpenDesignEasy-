@@ -4,6 +4,37 @@ import type { WebBounds } from './web-selection.ts';
 
 const round = (value: number) => Math.round(value * 100) / 100;
 const geometry = /^(?:left|right|top|bottom|width|height|min|max|margin|padding|border|transform|translate|scale|rotate|position|display|boxSizing)/;
+const nativeParents = new Set('main section div article aside header footer nav form figure fieldset'.split(' '));
+export const isWebFlowGroup = (node: WebNode) => Boolean(node.group && node.layout.mode === 'flow' && node.style.display === 'contents');
+export function webFlowGroupMembers(document: WebDocument, id: string): string[] {
+  return document.nodes[id]!.children.flatMap(id => isWebFlowGroup(document.nodes[id]!) ? webFlowGroupMembers(document, id) : [id]);
+}
+function orderedSelection(document: WebDocument, ids: string[]) {
+  webDeleteSelection(document, ids);
+  const nodes = webSelectionRoots(document, ids);
+  if (nodes.length < 2 || !nodes[0]!.parentId || nodes.some(node => node.parentId !== nodes[0]!.parentId)) throw new Error('分组需要同父级的至少两个元素。');
+  const parentId = nodes[0]!.parentId!, parent = document.nodes[parentId]!;
+  if (!nativeParents.has(parent.tag) || parent.component) throw new Error('此HTML父级或组件边界不能插入原生组容器。');
+  const ordered = [...nodes].sort((a, b) => parent.children.indexOf(a.id) - parent.children.indexOf(b.id));
+  const first = parent.children.indexOf(ordered[0]!.id);
+  if (ordered.some((node, i) => parent.children[first + i] !== node.id)) throw new Error('请选择连续兄弟元素，避免分组改变其他对象的叠放顺序。');
+  return { nodes, ordered, parentId, first };
+}
+function flowPreconditions(document: WebDocument, ids: string[]) {
+  const nodes = new Set(ids);
+  ids.forEach(id => { const parentId = document.nodes[id]!.parentId; if (parentId) nodes.add(parentId); });
+  return [...[...nodes].flatMap(nodeId => ['parentId', 'children'].map(path => ({ type: 'node.property' as const, nodeId, path, value: structuredClone(document.nodes[nodeId]![path as 'parentId' | 'children']) }))),
+    { type: 'document.property' as const, path: 'sourceModules' as const, value: structuredClone(document.sourceModules) }];
+}
+export function webGroupFlowSelection(document: WebDocument, ids: string[], groupId: string) {
+  const { nodes, ordered, parentId, first } = orderedSelection(document, ids);
+  if (nodes.some(node => node.layout.mode === 'position' || node.layout.position && !['static', 'relative'].includes(node.layout.position) || node.style.position && !['static', 'relative'].includes(String(node.style.position))
+    || Object.values(node.responsive ?? {}).some(override => override.layout?.mode === 'position' || override.layout?.position && !['static', 'relative'].includes(override.layout.position) || override.style?.position && !['static', 'relative'].includes(String(override.style.position))))
+    || document.sourceModules?.some(module => module.language === 'css' && module.source.trim())) throw new Error('流式组只支持无外部CSS且各断点保持非定位的原生流式/Flex/Grid对象；定位元素单独分组。');
+  const operations: WebOperation[] = [{ type: 'web.node.insert', index: first, node: { id: groupId, group: true, parentId, tag: 'div', children: [], props: { 'aria-label': '流式组' }, style: { display: 'contents' }, layout: { mode: 'flow' } } },
+    ...ordered.map(node => ({ type: 'web.node.reparent' as const, nodeId: node.id, parentId: groupId }))];
+  return { operations, selectedIds: [groupId], preconditions: flowPreconditions(document, ids) };
+}
 function box(document: WebDocument, node: WebNode) {
   const s = node.style, layout = node.layout;
   if (document.sourceModules?.some(module => module.language === 'css' && module.source.trim()) || node.hidden || layout.mode !== 'position' || layout.position && layout.position !== 'absolute'
@@ -24,13 +55,7 @@ function groupBox(document: WebDocument, group: WebNode, ungroup = false) {
 }
 
 export function webGroupSelection(document: WebDocument, ids: string[], bounds: Record<string, WebBounds>, groupId: string) {
-  webDeleteSelection(document, ids); // Reject roots and locked descendants before any edit.
-  const nodes = webSelectionRoots(document, ids);
-  if (nodes.length < 2 || !nodes[0]!.parentId || nodes.some(node => node.parentId !== nodes[0]!.parentId)) throw new Error('分组需要同父级的至少两个元素。');
-  const parentId = nodes[0]!.parentId!, siblings = document.nodes[parentId]!.children;
-  const ordered = [...nodes].sort((a, b) => siblings.indexOf(a.id) - siblings.indexOf(b.id));
-  const first = siblings.indexOf(ordered[0]!.id);
-  if (ordered.some((node, i) => siblings[first + i] !== node.id)) throw new Error('请选择连续兄弟元素，避免分组改变其他对象的叠放顺序。');
+  const { nodes, ordered, parentId, first } = orderedSelection(document, ids);
   nodes.forEach(node => { box(document, node); const b = bounds[node.id]; if (!b || !Object.values(b).every(Number.isFinite) || b.width <= 0 || b.height <= 0) throw new Error('无法可靠测量组边界。'); });
   const x = Math.min(...nodes.map(node => bounds[node.id]!.x)), y = Math.min(...nodes.map(node => bounds[node.id]!.y));
   const width = Math.max(...nodes.map(node => bounds[node.id]!.x + bounds[node.id]!.width)) - x;
@@ -44,8 +69,14 @@ export function webGroupSelection(document: WebDocument, ids: string[], bounds: 
 }
 
 export function webUngroup(document: WebDocument, id: string) {
-  webDeleteSelection(document, [id]); const group = document.nodes[id]!, origin = groupBox(document, group, true);
+  webDeleteSelection(document, [id]); const group = document.nodes[id]!;
   const parentId = group.parentId!, index = document.nodes[parentId]!.children.indexOf(id);
+  if (isWebFlowGroup(group)) {
+    if (Object.keys(group.style).some(key => key !== 'display') || Object.keys(group.layout).some(key => key !== 'mode') || Object.keys(group.props ?? {}).some(key => key !== 'aria-label') || document.sourceModules?.some(module => module.language === 'css' && module.source.trim())) throw new Error('流式组外观或源码已改变，不能无损解组。');
+    const operations: WebOperation[] = [...group.children.map((nodeId, i) => ({ type: 'web.node.reparent' as const, nodeId, parentId, index: index + i })), { type: 'web.node.remove', nodeId: id }];
+    return { operations, selectedIds: [...group.children], preconditions: flowPreconditions(document, [id, ...group.children]) };
+  }
+  const origin = groupBox(document, group, true);
   const operations: WebOperation[] = [];
   group.children.forEach((id, i) => {
     const child = document.nodes[id]!, b = box(document, child);

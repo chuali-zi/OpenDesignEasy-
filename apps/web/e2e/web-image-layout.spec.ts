@@ -70,6 +70,8 @@ test('Web image crop/opacity and replacement preserve originals, history, respon
 
 test('Flex/Grid inspector preserves native flow children and keeps responsive layout properties isolated', async ({ page }) => {
   await page.goto('/'); await page.getByRole('button', { name: '新建 Web 文档' }).click();
+  await expect(page.getByRole('main', { name: 'Web 编辑器' })).toBeVisible();
+  await expect(page.getByRole('button', { name: '新建 Web 文档' })).toBeEnabled();
   const id = await page.getByLabel('选择文档').inputValue(), read = async (): Promise<WebDocument> => (await (await page.request.get(`/api/documents/${id}`)).json()).document;
   const initial = await read(), root = initial.pages[0]!.rootId, project = (await (await page.request.get('/api/project')).json()).project;
   const response = await page.request.post('/api/commands', { data: { commandId: 'flow-' + id, projectId: project.projectId, documentId: id, actorId: 'human', actorKind: 'human', clientId: 'test', baseRevision: 0, preconditions: [], label: 'Synthetic responsive layout', operations: [

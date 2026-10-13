@@ -6,9 +6,9 @@ import { WebDraftField } from './WebDraftField.tsx';
 import { WebRichTextEditor } from './WebRichTextEditor.tsx';
 import { WebImageProperties } from './WebImageProperties.tsx';
 import { WEB_RICH_TEXT_TAGS } from '@oeydesign/document';
-import { nextWebSelection, webBatchStyles, webAlignmentOperations, webAlignmentPreconditions, webPixelCoordinate, webNodeLocked, webRangeSelection, webSelectionRoots, webDuplicateSelection, webDeleteSelection } from './web-selection.ts';
+import { nextWebSelection, webBatchStyles, webAlignmentOperations, webAlignmentPreconditions, webPixelCoordinate, webNodeLocked, webNodeTreeLocked, webRangeSelection, webSelectionRoots, webDuplicateSelection, webDeleteSelection } from './web-selection.ts';
 import type { WebAlignment, WebBounds } from './web-selection.ts';
-import { webGroupSelection, webUngroup, webResizeGroup, webGroupResizeMembers } from './web-groups.ts';
+import { webGroupSelection, webGroupFlowSelection, webUngroup, webResizeGroup, webGroupResizeMembers, isWebFlowGroup, webFlowGroupMembers } from './web-groups.ts';
 import './web-editor.css';
 
 type Props = {
@@ -133,7 +133,7 @@ export function WebEditor({ document, onApply, onUndo, onRedo, onImportAsset, di
     try {
       const imageUrls = Object.fromEntries(Object.values(previewDocument.assets ?? {}).map(asset => [asset.id, `/api/assets/${encodeURIComponent(asset.id)}`]));
       const markup = renderWebMarkup(previewDocument, previewPage.id, imageUrls, { editing: true });
-      return `<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><style>${renderWebStyles(previewDocument)}</style><style>html,body{min-height:100%;font-family:Georgia,serif}[data-page-root]{min-height:420px}[data-web-id]{cursor:pointer}[data-selected=true]{outline:2px solid #398568;outline-offset:2px}[data-oey-resize-handle]{position:fixed;width:12px;height:12px;background:#398568;border:2px solid white;z-index:2147483647;cursor:nwse-resize;padding:0}a{color:#39745e}button,input{font:inherit}</style></head><body data-preview-revision="${previewDocument.revision}" data-preview-page="${escapeWebText(previewPage.id)}">${markup}</body></html>`;
+      return `<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><style>${renderWebStyles(previewDocument)}</style><style>html,body{min-height:100%;font-family:Georgia,serif}[data-page-root]{min-height:420px}[data-web-id]{cursor:pointer}[data-selected=true]{outline:2px solid #398568;outline-offset:2px}[data-flow-group-selected=true]{outline:1px dashed #398568;outline-offset:2px}[data-oey-resize-handle]{position:fixed;width:12px;height:12px;background:#398568;border:2px solid white;z-index:2147483647;cursor:nwse-resize;padding:0}a{color:#39745e}button,input{font:inherit}</style></head><body data-preview-revision="${previewDocument.revision}" data-preview-page="${escapeWebText(previewPage.id)}">${markup}</body></html>`;
     } catch (error) {
       return `<!doctype html><html><body><p role="alert">无法显示预览：${escapeWebText(error instanceof Error ? error.message : String(error))}</p></body></html>`;
     }
@@ -215,9 +215,13 @@ export function WebEditor({ document, onApply, onUndo, onRedo, onImportAsset, di
       let groupBounds: Record<string, WebBounds> | undefined, memberStyles: Map<HTMLElement, string | null> | undefined;
       if (current.group) {
         try {
-          if (live.current.breakpoint) throw new Error('组手势在基础视口操作，响应式几何保持原样。');
           webDeleteSelection(previewDocument, [id]);
-          if (handle) {
+          if (isWebFlowGroup(current)) {
+            if (handle) throw new Error('流式组通过父级布局排版，尺寸请编辑成员。');
+            memberStyles = new Map();
+            webFlowGroupMembers(previewDocument, id).forEach(id => { const el = dom.querySelector<HTMLElement>(`[data-web-id="${CSS.escape(id)}"]`); if (el) memberStyles!.set(el, el.getAttribute('style')); });
+          } else if (live.current.breakpoint) throw new Error('组手势在基础视口操作，响应式几何保持原样。');
+          else if (handle) {
             const members = webGroupResizeMembers(previewDocument, id);
             groupBounds = measurePositions([id, ...members], false);
             webResizeGroup(previewDocument, id, Math.max(16, webPixelCoordinate(current.style.width)!), Math.max(16, webPixelCoordinate(current.style.height)!), groupBounds);
@@ -240,6 +244,7 @@ export function WebEditor({ document, onApply, onUndo, onRedo, onImportAsset, di
       if (Math.abs(dx) + Math.abs(dy) < 5 && !gesture.moved) return;
       gesture.moved = true;
       gesture.target.style.opacity = '.7';
+      if (isWebFlowGroup(previewDocument.nodes[gesture.id]!)) gesture.memberStyles?.forEach((_style, el) => { el.style.opacity = '.7'; });
       if (gesture.resize) {
         gesture.target.style.width = `${Math.max(16, gesture.width + dx)}px`; gesture.target.style.height = `${Math.max(16, gesture.height + dy)}px`;
         if (gesture.groupBounds) for (const op of webResizeGroup(previewDocument, gesture.id, Math.max(16, gesture.width + dx), Math.max(16, gesture.height + dy), gesture.groupBounds).operations) {
@@ -276,7 +281,7 @@ export function WebEditor({ document, onApply, onUndo, onRedo, onImportAsset, di
         void live.current.act(batch.operations, '调整组尺寸', previewDocument.revision, batch.preconditions);
       }
       else if (done.resize) submit([{ type: 'web.style.update', nodeId: done.id, breakpointId: done.breakpoint, style: { width: Math.max(16, Math.round(done.width + dx)), height: Math.max(16, Math.round(done.height + dy)) } }], '调整网页元素尺寸');
-      else if (current.group) void live.current.act([{ type: 'web.style.update', nodeId: done.id, style: { left: Math.round(done.left + dx), top: Math.round(done.top + dy) } }], '移动原生组', previewDocument.revision, webAlignmentPreconditions(previewDocument, [done.id]));
+      else if (current.group && !isWebFlowGroup(current)) void live.current.act([{ type: 'web.style.update', nodeId: done.id, style: { left: Math.round(done.left + dx), top: Math.round(done.top + dy) } }], '移动原生组', previewDocument.revision, webAlignmentPreconditions(previewDocument, [done.id]));
       else if (projection(current, done.breakpoint).layout.mode === 'position') submit([{ type: 'web.style.update', nodeId: done.id, breakpointId: done.breakpoint, style: { left: Math.round(done.left + dx), top: Math.round(done.top + dy) } }], '移动网页元素');
       else {
         const target = dom.elementFromPoint(event.clientX, event.clientY)?.closest<HTMLElement>('[data-web-id]');
@@ -289,9 +294,10 @@ export function WebEditor({ document, onApply, onUndo, onRedo, onImportAsset, di
         let index = siblings.length;
         if (siblings.includes(under.id)) {
           const bounds = target.getBoundingClientRect();
-          const layout = projection(previewDocument.nodes[parentId]!, done.breakpoint).layout;
-          const horizontal = layout.mode === 'flex' && layout.flexDirection !== 'column';
-          const after = horizontal ? event.clientX > bounds.x + bounds.width / 2 : event.clientY > bounds.y + bounds.height / 2;
+          const projected = projection(previewDocument.nodes[parentId]!, done.breakpoint), layout = projected.layout;
+          const direction = String(layout.flexDirection ?? projected.style.flexDirection ?? 'row');
+          const horizontal = layout.mode === 'grid' || layout.mode === 'flex' && !direction.startsWith('column');
+          const after = (horizontal ? event.clientX > bounds.x + bounds.width / 2 : event.clientY > bounds.y + bounds.height / 2) !== (layout.mode === 'flex' && direction.endsWith('reverse'));
           index = siblings.indexOf(under.id) + Number(after);
         }
         submit([{ type: 'web.node.reparent', nodeId: done.id, parentId, index }], '调整网页层级');
@@ -312,9 +318,11 @@ export function WebEditor({ document, onApply, onUndo, onRedo, onImportAsset, di
     const dom = iframe.current?.contentDocument, win = iframe.current?.contentWindow;
     if (!dom || !win) return;
     const elements = dom.querySelectorAll<HTMLElement>('[data-web-id]');
+    const flowMembers = new Set(selectedIds.flatMap(id => isWebFlowGroup(document.nodes[id]!) ? webFlowGroupMembers(document, id) : []));
     elements.forEach(item => { if (selectedIds.includes(item.dataset.webId ?? '')) item.dataset.selected = 'true'; else delete item.dataset.selected; });
+    elements.forEach(item => { if (flowMembers.has(item.dataset.webId ?? '')) item.dataset.flowGroupSelected = 'true'; else delete item.dataset.flowGroupSelected; });
     const target = Array.from(elements).find(item => item.dataset.webId === selection);
-    if (selectedIds.length !== 1 || !target || !node || !page || node.id === page.rootId || locked(document, node.id) || !overrideEnabled || blocked) return;
+    if (selectedIds.length !== 1 || !target || !node || !page || node.id === page.rootId || (node.group ? webNodeTreeLocked(document, node.id) : locked(document, node.id)) || isWebFlowGroup(node) || !overrideEnabled || blocked) return;
     const handle = dom.createElement('button'); handle.dataset.oeyResizeHandle = ''; handle.dataset.nodeId = node.id; handle.setAttribute('aria-label', '调整元素尺寸');
     const position = () => { const rect = target.getBoundingClientRect(); handle.style.left = `${rect.right - 6}px`; handle.style.top = `${rect.bottom - 6}px`; };
     dom.body.append(handle); position();
@@ -358,7 +366,7 @@ export function WebEditor({ document, onApply, onUndo, onRedo, onImportAsset, di
     const module: WebSourceModule = { id: uid('source'), path, language: moduleLanguage, source: moduleLanguage === 'css' ? '/* 页面样式 */\n' : moduleLanguage === 'tsx' ? 'export function Component() {\n  return <div>新组件</div>;\n}\n' : 'export const pageTitle = "New page";\n', ...(moduleLanguage === 'tsx' ? { exports: ['Component'] } : {}) };
     void act([{ type: 'source.update', module }], '创建受管源码').then(ok => { if (ok) { setSourceId(module.id); setSourceDraft(module.source); sourceChanged.current = false; setSourceDirty(false); } });
   };
-  const editable = node && !locked(document, node.id) && !blocked;
+  const editable = node && !(node.group ? webNodeTreeLocked(document, node.id) : locked(document, node.id)) && !blocked;
   const projected = node ? projection(node, breakpoint) : undefined;
   const field = (label: string, value: string, commit: (value: string, base: number) => Promise<boolean>, options: { multiline?: boolean; disabled?: boolean; placeholder?: string; type?: 'text' | 'color' } = {}) =>
     <WebDraftField key={`${page.id}/${node?.id ?? 'page'}/${breakpoint}/${label}`} label={label} value={value} revision={document.revision} onCommit={commit} disabled={blocked || Boolean(node && !editable)} {...options} />;
@@ -372,7 +380,7 @@ export function WebEditor({ document, onApply, onUndo, onRedo, onImportAsset, di
       } catch (error) { setEditorError(error instanceof Error ? error.message : String(error)); return Promise.resolve(false); }
     }
     return act([{ type: 'web.style.update', nodeId: node!.id, breakpointId: breakpoint, style: { [key]: key === 'rotate' && typeof parsed === 'number' ? `${parsed}deg` : parsed } }], `修改${label}`, base);
-  }, { disabled: !editable || !overrideEnabled, type });
+  }, { disabled: !editable || !overrideEnabled || Boolean(node && isWebFlowGroup(node) && ['width', 'height', 'padding', 'gap', 'rotate', 'left', 'top', 'backgroundColor'].includes(key)), type });
   const layoutSelect = (label: string, key: string, options: Array<[string, string]>, fallback: string) => <label>{label}<select aria-label={label} value={String(projected?.layout[key] ?? projected?.style[key] ?? fallback)} disabled={!editable || !overrideEnabled}
     onChange={event => void act([{ type: 'web.layout.update', nodeId: node!.id, breakpointId: breakpoint, layout: { [key]: event.currentTarget.value } }], `修改${label}`)}>{options.map(([value, text]) => <option key={value} value={value}>{text}</option>)}</select></label>;
   const layoutField = (label: string, key: string, fallback = '') => field(label, String(projected?.layout[key] ?? projected?.style[key] ?? fallback), (value, base) => act([{ type: 'web.layout.update', nodeId: node!.id, breakpointId: breakpoint, layout: { [key]: cssValue(value) } }], `修改${label}`, base), { disabled: !editable || !overrideEnabled });
@@ -382,7 +390,7 @@ export function WebEditor({ document, onApply, onUndo, onRedo, onImportAsset, di
     const index = Math.max(0, Math.min(siblings.length - 1, siblings.indexOf(node.id) + direction));
     void act([{ type: 'web.node.reparent', nodeId: node.id, parentId: node.parentId, index }], '调整图层顺序');
   };
-  const batchEditable = selectedIds.length > 1 && selectedIds.every(id => document.nodes[id] && !webNodeLocked(document, id)) && !blocked;
+  const batchEditable = selectedIds.length > 1 && selectedIds.every(id => document.nodes[id] && !(document.nodes[id]!.group ? webNodeTreeLocked(document, id) : webNodeLocked(document, id))) && !blocked;
   const alignmentReady = frameEpoch > 0 && iframe.current?.contentDocument?.body?.dataset.previewRevision === String(document.revision)
     && iframe.current?.contentDocument?.body?.dataset.previewPage === page.id;
   const commonStyle = (key: string): string => {
@@ -390,7 +398,7 @@ export function WebEditor({ document, onApply, onUndo, onRedo, onImportAsset, di
     return values.every(value => value === values[0]) ? values[0]! : '';
   };
   const batchField = (label: string, key: string) => <WebDraftField key={`${page.id}/${selectedIds.join(',')}/${breakpoint}/${key}`} label={label}
-    value={commonStyle(key)} placeholder="混合或未设置" revision={document.revision} disabled={!batchEditable || !overrideEnabled}
+    value={commonStyle(key)} placeholder="混合或未设置" revision={document.revision} disabled={!batchEditable || !overrideEnabled || selectedIds.some(id => isWebFlowGroup(document.nodes[id]!)) && ['width', 'height', 'backgroundColor'].includes(key)}
     onCommit={async (value, base) => {
       try { return await act(webBatchStyles(document, selectedIds, { [key]: cssValue(value) }, breakpoint), `批量修改${label}`, base); }
       catch (error) { setEditorError(error instanceof Error ? error.message : String(error)); return false; }
@@ -407,10 +415,12 @@ export function WebEditor({ document, onApply, onUndo, onRedo, onImportAsset, di
   function groupAction(action: 'group' | 'ungroup') {
     if (blocked || !selectedIds.length) return;
     try {
-      if (breakpoint) throw new Error('分组/解组在基础视口操作，响应式几何保持原样。');
       if (action === 'ungroup' && selectedIds.length !== 1) throw new Error('请选择一个原生组再解组。');
       const roots = webSelectionRoots(document, selectedIds).map(node => node.id);
-      const batch = action === 'group' ? webGroupSelection(document, selectedIds, measurePositions(roots), uid('group')) : webUngroup(document, selection);
+      const flow = action === 'group' ? roots.every(id => projection(document.nodes[id]!, breakpoint).layout.mode !== 'position') : isWebFlowGroup(document.nodes[selection]!);
+      if (action === 'group' && roots.some(id => projection(document.nodes[id]!, breakpoint).layout.mode === 'position') && flow === false && roots.some(id => projection(document.nodes[id]!, breakpoint).layout.mode !== 'position')) throw new Error('不能混合流式与定位对象分组。');
+      if (!flow && breakpoint) throw new Error('定位组分组/解组在基础视口操作，响应式几何保持原样。');
+      const batch = action === 'group' ? flow ? webGroupFlowSelection(document, selectedIds, uid('group')) : webGroupSelection(document, selectedIds, measurePositions(roots), uid('group')) : webUngroup(document, selection);
       void act(batch.operations, action === 'group' ? '原生元素分组' : '原生元素解组', document.revision, batch.preconditions).then(ok => { if (ok) setSelectedIds(batch.selectedIds); });
     } catch (error) { setEditorError(error instanceof Error ? error.message : String(error)); }
   }
@@ -445,6 +455,7 @@ export function WebEditor({ document, onApply, onUndo, onRedo, onImportAsset, di
       <div className="web-editor-fields">{selectedIds.length > 1 ? <>
         <small className="web-editor-breakpoint-note">图层 Shift 范围选择，Ctrl / ⌘ 切换选择；画布 Shift 追加。一次批量修改对应一次撤销。</small>
         {selectedIds.some(id => webNodeLocked(document, id)) && <p role="status">选择包含锁定元素，批量修改已禁用。</p>}
+        {selectedIds.some(id => isWebFlowGroup(document.nodes[id]!)) && <small className="web-editor-breakpoint-note">流式组的框尺寸与背景请编辑成员。</small>}
         {!overrideEnabled && <button className="web-editor-override" onClick={enableOverride} disabled={blocked}>为 {breakpoint} 创建样式覆盖</button>}
         {batchField('批量文字颜色', 'color')}{batchField('批量背景色', 'backgroundColor')}
         <div className="web-editor-field-grid">{batchField('批量宽度', 'width')}{batchField('批量高度', 'height')}</div>
@@ -466,7 +477,8 @@ export function WebEditor({ document, onApply, onUndo, onRedo, onImportAsset, di
         {!webVoidTags.has(node.tag) && !node.component && !node.group && !node.content && field('元素文案', node.text ?? '', (text, base) => act([{ type: 'web.node.update', nodeId: node.id, text }], '修改网页文案', base), { multiline: true })}
         {!node.component && !node.group && WEB_RICH_TEXT_TAGS.has(node.tag) && <button className="web-editor-override" disabled={!editable} onClick={() => setRichOpen(!richOpen)}>{richOpen ? '关闭富文本' : '编辑富文本'}</button>}
         {node.group && <button className="web-editor-override" disabled={!editable} onClick={() => groupAction('ungroup')}>解组</button>}
-        <label>布局<select aria-label="布局模式" value={projected!.layout.mode} onChange={event => void act([{ type: 'web.layout.update', nodeId: node.id, breakpointId: breakpoint, layout: { mode: event.currentTarget.value as WebLayout['mode'] } }], '修改布局')} disabled={!editable || !overrideEnabled}><option value="flow">流式</option><option value="flex">Flex</option><option value="grid">Grid</option><option value="position">定位</option></select></label>
+        {isWebFlowGroup(node) && <small className="web-editor-breakpoint-note">流式组保留父级排版，拖动可整组重排；尺寸请编辑成员。</small>}
+        <label>布局<select aria-label="布局模式" value={projected!.layout.mode} onChange={event => void act([{ type: 'web.layout.update', nodeId: node.id, breakpointId: breakpoint, layout: { mode: event.currentTarget.value as WebLayout['mode'] } }], '修改布局')} disabled={!editable || !overrideEnabled || isWebFlowGroup(node)}><option value="flow">流式</option><option value="flex">Flex</option><option value="grid">Grid</option><option value="position">定位</option></select></label>
         {projected!.layout.mode === 'flex' && <section className="web-editor-layout-properties" aria-label="Flex 布局属性">
           {layoutSelect('排列方向', 'flexDirection', [['row', '水平'], ['column', '垂直'], ['row-reverse', '水平反向'], ['column-reverse', '垂直反向']], 'row')}
           {layoutSelect('换行方式', 'flexWrap', [['nowrap', '不换行'], ['wrap', '换行'], ['wrap-reverse', '反向换行']], 'nowrap')}

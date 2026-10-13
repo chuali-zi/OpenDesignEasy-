@@ -62,6 +62,9 @@ export function webNodeLocked(document: WebDocument, id: string): boolean {
   }
   return false;
 }
+export function webNodeTreeLocked(document: WebDocument, id: string): boolean {
+  const node = document.nodes[id]; return !node || webNodeLocked(document, id) || node.children.some(id => webNodeTreeLocked(document, id));
+}
 
 export function selectedWebNodes(document: WebDocument, ids: string[]): WebNode[] {
   const nodes = [...new Set(ids)].map(id => document.nodes[id]);
@@ -72,6 +75,7 @@ export function selectedWebNodes(document: WebDocument, ids: string[]): WebNode[
 export function webBatchStyles(document: WebDocument, ids: string[], style: Record<string, JSONValue | null>, breakpointId?: string): WebOperation[] {
   const nodes = selectedWebNodes(document, ids);
   if (nodes.some(node => webNodeLocked(document, node.id))) throw new Error('选择包含锁定元素，未修改任何元素。');
+  if (nodes.some(node => node.group && node.layout.mode === 'flow' && node.style.display === 'contents') && Object.keys(style).some(key => ['width', 'height', 'backgroundColor'].includes(key))) throw new Error('选择包含流式组，框尺寸与背景请编辑成员。');
   return nodes.map(node => ({ type: 'web.style.update', nodeId: node.id, breakpointId, style }));
 }
 
