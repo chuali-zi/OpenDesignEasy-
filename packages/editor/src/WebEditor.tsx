@@ -7,6 +7,7 @@ import { WebRichTextEditor } from './WebRichTextEditor.tsx';
 import { WEB_RICH_TEXT_TAGS } from '@oeydesign/document';
 import { nextWebSelection, webBatchStyles, webAlignmentOperations, webAlignmentPreconditions, webPixelCoordinate, webNodeLocked, webRangeSelection, webSelectionRoots, webDuplicateSelection, webDeleteSelection } from './web-selection.ts';
 import type { WebAlignment, WebBounds } from './web-selection.ts';
+import { webGroupSelection, webUngroup, webResizeGroup, webGroupResizeMembers } from './web-groups.ts';
 import './web-editor.css';
 
 type Props = {
@@ -95,6 +96,7 @@ export function WebEditor({ document, onApply, onUndo, onRedo, onImportAsset, di
     const modifier = event.ctrlKey || event.metaKey;
     if (event.key === 'Escape') { setSelection(''); setBoxMode(false); event.preventDefault(); }
     else if (modifier && event.key.toLowerCase() === 'd') { selectionAction('duplicate'); event.preventDefault(); }
+    else if (modifier && event.key.toLowerCase() === 'g') { groupAction(event.shiftKey ? 'ungroup' : 'group'); event.preventDefault(); }
     else if (event.key === 'Delete' || event.key === 'Backspace') { selectionAction('delete'); event.preventDefault(); }
     else if (modifier && event.key.toLowerCase() === 'a' && page) { setSelectedIds(flatNodes.filter(item => item.node.id !== page.rootId).map(item => item.node.id)); event.preventDefault(); }
     else if (['ArrowUp', 'ArrowDown', 'Home', 'End'].includes(event.key)) {
@@ -136,17 +138,43 @@ export function WebEditor({ document, onApply, onUndo, onRedo, onImportAsset, di
     }
   }, [previewDocument, previewPage]);
 
+  function measurePositions(ids: string[], sharedCoordinate = true, allowOwnTransform = false): Record<string, WebBounds> {
+    const dom = iframe.current?.contentDocument;
+    if (!dom || dom.body.dataset.previewRevision !== String(document.revision) || dom.body.dataset.previewPage !== page?.id) throw new Error('预览正在更新，请等待载入后再操作。');
+    const elements = ids.map(id => dom.querySelector<HTMLElement>(`[data-web-id="${CSS.escape(id)}"]`));
+    if (elements.some(el => !el || sharedCoordinate && el.offsetParent !== elements[0]?.offsetParent)) throw new Error('请选择同一定位坐标系内的元素。');
+    const bounds: Record<string, WebBounds> = {};
+    elements.forEach((element, i) => {
+      const el = element!, css = dom.defaultView!.getComputedStyle(el);
+      for (let ancestor: Element | null = el; ancestor; ancestor = ancestor.parentElement) {
+        if (allowOwnTransform && ancestor === el) continue;
+        const style = dom.defaultView!.getComputedStyle(ancestor);
+        if (style.transform !== 'none' || !['none', '0deg'].includes(style.rotate) || !['none', '0px'].includes(style.translate) || !['none', '1'].includes(style.scale)) throw new Error('变换后的元素或祖先暂不支持此几何操作。');
+      }
+      const expected = projection(document.nodes[ids[i]!]!, breakpoint).style;
+      if (css.position !== 'absolute' || ['left', 'top', 'width', 'height'].some(key => !Number.isFinite(parseFloat(css.getPropertyValue(key))) || webPixelCoordinate(expected[key]) === undefined || Math.abs(parseFloat(css.getPropertyValue(key)) - webPixelCoordinate(expected[key])!) > .1)) throw new Error('操作需要像素坐标/尺寸，且不能被其他 CSS 几何规则覆盖。');
+      bounds[ids[i]!] = { x: el.offsetLeft, y: el.offsetTop, width: el.offsetWidth, height: el.offsetHeight, marginLeft: parseFloat(css.marginLeft) || 0, marginTop: parseFloat(css.marginTop) || 0 };
+    });
+    return bounds;
+  }
+
   // Keep one snapshot for the entire pointer gesture; commit once on release.
   useEffect(() => {
     const frame = iframe.current, dom = frame?.contentDocument, body = dom?.body;
     if (!frame || !dom || !body || !previewPage) return;
     body.tabIndex = -1;
-    type Gesture = { id: string; target: HTMLElement; pointerId: number; x: number; y: number; moved: boolean; resize: boolean; width: number; height: number; left: number; top: number; breakpoint?: string; originalStyle: string | null };
+    type Gesture = { id: string; target: HTMLElement; pointerId: number; x: number; y: number; moved: boolean; resize: boolean; width: number; height: number; left: number; top: number; breakpoint?: string; originalStyle: string | null; groupBounds?: Record<string, WebBounds>; memberStyles?: Map<HTMLElement, string | null> };
     let gesture: Gesture | undefined;
     let box: { x: number; y: number; overlay: HTMLElement; additive: boolean; selected: string[]; pointerId: number } | undefined;
     let suppressClick = false;
-    const restore = (done: Gesture) => { if (done.originalStyle === null) done.target.removeAttribute('style'); else done.target.setAttribute('style', done.originalStyle); };
-    const cancel = () => { if (gesture) restore(gesture); gesture = undefined; box?.overlay.remove(); if (box && body.hasPointerCapture(box.pointerId)) body.releasePointerCapture(box.pointerId); box = undefined; setDragging(false); };
+    const restore = (done: Gesture) => {
+      if (done.originalStyle === null) done.target.removeAttribute('style'); else done.target.setAttribute('style', done.originalStyle);
+      done.memberStyles?.forEach((style, el) => { if (style === null) el.removeAttribute('style'); else el.setAttribute('style', style); });
+    };
+    const cancel = () => {
+      if (gesture) { restore(gesture); if (gesture.target.hasPointerCapture(gesture.pointerId)) gesture.target.releasePointerCapture(gesture.pointerId); }
+      gesture = undefined; box?.overlay.remove(); if (box && body.hasPointerCapture(box.pointerId)) body.releasePointerCapture(box.pointerId); box = undefined; setDragging(false);
+    };
     const click = (event: MouseEvent) => {
       if ((event.target as Element)?.closest('a,button,input,select,textarea')) event.preventDefault();
       if (suppressClick) { suppressClick = false; return; }
@@ -157,7 +185,7 @@ export function WebEditor({ document, onApply, onUndo, onRedo, onImportAsset, di
     const editText = (event: MouseEvent) => {
       const target = (event.target as Element)?.closest<HTMLElement>('[data-web-id]');
       const id = target?.dataset.webId, item = id ? previewDocument.nodes[id] : undefined;
-      if (!id || !item || item.component || !WEB_RICH_TEXT_TAGS.has(item.tag) || locked(previewDocument, id)) return;
+      if (!id || !item || item.component || item.group || !WEB_RICH_TEXT_TAGS.has(item.tag) || locked(previewDocument, id)) return;
       event.preventDefault(); setSelection(id); setRichOpen(true);
     };
     const start = (event: PointerEvent) => {
@@ -171,13 +199,28 @@ export function WebEditor({ document, onApply, onUndo, onRedo, onImportAsset, di
       }
       if (event.shiftKey || event.ctrlKey || event.metaKey) return;
       const handle = (event.target as Element)?.closest<HTMLElement>('[data-oey-resize-handle]');
-      const target = handle ? dom.querySelector<HTMLElement>(`[data-web-id="${CSS.escape(handle.dataset.nodeId!)}"]`) : (event.target as Element)?.closest<HTMLElement>('[data-web-id]');
+      let target = handle ? dom.querySelector<HTMLElement>(`[data-web-id="${CSS.escape(handle.dataset.nodeId!)}"]`) : (event.target as Element)?.closest<HTMLElement>('[data-web-id]');
+      const chosen = previewDocument.nodes[live.current.selection];
+      if (!handle && chosen?.group && live.current.selectedIds.length === 1 && target?.dataset.webId && contains(previewDocument, chosen.id, target.dataset.webId)) target = dom.querySelector<HTMLElement>(`[data-web-id="${CSS.escape(chosen.id)}"]`);
       const id = target?.dataset.webId, current = id ? previewDocument.nodes[id] : undefined;
       if (!target || !id || !current || id === previewPage.rootId || locked(previewDocument, id)) return;
       const projected = projection(current, live.current.breakpoint);
       if ((handle || projected.layout.mode === 'position') && !live.current.overrideEnabled) return;
       const bounds = target.getBoundingClientRect();
-      gesture = { id, target, pointerId: event.pointerId, x: event.clientX, y: event.clientY, moved: false, resize: Boolean(handle), width: bounds.width, height: bounds.height, left: target.offsetLeft, top: target.offsetTop, breakpoint: live.current.breakpoint, originalStyle: target.getAttribute('style') };
+      let groupBounds: Record<string, WebBounds> | undefined, memberStyles: Map<HTMLElement, string | null> | undefined;
+      if (current.group) {
+        try {
+          if (live.current.breakpoint) throw new Error('组手势在基础视口操作，响应式几何保持原样。');
+          webDeleteSelection(previewDocument, [id]);
+          if (handle) {
+            const members = webGroupResizeMembers(previewDocument, id);
+            groupBounds = measurePositions([id, ...members], false);
+            webResizeGroup(previewDocument, id, Math.max(16, webPixelCoordinate(current.style.width)!), Math.max(16, webPixelCoordinate(current.style.height)!), groupBounds);
+            memberStyles = new Map(members.map(id => { const el = dom.querySelector<HTMLElement>(`[data-web-id="${CSS.escape(id)}"]`)!; return [el, el.getAttribute('style')]; }));
+          } else measurePositions([id], false, true);
+        } catch (error) { setEditorError(error instanceof Error ? error.message : String(error)); return; }
+      }
+      gesture = { id, target, pointerId: event.pointerId, x: event.clientX, y: event.clientY, moved: false, resize: Boolean(handle), width: bounds.width, height: bounds.height, left: target.offsetLeft, top: target.offsetTop, breakpoint: live.current.breakpoint, originalStyle: target.getAttribute('style'), groupBounds, memberStyles };
       target.setPointerCapture(event.pointerId);
       setDragging(true); setSelection(id); event.preventDefault();
     };
@@ -192,7 +235,14 @@ export function WebEditor({ document, onApply, onUndo, onRedo, onImportAsset, di
       if (Math.abs(dx) + Math.abs(dy) < 5 && !gesture.moved) return;
       gesture.moved = true;
       gesture.target.style.opacity = '.7';
-      if (gesture.resize) { gesture.target.style.width = `${Math.max(16, gesture.width + dx)}px`; gesture.target.style.height = `${Math.max(16, gesture.height + dy)}px`; }
+      if (gesture.resize) {
+        gesture.target.style.width = `${Math.max(16, gesture.width + dx)}px`; gesture.target.style.height = `${Math.max(16, gesture.height + dy)}px`;
+        if (gesture.groupBounds) for (const op of webResizeGroup(previewDocument, gesture.id, Math.max(16, gesture.width + dx), Math.max(16, gesture.height + dy), gesture.groupBounds).operations) {
+          if (op.type !== 'web.style.update' || op.nodeId === gesture.id) continue;
+          const el = dom.querySelector<HTMLElement>(`[data-web-id="${CSS.escape(op.nodeId)}"]`)!;
+          for (const [key, value] of Object.entries(op.style)) if (value != null) el.style.setProperty(key, typeof value === 'number' ? `${value}px` : String(value)); else el.style.removeProperty(key);
+        }
+      }
       else if (projection(previewDocument.nodes[gesture.id]!, gesture.breakpoint).layout.mode === 'position') {
         gesture.target.style.left = `${gesture.left + dx}px`; gesture.target.style.top = `${gesture.top + dy}px`;
       }
@@ -216,7 +266,12 @@ export function WebEditor({ document, onApply, onUndo, onRedo, onImportAsset, di
       const current = previewDocument.nodes[done.id]!;
       const dx = event.clientX - done.x, dy = event.clientY - done.y;
       const submit = (operations: WebOperation[], label: string) => void live.current.act(operations, label, previewDocument.revision);
-      if (done.resize) submit([{ type: 'web.style.update', nodeId: done.id, breakpointId: done.breakpoint, style: { width: Math.max(16, Math.round(done.width + dx)), height: Math.max(16, Math.round(done.height + dy)) } }], '调整网页元素尺寸');
+      if (done.resize && done.groupBounds) {
+        const batch = webResizeGroup(previewDocument, done.id, Math.max(16, Math.round(done.width + dx)), Math.max(16, Math.round(done.height + dy)), done.groupBounds);
+        void live.current.act(batch.operations, '调整组尺寸', previewDocument.revision, batch.preconditions);
+      }
+      else if (done.resize) submit([{ type: 'web.style.update', nodeId: done.id, breakpointId: done.breakpoint, style: { width: Math.max(16, Math.round(done.width + dx)), height: Math.max(16, Math.round(done.height + dy)) } }], '调整网页元素尺寸');
+      else if (current.group) void live.current.act([{ type: 'web.style.update', nodeId: done.id, style: { left: Math.round(done.left + dx), top: Math.round(done.top + dy) } }], '移动原生组', previewDocument.revision, webAlignmentPreconditions(previewDocument, [done.id]));
       else if (projection(current, done.breakpoint).layout.mode === 'position') submit([{ type: 'web.style.update', nodeId: done.id, breakpointId: done.breakpoint, style: { left: Math.round(done.left + dx), top: Math.round(done.top + dy) } }], '移动网页元素');
       else {
         const target = dom.elementFromPoint(event.clientX, event.clientY)?.closest<HTMLElement>('[data-web-id]');
@@ -238,15 +293,14 @@ export function WebEditor({ document, onApply, onUndo, onRedo, onImportAsset, di
       }
     };
     const submit = (event: Event) => event.preventDefault();
-    const keydown = (event: KeyboardEvent) => live.current.handleKey(event);
+    const keydown = (event: KeyboardEvent) => { if (event.key === 'Escape' && (gesture || box)) { cancel(); suppressClick = true; } live.current.handleKey(event); };
     body.addEventListener('keydown', keydown);
     body.addEventListener('click', click); body.addEventListener('dblclick', editText); body.addEventListener('submit', submit);
     body.addEventListener('pointerdown', start); body.addEventListener('pointermove', move); body.addEventListener('pointerup', end); body.addEventListener('pointercancel', cancel);
     return () => {
-      body.removeEventListener('keydown', keydown); box?.overlay.remove();
+      body.removeEventListener('keydown', keydown); cancel();
       body.removeEventListener('click', click); body.removeEventListener('dblclick', editText); body.removeEventListener('submit', submit);
       body.removeEventListener('pointerdown', start); body.removeEventListener('pointermove', move); body.removeEventListener('pointerup', end); body.removeEventListener('pointercancel', cancel);
-      if (gesture) restore(gesture);
     };
   }, [sourceDoc, frameEpoch, previewDocument, previewPage, boxMode]);
   useEffect(() => {
@@ -305,6 +359,13 @@ export function WebEditor({ document, onApply, onUndo, onRedo, onImportAsset, di
     <WebDraftField key={`${page.id}/${node?.id ?? 'page'}/${breakpoint}/${label}`} label={label} value={value} revision={document.revision} onCommit={commit} disabled={blocked || Boolean(node && !editable)} {...options} />;
   const styleField = (label: string, key: string, fallback = '', type: 'text' | 'color' = 'text') => field(label, String(projected?.style[key] ?? fallback), (value, base) => {
     const parsed = cssValue(value);
+    if (node?.group && ['width', 'height'].includes(key)) {
+      try {
+        if (breakpoint) throw new Error('组尺寸在基础视口操作。');
+        const batch = webResizeGroup(document, node.id, webPixelCoordinate(key === 'width' ? parsed : node.style.width)!, webPixelCoordinate(key === 'height' ? parsed : node.style.height)!, measurePositions([node.id, ...webGroupResizeMembers(document, node.id)], false));
+        return act(batch.operations, '调整组尺寸', base, batch.preconditions);
+      } catch (error) { setEditorError(error instanceof Error ? error.message : String(error)); return Promise.resolve(false); }
+    }
     return act([{ type: 'web.style.update', nodeId: node!.id, breakpointId: breakpoint, style: { [key]: key === 'rotate' && typeof parsed === 'number' ? `${parsed}deg` : parsed } }], `修改${label}`, base);
   }, { disabled: !editable || !overrideEnabled, type });
   const moveLayer = (direction: number) => {
@@ -331,19 +392,20 @@ export function WebEditor({ document, onApply, onUndo, onRedo, onImportAsset, di
       const dom = iframe.current?.contentDocument;
       if (!dom || !alignmentReady) throw new Error('预览正在更新，请等待载入后再对齐。');
       if (selectedIds.some(id => { const layout = projection(document.nodes[id]!, breakpoint).layout; return layout.mode !== 'position' || layout.position && layout.position !== 'absolute'; })) throw new Error('流式或相对定位元素暂不参与对齐，流式布局保持原样。');
-      const elements = selectedIds.map(id => dom.querySelector<HTMLElement>(`[data-web-id="${CSS.escape(id)}"]`));
-      if (elements.some(element => !element || element.offsetParent !== elements[0]?.offsetParent)) throw new Error('请选择同一定位坐标系内的元素。');
-      const bounds: Record<string, WebBounds> = {};
-      elements.forEach((element, i) => {
-        const el = element!, css = dom.defaultView!.getComputedStyle(el);
-        if (css.transform !== 'none' || !['none', '0deg'].includes(css.rotate) || !['none', '0px'].includes(css.translate) || !['none', '1'].includes(css.scale)) throw new Error('变换后的元素暂不支持批量对齐。');
-        const expected = projection(document.nodes[selectedIds[i]!]!, breakpoint).style;
-        if (css.position !== 'absolute' || ['left', 'top', 'width', 'height'].some(key => !Number.isFinite(parseFloat(css.getPropertyValue(key))) || webPixelCoordinate(expected[key]) === undefined || Math.abs(parseFloat(css.getPropertyValue(key)) - webPixelCoordinate(expected[key])!) > .1)) throw new Error('对齐需要像素坐标/尺寸，且不能被其他 CSS 几何规则覆盖。');
-        bounds[selectedIds[i]!] = { x: el.offsetLeft, y: el.offsetTop, width: el.offsetWidth, height: el.offsetHeight, marginLeft: parseFloat(css.marginLeft) || 0, marginTop: parseFloat(css.marginTop) || 0 };
-      });
+      const bounds = measurePositions(selectedIds);
       void act(webAlignmentOperations(document, selectedIds, bounds, alignment, breakpoint), '对齐网页元素', document.revision, webAlignmentPreconditions(document, selectedIds));
     } catch (error) { setEditorError(error instanceof Error ? error.message : String(error)); }
   };
+  function groupAction(action: 'group' | 'ungroup') {
+    if (blocked || !selectedIds.length) return;
+    try {
+      if (breakpoint) throw new Error('分组/解组在基础视口操作，响应式几何保持原样。');
+      if (action === 'ungroup' && selectedIds.length !== 1) throw new Error('请选择一个原生组再解组。');
+      const roots = webSelectionRoots(document, selectedIds).map(node => node.id);
+      const batch = action === 'group' ? webGroupSelection(document, selectedIds, measurePositions(roots), uid('group')) : webUngroup(document, selection);
+      void act(batch.operations, action === 'group' ? '原生元素分组' : '原生元素解组', document.revision, batch.preconditions).then(ok => { if (ok) setSelectedIds(batch.selectedIds); });
+    } catch (error) { setEditorError(error instanceof Error ? error.message : String(error)); }
+  }
   return <main className="web-editor" aria-label="Web 编辑器" tabIndex={-1} onKeyDown={handleKey}>
     <aside className="web-editor-side web-editor-structure">
       <div className="web-editor-heading"><div><span>DOCUMENT</span><strong>页面与图层</strong></div><button onClick={addPage} disabled={blocked}>＋ 页面</button></div>
@@ -364,7 +426,7 @@ export function WebEditor({ document, onApply, onUndo, onRedo, onImportAsset, di
       <div className="web-editor-browser"><div className="web-editor-browser-bar"><i/><i/><i/><span>{page.route}</span><small>{breakpoint ?? '基础'}</small></div><div className="web-editor-viewport" style={{ '--preview-width': `${width}px` } as CSSProperties}><iframe ref={iframe} title="隔离网页预览" sandbox="allow-same-origin" srcDoc={sourceDoc} onLoad={() => setFrameEpoch(epoch => epoch + 1)} /></div></div>
       <div className="web-editor-stage-foot"><span><b>提示</b> {boxMode ? '拖出矩形选中完整包含的对象 · 修饰键追加' : '拖动重排 · 右下角缩放 · 定位元素自由移动'}</span><button aria-pressed={boxMode} disabled={blocked || dragging} onClick={() => setBoxMode(!boxMode)}>框选</button><button onClick={() => setSourceOpen(!sourceOpen)}>{sourceOpen ? '关闭源码' : '源码模块'}</button></div>
       {editorError && <div className="web-editor-error" role="status">{editorError}</div>}
-      {richOpen && selectedIds.length === 1 && node && !node.component && WEB_RICH_TEXT_TAGS.has(node.tag) &&
+      {richOpen && selectedIds.length === 1 && node && !node.component && !node.group && WEB_RICH_TEXT_TAGS.has(node.tag) &&
         <WebRichTextEditor key={`${document.documentId}/${node.id}`} document={document} node={node} disabled={blocked || locked(document, node.id)}
           commit={(operations, label, base, target) => act(operations, label, base, [], target)} />}
       {sourceOpen && <section className="web-editor-source"><header><strong>源码模块</strong><select aria-label="选择源码模块" value={sourceId} disabled={blocked || sourceDirty} onChange={event => selectSource(event.currentTarget.value)}><option value="">选择已有模块…</option>{document.sourceModules?.map(item => <option key={item.id} value={item.id}>{item.path}</option>)}</select><button disabled={!selectedSource || blocked || !sourceDirty} onClick={saveSource}>保存模块</button>{sourceDirty && <button disabled={blocked} onClick={() => selectSource(sourceId)}>恢复已保存源码</button>}</header>
@@ -383,6 +445,7 @@ export function WebEditor({ document, onApply, onUndo, onRedo, onImportAsset, di
           <small>同父级、绝对定位、像素尺寸且无变换。流式布局保持原样。</small>
         </section>
         <div className="web-editor-node-actions"><button disabled={!batchEditable} onClick={() => selectionAction('duplicate')}>复制选中元素</button><button className="is-danger" disabled={!batchEditable} onClick={() => selectionAction('delete')}>删除选中元素</button></div>
+        <button className="web-editor-override" disabled={!batchEditable} onClick={() => groupAction('group')}>分组</button>
         <button className="web-editor-override" onClick={() => setSelection('')}>清除选择</button>
         <small className="web-editor-breakpoint-note">{breakpoint ?? '基础样式'} · {width}px</small>
       </> : !node ? <>
@@ -392,8 +455,9 @@ export function WebEditor({ document, onApply, onUndo, onRedo, onImportAsset, di
       </> : <>
         <label>元素标签<input value={node.tag} aria-label="元素标签" readOnly /></label>
         {!overrideEnabled && <button className="web-editor-override" onClick={enableOverride} disabled={blocked}>为 {breakpoint} 创建样式覆盖</button>}
-        {!webVoidTags.has(node.tag) && !node.component && !node.content && field('元素文案', node.text ?? '', (text, base) => act([{ type: 'web.node.update', nodeId: node.id, text }], '修改网页文案', base), { multiline: true })}
-        {!node.component && WEB_RICH_TEXT_TAGS.has(node.tag) && <button className="web-editor-override" disabled={!editable} onClick={() => setRichOpen(!richOpen)}>{richOpen ? '关闭富文本' : '编辑富文本'}</button>}
+        {!webVoidTags.has(node.tag) && !node.component && !node.group && !node.content && field('元素文案', node.text ?? '', (text, base) => act([{ type: 'web.node.update', nodeId: node.id, text }], '修改网页文案', base), { multiline: true })}
+        {!node.component && !node.group && WEB_RICH_TEXT_TAGS.has(node.tag) && <button className="web-editor-override" disabled={!editable} onClick={() => setRichOpen(!richOpen)}>{richOpen ? '关闭富文本' : '编辑富文本'}</button>}
+        {node.group && <button className="web-editor-override" disabled={!editable} onClick={() => groupAction('ungroup')}>解组</button>}
         <label>布局<select aria-label="布局模式" value={projected!.layout.mode} onChange={event => void act([{ type: 'web.layout.update', nodeId: node.id, breakpointId: breakpoint, layout: { mode: event.currentTarget.value as WebLayout['mode'] } }], '修改布局')} disabled={!editable || !overrideEnabled}><option value="flow">流式</option><option value="flex">Flex</option><option value="grid">Grid</option><option value="position">定位</option></select></label>
         <div className="web-editor-field-grid">{styleField('样式宽度', 'width')}{styleField('样式高度', 'height')}{styleField('内边距', 'padding')}{styleField('元素间距', 'gap')}{styleField('旋转角度', 'rotate', '0deg')}</div>
         {projected!.layout.mode === 'position' && <div className="web-editor-field-grid">{styleField('定位左侧', 'left', '0')}{styleField('定位顶部', 'top', '0')}</div>}
@@ -401,7 +465,7 @@ export function WebEditor({ document, onApply, onUndo, onRedo, onImportAsset, di
         {node.tag === 'a' && field('链接地址', String(node.props?.href ?? ''), (href, base) => act([{ type: 'web.node.update', nodeId: node.id, props: { href } }], '修改链接', base))}
         {node.tag === 'input' && field('输入提示', String(node.props?.placeholder ?? ''), (placeholder, base) => act([{ type: 'web.node.update', nodeId: node.id, props: { placeholder } }], '修改输入提示', base))}
         {node.tag === 'img' && field('图片说明', String(node.props?.alt ?? ''), (alt, base) => act([{ type: 'web.node.update', nodeId: node.id, props: { alt } }], '修改图片说明', base))}
-        {containers.has(node.tag) && <label>绑定组件<select aria-label="绑定组件" value={node.component?.moduleId ?? ''} disabled={!editable} onChange={event => {
+        {containers.has(node.tag) && !node.group && <label>绑定组件<select aria-label="绑定组件" value={node.component?.moduleId ?? ''} disabled={!editable} onChange={event => {
           const module = document.sourceModules?.find(item => item.id === event.currentTarget.value);
           void act([{ type: 'web.node.update', nodeId: node.id, component: module ? { moduleId: module.id, exportName: module.exports?.[0] ?? 'default' } : null }], '绑定网页组件');
         }}><option value="">原生容器</option>{document.sourceModules?.filter(item => item.language === 'tsx').map(item => <option key={item.id} value={item.id}>{item.path}</option>)}</select></label>}

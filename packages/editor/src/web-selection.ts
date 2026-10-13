@@ -37,7 +37,7 @@ export function webDuplicateSelection(document: WebDocument, ids: string[], make
   const mapping = new Map(trees.map(node => [node.id, makeId(node.tag)]));
   if (new Set(mapping.values()).size !== trees.length || [...mapping.values()].some(id => document.nodes[id])) throw new Error('复制元素 ID 必须唯一。');
   const htmlIds = new Map(trees.filter(node => typeof node.props?.id === 'string').map(node => [node.props!.id as string, `copy-${mapping.get(node.id)!}`]));
-  const preconditions: EditPrecondition[] = trees.flatMap(node => ['id', 'parentId', 'tag', 'children', 'style', 'layout', 'props', 'text', 'content', 'locked', 'hidden', 'responsive', 'component'].map(path => ({ type: 'node.property' as const, nodeId: node.id, path, value: structuredClone(node[path as keyof WebNode]) })));
+  const preconditions: EditPrecondition[] = trees.flatMap(node => ['id', 'parentId', 'tag', 'children', 'style', 'layout', 'props', 'text', 'content', 'group', 'locked', 'hidden', 'responsive', 'component'].map(path => ({ type: 'node.property' as const, nodeId: node.id, path, value: structuredClone(node[path as keyof WebNode]) })));
   const operations: WebOperation[] = [];
   const copy = (original: WebNode, parentId: string, index?: number) => {
     const node = structuredClone(original); node.id = mapping.get(original.id)!; node.parentId = parentId; node.children = [];

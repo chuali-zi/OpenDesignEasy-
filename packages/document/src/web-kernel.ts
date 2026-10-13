@@ -40,6 +40,7 @@ export function validateWebDocument(doc: WebDocument): void {
       for (const [breakpointId, override] of Object.entries(node.responsive)) if (!doc.breakpoints?.some((b) => b.id === breakpointId) || !rec(override) || override.style !== undefined && (!rec(override.style) || !json(override.style)) || override.layout !== undefined && (!rec(override.layout) || !json(override.layout) || override.layout.mode !== undefined && !["flow", "flex", "grid", "position"].includes(String(override.layout.mode)))) invalid("invalid responsive override", nodeId);
     }
     if (node.component !== undefined && (!rec(node.component) || !id(node.component.moduleId) || typeof node.component.exportName !== 'string' || !/^[A-Za-z_$][\w$]*$/.test(node.component.exportName))) invalid("invalid component binding", nodeId);
+    if (node.group !== undefined && (node.group !== true || node.tag !== 'div' || node.text !== undefined || node.content !== undefined || node.component !== undefined)) invalid('Web groups require a native div without own text or component', nodeId);
     if (node.content !== undefined) {
       if (!rec(node.content) || node.content.type !== 'doc' || !WEB_RICH_TEXT_TAGS.has(node.tag)) invalid('rich content requires a supported text container', nodeId);
       validateTextContent(node.content, nodeId);
@@ -229,7 +230,7 @@ function applyOne(doc: WebDocument, op: WebOperation, changed: Set<string>): voi
     case "web.style.update":
     case "web.layout.update": {
       const current = node(doc, op.nodeId);
-      assertEditable(doc, current.id);
+      assertEditable(doc, current.id, Boolean(current.group));
       if (op.breakpointId && !doc.breakpoints?.some(point => point.id === op.breakpointId)) invalid("unknown breakpoint", op.breakpointId);
       const target: Record<string, any> = op.breakpointId ? ((current.responsive ??= {})[op.breakpointId] ??= {}) : current;
       const key = op.type === "web.style.update" ? "style" : "layout";
