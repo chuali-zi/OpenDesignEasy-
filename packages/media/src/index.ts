@@ -280,3 +280,5 @@ export * from "./artifact.ts";
 export * from './doc.ts';
 
 export * from './references.ts';
+
+export * from './doc-import.ts';

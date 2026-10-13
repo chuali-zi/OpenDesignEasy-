@@ -21,6 +21,7 @@ const HELP = {
     agent: ["run <dir> --text <prompt> [--session <id>] [--document <id>] [--asset <id>]", "create|list|status|config <dir> [--session <id>] [--file <config.json>]", "send|steer|follow-up|answer|cancel --host <local-url> --session <id> [--text <text>] [--question <id>] [--wait]"],
     asset: ["import <dir> <file>", "list <dir>", "read <dir> <assetId> [--offset <n>] [--limit <n>] [--ocr true] [--language eng|chi_sim]"],
     document: [
+      "import-docx <dir> <template.docx>",
       "create <dir> [--kind deck|web|doc] [--name <name>]",
       "read <dir> [documentId]",
       "apply <dir> <command.json>",
@@ -204,6 +205,9 @@ export async function execute(argv: string[]): Promise<unknown> {
     return withRuntime(positional[0]!, (runtime) => ({ project: runtime.project, documents: runtime.listDocuments() }));
   }
 
+  if(area==='document'&&action==='import-docx'){
+    const {positional}=parseFlags(rest,[]);expectPositionals(positional,2,'document import-docx');const file=resolve(positional[1]!);if((await stat(file)).size>8*1024*1024)usage('DOCX template exceeds 8 MiB');const runtime=ProjectRuntime.open(positional[0]!);try{return await runtime.importDocx(await readFile(file),basename(file));}finally{runtime.close();}
+  }
   if (area === "document" && action === "create") {
     const { values, positional } = parseFlags(rest, ["name", "kind"]);
     expectPositionals(positional, 1, "document create");

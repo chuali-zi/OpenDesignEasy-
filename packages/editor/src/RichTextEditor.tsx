@@ -235,7 +235,7 @@ export function RichTextEditor({ schema = editorTextSchema, onImportImage, docum
     const font = style?.attrs.fontFamily;
     const size = style?.attrs.fontSize;
     const color = style?.attrs.color;
-    if (typeof font === 'string' && FONT_CHOICES.includes(font)) setFontFamily(font);
+    if (typeof font === 'string' && font.trim()) setFontFamily(font);
     else if (baseStyle?.fontFamily) setFontFamily(baseStyle.fontFamily);
     if (typeof size === 'number' && Number.isFinite(size)) setFontSize(String(size));
     else if (baseStyle?.fontSize) setFontSize(String(baseStyle.fontSize));
@@ -336,6 +336,7 @@ export function RichTextEditor({ schema = editorTextSchema, onImportImage, docum
   return <section className="editor-rich-text" aria-label="富文本编辑器">
     <div className="editor-rich-toolbar" role="toolbar" aria-label="文字格式">
       <select aria-label="字体" title="字体" value={fontFamily} disabled={disabled || saving} onChange={event => { const value = event.currentTarget.value; setFontFamily(value); applyTextStyle({ fontFamily: value }); }}>
+        {!FONT_CHOICES.includes(fontFamily) && <option value={fontFamily}>{fontFamily}</option>}
         {FONT_CHOICES.map(font => <option key={font} value={font}>{font}</option>)}
       </select>
       <input aria-label="字号" title="字号（px）" type="number" min="6" max="240" value={fontSize} disabled={disabled || saving}

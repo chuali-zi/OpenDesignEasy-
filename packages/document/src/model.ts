@@ -112,8 +112,14 @@ export type WebDocument = DocumentHeader & { kind: "web"; pages: WebPage[]; node
 
 /** Doc lengths are logical CSS pixels (96 per inch); sections own canonical content. */
 export type DocPageSettings = { width: number; height: number; marginTop: number; marginRight: number; marginBottom: number; marginLeft: number; [key: string]: JSONValue | undefined };
-export type DocSection = { id: string; name: string; content: PMNodeJSON; pageSettings?: DocPageSettings; styleId?: string; header?: PMNodeJSON; footer?: PMNodeJSON };
-export type DocDocument = DocumentHeader & { kind: "doc"; content: PMNodeJSON; sections: DocSection[]; pageSettings: DocPageSettings; styles?: Record<string, Record<string, JSONValue | undefined>> };
+export type DocSection = { id: string; name: string; content: PMNodeJSON; pageSettings?: DocPageSettings; styleId?: string; header?: PMNodeJSON; footer?: PMNodeJSON; breakType?: "nextPage"|"continuous"|"evenPage"|"oddPage" };
+export type DocTemplateSource = { assetId: string; fileName: string; sourceHash: string; fingerprint: string;
+  stylesSnapshot: Record<string, Record<string, JSONValue | undefined>>;
+  sections: Record<string,{path:number[];settings:DocPageSettings;breakType?:string}>;
+  runs: Record<string, { part: string; path: number[]; marks: PMMarkJSON[] }>;
+  blocks: Record<string, { part: string; path: number[]; type: string; attrs: Record<string, JSONValue> }>;
+};
+export type DocDocument = DocumentHeader & { kind: "doc"; templateSource?: DocTemplateSource; content: PMNodeJSON; sections: DocSection[]; pageSettings: DocPageSettings; styles?: Record<string, Record<string, JSONValue | undefined>> };
 export type AnyDocument = DeckDocument | WebDocument | DocDocument;
 /** Document kinds that currently accept document commands. */
 export type EditableDocument = DeckDocument | WebDocument | DocDocument;

@@ -1,9 +1,9 @@
-import { randomUUID } from 'node:crypto';
+import { randomUUID, createHash } from 'node:crypto';
 import { existsSync, mkdirSync, realpathSync } from 'node:fs';
 import { basename, join, resolve } from 'node:path';
 import { open, unlink } from 'node:fs/promises';
 import { imageSize } from 'image-size';
-import { prepareWebSourceImport, prepareWebStructureImport } from '@oeydesign/media';
+import { prepareWebSourceImport, prepareWebStructureImport, prepareDocxImport, docFingerprint } from '@oeydesign/media';
 import type { StoredAsset } from './assets.ts';
 import { applyEditableCommand, createDocDocument, createDeckDocument, createWebDocument, restoreEditableDocument, validateEditableDocument } from '@oeydesign/document';
 import type { CommandEnvelope, DocDocument, DeckDocument, EditableDocument, WebDocument, ImageAsset } from '@oeydesign/document';
@@ -219,6 +219,30 @@ export class ProjectRuntime {
       this.broadcast(event);
       return { document, ...provenance };
     } catch (error) { await Promise.all(written.map(path => unlink(path).catch(() => {}))); throw error; }
+  }
+
+  async importDocx(bytes: Uint8Array, fileName: string, commandOptions: CommandOptions = {}) {
+    this.ensureOpen();
+    if(typeof fileName!=='string'||!fileName.trim()||fileName.length>160||/[\\/\x00-\x1f]/.test(fileName)||!/\.docx$/i.test(fileName)||!bytes.length||bytes.length>8*1024*1024)throw new RuntimeError('invalid','Use a DOCX template up to 8 MiB with a simple filename.');
+    const commandId=commandOptions.commandId ?? randomUUID();
+    const request=canonicalJson({type:'document.import-docx',commandId,fileName,hash:createHash('sha256').update(bytes).digest('hex'),actor:actor(commandOptions)});
+    const previous=this.retry(commandId,request);if(previous)return {document:this.readDocDocument(previous.documentId),warnings:['重复导入已复用现有文档。']};
+    const documentId=`document-${commandId}`,referenceId=`reference-${randomUUID()}`;
+    let prepared:ReturnType<typeof prepareDocxImport>;try{prepared=prepareDocxImport(bytes,{documentId,assetId:referenceId,fileName});}catch(error){throw new RuntimeError('invalid',error instanceof Error?error.message:'Unsupported DOCX template');}
+    const document=prepared.document;if(this.store.listDocuments().some(d=>d.documentId===documentId))throw new RuntimeError('invalid','Imported document ID already exists');
+    const staged:Array<{record:StoredAsset;bytes:Uint8Array}>=[{record:{id:referenceId,kind:'reference',name:fileName,mimeType:'application/vnd.openxmlformats-officedocument.wordprocessingml.document',sizeBytes:bytes.length,createdAt:new Date().toISOString()},bytes}];
+    const remap=new Map<string,string>();
+    for(const image of prepared.images){const id=`asset-${randomUUID()}`;remap.set(image.asset.id,id);staged.push({record:{id,kind:'image',name:image.asset.name ?? 'Imported image',mimeType:image.asset.mimeType,width:image.asset.width,height:image.asset.height,sizeBytes:image.bytes.length,createdAt:new Date().toISOString()},bytes:image.bytes});}
+    const update=(node:import('@oeydesign/document').PMNodeJSON)=>{if(node.type==='inline_image'){node.attrs!.assetId=remap.get(String(node.attrs!.assetId))!;if(node.attrs?.id&&document.templateSource?.blocks[String(node.attrs.id)])document.templateSource.blocks[String(node.attrs.id)]!.attrs=structuredClone(node.attrs);}for(const n of node.content ?? [])update(n);};
+    for(const section of document.sections)for(const content of [section.content,section.header,section.footer])if(content)update(content);
+    document.assets=prepared.images.map(image=>({...image.asset,id:remap.get(image.asset.id)!}));
+    document.content={type:'doc',content:document.sections.flatMap(s=>structuredClone(s.content.content ?? []))};document.templateSource!.fingerprint=docFingerprint(document);validateEditableDocument(document);
+    const written:string[]=[];
+    try{
+      for(const item of staged){const path=join(this.root,'assets',`${item.record.id}.bin`);const file=await open(path,'wx');written.push(path);try{await file.writeFile(item.bytes);}finally{await file.close();}}
+      this.ensureOpen();const concurrent=this.retry(commandId,request);if(concurrent){await Promise.all(written.map(path=>unlink(path)));return {document:this.readDocDocument(concurrent.documentId),warnings:['重复导入已复用现有文档。']};}
+      const event=this.store.transaction(()=>{for(const item of staged)this.store.putRecord('assets',item.record.id,item.record);this.store.saveDocument({document,undo:[],redo:[]});const event=this.changeEvent(document,commandId,'Import DOCX template',actor(commandOptions),document.sections.map(s=>s.id));this.store.saveCommand(request,{commandId,documentId,revision:0,changedNodeIds:document.sections.map(s=>s.id),seq:event.seq},null);return event;});this.broadcast(event);return {document,warnings:prepared.warnings};
+    }catch(error){await Promise.all(written.map(path=>unlink(path).catch(()=>{})));throw error;}
   }
 
   async importWebStructure(source: string, format: 'html' | 'tsx', fileName: string, commandOptions: CommandOptions = {}) {

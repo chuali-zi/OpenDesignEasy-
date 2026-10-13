@@ -4,15 +4,17 @@ import { textSchema, textFromString, applyTextSteps, validateTextContent } from 
 import type { CommandEnvelope, DocDocument, DocSection, DocPageSettings, DocOperation, PMNodeJSON } from './model.ts';
 
 let nodes = textSchema.spec.nodes;
-nodes.forEach((name, spec) => { if (!['doc', 'text', 'hard_break'].includes(name)) nodes = nodes.update(name, { ...spec, attrs: { ...spec.attrs, id: { default: null }, styleId: { default: null } } }); });
+nodes.forEach((name, spec) => { if (!['doc', 'text', 'hard_break'].includes(name)) nodes = nodes.update(name, { ...spec, attrs: { ...spec.attrs, id: { default: null }, styleId: { default: null }, ...(['paragraph','heading'].includes(name) ? { pageBreakBefore: {default:null}, keepNext: {default:null}, keepLines: {default:null}, widowControl:{default:null} }: {}) } }); });
 nodes = nodes.append({
-  table: { group: 'block', content: 'table_row+', isolating: true, attrs: { id: { default: null }, headerRows: { default: 1 } } },
+  table: { group: 'block', content: 'table_row+', isolating: true, attrs: { id: { default: null }, headerRows: { default: 1 }, columnWidths: { default: null } } },
   table_row: { content: 'table_cell+', attrs: { id: { default: null } } },
   table_cell: { content: 'block+', isolating: true, attrs: { id: { default: null } } },
   inline_image: { inline: true, group: 'inline', atom: true, draggable: true, attrs: { id: { default: null }, assetId: {}, width: {}, height: {}, alt: { default: '' } } },
+  doc_field: { inline:true, group:'inline', atom:true, attrs:{id:{default:null},kind:{}} },
+  inline_page_break: {inline:true,group:'inline',atom:true,attrs:{id:{default:null}}},
   page_break: { group: 'block', atom: true, attrs: { id: { default: null } } },
 } as Record<string, NodeSpec>);
-export const docSchema = new Schema({ nodes, marks: textSchema.spec.marks });
+export const docSchema = new Schema({ nodes, marks: textSchema.spec.marks.append({ooxmlRun:{attrs:{sourceId:{}}}}) });
 export const DEFAULT_DOC_PAGE: DocPageSettings = { width: 793.7008, height: 1122.5197, marginTop: 96, marginRight: 96, marginBottom: 96, marginLeft: 96 };
 const equal = (a: unknown,b: unknown) => JSON.stringify(a) === JSON.stringify(b);
 const record = (x: unknown): x is Record<string, any> => !!x && typeof x === 'object' && !Array.isArray(x);
@@ -42,6 +44,11 @@ function checkStructureBounds(value: PMNodeJSON): void {
 }
 export function validateDocDocument(doc: DocDocument): void {
   if (!record(doc) || doc.kind !== 'doc' || doc.schemaVersion !== 1 || !id(doc.documentId) || !id(doc.name) || !Number.isInteger(doc.revision) || doc.revision < 0 || !Array.isArray(doc.sections) || !doc.sections.length || doc.sections.length > 256) invalid('invalid Doc header/sections');
+  if (doc.templateSource !== undefined) {
+    const source=doc.templateSource;
+    if(!record(source)||!id(source.assetId)||!id(source.fileName)||/[\\/\x00-\x1f]/.test(source.fileName)||!/^[a-f0-9]{64}$/.test(source.sourceHash)||!/^[a-f0-9]{64}$/.test(source.fingerprint)||!record(source.runs)||!record(source.blocks)||!record(source.stylesSnapshot)||!record(source.sections)) invalid('invalid Doc template provenance');
+    for(const [key,item]of [...Object.entries(source.runs),...Object.entries(source.blocks)]) if(!id(key)||!record(item)||typeof item.part!=='string'||!/^word\/[\w.-]+\.xml$/.test(item.part)||!Array.isArray(item.path)||item.path.length>64||item.path.some((n:unknown)=>!Number.isSafeInteger(n)||Number(n)<0||Number(n)>100000))invalid('invalid template property location');
+  }
   validatePage(doc.pageSettings); const ids = new Set<string>(); let count = 0;
   const assets = Array.isArray(doc.assets) ? doc.assets : Object.values(doc.assets ?? {}); const assetIds = new Set<string>();
   for (const asset of assets) { if (!record(asset) || !id(asset.id) || assetIds.has(asset.id) || asset.kind !== 'image' || !['image/png','image/jpeg','image/webp'].includes(asset.mimeType) || !Number.isFinite(asset.width) || !Number.isFinite(asset.height) || asset.width <= 0 || asset.height <= 0) invalid('invalid Doc image asset'); assetIds.add(asset.id); }
@@ -49,15 +56,18 @@ export function validateDocDocument(doc: DocDocument): void {
   const walk = (node: PMNodeJSON, depth: number) => {
     if (depth > 64 || ++count > 100000 || !record(node)) invalid('Doc content exceeds structure limit');
     if (!['doc','text','hard_break'].includes(node.type)) { if (!id(node.attrs?.id) || ids.has(node.attrs.id)) invalid('Doc block IDs must be unique'); ids.add(node.attrs.id); }
+    for(const mark of node.marks ?? []) if(mark.type==='ooxmlRun' && (!id(mark.attrs?.sourceId)||!doc.templateSource?.runs[mark.attrs.sourceId])) invalid('missing template run property source');
+    if(node.type==='doc_field'&&!['page','pages'].includes(String(node.attrs?.kind)))invalid('unsupported Doc field');
+    if(['paragraph','heading'].includes(node.type))for(const key of ['pageBreakBefore','keepNext','keepLines','widowControl'])if(node.attrs?.[key]!=null&&typeof node.attrs[key]!=='boolean')invalid('invalid paragraph pagination flag');
     if (node.type === 'heading' && (!Number.isInteger(node.attrs?.level) || Number(node.attrs?.level) < 1 || Number(node.attrs?.level) > 6)) invalid('invalid Doc heading level');
     if (node.type === 'ordered_list' && (!Number.isInteger(node.attrs?.order) || Number(node.attrs?.order) < 1)) invalid('invalid ordered list start');
-    if (node.attrs?.styleId != null && (!id(node.attrs.styleId) || !doc.styles?.[node.attrs.styleId])) invalid('missing Doc style reference');
-    if (node.type === 'table') { if (!Number.isInteger(node.attrs?.headerRows) || Number(node.attrs?.headerRows) < 0 || Number(node.attrs?.headerRows) > (node.content?.length ?? 0)) invalid('invalid table header count'); const cols = node.content?.[0]?.content?.length; if (!cols || cols > 32 || (node.content?.length ?? 0) > 1000 || node.content?.some(row => row.content?.length !== cols)) invalid('Doc tables must have rectangular rows'); }
+    if (node.attrs?.styleId != null && (!id(node.attrs.styleId) || !doc.styles || !Object.hasOwn(doc.styles,String(node.attrs.styleId)))) invalid('missing Doc style reference');
+    if (node.type === 'table') { if (!Number.isInteger(node.attrs?.headerRows) || Number(node.attrs?.headerRows) < 0 || Number(node.attrs?.headerRows) > (node.content?.length ?? 0)) invalid('invalid table header count'); const cols = node.content?.[0]?.content?.length; if (!cols || cols > 32 || (node.content?.length ?? 0) > 1000 || node.content?.some(row => row.content?.length !== cols)) invalid('Doc tables must have rectangular rows'); if(node.attrs?.columnWidths != null && (!Array.isArray(node.attrs.columnWidths)||node.attrs.columnWidths.length!==cols||node.attrs.columnWidths.some(v=>typeof v!=='number'||!Number.isFinite(v)||v<=0||v>10000)))invalid('invalid Doc column widths'); }
     if (node.type === 'inline_image' && (!assetIds.has(String(node.attrs?.assetId)) || !Number.isFinite(node.attrs?.width) || !Number.isFinite(node.attrs?.height) || Number(node.attrs?.width) <= 0 || Number(node.attrs?.height) <= 0 || Number(node.attrs?.width) > 10000 || Number(node.attrs?.height) > 10000 || typeof node.attrs?.alt !== 'string')) invalid('invalid Doc image reference/geometry');
     for (const child of node.content ?? []) walk(child,depth+1);
   };
-  if (doc.styles !== undefined) { if (!record(doc.styles)) invalid('invalid Doc styles'); for (const [key,style] of Object.entries(doc.styles)) { if (!id(key) || !record(style) || Object.keys(style).some(k => !['fontFamily','fontSize','color','lineHeight','spaceBefore','spaceAfter','align'].includes(k))) invalid('invalid Doc style'); for (const [k,v] of Object.entries(style)) { if (['fontSize','lineHeight','spaceBefore','spaceAfter'].includes(k) ? typeof v !== 'number' || !Number.isFinite(v) || v < 0 || v > 10000 : typeof v !== 'string' || !v.trim() || /[;{}<>]/.test(v) || /url\s*\(|expression\s*\(/i.test(v)) invalid('invalid Doc style value'); } } }
-  for (const section of doc.sections) { if (!record(section) || !id(section.id) || ids.has(section.id) || !id(section.name)) invalid('invalid Doc section'); ids.add(section.id); if (section.styleId !== undefined && !doc.styles?.[section.styleId]) invalid('missing section style'); if (section.pageSettings) validatePage(section.pageSettings); for (const part of ['content','header','footer'] as const) if (section[part]) { if (section[part].type !== 'doc') invalid('section parts must be ProseMirror docs'); checkStructureBounds(section[part]); validateTextContent(section[part],section.id,docSchema); walk(section[part],0); } }
+  if (doc.styles !== undefined) { if (!record(doc.styles)) invalid('invalid Doc styles'); for (const [key,style] of Object.entries(doc.styles)) { if (!id(key) || !record(style) || Object.keys(style).some(k => !['fontFamily','fontSize','color','lineHeight','spaceBefore','spaceAfter','align','bold','italic','underline','strike'].includes(k))) invalid('invalid Doc style'); for (const [k,v] of Object.entries(style)) { if (['bold','italic','underline','strike'].includes(k) ? typeof v !== 'boolean' : ['fontSize','lineHeight','spaceBefore','spaceAfter'].includes(k) ? typeof v !== 'number' || !Number.isFinite(v) || v < 0 || v > 10000 : typeof v !== 'string' || !v.trim() || /[;{}<>]/.test(v) || /url\s*\(|expression\s*\(/i.test(v)) invalid('invalid Doc style value'); } } }
+  for (const section of doc.sections) { if (!record(section) || !id(section.id) || ids.has(section.id) || !id(section.name)) invalid('invalid Doc section'); ids.add(section.id); if(section.breakType!==undefined&&!['nextPage','continuous','evenPage','oddPage'].includes(section.breakType))invalid('unsupported section break'); if (section.styleId !== undefined && (!doc.styles||!Object.hasOwn(doc.styles,section.styleId))) invalid('missing section style'); if (section.pageSettings) validatePage(section.pageSettings); for (const part of ['content','header','footer'] as const) if (section[part]) { if (section[part].type !== 'doc') invalid('section parts must be ProseMirror docs'); checkStructureBounds(section[part]); validateTextContent(section[part],section.id,docSchema); walk(section[part],0); } }
   if (!equal(doc.content,projectDocContent(doc.sections))) invalid('Doc content projection differs from sections');
   if (new TextEncoder().encode(JSON.stringify(doc)).length > 4 * 1024 * 1024) invalid('Doc exceeds 4 MiB');
 }

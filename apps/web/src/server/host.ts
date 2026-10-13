@@ -55,6 +55,10 @@ export async function createWebHost(runtime: ProjectRuntime, options: WebHostOpt
     if (typeof body?.base64 !== 'string' || body.base64.length > 11200000 || body.base64.length % 4 || !/^[A-Za-z0-9+/]*={0,2}$/.test(body.base64)) throw new RuntimeError('invalid', 'Expected a source ZIP no larger than 8 MiB.');
     return runtime.importWebSource(Buffer.from(body.base64, 'base64'), { name: body.name }, { ...human, clientId: 'web' });
   });
+  app.post<{Body:{base64:string;fileName:string;commandId?:string}}>('/api/documents/import-docx',{bodyLimit:12*1024*1024},async request=>{
+    const body=request.body;if(typeof body?.base64!=='string'||body.base64.length>11200000||body.base64.length%4||!/^[A-Za-z0-9+/]*={0,2}$/.test(body.base64)||typeof body.fileName!=='string'||body.commandId!==undefined&&(typeof body.commandId!=='string'||!body.commandId))throw new RuntimeError('invalid','Expected a DOCX template up to 8 MiB');
+    return runtime.importDocx(Buffer.from(body.base64,'base64'),body.fileName,{...human,clientId:'web',commandId:body.commandId});
+  });
   app.post<{ Body: { source: string; format: 'html' | 'tsx'; fileName: string; commandId?: string } }>('/api/documents/import-structure', { bodyLimit: 2 * 1024 * 1024 }, async request => {
     const body = request.body;
     if (typeof body?.source !== 'string' || !['html', 'tsx'].includes(body.format) || typeof body.fileName !== 'string' || body.commandId !== undefined && (typeof body.commandId !== 'string' || !body.commandId)) throw new RuntimeError('invalid', 'Expected a static HTML or TSX file.');

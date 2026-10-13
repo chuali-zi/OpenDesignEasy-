@@ -8,7 +8,7 @@ export type XmlNode = {
     text?: string;
 };
 export const local = (name: string) => name.split(':').at(-1)!;
-export const child = (node: XmlNode, name: string) => node.children.find(c => local(c.name) === name);
+export const child = (node: XmlNode | undefined, name: string) => node?.children.find(c => local(c.name) === name);
 export const children = (node: XmlNode, name: string) => node.children.filter(c => local(c.name) === name);
 export const attr = (node: XmlNode | undefined, name: string) => node && Object.entries(node.attrs).find(([key]) => local(key) === name)?.[1];
 export function descendants(node: XmlNode, name: string): XmlNode[] { return [...(local(node.name) === name ? [node] : []), ...node.children.flatMap(n => descendants(n, name))]; }
@@ -55,3 +55,18 @@ export function relationships(files: Map<string, Uint8Array>, part: string): Map
     }
     return result;
 }
+export function serializeOfficeXml(node: XmlNode): string {
+ const esc=(value:string)=>value.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&apos;'}[c]!));
+ if(node.name==='#text')return esc(node.text ?? '');
+ const attributes=Object.entries(node.attrs).map(([k,v])=>` ${k}="${esc(v)}"`).join('');
+ return node.children.length?`<${node.name}${attributes}>${node.children.map(serializeOfficeXml).join('')}</${node.name}>`:`<${node.name}${attributes}/>`;
+}
+export const setXmlChild=(node:XmlNode,name:string,value:XmlNode|undefined)=>{
+ const before=node.children.findIndex(c=>local(c.name)===name);
+ node.children=node.children.filter(c=>local(c.name)!==name);if(!value)return;
+ let at=before<0?node.children.length:Math.min(before,node.children.length);
+ if(['pPr','rPr','tblPr','trPr','tcPr'].includes(name))at=0;
+ if(name==='tblGrid'){const props=node.children.findIndex(c=>local(c.name)==='tblPr');at=props<0?0:props+1;}
+ node.children.splice(at,0,structuredClone(value));
+};
+export const setXmlAttr=(node:XmlNode,name:string,value:string|undefined)=>{for(const k of Object.keys(node.attrs))if(local(k)===name)delete node.attrs[k];if(value!==undefined)node.attrs[`w:${name}`]=value;};

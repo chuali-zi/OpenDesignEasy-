@@ -12,7 +12,7 @@ const crcTable = Array.from({ length: 256 }, (_, n) => {
   for (let bit = 0; bit < 8; bit++) n = n & 1 ? 0xedb88320 ^ (n >>> 1) : n >>> 1;
   return n >>> 0;
 });
-function crc32(bytes: Uint8Array): number {
+export function crc32(bytes: Uint8Array): number {
   let value = 0xffffffff;
   for (const byte of bytes) value = crcTable[(value ^ byte) & 255]! ^ (value >>> 8);
   return (value ^ 0xffffffff) >>> 0;

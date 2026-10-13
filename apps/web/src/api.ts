@@ -57,3 +57,9 @@ export function submitOperations(projectId: string, documentId: string, operatio
     clientId: 'web', baseRevision, preconditions, operations, label };
   return request('/api/commands', command);
 }
+
+export async function importDocx(file:File,commandId=crypto.randomUUID()) {
+ if(!/\.docx$/i.test(file.name)||file.size>8*1024*1024)throw new Error('请选择最多 8 MiB 的 DOCX 模板。');
+ const base64=await new Promise<string>((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(String(reader.result).split(',')[1]!);reader.onerror=()=>reject(new Error('无法读取 DOCX'));reader.readAsDataURL(file);});
+ return request<{document:EditableDocument;warnings:string[]}>('/api/documents/import-docx',{base64,fileName:file.name,commandId});
+}
