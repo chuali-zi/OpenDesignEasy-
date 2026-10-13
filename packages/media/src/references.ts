@@ -1,7 +1,8 @@
 import { Worker } from 'node:worker_threads';
 import { statSync } from 'node:fs';
 import { existsSync } from 'node:fs';
-import { resolve, isAbsolute } from 'node:path';
+import { resolve, isAbsolute, dirname } from 'node:path';
+import { createRequire } from 'node:module';
 import { imageSize } from 'image-size';
 import { readOfficeArchive, parseOfficeXml, descendants, child, children, attr, xmlText, relationships } from './office-xml.ts';
 export type ParsedReference = {
@@ -86,10 +87,18 @@ export async function readImageOcr(bytes: Uint8Array, options: {
     language?: string;
     dataDir?: string;
 } = {}): Promise<ParsedReference> {
-    const language = options.language ?? 'eng', directory = options.dataDir ?? process.env.OEY_OCR_DATA_DIR;
-    if (!['eng', 'chi_sim'].includes(language) || !directory || !isAbsolute(directory) || !existsSync(resolve(directory, `${language}.traineddata`)))
+    const language = options.language ?? 'eng';
+    if (!['eng', 'chi_sim'].includes(language)) throw new Error('OCR language must be eng or chi_sim; no automatic download occurs.');
+    let directory = options.dataDir ?? process.env.OEY_OCR_DATA_DIR, gzip = false;
+    if (directory === undefined) {
+        // Fixed, installed dependency data only. Never ask the engine to choose a CDN.
+        try { directory = resolve(dirname(createRequire(import.meta.url).resolve(language === 'eng' ? '@tesseract.js-data/eng' : '@tesseract.js-data/chi_sim')), '4.0.0_best_int'); gzip = true; }
+        catch { throw new Error('OCR needs installed local language data or OEY_OCR_DATA_DIR; no automatic download occurs.'); }
+    }
+    const dataFile = resolve(directory, `${language}.traineddata${gzip ? '.gz' : ''}`);
+    if (!isAbsolute(directory) || !existsSync(dataFile))
         throw new Error('OCR needs existing local eng/chi_sim traineddata in OEY_OCR_DATA_DIR; no automatic download occurs.');
-    const trainedData = statSync(resolve(directory, `${language}.traineddata`));
+    const trainedData = statSync(dataFile);
     if (!trainedData.isFile() || trainedData.size > 40 * 1024 * 1024)
         throw new Error('OCR language data must be a local file below 40 MiB');
     if (!bytes.length || bytes.length > 20 * 1024 * 1024)
@@ -99,7 +108,7 @@ export async function readImageOcr(bytes: Uint8Array, options: {
         throw new Error('OCR image exceeds 20 megapixels');
     const signal = options.signal ? AbortSignal.any([options.signal, AbortSignal.timeout(45000)]) : AbortSignal.timeout(45000);
     signal.throwIfAborted();
-    const worker = new Worker(new URL(import.meta.url.endsWith('.ts') ? './ocr-worker.ts' : './ocr-worker.mjs', import.meta.url), { workerData: { bytes: new Uint8Array(bytes), language, dataDir: directory } });
+    const worker = new Worker(new URL(import.meta.url.endsWith('.ts') ? './ocr-worker.ts' : './ocr-worker.mjs', import.meta.url), { workerData: { bytes: new Uint8Array(bytes), language, dataDir: directory, gzip } });
     let onAbort: () => void = () => { };
     try {
         const text = await new Promise<string>((accept, reject) => {

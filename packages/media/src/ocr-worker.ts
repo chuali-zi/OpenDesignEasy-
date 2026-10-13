@@ -6,11 +6,12 @@ const input = workerData as {
     bytes: Uint8Array;
     language: string;
     dataDir: string;
+    gzip: boolean;
 };
 let engine: Awaited<ReturnType<typeof createWorker>> | undefined;
 try {
     engine = await createWorker(input.language, OEM.LSTM_ONLY, {
-        langPath: input.dataDir, gzip: false, cacheMethod: 'none',
+        langPath: input.dataDir, gzip: input.gzip, cacheMethod: 'none',
         logger: () => { }, errorHandler: () => { },
     });
     const result = await engine.recognize(Buffer.from(input.bytes));

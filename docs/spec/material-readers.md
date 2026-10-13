@@ -10,7 +10,7 @@
 |---|---|---|
 | TXT/Markdown/JSON、TS/TSX/JS/JSX/CSS/HTML/Python 源文件 | 严格 UTF-8 文本；JSON 校验 | 不执行源码/脚本；并非任意工程可编辑导入 |
 | CSV | 引号、双引号转义、跨行值与空单元格 | 字符串单元格，不执行公式；10,000 行、256 列 |
-| DOCX | 正文段落与表格单元格文字、页眉/页脚文字 | 不解释字段、图形、批注；原件保留，尚非模板结构导入 |
+| DOCX | 正文段落与表格单元格文字、页眉/页脚文字 | 不解释字段、图形、批注；原件保留；可编辑模板结构导入见 [模板规范](doc-templates.md) |
 | PPTX | 按 presentation relationships 的实际幻灯片顺序读取形状/表格文本 | 100 页上限；图表数据、备注和媒体仍不解释 |
 | XLSX | 工作表名、shared/inline strings、原始值与公式缓存；保留稀疏行列位置 | 100 表、行坐标 1..10,000、列 A..IV；重复地址/无效共享串拒绝；公式不执行，日期/显示格式须复核 |
 | PDF | PDF.js 真实逐页文字 | 100 页、45 秒；无文字页明确说明需要 OCR |
@@ -22,7 +22,7 @@
 
 ## OCR 运行与交付
 
-OCR 要求 `OEY_OCR_DATA_DIR` 指向既有本地 `eng.traineddata` 或 `chi_sim.traineddata`（单文件最多 40 MiB）。缺少语言数据立即说明原因，不走 CDN 下载。当前机器只有英文数据，实际英文图片和扫描 PDF 通过；中文 OCR 未通过、不能代称已支持。本地字体支持的中文 Office/PDF 文字读取与中文 OCR 是不同验证。
+OCR 现随 media 安装固定 `@tesseract.js-data/eng@1.0.0` 与 `@tesseract.js-data/chi_sim@1.0.0`（npm 元数据标 MIT，integrity 固定在 lockfile），默认读取依赖中的 `4.0.0_best_int/*.traineddata.gz`。安装按 npm 标准依赖下载，识别过程不访问网络/CDN；压缩语言文件合计约 4.6 MiB。可用 `OEY_OCR_DATA_DIR` 显式覆盖为既有本地原始 `eng.traineddata` / `chi_sim.traineddata`（单文件最多 40 MiB），覆盖路径缺失立即失败，不回落自动下载。
 
 可信应用线程承载 WASM 引擎；图像和语言路径仅作为数据传递。外层 45 秒 signal 覆盖创建与识别，取消后等待线程终止，不只取消结果。构建同时产出 `dist/oey.mjs` 和 `dist/ocr-worker.mjs`，两者须一起交付。实际已构建 CLI 在独立合成项目中读取图片，输出准确的 `SYNTHETIC EVIDENCE 42` 并正常退出。测试可通过 `OEY_TEST_OCR_DATA_DIR` 指定本地英文数据；缺数据时 OCR 子场景明确 skip，不冒报引擎通过。本机子场景没有跳过。
 
@@ -33,3 +33,11 @@ CLI asset read 原先被前面的通用 asset 路由截获，也误用同步 wit
 合成场景验证原件、读取内容、警告、分页、CSV 引号、XLSX 稀疏/损坏地址、宏/实体/深层 XML 拒绝、OCR 缺数据与初始化取消、缓存/重开、真实子进程 CLI，以及 Pi 附件和工具共享读取。Pi 场景使用本地 faux provider；本阶段没有新增真实 K2.8/provider 请求、模型 usage 或费用。旧 `5c5a4eb` 有界 K2.8 结果仍只属于其当时版本。
 
 最终 Node 全套 137/137（0 skip）、Chromium 全套 24/24、核心与 Web 构建均通过；编译 CLI 的独立 OCR 验收另行通过。证据目录为独立 `oey-cloud-evidence/r5-materials`。Library 此前网络失败，未重试或生成分享链接。完整 R5 仍需 DOCX 模板结构/OOXML、浮动锚点、分页编辑与实际 Word 验收；此次资料读取不冒称这些功能完成。
+
+## 中文 OCR 接续验收
+
+实际合成图片和扫描 PDF 读到 `合成 中 文 资料 测试 42`，按空白归一后准确为“合成中文资料测试42”；OCR 保留原文空格并标 inferred/需复核，不悄悄替换原件。默认本地英文包同样实测，运行取消覆盖初始化。CLI/资料工具共用资产缓存、范围与警告，保存重开保留原图字节；失败取消没有写入成功缓存。
+
+实际编译 `dist/oey.mjs` + `dist/ocr-worker.mjs` 在新合成项目中读取中文原图，CLI 和继承 Worker 的 HTTP/HTTPS/socket/fetch 均用验收钩子禁止，仍返回准确内容、0 模型请求并正常退出，约 1.023 秒。实际结果在 `oey-cloud-evidence/r5-chinese-ocr/compiled-cli.json`；安装、原图、扫描 PDF、生成与复核脚本也保留。
+
+中文数据接续后 Node 全套 143/143（0 skip）与核心构建通过；Web 代码没有变化，其最近完整 Chromium 回归为浮动对象提交时 26/26。本轮实际模型请求 0，usage 不属于 K2.8 验收。
