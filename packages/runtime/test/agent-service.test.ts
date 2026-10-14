@@ -423,3 +423,11 @@ test('native DOCX references enter Pi as extracted content and reading limits, r
   const session=await fixture.runtime.agent.createSession();const accepted=await fixture.runtime.agent.send(session.sessionId,'只读取合成材料，不修改设计。',{documentId:doc.documentId,assetIds:[reference.id]});await within(fixture.runtime.agent.waitForIdle(session.sessionId),'native reference offline run');
   assert.equal(fixture.runtime.agent.getRun(accepted.runId)?.status,'completed');assert.equal(fixture.faux.state.callCount,2);const messages=JSON.stringify(await fixture.runtime.agent.getMessages(session.sessionId));assert.match(messages,/Synthetic source evidence 42/);assert.match(messages,/not interpreted/);assert.match(messages,/docx/);assert.equal(fixture.runtime.listRecords('reference-text').length,1);assert.deepEqual(Buffer.from(await assets.resolve(reference.id)),Buffer.from(original));assert.equal(fixture.runtime.readDocDocument(doc.documentId).revision,1);
 });
+
+test('actual Pi context and Doc schema carry readable media proportions without network or recoloring current documents',async t=>{
+ const fixture=makeFixture(t),doc=fixture.runtime.createDocument({kind:'doc',name:'Synthetic default Doc'}),before=fixture.runtime.readDocDocument(doc.documentId);let prompt='',toolContext='';
+ fixture.faux.setResponses([context=>{prompt=context.systemPrompt??'';return fauxAssistantMessage([fauxToolCall('document_schema',{kind:'doc'},{id:'normal-schema'})],{stopReason:'toolUse'});},context=>{toolContext=JSON.stringify(context.messages);return fauxAssistantMessage('Offline rules checked.',{stopReason:'stop'});}]);
+ const session=await fixture.runtime.agent.createSession();await fixture.runtime.agent.send(session.sessionId,'Check media defaults only.',{documentId:doc.documentId});await within(fixture.runtime.agent.waitForIdle(session.sessionId),'proportions context');
+ for(const rule of ['210 × 297','25.4 mm','12pt (16px)','black (#000000)','black bold headings','avoid pale text','Preserve existing user templates','16:9','1280 × 900','390 × 844','PDF has no unique aspect ratio','100%'])assert.ok(prompt.includes(rule),rule);
+ assert.ok(toolContext.includes('#000000'));assert.ok(!toolContext.includes('#18231d'));assert.deepEqual(fixture.runtime.readDocDocument(doc.documentId),before);assert.equal(fixture.faux.state.callCount,2);
+});

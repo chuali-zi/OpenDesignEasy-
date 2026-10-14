@@ -13,7 +13,7 @@ test('Web zoom/pan stay local and scaled pointer gestures preserve margins, move
   ] } }); expect(response.ok()).toBe(true);
   const frame = page.frameLocator('iframe[title="隔离网页预览"]'), a = frame.locator('[data-web-id="a"]');
   await expect(a).toBeVisible(); const seed = await read(); await page.getByLabel('网页缩放').selectOption('0.5');
-  expect((await read()).revision).toBe(seed.revision); expect(await frame.locator('body').evaluate(el => el.ownerDocument.defaultView!.innerWidth)).toBe(1200);
+  expect((await read()).revision).toBe(seed.revision); expect(await frame.locator('body').evaluate(el => el.ownerDocument.defaultView!.innerWidth)).toBe(1280);
   const start = (await a.boundingBox())!; expect(start.width).toBeCloseTo(50);
   await page.mouse.move(start.x + 15, start.y + 10); await page.mouse.down(); await page.mouse.move(start.x + 35, start.y + 20, { steps: 6 }); await page.mouse.up();
   await expect.poll(async () => (await read()).nodes.a!.style.left).toBe(70); expect((await read()).nodes.a!.style.top).toBe(60);

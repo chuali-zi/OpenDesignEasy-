@@ -165,11 +165,13 @@ export async function renderWebPng(document: WebDocument, pageId = document.page
 export async function exportWebPdf(document: WebDocument, resolveAsset?: AssetResolver, options: WebRenderOptions = {}): Promise<Uint8Array> {
   options.signal?.throwIfAborted();
   validateWebDocument(document);
+  const width=options.width??1280,height=options.height??900;
   const urls = await imageUrls(document, resolveAsset);
   const sections = document.pages.map(page => `<section class="oey-print-page">${renderWebMarkup(document, page.id, urls)}</section>`).join('\n');
-  const html = `<!doctype html><html><head><meta charset="utf-8"><style>${renderWebStyles(document)}\n@page{size:A4;margin:16mm}.oey-print-page{break-after:page}.oey-print-page:last-child{break-after:auto}</style></head><body>${sections}</body></html>`;
+  const html = `<!doctype html><html><head><meta charset="utf-8"><style>${renderWebStyles(document)}\n@page{size:${width}px ${height}px;margin:0}.oey-print-page{break-after:page}.oey-print-page:last-child{break-after:auto}</style></head><body>${sections}</body></html>`;
   return withBrowser(options, async browser => {
-    const page = await browser.newPage({ viewport: { width: options.width ?? 1280, height: options.height ?? 900 } });
+    const page = await browser.newPage({ viewport: { width, height } });
+    await page.emulateMedia({media:'screen'});
     await page.setContent(html, { waitUntil: 'load' });
     await ready(page);
     return new Uint8Array(await page.pdf({ printBackground: true, preferCSSPageSize: true, tagged: true }));

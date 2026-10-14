@@ -1,6 +1,7 @@
 import { Schema, type NodeSpec } from 'prosemirror-model';
 import { KernelError, invalid } from './errors.ts';
 import { textSchema, textFromString, applyTextSteps, validateTextContent } from './text.ts';
+import { DEFAULT_DOC_STYLES } from './doc-defaults.ts';
 import type { CommandEnvelope, DocDocument, DocSection, DocPageSettings, DocOperation, PMNodeJSON } from './model.ts';
 
 let nodes = textSchema.spec.nodes;
@@ -8,7 +9,7 @@ nodes.forEach((name, spec) => { if (!['doc', 'text', 'hard_break'].includes(name
 const floatAttrs={id:{default:null},x:{default:0},y:{default:0},width:{default:240},height:{default:140},rotation:{default:0},wrap:{default:'topBottom'},locked:{default:false}};
 nodes = nodes.append({
   floating_image:{inline:true,group:'inline',atom:true,attrs:{...floatAttrs,assetId:{},alt:{default:''}}},
-  floating_shape:{inline:true,group:'inline',atom:true,attrs:{...floatAttrs,shape:{default:'rectangle'},fill:{default:'#DDEBDD'},stroke:{default:'#355E49'},strokeWidth:{default:1},text:{default:'文字框'},fontSize:{default:16},fontFamily:{default:'Noto Sans CJK SC'},color:{default:'#18231d'}}},
+  floating_shape:{inline:true,group:'inline',atom:true,attrs:{...floatAttrs,shape:{default:'rectangle'},fill:{default:'#FFFFFF'},stroke:{default:'#000000'},strokeWidth:{default:1},text:{default:'文字框'},fontSize:{default:16},fontFamily:{default:'Noto Sans CJK SC'},color:{default:'#000000'}}},
   table: { group: 'block', content: 'table_row+', isolating: true, attrs: { id: { default: null }, headerRows: { default: 1 }, columnWidths: { default: null } } },
   table_row: { content: 'table_cell+', attrs: { id: { default: null } } },
   table_cell: { content: 'block+', isolating: true, attrs: { id: { default: null } } },
@@ -34,7 +35,7 @@ export function normalizeDocContent(value: PMNodeJSON, prefix: string): PMNodeJS
 export function projectDocContent(sections: DocSection[]): PMNodeJSON { return { type: 'doc', content: sections.flatMap(section => structuredClone(section.content.content ?? [])) }; }
 export function createDocDocument(input: { documentId: string; name: string }): DocDocument {
   const section: DocSection = { id: `section-${input.documentId}`, name: '正文', content: normalizeDocContent(textFromString(''), `block-${input.documentId}`) };
-  const document: DocDocument = { schemaVersion: 1, kind: 'doc', documentId: input.documentId, revision: 0, name: input.name, sections: [section], content: projectDocContent([section]), pageSettings: { ...DEFAULT_DOC_PAGE } };
+  const document: DocDocument = { schemaVersion: 1, kind: 'doc', documentId: input.documentId, revision: 0, name: input.name, sections: [section], content: projectDocContent([section]), pageSettings: { ...DEFAULT_DOC_PAGE }, styles: structuredClone(DEFAULT_DOC_STYLES) };
   validateDocDocument(document); return document;
 }
 function validatePage(page: DocPageSettings) {
@@ -70,7 +71,7 @@ export function validateDocDocument(doc: DocDocument): void {
     if ((node.type === 'inline_image' || node.type==='floating_image') && (!assetIds.has(String(node.attrs?.assetId)) || !Number.isFinite(node.attrs?.width) || !Number.isFinite(node.attrs?.height) || Number(node.attrs?.width) <= 0 || Number(node.attrs?.height) <= 0 || Number(node.attrs?.width) > 10000 || Number(node.attrs?.height) > 10000 || typeof node.attrs?.alt !== 'string')) invalid('invalid Doc image reference/geometry');
     for (const child of node.content ?? []) walk(child,depth+1);
   };
-  if (doc.styles !== undefined) { if (!record(doc.styles)) invalid('invalid Doc styles'); for (const [key,style] of Object.entries(doc.styles)) { if (!id(key) || !record(style) || Object.keys(style).some(k => !['fontFamily','fontSize','color','lineHeight','spaceBefore','spaceAfter','align','bold','italic','underline','strike'].includes(k))) invalid('invalid Doc style'); for (const [k,v] of Object.entries(style)) { if (['bold','italic','underline','strike'].includes(k) ? typeof v !== 'boolean' : ['fontSize','lineHeight','spaceBefore','spaceAfter'].includes(k) ? typeof v !== 'number' || !Number.isFinite(v) || v < 0 || v > 10000 : typeof v !== 'string' || !v.trim() || /[;{}<>]/.test(v) || /url\s*\(|expression\s*\(/i.test(v)) invalid('invalid Doc style value'); } } }
+  if (doc.styles !== undefined) { if (!record(doc.styles)) invalid('invalid Doc styles'); for (const [key,style] of Object.entries(doc.styles)) { if (!id(key) || !record(style) || Object.keys(style).some(k => !['fontFamily','fontSize','color','lineHeight','spaceBefore','spaceAfter','align','bold','italic','underline','strike','keepNext'].includes(k))) invalid('invalid Doc style'); for (const [k,v] of Object.entries(style)) { if (['bold','italic','underline','strike','keepNext'].includes(k) ? typeof v !== 'boolean' : ['fontSize','lineHeight','spaceBefore','spaceAfter'].includes(k) ? typeof v !== 'number' || !Number.isFinite(v) || v < 0 || v > 10000 : typeof v !== 'string' || !v.trim() || /[;{}<>]/.test(v) || /url\s*\(|expression\s*\(/i.test(v)) invalid('invalid Doc style value'); } } }
   for (const section of doc.sections) { if (!record(section) || !id(section.id) || ids.has(section.id) || !id(section.name)) invalid('invalid Doc section'); ids.add(section.id); if(section.breakType!==undefined&&!['nextPage','continuous','evenPage','oddPage'].includes(section.breakType))invalid('unsupported section break'); if (section.styleId !== undefined && (!doc.styles||!Object.hasOwn(doc.styles,section.styleId))) invalid('missing section style'); if (section.pageSettings) validatePage(section.pageSettings); for (const part of ['content','header','footer'] as const) if (section[part]) { if (section[part].type !== 'doc') invalid('section parts must be ProseMirror docs'); checkStructureBounds(section[part]); validateTextContent(section[part],section.id,docSchema); walk(section[part],0); } }
   if (!equal(doc.content,projectDocContent(doc.sections))) invalid('Doc content projection differs from sections');
   if (new TextEncoder().encode(JSON.stringify(doc)).length > 4 * 1024 * 1024) invalid('Doc exceeds 4 MiB');

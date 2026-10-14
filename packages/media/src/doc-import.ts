@@ -130,7 +130,7 @@ export function prepareDocxImport(bytes: Uint8Array, options: {
         else
             result[{ strong: 'bold', em: 'italic', underline: 'underline', strike: 'strike' }[mark.type]!] = true;
     } const rp=node&&child(node,'rPr');for(const [xml,key]of [['b','bold'],['i','italic'],['strike','strike']] as const){const value=flag(rp&&child(rp,xml));if(value!==undefined)result[key]=value;}if(rp&&child(rp,'u'))result.underline=attr(child(rp,'u'),'val')!=='none';
-        const p = pAttrs(node && child(node, 'pPr')); for (const k of ['align', 'lineHeight', 'spaceBefore', 'spaceAfter'])
+        const p = pAttrs(node && child(node, 'pPr')); for (const k of ['align', 'lineHeight', 'spaceBefore', 'spaceAfter', 'keepNext'])
         if (p[k] != null)
             result[k] = p[k]!; doc.styles![id] = result; return result; };
     for (const id of styleNodes.keys())

@@ -68,7 +68,7 @@ function selector(id: string): string {
 
 /** The editor, static exports and React source all use this CSS projection. */
 export function renderWebStyles(document: WebDocument): string {
-  const rules = ['*,*::before,*::after{box-sizing:border-box}', 'html,body{margin:0}', 'img{max-width:100%}'];
+  const rules = ['*,*::before,*::after{box-sizing:border-box}', 'html,body{margin:0;font:16px/1.5 system-ui,sans-serif;color:#000000}','button,input,select,textarea{font:inherit}', 'img{max-width:100%}'];
   for (const module of document.sourceModules ?? []) if (module.language === 'css') rules.push(module.source.replace(/</g, '\\3c '));
   for (const node of Object.values(document.nodes)) rules.push(`${selector(node.id)}{${declarations({ ...node.style, ...layoutStyles(node.layout) })}}`);
   for (const breakpoint of document.breakpoints ?? []) {

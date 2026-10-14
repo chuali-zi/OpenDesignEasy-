@@ -1302,14 +1302,14 @@ export function DeckEditor({ document, onApply, onUndo, onRedo, onSelectionChang
         </div>
         <div className="editor-tool-group editor-zoom-tools">
           <button type="button" className="editor-icon-button" aria-label="缩小画布" title="缩小画布" onClick={() => zoomAt(1 / 1.2)} disabled={!page}>−</button>
-          <span className="editor-zoom-value">{Math.round(zoom * 100)}%</span>
+          <span className="editor-zoom-value" aria-label="幻灯片显示缩放" title="实际显示比例；缩放不改变幻灯片尺寸">{Math.round(stageScale * 100)}%</span>
           <button type="button" className="editor-icon-button" aria-label="放大画布" title="放大画布" onClick={() => zoomAt(1.2)} disabled={!page}>＋</button>
           <button type="button" className="editor-fit-button" aria-label="适应页面" title="适应页面" onClick={resetView}>适应</button>
         </div>
       </div>
 
       <input ref={assetInputRef} className="editor-hidden-file-input" type="file" accept="image/png,image/jpeg,image/webp" aria-label="选择图片文件" onChange={event => { void importImage(event); }} />
-      <div ref={canvasRef} className="editor-canvas-wrap" onWheel={event => {
+      <div ref={canvasRef} data-display-scale={stageScale} className="editor-canvas-wrap" onWheel={event => {
         if (!page) return;
         event.preventDefault();
         const bounds = canvasRef.current?.getBoundingClientRect();

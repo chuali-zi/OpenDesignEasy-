@@ -52,6 +52,7 @@ test('canvas drag, resize and rotation persist while zoom stays local', async ({
   await expect.poll(async () => Object.values((await snapshot()).nodes).filter(node => node.kind === 'shape').length).toBe(1);
   const before = await snapshot();
   const shape = Object.values(before.nodes).find(node => node.kind === 'shape')!;
+  await expect(page.getByLabel('属性 宽度',{exact:true})).toHaveValue(String(Math.round(shape.geometry.width*100)/100));
   const bounds = (await page.locator('.editor-canvas-wrap').boundingBox())!;
   const slide = before.pages[0]!;
   const scale = Math.min((bounds.width - 108) / slide.width, (bounds.height - 108) / slide.height, 1);
@@ -65,6 +66,8 @@ test('canvas drag, resize and rotation persist while zoom stays local', async ({
   await expect.poll(async () => (await snapshot()).nodes[shape.id]!.geometry.x).toBeGreaterThan(g.x + 20);
   const moved = await snapshot();
   const m = moved.nodes[shape.id]!.geometry;
+  await expect(page.getByLabel('属性 X',{exact:true})).toHaveValue(String(Math.round(m.x*100)/100));
+  await page.evaluate(()=>new Promise<void>(resolve=>requestAnimationFrame(()=>requestAnimationFrame(()=>resolve()))));
   const corner = { x: origin.x + (m.x + m.width) * scale, y: origin.y + (m.y + m.height) * scale };
   await page.mouse.move(corner.x, corner.y);
   await page.mouse.down();
@@ -114,6 +117,7 @@ test('rich-text idle save restores its caret without stealing a later focus', as
   const snapshot = await createDeck(page, 'Idle save focus fixture');
   await page.getByRole('button', { name: '增加文字', exact: true }).click();
   const content = page.getByLabel('富文本内容', { exact: true });
+  await expect(content).toHaveText('双击编辑文字');
   await content.click();
   const nodeId = Object.keys((await snapshot()).nodes)[0]!;
   const text = async () => JSON.stringify((await snapshot()).nodes[nodeId]!.content);
@@ -132,6 +136,7 @@ test('rich-text idle save restores its caret without stealing a later focus', as
   await expect(content).toHaveAttribute('contenteditable', 'false');
   first.release();
   await expect.poll(text).toContain('Saved with a caret');
+  await expect(content).toHaveText('Saved with a caret');
   await expect(content).toBeFocused();
   await content.press('End');
   await page.keyboard.type(' retained');

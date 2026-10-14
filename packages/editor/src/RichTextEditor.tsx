@@ -22,6 +22,7 @@ export type RichTextEditorProps = {
   revision: number;
   disabled: boolean;
   focused?: boolean;
+  resolveBlockStyle?: (node: PMNodeJSON) => Record<string, unknown>;
   baseStyle?: { fontFamily?: string; fontSize?: number; color?: string; lineHeight?: number };
   onCommit: (documentId: string, nodeId: string, steps: unknown[], label: string, baseRevision: number, assets?: ImageAsset[]) => Promise<boolean>;
   onConflict: (draft?: PMNodeJSON) => void;
@@ -31,7 +32,8 @@ export type RichTextEditorProps = {
 const FONT_CHOICES = ['Noto Sans CJK SC', 'Segoe UI', 'Arial', 'Georgia', 'Aptos', 'Microsoft YaHei', 'Noto Sans'];
 type PendingFocusRestore = { view: EditorView; selection: Selection; moved: boolean; cleanup: () => void };
 
-export function RichTextEditor({ schema: requestedSchema = editorTextSchema, docPagination, assetUrl, onImportImage, documentId, nodeId, content, revision, disabled, focused = false, baseStyle, onCommit, onConflict, onDraftChange }: RichTextEditorProps) {
+export function RichTextEditor({ schema: requestedSchema = editorTextSchema, docPagination, assetUrl, onImportImage, documentId, nodeId, content, revision, disabled, focused = false, baseStyle, resolveBlockStyle, onCommit, onConflict, onDraftChange }: RichTextEditorProps) {
+  const blockStyleRef=useRef(resolveBlockStyle);blockStyleRef.current=resolveBlockStyle;
   const [schema,setSchema]=useState(requestedSchema);
   const selectionSnapshot=useRef<{documentId:string;nodeId:string;json:unknown;expectedDoc:string;focused:boolean}|null>(null);
   const docJson = (value: PMNodeJSON) => schema.nodeFromJSON(value);
@@ -247,29 +249,29 @@ export function RichTextEditor({ schema: requestedSchema = editorTextSchema, doc
 
   function syncToolbar(state: EditorState) {
     const selected=(state.selection as Selection & {node?: typeof state.doc}).node;setObjectAttrs(selected && ['inline_image','floating_image','floating_shape'].includes(selected.type.name)?{...selected.attrs,kind:selected.type.name}:null);
+    const block = state.selection.$from.parent;const inherited:Record<string,unknown>={...baseStyle,...blockStyleRef.current?.(block.toJSON())};
     const marks = state.storedMarks ?? state.selection.$from.marks();
     const style = marks.find(mark => mark.type === schema.marks.textStyle);
-    const font = style?.attrs.fontFamily;
-    const size = style?.attrs.fontSize;
-    const color = style?.attrs.color;
+    const font = style?.attrs.fontFamily ?? inherited.fontFamily;
+    const size = style?.attrs.fontSize ?? inherited.fontSize;
+    const color = style?.attrs.color ?? inherited.color;
     if (typeof font === 'string' && font.trim()) setFontFamily(font);
     else if (baseStyle?.fontFamily) setFontFamily(baseStyle.fontFamily);
     if (typeof size === 'number' && Number.isFinite(size)) setFontSize(String(size));
     else if (baseStyle?.fontSize) setFontSize(String(baseStyle.fontSize));
     if (typeof color === 'string' && /^#[0-9a-f]{6}$/i.test(color)) setFontColor(color);
     else if (baseStyle?.color) setFontColor(baseStyle.color);
-    const block = state.selection.$from.parent;
-    setPagination(Object.fromEntries(['pageBreakBefore','keepNext','keepLines','widowControl'].map(key=>[key,block.attrs[key]===true])));
-    const currentAlign = block.attrs.align;
+    setPagination(Object.fromEntries(['pageBreakBefore','keepNext','keepLines','widowControl'].map(key=>[key,(block.attrs[key]??inherited[key])===true])));
+    const currentAlign = block.attrs.align ?? inherited.align;
     if (currentAlign === 'left' || currentAlign === 'center' || currentAlign === 'right' || currentAlign === 'justify') setAlign(currentAlign);
     else setAlign('left');
-    const currentLineHeight = block.attrs.lineHeight;
+    const currentLineHeight = block.attrs.lineHeight ?? inherited.lineHeight;
     if (typeof currentLineHeight === 'number') setLineHeight(String(currentLineHeight));
     else setLineHeight(String(baseStyle?.lineHeight ?? (baseStyle?.fontSize ?? 24) * 1.2));
-    setSpaceBefore(typeof block.attrs.spaceBefore === 'number' ? String(block.attrs.spaceBefore) : '0');
-    setSpaceAfter(typeof block.attrs.spaceAfter === 'number' ? String(block.attrs.spaceAfter) : '0');
-    setIndent(typeof block.attrs.indent === 'number' ? String(block.attrs.indent) : '0');
-    setFirstLineIndent(typeof block.attrs.firstLineIndent === 'number' ? String(block.attrs.firstLineIndent) : '0');
+    setSpaceBefore(typeof (block.attrs.spaceBefore ?? inherited.spaceBefore) === 'number' ? String(block.attrs.spaceBefore ?? inherited.spaceBefore) : '0');
+    setSpaceAfter(typeof (block.attrs.spaceAfter ?? inherited.spaceAfter) === 'number' ? String(block.attrs.spaceAfter ?? inherited.spaceAfter) : '0');
+    setIndent(typeof (block.attrs.indent ?? inherited.indent) === 'number' ? String(block.attrs.indent ?? inherited.indent) : '0');
+    setFirstLineIndent(typeof (block.attrs.firstLineIndent ?? inherited.firstLineIndent) === 'number' ? String(block.attrs.firstLineIndent ?? inherited.firstLineIndent) : '0');
   }
 
   useEffect(() => {
