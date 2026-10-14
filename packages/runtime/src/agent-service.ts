@@ -49,7 +49,8 @@ interface DecisionRecord {
   createdAt: string;
 }
 
-const SYSTEM_PROMPT = `You are OEYdesign, a collaborative design agent. The project document and its revisions are the source of truth. Use the supplied read tools before editing, apply edits through document_apply, and use its exact current base revision. Preserve human edits and report conflicts instead of overwriting them. Discuss without changing the document when asked. Ask a focused question with user_ask only when an important design decision is missing; after asking, stop and wait. Do not claim an asset, preview, export, or document change succeeded unless the corresponding tool confirms it. Use only the supplied design tools; do not invent filesystem or shell access.`;
+const SYSTEM_PROMPT = `You are OEYdesign, a collaborative design agent. The project document and its revisions are the source of truth. Use the supplied read tools before editing, apply edits through document_apply, and use its exact current base revision. Preserve human edits and report conflicts instead of overwriting them. Discuss without changing the document when asked. Ask a focused question with user_ask only when an important design decision is missing; after asking, stop and wait. Do not claim an asset, preview, export, or document change succeeded unless the corresponding tool confirms it. Use only the supplied design tools; do not invent filesystem or shell access.
+Visual inspection: After important layout changes and before final delivery or artifact_export, proactively call render_preview for each affected page. For Web, inspect both viewport:"desktop" (1280x900) and viewport:"mobile" (390x844); managed React components run in these previews. For Deck, inspect each affected slide at its native dimensions without a viewport preset. Look at the returned images, checking clipped or overflowing text, overlap, spacing, alignment, image cropping, contrast, hierarchy and content completeness. If you find a defect, read the current document, fix the relevant objects or managed source through document_apply, then render again and examine the repaired layout; recheck both Web sizes after responsive changes. Use the returned revision and current document revision to avoid judging an outdated screenshot. Preserve user choices and human edits. Do not screenshot every minor wording edit or invent defects to force a repair loop. If rendering fails or the model cannot inspect images, report the limitation instead of claiming visual verification. A browser preview does not verify actual Office export layout.`;
 
 function systemPrompt(context: string): string {
   return `${SYSTEM_PROMPT}\n\nCurrent project design context (refresh from tools before editing if anything changed):\n${context}`;
@@ -871,12 +872,13 @@ export class AgentService {
       },
     }));
     tools.push(define({
-      name: 'render_preview', label: 'Render preview', description: 'Render the current document or a page and return an image for visual inspection.',
-      parameters: Type.Object({ documentId: Type.String(), pageId: Type.Optional(Type.String()) }), ...sequential,
+      name: 'render_preview', label: 'Render preview', description: 'Inspect the current page visually. Web supports desktop (1280x900) and mobile (390x844), including real managed React components; Deck retains its slide dimensions. Check after layout changes and before delivery; fix defects and inspect again.',
+      parameters: Type.Object({ documentId: Type.String(), pageId: Type.Optional(Type.String()), viewport: Type.Optional(Type.Union([Type.Literal('desktop'), Type.Literal('mobile')])) }), ...sequential,
       async execute(_id, args, signal) {
-        const result = await thisService.requireServices().preview({ documentId: args.documentId, pageId: args.pageId }, signal ?? new AbortController().signal);
+        const result = await thisService.requireServices().preview({ documentId: args.documentId, pageId: args.pageId, viewport: args.viewport }, signal ?? new AbortController().signal);
         const image = toImageContent(result.mimeType, result.data);
-        return { content: [image, { type: 'text', text: `Preview at revision ${result.revision}.` }], details: { revision: result.revision, mimeType: result.mimeType } };
+        const { data: _pixels, ...details } = result;
+        return { content: [image, { type: 'text', text: `Preview at revision ${result.revision}. ${JSON.stringify(details)}` }], details };
       },
     }));
     tools.push(define({

@@ -2,6 +2,7 @@ import { randomUUID } from 'node:crypto';
 import { mkdir, readFile, realpath, rename, writeFile } from 'node:fs/promises';
 import { basename, isAbsolute, join, relative, resolve } from 'node:path';
 import { exportDocumentArtifact } from '@oeydesign/media';
+import { renderWebPreviewPng } from '@oeydesign/media/web-preview';
 import type { ArtifactFormat } from '@oeydesign/media';
 import { ProjectAssets, generateImage } from './assets.ts';
 import type { ProjectRuntime } from './project-runtime.ts';
@@ -11,7 +12,7 @@ export interface AgentDesignServices {
   readReference(args: { assetId: string; offset?: number; limit?: number }, signal: AbortSignal): Promise<unknown>;
   importAsset(args: { path: string }, signal: AbortSignal): Promise<unknown>;
   generateAsset(args: { prompt: string }, signal: AbortSignal): Promise<unknown>;
-  preview(args: { documentId: string; pageId?: string }, signal: AbortSignal): Promise<{ revision: number; mimeType: 'image/png'; data: string }>;
+  preview(args: { documentId: string; pageId?: string; viewport?: 'desktop' | 'mobile' }, signal: AbortSignal): Promise<{ revision: number; mimeType: 'image/png'; data: string; pageId?: string; viewport?: { width: number; height: number }; renderMode?: 'static' | 'react' | 'deck' }>;
   exportArtifact(args: { documentId: string; format: ArtifactFormat }, signal: AbortSignal): Promise<unknown>;
 }
 
@@ -42,9 +43,15 @@ export function createDesignServices(runtime: ProjectRuntime): AgentDesignServic
     async preview(args, signal) {
       signal.throwIfAborted();
       const document = runtime.readDocument(args.documentId);
-      const bytes = await exportDocumentArtifact(document, assets.resolve, 'png', { signal, pageId: args.pageId });
+      const pageId = args.pageId ?? document.pages[0]?.id;
+      if (document.kind !== 'web' && args.viewport) throw new RuntimeError('invalid', 'Viewport presets apply to Web documents; Deck previews retain their slide dimensions.');
+      const viewport = document.kind === 'web' ? args.viewport === 'mobile' ? { width: 390, height: 844 } : { width: 1280, height: 900 } : undefined;
+      const bytes = document.kind === 'web'
+        ? await renderWebPreviewPng(document, pageId, assets.resolve, { signal, ...viewport })
+        : await exportDocumentArtifact(document, assets.resolve, 'png', { signal, pageId });
       signal.throwIfAborted();
-      return { revision: document.revision, mimeType: 'image/png', data: Buffer.from(bytes).toString('base64') };
+      const renderMode = document.kind === 'web' ? Object.values(document.nodes).some(node => node.component) ? 'react' : 'static' : 'deck';
+      return { revision: document.revision, pageId, viewport, renderMode, mimeType: 'image/png', data: Buffer.from(bytes).toString('base64') };
     },
     async exportArtifact(args, signal) {
       signal.throwIfAborted();
