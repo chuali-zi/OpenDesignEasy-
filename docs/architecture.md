@@ -97,7 +97,7 @@ CSS、HTML、PPTX、DOCX 与 Canvas 节点均是表示或投影，不能与文�
 |---|---|
 | 一方代码 | TypeScript、ESM、npm workspaces |
 | Node | Node 24.21.0 Windows x64 binary 与 `node:sqlite` 内存读写已验证；跨平台干净安装留到 R7 |
-| Agent | Pi 本地 SDK；已核对 0.85.1 为当前研究基线，不使用实验 server/client 接口 |
+| Agent | Pi 1.2.0 公共 SDK；共享 runtime 中的 ChatGPT 账号连接与 Responses 兼容见 [接入规范](spec/chatgpt-sign-in.md)；0.85.1 为既有 R3 验证版本 |
 | 图形 UI | React + Vite；旧 UI 可择取组件，不保留旧 run/store 语义 |
 | 固定画布 | React-Konva/Konva 的命中、变换与绘制；文档模型由 OEY 管理 |
 | Web 编辑 | 实际 DOM 布局与编辑 overlay；同一文档投影支持源码生产 |

@@ -2,7 +2,7 @@ import { randomUUID } from 'node:crypto';
 import { existsSync } from 'node:fs';
 import { mkdir } from 'node:fs/promises';
 import { isAbsolute, join, relative, resolve } from 'node:path';
-import type { AgentMessage, AgentContext } from '@earendil-works/pi-agent-core';
+import type { AgentMessage } from '@earendil-works/pi-agent-core';
 import type { Api, ImageContent, Model } from '@earendil-works/pi-ai';
 import type { AgentSession, ModelRuntime, SessionManager, ToolDefinition } from '@earendil-works/pi-coding-agent';
 import type { ProjectRuntime } from './project-runtime.ts';
@@ -10,6 +10,9 @@ import type { ProjectStore } from './storage/project-store.ts';
 import type { AgentDesignServices } from './design-services.ts';
 import { RuntimeError } from './errors.ts';
 import { webOperationSchema } from './web-schema.ts';
+import { ChatGPTAuth, ChatGPTError } from './chatgpt-auth.ts';
+import type { PublicChatGPTProfile } from './chatgpt-store.ts';
+import { createChatGPTModelRuntime, listChatGPTModels, chatGPTFailure } from './chatgpt-provider.ts';
 import type {
   AgentAcceptedInputOptions, AgentInputKind, AgentInputRecord, AgentProviderConfig, AgentQuestionRecord,
   AgentRunRecord, AgentRunStart, AgentSelection, AgentServiceEvent, AgentSessionOptions, AgentSessionRecord,
@@ -18,6 +21,7 @@ import type {
 
 type ConfiguredModel = { modelRuntime: ModelRuntime; model: Model<Api> };
 export interface AgentServiceOptions {
+  chatgptAuth?: ChatGPTAuth;
   /** Public SDK injection point used by deterministic faux-provider integration tests. */
   createModelRuntime?: (config: AgentProviderConfig) => Promise<ConfiguredModel>;
 }
@@ -84,6 +88,8 @@ function toImageContent(mimeType: string, data: string): ImageContent {
 }
 
 export class AgentService {
+  readonly chatgpt: ChatGPTAuth;
+  private chatgptProfiles: PublicChatGPTProfile[] = [];
   private readonly runtime: ProjectRuntime;
   private readonly store: ProjectStore;
   private readonly options: AgentServiceOptions;
@@ -101,6 +107,7 @@ export class AgentService {
   private readonly listeners = new Set<(event: AgentServiceEvent) => void>();
 
   constructor(runtime: ProjectRuntime, store: ProjectStore, options: AgentServiceOptions = {}) {
+    this.chatgpt = options.chatgptAuth ?? new ChatGPTAuth();
     this.runtime = runtime;
     this.store = store;
     this.options = options;
@@ -148,6 +155,8 @@ export class AgentService {
       throw new RuntimeError('busy', 'Stop or finish the active agent run before changing its model configuration.');
     }
     if (!config || typeof config !== 'object') throw new RuntimeError('invalid', 'Model configuration must be an object.');
+    if (config.authMode !== undefined && !['api_key', 'chatgpt'].includes(config.authMode)) throw new RuntimeError('invalid', 'Unknown model authentication mode.');
+    if (config.authMode === 'chatgpt' && (typeof config.profileId !== 'string' || !config.profileId)) throw new RuntimeError('invalid', 'Select a ChatGPT account.');
     const providerId = config.providerId ?? config.provider ?? this.config.providerId;
     const modelId = config.modelId ?? config.model ?? this.config.modelId;
     const baseUrl = config.baseUrl === undefined ? this.config.baseUrl : config.baseUrl.trim() || undefined;
@@ -171,7 +180,19 @@ export class AgentService {
       apiKey: config.apiKey ?? (sameBackend ? this.config.apiKey : undefined),
       apiKeyEnv,
     };
-    const { apiKey: _secret, ...safeConfig } = this.config;
+    const { apiKey: _secret, ...restConfig } = this.config;
+    const safeConfig: AgentProviderConfig = restConfig;
+    if (this.config.authMode === 'chatgpt') {
+      if (!this.config.profileId) throw new RuntimeError('invalid', 'Select a ChatGPT account.');
+      this.config.providerId = 'openai';
+      this.config.providerName = 'ChatGPT';
+      this.config.baseUrl = undefined;
+      this.config.apiKey = undefined;
+      this.config.api = 'openai-responses';
+      this.config.compat = undefined;
+      Object.assign(safeConfig, this.config);
+      delete safeConfig.apiKey;
+    }
     this.runtime.putRecord('agent-config', 'current', safeConfig);
     for (const [sessionId, loaded] of this.sessions) {
       loaded.disposeEvents();
@@ -182,8 +203,12 @@ export class AgentService {
   }
 
   getConfig(): PublicAgentConfig {
-    const keyAvailable = Boolean(this.config.apiKey || (this.config.apiKeyEnv && process.env[this.config.apiKeyEnv]));
+    const keyAvailable = this.config.authMode === 'chatgpt'
+      ? this.chatgptProfiles.some(profile => profile.id === this.config.profileId && profile.planEnabled)
+      : Boolean(this.config.apiKey || (this.config.apiKeyEnv && process.env[this.config.apiKeyEnv]));
     return {
+      authMode: this.config.authMode ?? 'api_key',
+      ...(this.config.authMode === 'chatgpt' ? { profileId: this.config.profileId } : {}),
       configured: Boolean(this.config.providerId && this.config.modelId && keyAvailable),
       ...(this.config.providerId ? { providerId: this.config.providerId } : {}),
       ...(this.config.providerName ? { providerName: this.config.providerName } : {}),
@@ -192,6 +217,42 @@ export class AgentService {
       ...(this.config.apiKeyEnv ? { apiKeyEnv: this.config.apiKeyEnv } : {}),
       ...(this.config.thinkingLevel ? { thinkingLevel: this.config.thinkingLevel } : {}),
     };
+  }
+
+  async chatGPTStatus() {
+    this.chatgptProfiles = await this.chatgpt.store.profiles();
+    return { profiles: this.chatgptProfiles, login: this.chatgpt.loginState(), profileId: this.config.profileId };
+  }
+  async chatGPTModels(profileId = this.config.profileId) {
+    if (!profileId) throw new ChatGPTError('sign_in_required', 'Select a ChatGPT connection.');
+    return listChatGPTModels(this.chatgpt, profileId);
+  }
+  beginChatGPTLogin(profileId?: string, enablePlan = false) {
+    this.assertModelIdle();
+    return this.chatgpt.beginLogin(profileId, enablePlan);
+  }
+  async selectChatGPTProfile(profileId: string, modelId?: string) {
+    this.assertModelIdle();
+    const models = await this.chatGPTModels(profileId);
+    const model = modelId ? models.find(choice => choice.id === modelId && choice.supported) : models.find(choice => choice.supported);
+    if (!model) throw new ChatGPTError('model_unavailable', 'This account has no selected model supported by the installed Pi SDK.');
+    await this.chatGPTStatus();
+    return this.configure({ authMode: 'chatgpt', profileId, providerId: 'openai', modelId: model.id, baseUrl: '', thinkingLevel: this.config.thinkingLevel });
+  }
+  async disconnectChatGPT(profileId: string) {
+    if (this.config.authMode === 'chatgpt' && this.config.profileId === profileId) {
+      for (const session of this.listSessions()) if (session.status === 'running' || session.status === 'waiting_input') await this.cancel(session.sessionId);
+      await Promise.all([...this.tasks.values()]);
+      for (const loaded of this.sessions.values()) { loaded.disposeEvents(); loaded.session.dispose(); }
+      this.sessions.clear();
+    }
+    const result = await this.chatgpt.disconnect(profileId);
+    await this.chatGPTStatus();
+    return result;
+  }
+  private assertModelIdle() {
+    this.ensureOpen();
+    if (this.listRuns().some(run => run.status === 'running' || run.status === 'waiting_input')) throw new RuntimeError('busy', 'Stop or finish the active run before changing its ChatGPT connection.');
   }
 
   configureTools(services: AgentDesignServices): void { this.ensureOpen(); this.services = services; }
@@ -401,6 +462,7 @@ export class AgentService {
   close(): void {
     if (this.closed) return;
     this.closed = true;
+    this.chatgpt.close();
     const timestamp = now();
     for (const session of this.listSessions()) {
       const activeId = this.activeRunBySession.get(session.sessionId);
@@ -506,7 +568,6 @@ export class AgentService {
     this.store.saveAgentSession(sessionRecord);
     const content = await this.inputContent(input, this.runAbortControllers.get(run.runId)?.signal);
     if (this.closed || this.store.agentRun<AgentRunRecord>(run.runId)?.status !== 'running') return;
-    loaded.session.agent.state.systemPrompt = systemPrompt(await this.contextText(sessionId));
     const messages = [{ type: 'text' as const, text: content.text }, ...content.images];
     input.status = 'delivered'; input.deliveredAt = now();
     this.store.saveAgentInput(input);
@@ -602,6 +663,7 @@ export class AgentService {
     record.updatedAt = now();
     this.store.saveAgentSession(record);
     const settingsManager = sdk.SettingsManager.inMemory();
+    if (this.config.authMode === 'chatgpt') settingsManager.setRetryEnabled(false);
     const resourceLoader = new sdk.DefaultResourceLoader({
       cwd: this.runtime.root,
       agentDir: join(this.runtime.root, 'sessions', '.agent-config-disabled'),
@@ -635,15 +697,20 @@ export class AgentService {
       if (!activeRun || status !== 'running') return { block: true, terminate: true, reason: 'This run is no longer allowed to execute tools.' };
       return undefined;
     };
-    session.agent.shouldStopAfterTurn = async () => {
+    session.agent.finishTurn = async () => {
       const activeRun = this.activeRunBySession.get(sessionId);
       const status = activeRun ? this.store.agentRun<AgentRunRecord>(activeRun)?.status : undefined;
-      return status !== 'running';
+      return status !== 'running' ? { action: 'end' } : undefined;
     };
-    session.agent.prepareNextTurnWithContext = async context => {
+    session.agent.prepareRequest = async request => {
       if (this.closed) return undefined;
       const current = await this.contextText(sessionId);
-      return { context: { ...context.context, systemPrompt: systemPrompt(current) } };
+      const messages = [...request.context.messages];
+      const first = messages[0];
+      const prompt = { ...(first?.role === 'system' ? first : {}), role: 'system' as const, content: systemPrompt(current), timestamp: Date.now() };
+      if (first?.role === 'system') messages[0] = prompt;
+      else messages.unshift(prompt);
+      return { context: { ...request.context, messages } };
     };
     const disposeEvents = session.subscribe(event => {
       if (this.closed) return;
@@ -672,6 +739,15 @@ export class AgentService {
   private async createModelRuntime(): Promise<ConfiguredModel> {
     const config = { ...this.config };
     if (this.options.createModelRuntime) return this.options.createModelRuntime(config);
+    if (config.authMode === 'chatgpt') {
+      if (!config.profileId || !config.modelId) throw new ChatGPTError('sign_in_required', 'Connect ChatGPT and choose a model.');
+      const available = await this.chatGPTModels(config.profileId);
+      if (!available.some(model => model.id === config.modelId && model.supported)) throw new ChatGPTError('model_unavailable', 'This model is not available to the selected ChatGPT account.');
+      const modelRuntime = await createChatGPTModelRuntime(this.chatgpt, config.profileId);
+      const model = modelRuntime.getModel('openai', config.modelId);
+      if (!model) throw new ChatGPTError('model_unavailable', 'Pi does not provide this ChatGPT model.');
+      return { modelRuntime, model };
+    }
     if (!config.providerId || !config.modelId) throw new RuntimeError('invalid', 'Configure a model provider and model before starting an agent run.');
     const sdk = await loadPiSdk();
     const runtime = await sdk.ModelRuntime.create({
@@ -983,6 +1059,7 @@ export class AgentService {
   }
 
   private finishRun(sessionId: string, runId: string, errorMessage?: string): void {
+    if (errorMessage && this.config.authMode === 'chatgpt') errorMessage = chatGPTFailure(errorMessage);
     if (this.closed) return;
     const run = this.store.agentRun<AgentRunRecord>(runId);
     if (!run || run.status !== 'running') return;
@@ -1007,7 +1084,8 @@ export class AgentService {
     if (this.closed) return;
     const run = this.store.agentRun<AgentRunRecord>(runId);
     if (!run || run.status !== 'running') return;
-    const message = error instanceof Error ? error.message : String(error);
+    const rawMessage = error instanceof Error ? error.message : String(error);
+    const message = this.config.authMode === 'chatgpt' ? chatGPTFailure(rawMessage) : rawMessage;
     const timestamp = now();
     run.status = 'failed'; run.error = message; run.completedAt = timestamp; run.updatedAt = timestamp;
     const session = this.requireSession(sessionId); session.status = 'idle'; session.updatedAt = timestamp;

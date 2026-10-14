@@ -4,7 +4,13 @@ import { ProjectRuntime, RuntimeError } from '@oeydesign/runtime';
 
 export function registerAgentRoutes(app: FastifyInstance, runtime: ProjectRuntime, streams: Set<ServerResponse>) {
   const agent = runtime.agent;
-  app.get('/api/agent/config', () => agent.getConfig());
+  app.get('/api/agent/config', async () => { if (agent.getConfig().authMode === 'chatgpt') await agent.chatGPTStatus(); return agent.getConfig(); });
+  app.get('/api/agent/chatgpt', () => agent.chatGPTStatus());
+  app.post<{ Body: { profileId?: string; enablePlan?: boolean } }>('/api/agent/chatgpt/login', request => agent.beginChatGPTLogin(request.body?.profileId, request.body?.enablePlan));
+  app.post('/api/agent/chatgpt/login/cancel', () => { agent.chatgpt.cancelLogin(); return { ok: true }; });
+  app.get<{ Querystring: { profileId?: string } }>('/api/agent/chatgpt/models', async request => ({ models: await agent.chatGPTModels(request.query.profileId) }));
+  app.post<{ Body: { profileId: string; modelId?: string } }>('/api/agent/chatgpt/select', request => agent.selectChatGPTProfile(request.body?.profileId, request.body?.modelId));
+  app.post<{ Body: { profileId: string } }>('/api/agent/chatgpt/logout', request => agent.disconnectChatGPT(request.body?.profileId));
   app.post<{ Body: Parameters<typeof agent.configure>[0] }>('/api/agent/config', request => {
     agent.configure(request.body);
     return agent.getConfig();

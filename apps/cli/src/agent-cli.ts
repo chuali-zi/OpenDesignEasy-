@@ -1,5 +1,6 @@
 import { readFile } from 'node:fs/promises';
 import { parseArgs } from 'node:util';
+import { execFile } from 'node:child_process';
 import { createDesignServices, ProjectRuntime, RuntimeError } from '@oeydesign/runtime';
 
 export async function executeAgent(argv: string[]): Promise<unknown> {
@@ -7,6 +8,7 @@ export async function executeAgent(argv: string[]): Promise<unknown> {
     text: { type: 'string' }, title: { type: 'string' }, session: { type: 'string' }, question: { type: 'string' },
     host: { type: 'string' }, file: { type: 'string' }, document: { type: 'string' }, input: { type: 'string' },
     asset: { type: 'string', multiple: true }, wait: { type: 'boolean', default: false },
+    profile: { type: 'string' }, model: { type: 'string' }, 'no-browser': { type: 'boolean', default: false }, 'enable-plan': { type: 'boolean', default: false },
   } });
   const [action, directory] = positionals;
   if (!action || (!directory && !values.host)) throw new RuntimeError('invalid', 'Use agent <action> <project> or --host http://127.0.0.1:4318.');
@@ -14,6 +16,13 @@ export async function executeAgent(argv: string[]): Promise<unknown> {
   const requireText = () => { if (!text?.trim()) throw new RuntimeError('invalid', '--text is required.'); return text; };
   const requireSession = () => { if (!values.session) throw new RuntimeError('invalid', '--session is required.'); return values.session; };
   const options = { inputId: values.input, assetIds: values.asset, documentId: values.document };
+  const openLogin = (url: string) => {
+    process.stderr.write(`Continue with ChatGPT: ${url}\n`);
+    if (!values['no-browser']) {
+      const program = process.platform === 'win32' ? 'rundll32.exe' : process.platform === 'darwin' ? 'open' : 'xdg-open';
+      execFile(program, process.platform === 'win32' ? ['url.dll,FileProtocolHandler', url] : [url], { windowsHide: true }, () => {});
+    }
+  };
   if (values.host) {
     const base = new URL(values.host);
     if (!['127.0.0.1', 'localhost', '[::1]'].includes(base.hostname)) throw new RuntimeError('invalid', '--host must identify a local project owner.');
@@ -24,6 +33,25 @@ export async function executeAgent(argv: string[]): Promise<unknown> {
       return data;
     };
     if (action === 'list') return request('/api/agent/sessions');
+    if (action === 'chatgpt-status') return request('/api/agent/chatgpt');
+    if (action === 'chatgpt-models') return request(`/api/agent/chatgpt/models${values.profile ? `?profileId=${encodeURIComponent(values.profile)}` : ''}`);
+    if (action === 'chatgpt-select' || action === 'chatgpt-logout') {
+      if (!values.profile) throw new RuntimeError('invalid', '--profile is required.');
+      return request(`/api/agent/chatgpt/${action === 'chatgpt-select' ? 'select' : 'logout'}`, { profileId: values.profile, modelId: values.model });
+    }
+    if (action === 'chatgpt-login') {
+      const login = await request('/api/agent/chatgpt/login', { profileId: values.profile, enablePlan: values['enable-plan'] });
+      openLogin(login.authorizationUrl);
+      while (true) {
+        const state = await request('/api/agent/chatgpt');
+        if (state.login.attemptId === login.attemptId && state.login.status !== 'pending') {
+          if (state.login.status !== 'completed') throw new RuntimeError('invalid', state.login.error?.message || 'ChatGPT sign-in did not complete.');
+          if (state.profiles.find((profile: { id: string; planEnabled: boolean }) => profile.id === state.login.profileId)?.planEnabled) await request('/api/agent/chatgpt/select', { profileId: state.login.profileId, modelId: values.model });
+          return state;
+        }
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      }
+    }
     if (action === 'config') return request('/api/agent/config', values.file ? JSON.parse(await readFile(values.file, 'utf8')) : undefined);
     if (action === 'create') return request('/api/agent/sessions', { title: values.title });
     let sessionId = values.session;
@@ -47,12 +75,29 @@ export async function executeAgent(argv: string[]): Promise<unknown> {
   runtime.agent.configureTools(createDesignServices(runtime));
   const agent = runtime.agent;
   let activeSession: string | undefined;
-  const interrupt = () => { if (activeSession) void agent.cancel(activeSession); };
+  const interrupt = () => { if (activeSession) void agent.cancel(activeSession); else agent.chatgpt.cancelLogin(); };
   process.once('SIGINT', interrupt);
   try {
+    if (action === 'chatgpt-status') return await agent.chatGPTStatus();
+    if (action === 'chatgpt-models') return { models: await agent.chatGPTModels(values.profile) };
+    if (action === 'chatgpt-select' || action === 'chatgpt-logout') {
+      if (!values.profile) throw new RuntimeError('invalid', '--profile is required.');
+      return await (action === 'chatgpt-select' ? agent.selectChatGPTProfile(values.profile, values.model) : agent.disconnectChatGPT(values.profile));
+    }
+    if (action === 'chatgpt-login') {
+      const login = await agent.beginChatGPTLogin(values.profile, values['enable-plan']);
+      openLogin(login.authorizationUrl);
+      while (agent.chatgpt.loginState().status === 'pending') await new Promise(resolve => setTimeout(resolve, 500));
+      const state = await agent.chatGPTStatus();
+      if (state.login.status !== 'completed') throw new RuntimeError('invalid', state.login.error?.message || 'ChatGPT sign-in did not complete.');
+      const profile = state.profiles.find(entry => entry.id === state.login.profileId);
+      if (profile?.planEnabled) await agent.selectChatGPTProfile(profile.id, values.model);
+      return state;
+    }
     if (action === 'list') return { sessions: agent.listSessions() };
     if (action === 'config') {
       if (values.file) agent.configure(JSON.parse(await readFile(values.file, 'utf8')));
+      if (agent.getConfig().authMode === 'chatgpt') await agent.chatGPTStatus();
       return agent.getConfig();
     }
     if (action === 'create') return { session: await agent.createSession({ title: values.title }) };

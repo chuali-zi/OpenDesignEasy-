@@ -7,6 +7,11 @@ export type { StoredAsset, ImageGenerationConfig } from './assets.ts';
 export { createDesignServices } from './design-services.ts';
 export type { AgentDesignServices } from './design-services.ts';
 export { AgentService } from './agent-service.ts';
+export { ChatGPTAuth, ChatGPTError, CHATGPT_USAGE_URL } from './chatgpt-auth.ts';
+export { ChatGPTStore } from './chatgpt-store.ts';
+export type { ChatGPTLoginState, ChatGPTAuthOptions } from './chatgpt-auth.ts';
+export type { PublicChatGPTProfile } from './chatgpt-store.ts';
+export type { ChatGPTModelChoice } from './chatgpt-provider.ts';
 export type { AgentServiceOptions } from './agent-service.ts';
 export type {
   AgentAcceptedInputOptions, AgentInputKind, AgentInputRecord, AgentInputStatus, AgentProviderConfig,

@@ -225,7 +225,7 @@ test('SDK compaction refreshes the latest document, selection, human edits and d
 
   let refreshedSystemPrompt = '';
   faux.appendResponses([context => {
-    refreshedSystemPrompt = context.systemPrompt ?? '';
+    refreshedSystemPrompt = context.messages.filter(message => message.role === 'system').map(message => typeof message.content === 'string' ? message.content : '').join('\n');
     return fauxAssistantMessage('I have refreshed the current design context.', { stopReason: 'stop' });
   }]);
   await fixture.runtime.agent.send(session.sessionId, 'Continue with the current design state.');
@@ -393,7 +393,7 @@ test('Pi tools expose Web operations and preserve human text while editing and e
   assert.equal(latest.nodes.headline!.text, '人工确定的标题');
   assert.equal(latest.nodes.headline!.style.color, '#234D39');
   const exported = fixture.runtime.listRecords<{ documentId: string; revision: number; format: string }>('exports');
-  assert.equal(exported.length, 1);
+  assert.equal(exported.length, 1, JSON.stringify(await fixture.runtime.agent.getMessages(session.sessionId)));
   assert.deepEqual({ documentId: exported[0]!.value.documentId, revision: exported[0]!.value.revision, format: exported[0]!.value.format }, { documentId, revision: latest.revision, format: 'html' });
   assert.match(JSON.stringify(await fixture.runtime.agent.getMessages(session.sessionId)), /web\.layout\.update/);
 });

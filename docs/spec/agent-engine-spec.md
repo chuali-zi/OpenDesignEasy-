@@ -1,7 +1,7 @@
 # Agent 引擎规范：直接使用 Pi SDK
 
 > TS 重构 v1，2026-09-12；实现状态更新于 2026-09-20。Pi 已直接接入新 runtime，当前产品与验证范围见 [R2/R3 记录](r2-r3-validation.md)。
-> 当前研究基线为 Pi 0.85.1；实现时锁定公开发布版本及 lockfile，不能把研究 checkout 的 main 当成发布契约。
+> 2026-10-13：产品基线升级到 Pi 1.2.0；此前 R1/R3 记录基于 0.85.1。锁定公开发布版本及 lockfile，不把研究 checkout 的 main 当成发布契约。ChatGPT 账号、模型与请求限制见 [接入规范](chatgpt-sign-in.md)。
 
 ## 1. 集成方式与分工
 
@@ -10,6 +10,8 @@ packages/runtime 内直接创建 Pi AgentSession，使用 @earendil-works/pi-cod
 不另建通用 AgentBackend 适配平台，不连接旧 Python agent，不复制一套 while-loop 来接管 Pi 的模型执行。runtime 内可有普通会话模块和工具函数，但其职责是产品集成，不是同时支持多个旧 harness。
 
 采用 SDK 的 AgentSession / SessionManager 路径，不混用 Pi 新实验 harness、server/client 或不同会话格式。SDK 研究版本的 SessionManager v3 与实验新格式不是同一保存协议。
+
+Pi 1.2.0 使用 transcript system messages；产品在公开 `prepareRequest` 中注入当前项目上下文，不写只读 `agent.state.systemPrompt`。等待输入后的终止使用 `finishTurn`，文档提交与取消仍由 OEY run 身份控制。
 
 ## 2. 会话创建
 

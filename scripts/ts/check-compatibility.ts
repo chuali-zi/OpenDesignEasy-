@@ -31,7 +31,7 @@ import { join } from "node:path";
 
 const TOOL_NAME = "r1_probe_tool";
 const checks: Record<string, unknown> = {
-  package: "@earendil-works/pi-coding-agent@0.85.1",
+  package: "@earendil-works/pi-coding-agent@1.2.0",
   provider: "Pi faux provider",
   network: false,
   credentials: false,
@@ -298,9 +298,9 @@ async function checkShouldStopAfterTurn(): Promise<void> {
   let stopCalls = 0;
 
   try {
-    probe.session.agent.shouldStopAfterTurn = async () => {
+    probe.session.agent.finishTurn = async () => {
       stopCalls += 1;
-      return true;
+      return { action: 'end' };
     };
     faux.setResponses([
       fauxAssistantMessage(

@@ -12,6 +12,8 @@
 
 ## 当前有效规范
 
+2026-10-13：AI runtime 升级至 Pi 1.2.0，增加 Web/CLI 的 ChatGPT 账号连接、独立账号存储和公共 Responses 兼容。实现与真实账号验收边界见 [ChatGPT 接入](spec/chatgpt-sign-in.md)；R3 既有真实模型记录仍对应其原始版本。
+
 | 文档 | 负责回答 |
 |---|---|
 | [PRD](prd.md) | 产品目标、直接编辑与四端必做范围 |
@@ -19,6 +21,7 @@
 | [系统规范](spec/system-spec.md) | 概念、命令/事件、运行入口、项目状态 |
 | [编辑文档规范](spec/editor-document-spec.md) | 三媒介模型、拖拽/缩放/图层、人机同步、冲突和撤销 |
 | [Agent 引擎](spec/agent-engine-spec.md) | Pi 公共 SDK、工具、消息、取消、上下文 |
+| [ChatGPT 接入](spec/chatgpt-sign-in.md) | 账号登录、套餐权限、凭据、模型目录和 Responses 兼容 |
 | [设计智能](spec/design-intelligence-spec.md) | 自主创作、视觉方向、确认、参考使用与连续修改 |
 | [资料与上下文](spec/context-evidence-baseline.md) | TS 解析、原件、风格、事实、模板及模型上下文 |
 | [产物生产](spec/artifact-production-spec.md) | Web/PPTX/DOCX/PDF 生产、导入、可编辑性和格式边界 |
@@ -38,7 +41,7 @@
 | 当前规范与历史失效标记 | 已更新 |
 | TS document/runtime/media、SQLite、命令/历史/事件与 owner 锁 | R1 已完成 Windows 开发基线验证 |
 | CLI 无头项目/文档/节点/历史/事件/SVG 路径 | R1 已完成；更广媒介能力继续按阶段实现 |
-| Pi 0.85.1 产品 AgentSession | 已接入 runtime；真实兼容服务文本、工具、图片、问答恢复通过；原生 K3 文本、工具、截图识别实测通过 |
+| Pi 1.2.0 产品 AgentSession / ChatGPT 连接 | SDK 与账号兼容已实现；ChatGPT 真实账号验收待完成。既有兼容服务与 K3 的真实记录基于 0.85.1，见 R2/R3 记录 |
 | Node 24.21.0 与 Electron 44.3.0 utilityProcess/SQLite | R1 Windows x64 实际宿主验证通过；跨平台干净安装留到 R7 |
 | Web host、React/Vite、Konva/ProseMirror Deck 编辑与原生导出 | 完整编辑与图片/表格/图表路径通过 Chrome 4/4；实际 Office 打开及视觉复验通过 |
 | TUI、Desktop 完整产品及 Web/Deck/Doc 全部生产能力 | 后续阶段未完成 |

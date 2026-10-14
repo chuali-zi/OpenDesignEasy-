@@ -64,6 +64,8 @@ export interface AgentSelection {
 
 /** Runtime-only provider details. apiKey is never stored in the project database. */
 export interface AgentProviderConfig {
+  authMode?: 'api_key' | 'chatgpt';
+  profileId?: string;
   providerId?: string;
   /** Accepted as a convenience for existing client forms. */
   provider?: string;
@@ -86,6 +88,8 @@ export interface AgentProviderConfig {
 }
 
 export interface PublicAgentConfig {
+  authMode?: 'api_key' | 'chatgpt';
+  profileId?: string;
   configured: boolean;
   providerId?: string;
   providerName?: string;

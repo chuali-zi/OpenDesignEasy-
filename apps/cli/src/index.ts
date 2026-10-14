@@ -18,7 +18,7 @@ const HELP = {
   usage: "oey <command> [options]",
   commands: {
     project: ["create <dir> [--name <name>]", "show <dir>"],
-    agent: ["run <dir> --text <prompt> [--session <id>] [--document <id>] [--asset <id>]", "create|list|status|config <dir> [--session <id>] [--file <config.json>]", "send|steer|follow-up|answer|cancel --host <local-url> --session <id> [--text <text>] [--question <id>] [--wait]"],
+    agent: ["run <dir> --text <prompt> [--session <id>] [--document <id>] [--asset <id>]", "create|list|status|config <dir> [--session <id>] [--file <config.json>]", "send|steer|follow-up|answer|cancel --host <local-url> --session <id> [--text <text>] [--question <id>] [--wait]", "chatgpt-login <dir> [--profile <id>] [--enable-plan] [--no-browser]", "chatgpt-status|chatgpt-models <dir> [--profile <id>]", "chatgpt-select|chatgpt-logout <dir> --profile <id> [--model <slug>]"],
     asset: ["import <dir> <file>", "list <dir>"],
     document: [
       "create <dir> [--kind deck|web] [--name <name>]",

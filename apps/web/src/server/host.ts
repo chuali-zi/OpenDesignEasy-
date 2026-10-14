@@ -5,7 +5,7 @@ import { readFile } from 'node:fs/promises';
 import { basename, join } from 'node:path';
 import type { CommandEnvelope } from '@oeydesign/document';
 import { KernelError } from '@oeydesign/document';
-import { ProjectAssets, ProjectRuntime, RuntimeError } from '@oeydesign/runtime';
+import { ChatGPTError, ProjectAssets, ProjectRuntime, RuntimeError } from '@oeydesign/runtime';
 import type { ProjectEvent, CommandOptions } from '@oeydesign/runtime';
 import { renderDeckSvg, renderWebHtml, exportDocumentArtifact, artifactMimeTypes } from '@oeydesign/media';
 import type { ArtifactFormat } from '@oeydesign/media';
@@ -26,6 +26,7 @@ export async function createWebHost(runtime: ProjectRuntime, options: WebHostOpt
   registerAgentRoutes(app, runtime, streams);
   const statusCodes: Record<string, number> = { invalid: 400, conflict: 409, locked: 423, not_found: 404, busy: 409, cancelled: 409 };
   app.setErrorHandler((error, _request, reply) => {
+    if (error instanceof ChatGPTError) return reply.code(error.code === 'busy' ? 409 : 400).send({ error: { code: error.code, message: error.message, retryable: error.retryable } });
     if (error instanceof KernelError || error instanceof RuntimeError) {
       return reply.code(statusCodes[error.code] ?? 400).send({ error: { code: error.code, message: error.message, details: error.details,
         ...('target' in error ? { target: error.target } : {}), ...('revision' in error ? { revision: error.revision } : {}) } });

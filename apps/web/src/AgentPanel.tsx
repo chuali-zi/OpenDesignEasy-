@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import * as api from './api.ts';
+import { ChatGPTConnection } from './ChatGPTConnection.tsx';
 
 type Session = { sessionId: string; title?: string; status: string; lastRunId?: string };
 type Question = { questionId: string; status: string; prompt: string; options: string[]; allowFreeText: boolean };
 type Snapshot = { session: Session; inputs: Array<{ inputId: string; text: string; status: string }>;
   runs: Array<{ runId: string; status: string; error?: string }>; questions: Question[]; messages: Array<{ role?: string; content?: unknown; text?: string; toolName?: string; customType?: string; details?: { inputId?: string } }> };
-type Config = { providerId?: string; modelId?: string; baseUrl?: string; apiKeyEnv?: string; configured?: boolean };
+type Config = { authMode?: 'api_key' | 'chatgpt'; profileId?: string; providerId?: string; modelId?: string; baseUrl?: string; apiKeyEnv?: string; configured?: boolean };
 type ExportedArtifact = { id: string; documentId: string; revision: number; format: string; createdAt: string };
 const statusText: Record<string, string> = { idle: '可以继续', running: '正在创作', waiting_input: '等待你的回答', interrupted: '上次任务已中断', completed: '已完成', cancelled: '已停止', failed: '执行失败', accepted: '已接收', delivered: '处理中', resolved: '已处理' };
 
@@ -21,7 +22,7 @@ export function AgentPanel({ documentId, selectedIds }: { documentId?: string; s
   const [selected, setSelected] = useState('');
   const [snapshot, setSnapshot] = useState<Snapshot | null>(null);
   const [config, setConfig] = useState<Config>({});
-  const [settings, setSettings] = useState(false);
+  const [settings, setSettings] = useState(() => new URLSearchParams(window.location.search).get('settings') === 'ai');
   const [text, setText] = useState('');
   const [mode, setMode] = useState('steer');
   const [busy, setBusy] = useState(false);
@@ -98,15 +99,19 @@ export function AgentPanel({ documentId, selectedIds }: { documentId?: string; s
   });
 
   return <aside className="agent-panel" aria-label="设计对话">
-    <div className="agent-heading"><div><span className="agent-eyebrow">DESIGN PARTNER</span><h2>一起把想法做出来</h2></div><button aria-label="模型设置" title="模型设置" onClick={() => setSettings(!settings)}>⚙</button></div>
+    <div className="agent-heading"><div><span className="agent-eyebrow">DESIGN PARTNER</span><h2>一起把想法做出来</h2></div><button className="agent-model-settings" aria-label="模型设置" aria-expanded={settings} title="模型设置" onClick={() => setSettings(!settings)}>⚙ 模型设置</button></div>
     <div className="agent-session-line"><select aria-label="选择对话" value={selected} onChange={event => { current.current = event.target.value; setSelected(event.target.value); setSnapshot(null); }}><option value="">新对话</option>{sessions.map(session => <option key={session.sessionId} value={session.sessionId}>{session.title || '设计对话'}</option>)}</select><button aria-label="新建对话" onClick={() => { void runAction(async () => { const result = await api.request<{ session: Session }>('/api/agent/sessions', { title: `设计对话 ${sessions.length + 1}` }); current.current = result.session.sessionId; setSelected(current.current); setSnapshot(null); }); }}>＋</button></div>
     {settings && <form className="agent-settings" onSubmit={event => { event.preventDefault(); void runAction(async () => { setConfig(await api.request<Config>('/api/agent/config', config)); setSettings(false); }); }}>
+      <label>AI 连接方式<select aria-label="AI 连接方式" value={config.authMode ?? 'api_key'} onChange={event => setConfig({ ...config, authMode: event.target.value as 'api_key' | 'chatgpt', configured: false })}><option value="api_key">API key / 自定义服务</option><option value="chatgpt">使用 ChatGPT 账号</option></select></label>
+      {config.authMode === 'chatgpt' ? <ChatGPTConnection onConfigured={setConfig} disabled={busy || running || Boolean(pendingQuestion)} /> : <>
       <label>Provider<input aria-label="模型 Provider" value={config.providerId ?? ''} onChange={event => setConfig({ ...config, providerId: event.target.value })} placeholder="kimi-coding" /></label>
       <label>模型<input aria-label="模型名称" value={config.modelId ?? ''} onChange={event => setConfig({ ...config, modelId: event.target.value })} /></label>
       <label>服务地址<input aria-label="模型服务地址" value={config.baseUrl ?? ''} onChange={event => setConfig({ ...config, baseUrl: event.target.value })} placeholder="原生 provider 可留空" /></label>
       <label>密钥环境变量名<input aria-label="密钥环境变量名" value={config.apiKeyEnv ?? 'API_KEY'} onChange={event => setConfig({ ...config, apiKeyEnv: event.target.value })} /></label>
       <small>服务端读取环境变量中的密钥。</small><button type="submit" disabled={busy || running}>保存模型设置</button>
+      </>}
     </form>}
+    {config.authMode === 'chatgpt' && config.configured && <div className="chatgpt-plan-indicator">正在使用 ChatGPT 套餐 · {config.modelId} <a href="https://chatgpt.com/settings/usage" target="_blank" rel="noreferrer">管理用量</a></div>}
     <div className="agent-transcript" ref={transcript} aria-live="polite">
       {!snapshot?.inputs.length && <div className="agent-welcome"><span>↗</span><h3>先说说，<br/>你想表达什么？</h3><p>给我主题、受众或参考资料。你也可以直接调整画布，再让我沿用你的布局继续。</p><button onClick={() => setText('先和我讨论这份演示的受众、核心信息与视觉方向，暂时不要修改作品。')}>讨论一个方向</button><button onClick={() => setText('读取我当前选中的对象与最新布局，告诉我可以怎样改进。')}>看看当前设计</button></div>}
       {snapshot?.messages.filter(message => message.role !== 'toolResult').map((message, index) => {

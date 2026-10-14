@@ -27,8 +27,9 @@ test('agent receives real React screenshots at desktop and mobile widths, with r
       fauxToolCall('render_preview', { documentId: document.documentId, viewport: 'mobile' }, { id: 'mobile' }),
     ], { stopReason: 'toolUse' }),
     context => {
-      assert.match(context.systemPrompt!, /After important layout changes and before final delivery/);
-      assert.match(context.systemPrompt!, /then render again/);
+      const prompt = JSON.stringify(context.messages.filter(message => message.role === 'system'));
+      assert.match(prompt, /After important layout changes and before final delivery/);
+      assert.match(prompt, /then render again/);
       for (const [id, width] of [['desktop', 1280], ['mobile', 390]] as const) {
         const result = context.messages.find(message => message.role === 'toolResult' && message.toolCallId === id);
         assert.ok(result && result.role === 'toolResult' && !result.isError, result && result.role === 'toolResult' ? JSON.stringify(result.content.filter(part => part.type === 'text')) : 'Missing preview');

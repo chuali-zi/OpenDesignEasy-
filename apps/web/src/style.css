@@ -75,3 +75,12 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .app-header > select[aria-label="其他导出格式"] { max-width: 100px; font-size: 11px; padding: 8px 4px; border: 1px solid #dce2db; border-radius: 5px; }
 @media(max-width: 1250px) { .agent-panel { width: 260px; flex-basis: 260px; } .app-header { gap: 9px; padding: 0 15px; } }
 @media(max-width: 1080px) { .project-name, .save-state { display: none; } .app-header { gap: 12px; } .document-select { margin-right: auto; } }
+.chatgpt-connection { display: grid; gap: 10px; padding: 12px 0; }
+.chatgpt-connection p { margin: 0; line-height: 1.5; }
+.chatgpt-connection select, .agent-settings select { width: 100%; min-height: 34px; border: 1px solid #ccd4ce; border-radius: 6px; padding: 5px 8px; background: white; color: #18221c; }
+.chatgpt-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.chatgpt-account-status, .chatgpt-plan-indicator { font-size: 12px; color: #34533e; }
+.chatgpt-plan-indicator { padding: 8px 12px; background: #eef5ef; }
+.chatgpt-connection a, .chatgpt-plan-indicator a { color: #34533e; text-decoration: underline; }
+.chatgpt-connection [role="alert"] { color: #a53434; }
+.agent-heading .agent-model-settings { width: auto; white-space: nowrap; padding: 6px 8px; font-size: 12px; }
