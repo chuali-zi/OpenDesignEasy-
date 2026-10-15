@@ -12,6 +12,7 @@ import { RuntimeError } from './errors.ts';
 import { AgentRunBudget, validateRunLimits } from './agent-budget.ts';
 import type { AgentRunLimits } from './agent-budget.ts';
 import { webOperationSchema } from './web-schema.ts';
+import { checkDelivery } from './delivery.ts';
 import type {
   AgentAcceptedInputOptions, AgentInputKind, AgentInputRecord, AgentProviderConfig, AgentQuestionRecord,
   AgentRunRecord, AgentRunStart, AgentSelection, AgentServiceEvent, AgentSessionOptions, AgentSessionRecord,
@@ -57,7 +58,7 @@ const SYSTEM_PROMPT = `You are OEYdesign, a collaborative design agent. The proj
 Media proportions and readable defaults: For Docs without a supplied template or explicit paper/style request, keep A4 portrait 210 × 297 mm (793.7008 × 1122.5197 logical px at 96/in), 25.4 mm margins (96px), body 12pt (16px), line height 18pt (24px). Use black (#000000) body and black bold headings (18pt/15pt/13.5pt for levels 1/2/3), sizing and whitespace for hierarchy. Use as little non-black text as possible; avoid pale text on white. Prefer paragraph styles and strong marks, rather than decorative colored headings. Fit images and tables within the actual body width, preserve image aspect ratios, and keep illustrations proportional to text. Preserve existing user templates, explicit palettes, paper sizes and image colors; do not recolor or resize an existing document merely to apply defaults. For PPT/Deck without a requested size, use 16:9 (1280 × 720 logical px); preserve other specified sizes and use readable slide-scale typography. For Web, design and inspect a real desktop viewport (1280 × 900px) and narrow viewport (390 × 844px), with normal body text (~16px), usable controls, responsive widths and intentional spacing. Neither PPT nor Web is A4, and PDF has no unique aspect ratio. Preview zoom changes display only, never canonical dimensions, text sizes or layout. Evaluate layout at 100% as well as fit; never conceal defects by shrinking a screenshot. Browser and Office font/pagination differences must be reported accurately; a preview or API success is not Word or aesthetic acceptance.`;
 
 function systemPrompt(context: string): string {
-  return `${SYSTEM_PROMPT}\n\nCurrent project design context (refresh from tools before editing if anything changed):\n${context}`;
+  return `${SYSTEM_PROMPT}\nFor delivery, use artifact_check at the current revision, address or disclose findings, and optionally artifact_deliver when a checked delivery bundle is requested. Checks marked not-run are not approvals: never equate static checks with visual review, verified sources, or Microsoft Office testing. A delivery requires the exact expectedRevision; refresh after edits or undo.\n\nCurrent project design context (refresh from tools before editing if anything changed):\n${context}`;
 }
 
 let piSdkPromise: Promise<PiSdk> | undefined;
@@ -918,6 +919,24 @@ export class AgentService {
         const result = await thisService.requireServices().preview({ documentId: args.documentId, pageId: args.pageId }, signal ?? new AbortController().signal);
         const image = toImageContent(result.mimeType, result.data);
         return { content: [image, { type: 'text', text: `Preview at revision ${result.revision}.` }], details: { revision: result.revision, mimeType: result.mimeType } };
+      },
+    }));
+    tools.push(define({
+      name: 'artifact_check', label: 'Check delivery', description: 'Read-only static delivery checks for Docs/Deck/Web. Reports revision, issues and checks NOT performed. Does not verify visual quality, facts or Office compatibility.',
+      parameters: Type.Object({ documentId: Type.String(), expectedRevision: Type.Number(), format: Type.Optional(Type.String()) }), ...sequential,
+      async execute(_id, args, signal) {
+        const report = await checkDelivery(thisService.runtime, args.documentId, { expectedRevision: args.expectedRevision, format: args.format as import('@oeydesign/media').ArtifactFormat | undefined, signal });
+        return textResult(JSON.stringify(report), report);
+      },
+    }));
+    tools.push(define({
+      name: 'artifact_deliver', label: 'Deliver checked snapshot', description: 'Create a delivery ZIP with native artifact and revision-bound check report/hashes. Requires the checked revision; errors block delivery, warnings remain disclosed. Does not archive the runtime project folder or separate reference library. Artifact content is retained and not redacted; source.zip includes Web source.',
+      parameters: Type.Object({ documentId: Type.String(), expectedRevision: Type.Number(), format: Type.Optional(Type.String()) }), ...sequential,
+      async execute(_id, args, signal) {
+        const deliver = thisService.requireServices().deliverArtifact;
+        if (!deliver) throw new RuntimeError('invalid', '此宿主尚未提供交付包服务。');
+        const result = await deliver({ documentId: args.documentId, expectedRevision: args.expectedRevision, format: args.format as import('@oeydesign/media').ArtifactFormat | undefined }, signal ?? new AbortController().signal);
+        return textResult(JSON.stringify(result), result);
       },
     }));
     tools.push(define({

@@ -1,3 +1,4 @@
+import { evidencePath } from './evidence.ts';
 import { expect,test } from '@playwright/test';
 import type { DocDocument } from '@oeydesign/document';
 import JSZip from 'jszip';
@@ -14,5 +15,5 @@ test('Doc direct text, native table/image, sections, margins, shared undo/reopen
   await page.reload();await expect(page.getByLabel('Doc 编辑器')).toBeVisible();await expect(editor).toContainText('合成表格');
   const docx=await page.request.get(`/api/documents/${id}/export.docx`);expect(docx.status()).toBe(200);const zip=await JSZip.loadAsync(await docx.body());expect(await zip.file('word/document.xml')!.async('string')).toContain('附录内容');
   const pdf=await page.request.get(`/api/documents/${id}/export.pdf`);expect(pdf.status()).toBe(200);expect((await pdf.body()).subarray(0,5).toString()).toBe('%PDF-');
-  await page.screenshot({path:'/workspace/oey-cloud-evidence/r5-doc-core/doc-editor-synthetic.png',fullPage:true});expect(errors).toEqual([]);
+  await page.screenshot({path:evidencePath('r5-doc-core/doc-editor-synthetic.png'),fullPage:true});expect(errors).toEqual([]);
 });

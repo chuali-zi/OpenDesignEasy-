@@ -102,3 +102,28 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .web-editor-stage-controls{flex-wrap:wrap}.web-editor-stage-controls input[type=number]{width:66px}.web-editor-toolbar{flex-wrap:wrap;gap:8px}
 
 .doc-pdf-preview{flex:0 0 auto}.doc-pdf-preview iframe{height:clamp(180px,30vh,360px)}.doc-scroll{min-height:0}.doc-geometry{flex-shrink:0}
+.delivery-panel { width:min(720px,calc(100vw - 48px)); max-height:86vh; padding:28px; border:1px solid #d6d9d6; border-radius:12px; color:#202820; background:#fff; overflow:auto; box-shadow:0 24px 80px #16201635; }
+.delivery-panel::backdrop { background:#15201565; }
+.delivery-panel button,.delivery-panel select { font:inherit; border:1px solid #cbd5cb; border-radius:5px; padding:7px 12px; color:#253c2a; background:#fff; cursor:pointer; }
+.delivery-panel button:hover { background:#f1f5ef; }
+.delivery-panel button:focus-visible,.delivery-panel select:focus-visible { outline:2px solid #345e40; outline-offset:3px; }
+.delivery-panel button:disabled { opacity:.5; cursor:default; }
+.delivery-panel .export-button { background:#244d3e; color:#fff; border-color:#244d3e; }
+.delivery-panel .export-button:hover { background:#193e2f; }
+.delivery-panel header { display:flex; justify-content:space-between; align-items:flex-start; gap:24px; }
+.delivery-panel header strong { font-size:22px; }
+.delivery-panel p { line-height:1.6; margin:8px 0 16px; }
+.delivery-controls { display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin:16px 0; }
+.delivery-controls select { margin-left:8px; }
+.delivery-summary { padding:16px 18px; background:#f1f4f0; border-left:3px solid #344e37; margin:18px 0; }
+.delivery-summary p { margin:8px 0 0; }
+.delivery-error { color:#a12e24; }
+.delivery-findings { list-style:none; padding:0; }
+.delivery-findings li { display:flex; gap:18px; padding:12px 0; border-bottom:1px solid #e6e9e5; line-height:1.6; }
+.delivery-findings li>span { flex:0 0 50px; font-weight:600; }
+.delivery-findings small { display:block; color:#596159; }
+.delivery-checks>div { display:grid; grid-template-columns:64px 1fr; gap:12px; padding:10px 0; line-height:1.65; }
+.delivery-checks dt { font-weight:600; }
+.delivery-checks dd { margin:0; }
+.delivery-panel footer { border-top:1px solid #dfe4df; margin-top:18px; padding-top:12px; }
+.delivery-panel footer p { color:#4b554b; font-size:13px; }

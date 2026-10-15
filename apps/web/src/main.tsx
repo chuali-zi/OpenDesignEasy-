@@ -7,6 +7,7 @@ import * as api from './api.ts';
 import './style.css';
 import { AgentPanel } from './AgentPanel.tsx';
 import { ApplicationPreview } from './ApplicationPreview.tsx';
+import { DeliveryPanel } from './DeliveryPanel.tsx';
 
 function includeDocument(documents: EditableDocument[], next: EditableDocument): EditableDocument[] {
   const index = documents.findIndex(item => item.documentId === next.documentId);
@@ -31,6 +32,7 @@ function App() {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [chatOpen, setChatOpen] = useState(true);
   const [applicationPreview, setApplicationPreview] = useState(false);
+  const [deliveryOpen, setDeliveryOpen] = useState(false);
   const docxInput=useRef<HTMLInputElement>(null);
   const sourceInput = useRef<HTMLInputElement>(null);
   const structureInput = useRef<HTMLInputElement>(null);
@@ -46,6 +48,7 @@ function App() {
     if (previous?.documentId === next.documentId && previous.revision >= next.revision) return;
     if (previous?.documentId !== next.documentId) {
       setApplicationPreview(false);
+      setDeliveryOpen(false);
       setSelectedIds([]);
       setVersions(null);
     }
@@ -189,6 +192,7 @@ function App() {
       }} />
       <span className={`save-state ${connected ? 'connected' : ''}`}><i/>{saving ? '正在保存' : connected ? '已保存到项目' : '正在连接'}</span>
       <button disabled={!document || saving} onClick={() => { if (document) void loadVersions(document.documentId).catch(error => setNotice(error.message)); }}>版本</button>
+      <button disabled={!document || saving} onClick={() => setDeliveryOpen(true)}>交付检查</button>
       <button disabled={!document} onClick={() => { if (document) window.open(`/api/documents/${encodeURIComponent(document.documentId)}/${document.kind !== 'deck' ? 'preview.html' : 'preview.svg'}`, '_blank', 'noopener'); }}>{document?.kind === 'doc' ? '预览文档' : document?.kind === 'web' ? '预览网页' : '预览 SVG'}</button>
       <select aria-label="其他导出格式" value="" disabled={!document || saving || exporting} onChange={event => { if (event.target.value) void download(event.target.value as 'pdf' | 'png' | 'html' | 'zip' | 'build.zip'); }}>
         <option value="">更多导出</option>
@@ -199,6 +203,7 @@ function App() {
     </header>
     {notice && <div role="alert" className="notice">{notice}<button aria-label="关闭提示" onClick={() => setNotice('')}>×</button></div>}
     {applicationPreview && document?.kind === 'web' && <ApplicationPreview key={document.documentId} documentId={document.documentId} revision={document.revision} onClose={() => setApplicationPreview(false)} />}
+    {deliveryOpen && document && <DeliveryPanel key={document.documentId} document={document} onClose={() => setDeliveryOpen(false)} />}
     {versions && document && <section className="version-panel" aria-label="文档版本"><div><strong>保存的版本</strong><button onClick={() => setVersions(null)}>关闭</button></div>
       <button onClick={() => { const name = window.prompt('版本名称', `版本 ${document.revision}`); if (name) void api.createVersion(document.documentId, name).then(() => loadVersions(document.documentId)).catch(error => setNotice(error.message)); }}>＋ 保存当前版本</button>
       {!versions.length && <p>将值得保留的设计存为一个版本。</p>}

@@ -1,5 +1,5 @@
 import { parseReference } from '@oeydesign/media';
-import { randomUUID } from 'node:crypto';
+import { createHash, randomUUID } from 'node:crypto';
 import { mkdir, readFile, rename, unlink, writeFile } from 'node:fs/promises';
 import { basename, join } from 'node:path';
 import { imageSize } from 'image-size';
@@ -9,7 +9,7 @@ import { RuntimeError } from './errors.ts';
 
 export interface StoredAsset {
   id: string; kind: 'image' | 'reference'; name: string; mimeType: string;
-  sizeBytes: number; width?: number; height?: number; createdAt: string;
+  sizeBytes: number; width?: number; height?: number; createdAt: string; sha256?: string;
 }
 const MAX_BYTES = 20 * 1024 * 1024;
 const mimeTypes: Record<string, string> = { png: 'image/png', jpg: 'image/jpeg', webp: 'image/webp' };
@@ -28,7 +28,7 @@ export class ProjectAssets {
       throw new RuntimeError('invalid', 'Use a PNG, JPEG or WebP image below 100 megapixels.');
     }
     const asset: StoredAsset = { id: `asset-${randomUUID()}`, kind: 'image', name: basename(name).slice(0, 240), mimeType,
-      sizeBytes: bytes.length, width: dimensions.width, height: dimensions.height, createdAt: new Date().toISOString() };
+      sizeBytes: bytes.length, sha256: createHash('sha256').update(bytes).digest('hex'), width: dimensions.width, height: dimensions.height, createdAt: new Date().toISOString() };
     await this.store(asset, bytes, signal);
     return asset as unknown as DocumentAsset;
   }
@@ -39,6 +39,7 @@ export class ProjectAssets {
     if (!['txt', 'md', 'csv', 'json', 'pdf', 'docx', 'pptx', 'xlsx', 'ts', 'tsx', 'js', 'jsx', 'css', 'html', 'py'].includes(extension ?? '')) throw new RuntimeError('invalid', 'Unsupported reference format; use text/source, CSV, PDF, DOCX, PPTX or XLSX. Images use image import.');
     const asset: StoredAsset = { id: `reference-${randomUUID()}`, kind: 'reference', name: basename(name).slice(0, 240),
       mimeType: ({pdf:'application/pdf',docx:'application/vnd.openxmlformats-officedocument.wordprocessingml.document',pptx:'application/vnd.openxmlformats-officedocument.presentationml.presentation',xlsx:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',json:'application/json',csv:'text/csv'} as Record<string,string>)[extension!] ?? 'text/plain', sizeBytes: bytes.length, createdAt: new Date().toISOString() };
+    asset.sha256 = createHash('sha256').update(bytes).digest('hex');
     await this.store(asset, bytes, signal);
     return asset;
   }
@@ -59,7 +60,8 @@ export class ProjectAssets {
     const { asset, bytes } = await this.read(id);
     if (asset.kind !== 'reference' && !options.ocr) throw new RuntimeError('invalid', 'Use the image asset visually or request OCR.');
     options.signal?.throwIfAborted();
-    const cacheId=`${asset.id}:${options.ocr ? options.ocrLanguage ?? 'eng' : 'text'}:v1`;
+    const parserVersion = ['application/pdf', 'application/vnd.openxmlformats-officedocument.presentationml.presentation'].includes(asset.mimeType) ? 'v2' : 'v1';
+    const cacheId=`${asset.id}:${options.ocr ? options.ocrLanguage ?? 'eng' : 'text'}:${parserVersion}`;
     let parsed=this.runtime.getRecord<{format:string;text:string;warnings:string[];pages?:number;truncated?:boolean}>('reference-text',cacheId);
     try { if (!parsed) { const name=asset.kind==='image' ? `image.${asset.mimeType==='image/jpeg'?'jpg':asset.mimeType==='image/webp'?'webp':'png'}` : asset.name; const result=await parseReference(bytes,name,options); parsed={format:result.format,text:result.text,warnings:result.warnings,pages:result.pages,truncated:result.truncated}; options.signal?.throwIfAborted(); this.runtime.putRecord('reference-text',cacheId,parsed); } } catch(error) { throw new RuntimeError('invalid', error instanceof Error ? error.message : 'Reference parsing failed'); }
     const text = parsed.text;

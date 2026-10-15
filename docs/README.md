@@ -18,6 +18,8 @@
 
 ## 阅读顺序与效力
 
+2026-10-15 Windows 接续：已从 `5dc969a` 在独立分支实现三媒介共享的[交付检查与版本绑定产物](spec/checked-delivery.md)，并开展真实 Word/PowerPoint 合成往返验收；[竞品研究](competitive-analysis/design-agents-2026-10-15.md)区分官方公告、源码和本机实测。固定夹具、离线 Pi faux 测试不代表真实 K2.8 产品创作效果，完整 R5/R6/R7 仍未完成。
+
 用户当前指令优先；产品范围由 [PRD](prd.md)规定，技术决策见 [ADR-0006](adr/0006-full-typescript-design-platform.md)，职责与依赖见 [架构](architecture.md)，详细行为由本页列出的当前 Spec 承接。实施状态只以 [实施计划](spec/implementation-plan.md)中的状态表为准。
 
 旧文档中的冻结条款、Python 端口、Phase 6 退出条件不约束新实现。原文快照见 [重构前归档](archive/2026-09-12-before-ts/INDEX.md)。
@@ -59,6 +61,8 @@
 | [Web 完成门槛与 R5 接续](spec/web-completion.md) | 用户流程验收、未完成能力和 Web 完成后进入 Doc 编辑模块的顺序 |
 
 ## 实施状态
+
+本轮新增有效规范：[交付检查与 Windows 验收](spec/checked-delivery.md)，涵盖三媒介检查、修订/素材/产物摘要、CLI/HTTP/Pi、真实 Office 合成检查与未验事项。
 
 | 项目 | 状态 |
 |---|---|

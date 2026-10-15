@@ -43,7 +43,10 @@ export function readSourceArchive(input: Uint8Array, options: { allowOfficeRelat
     if (!name || name.length > 240 || /[\\:\x00-\x1f]/.test(name) || parts.some(p => !p || p === '.' || p === '..' || p.startsWith('.') && !(options.allowOfficeRelationships && name === '_rels/.rels')) || names.has(name.toLowerCase())) fail('unsafe or duplicate ZIP path');
     names.add(name.toLowerCase());
     const mode = (b.readUInt32LE(offset + 38) >>> 16) & 0xf000;
-    if (mode && mode !== 0x8000 && mode !== 0x4000 || b.readUInt16LE(offset + 34) || flags & ~0x0808 || ![0, 8].includes(method)) fail('links, encryption or unsupported compression');
+    // PKWARE APPNOTE 4.4.4: bits 1/2 are ordinary DEFLATE compression-level
+    // hints (Office writes 0x0006), not encryption. Only permit them for method 8.
+    const allowedFlags = 0x0808 | (method === 8 ? 0x0006 : 0);
+    if (mode && mode !== 0x8000 && mode !== 0x4000 || b.readUInt16LE(offset + 34) || flags & ~allowedFlags || ![0, 8].includes(method)) fail('links, encryption or unsupported compression');
     // ZIP64 is intentionally unsupported; entry sizes must fit the same limits.
     for (let e = offset + 46 + nameSize; e < offset + 46 + nameSize + extraSize;) {
       if (e + 4 > offset + 46 + nameSize + extraSize) fail('invalid ZIP extra field');

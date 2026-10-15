@@ -1,11 +1,12 @@
 import { randomUUID } from 'node:crypto';
-import { mkdir, readFile, realpath, rename, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, realpath, rename, unlink, writeFile } from 'node:fs/promises';
 import { basename, isAbsolute, join, relative, resolve } from 'node:path';
 import { exportDocumentArtifact, docPdfEngine } from '@oeydesign/media';
 import type { ArtifactFormat } from '@oeydesign/media';
 import { ProjectAssets, generateImage } from './assets.ts';
 import type { ProjectRuntime } from './project-runtime.ts';
 import { RuntimeError } from './errors.ts';
+import { createDeliveryBundle } from './delivery.ts';
 
 export interface AgentDesignServices {
   readReference(args: { assetId: string; offset?: number; limit?: number; ocr?: boolean; ocrLanguage?: string }, signal: AbortSignal): Promise<unknown>;
@@ -13,11 +14,35 @@ export interface AgentDesignServices {
   generateAsset(args: { prompt: string }, signal: AbortSignal): Promise<unknown>;
   preview(args: { documentId: string; pageId?: string }, signal: AbortSignal): Promise<{ revision: number; mimeType: 'image/png'; data: string }>;
   exportArtifact(args: { documentId: string; format: ArtifactFormat }, signal: AbortSignal): Promise<unknown>;
+  deliverArtifact?(args: { documentId: string; format?: ArtifactFormat; expectedRevision: number }, signal: AbortSignal): Promise<unknown>;
 }
 
 export function createDesignServices(runtime: ProjectRuntime): AgentDesignServices {
   const assets = new ProjectAssets(runtime);
   return {
+    async deliverArtifact(args, signal) {
+      const { bytes, manifest } = await createDeliveryBundle(runtime, args.documentId, { ...args, signal });
+      const id = `delivery-${randomUUID()}`;
+      const directory = join(runtime.root, 'exports');
+      await mkdir(directory, { recursive: true });
+      const path = join(directory, `${id}.delivery.zip`);
+      let published = false;
+      try {
+        await writeFile(`${path}.tmp`, bytes, { flag: 'wx', signal });
+        signal.throwIfAborted();
+        if (runtime.readDocument(args.documentId).revision !== manifest.report.revision) throw new RuntimeError('conflict', '文档已更新，请重新检查后交付。');
+        await rename(`${path}.tmp`, path);
+        signal.throwIfAborted();
+        if (runtime.readDocument(args.documentId).revision !== manifest.report.revision) throw new RuntimeError('conflict', '文档已更新，请重新检查后交付。');
+        const result = { id, documentId: args.documentId, revision: manifest.report.revision, format: 'delivery.zip', filename: basename(path), sizeBytes: bytes.length, manifest };
+        runtime.putRecord('exports', id, result);
+        published = true;
+        return result;
+      } finally {
+        await unlink(`${path}.tmp`).catch(() => {});
+        if (!published) await unlink(path).catch(() => {});
+      }
+    },
     async readReference(args, signal) {
       signal.throwIfAborted();
       const { asset, bytes } = await assets.read(args.assetId);

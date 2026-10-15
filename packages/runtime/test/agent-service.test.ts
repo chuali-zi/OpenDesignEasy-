@@ -370,6 +370,24 @@ test('a tool that ignores abort cannot let its tool batch write after cancellati
   assert.equal(fixture.faux.state.callCount, 1, 'the model does not continue to the queued write after the delayed tool returns');
 });
 
+test('Pi offline tools check and deliver the requested revision without inventing visual or Office approval', async t => {
+  const fixture = makeFixture(t);
+  fixture.faux.setResponses([
+    fauxAssistantMessage(fauxToolCall('artifact_check', { documentId: fixture.documentId, expectedRevision: 1 }, { id: 'check' }), { stopReason: 'toolUse' }),
+    fauxAssistantMessage(fauxToolCall('artifact_deliver', { documentId: fixture.documentId, expectedRevision: 1 }, { id: 'deliver' }), { stopReason: 'toolUse' }),
+    fauxAssistantMessage('交付包已生成，视觉与 Office 待审核。', { stopReason: 'stop' }),
+  ]);
+  const session = await fixture.runtime.agent.createSession();
+  const accepted = await fixture.runtime.agent.send(session.sessionId, '检查并交付当前版本。', { documentId: fixture.documentId });
+  await within(fixture.runtime.agent.waitForIdle(session.sessionId), 'offline delivery');
+  assert.equal(fixture.runtime.agent.getRun(accepted.runId)?.status, 'completed');
+  const records = fixture.runtime.listRecords<{ format: string; revision: number; manifest: { report: { checks: Array<{ id: string; status: string }> } } }>('exports');
+  assert.equal(records.length, 1); assert.equal(records[0]!.value.format, 'delivery.zip'); assert.equal(records[0]!.value.revision, 1);
+  assert.ok(records[0]!.value.manifest.report.checks.some(check => check.id === 'native-app' && check.status === 'not-run'));
+  assert.equal(fixture.runtime.readDocument(fixture.documentId).revision, 1);
+  assert.match(JSON.stringify(await fixture.runtime.agent.getMessages(session.sessionId)), /not-run/);
+});
+
 test('Pi tools expose Web operations and preserve human text while editing and exporting the same document', async t => {
   const fixture = makeFixture(t);
   const web = fixture.runtime.createDocument({ kind: 'web', name: 'Shared website' });

@@ -28,6 +28,7 @@
     "web": "tsx apps/web/src/server/main.ts",
     "dev:web": "vite --config apps/web/vite.config.ts",
     "build:web": "vite build --config apps/web/vite.config.ts",
+    "pretest:web": "npm run build:web",
     "test:web": "playwright test --config apps/web/playwright.config.ts"
   },
   "devDependencies": {

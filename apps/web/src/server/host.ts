@@ -5,7 +5,7 @@ import { readFile } from 'node:fs/promises';
 import { basename, join } from 'node:path';
 import type { CommandEnvelope } from '@oeydesign/document';
 import { KernelError } from '@oeydesign/document';
-import { ProjectAssets, ProjectRuntime, RuntimeError } from '@oeydesign/runtime';
+import { ProjectAssets, ProjectRuntime, RuntimeError, checkDelivery, createDeliveryBundle } from '@oeydesign/runtime';
 import type { ProjectEvent, CommandOptions } from '@oeydesign/runtime';
 import { renderDeckSvg, renderDocHtml, renderWebHtml, exportDocumentArtifact, artifactMimeTypes, buildWebProject, docPdfEngine } from '@oeydesign/media';
 import type { ArtifactFormat } from '@oeydesign/media';
@@ -50,6 +50,20 @@ export async function createWebHost(runtime: ProjectRuntime, options: WebHostOpt
     return { project: runtime.project, documents: runtime.listDocuments(), seq: events.at(-1)?.seq ?? 0 };
   });
   app.get('/api/assets', () => ({ assets: assets.list() }));
+  app.get<{ Params: { id: string }; Querystring: { format?: ArtifactFormat; revision?: string } }>('/api/documents/:id/delivery-check', async (request, reply) => {
+    const report = await checkDelivery(runtime, request.params.id, { format: request.query.format, expectedRevision: request.query.revision === undefined ? undefined : Number(request.query.revision) });
+    return reply.header('Cache-Control', 'no-store').send({ report });
+  });
+  app.post<{ Params: { id: string }; Body: { format?: ArtifactFormat; expectedRevision: number } }>('/api/documents/:id/delivery.zip', async (request, reply) => {
+    const controller = new AbortController();
+    const stop = () => { if (!reply.raw.writableEnded) controller.abort(); };
+    reply.raw.once('close', stop);
+    try {
+      const result = await createDeliveryBundle(runtime, request.params.id, { format: request.body?.format, expectedRevision: request.body?.expectedRevision, signal: controller.signal });
+      return reply.type('application/zip').header('Content-Disposition', `attachment; filename="${result.manifest.report.kind}-r${result.manifest.report.revision}.delivery.zip"`)
+        .header('Cache-Control', 'no-store').header('X-Document-Revision', result.manifest.report.revision).send(Buffer.from(result.bytes));
+    } finally { reply.raw.removeListener('close', stop); }
+  });
   app.post<{ Body: { base64: string; name?: string } }>('/api/documents/import-source', { bodyLimit: 12 * 1024 * 1024 }, async request => {
     const body = request.body;
     if (typeof body?.base64 !== 'string' || body.base64.length > 11200000 || body.base64.length % 4 || !/^[A-Za-z0-9+/]*={0,2}$/.test(body.base64)) throw new RuntimeError('invalid', 'Expected a source ZIP no larger than 8 MiB.');

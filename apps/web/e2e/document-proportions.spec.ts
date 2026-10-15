@@ -1,10 +1,11 @@
+import { evidencePath } from './evidence.ts';
 import {expect,test} from '@playwright/test';
 import {mkdir,writeFile} from 'node:fs/promises';
 import JSZip from 'jszip';
 import {createHash} from 'node:crypto';
 import {getDocument} from 'pdfjs-dist/legacy/build/pdf.mjs';
 import type {DocDocument,WebDocument,DeckDocument} from '@oeydesign/document';
-const evidence='/workspace/oey-cloud-evidence/r5-proportions';
+const evidence=evidencePath('r5-proportions');
 const hash=(value:unknown)=>createHash('sha256').update(JSON.stringify(value)).digest('hex');
 const paragraph=(text:string)=>({type:'paragraph',content:[{type:'text',text}]});
 async function save(name:string,bytes:Uint8Array){await mkdir(evidence+'/deliverables',{recursive:true});await writeFile(evidence+'/deliverables/'+name,bytes);}

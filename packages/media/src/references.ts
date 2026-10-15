@@ -4,6 +4,7 @@ import { existsSync } from 'node:fs';
 import { resolve, isAbsolute, dirname } from 'node:path';
 import { createRequire } from 'node:module';
 import { imageSize } from 'image-size';
+import { pdfPageText } from './pdf-text.ts';
 import { readOfficeArchive, parseOfficeXml, descendants, child, children, attr, xmlText, relationships } from './office-xml.ts';
 export type ParsedReference = {
     format: string;
@@ -168,7 +169,9 @@ export async function parseReference(bytes: Uint8Array, fileName: string, option
             for (let i = 1; i <= pdf.numPages; i++) {
                 signal.throwIfAborted();
                 const page = await pdf.getPage(i), content = await page.getTextContent();
-                let text = content.items.map(item => 'str' in item ? item.str + ('hasEOL' in item && item.hasEOL ? '\n' : ' ') : '').join('');
+                const extracted = pdfPageText(content.items);
+                let text = extracted.text;
+                if (extracted.repaired) warnings.push(`Page ${i}: font-fallback CJK runs reordered within a horizontal line; verify complex reading order against the original.`);
                 if (!text.trim()) {
                     if (options.ocr) {
                         const factory = pdf.canvasFactory as {
@@ -218,7 +221,7 @@ export async function parseReference(bytes: Uint8Array, fileName: string, option
             if (ids.length > 100)
                 throw new Error('PPTX exceeds 100 slides');
             const pages = ids.map((n, i) => { const rel = rels.get(n.attrs['r:id'] ?? attr(n, 'id')!); if (!rel || rel.external)
-                throw new Error('Invalid slide relationship'); return `Slide ${i + 1}\n` + descendants(xml(rel.path), 't').map(xmlText).join('\n'); });
+                throw new Error('Invalid slide relationship'); return `Slide ${i + 1}\n` + descendants(xml(rel.path), 'p').map(paragraph => paragraph.children.map(run => run.name.split(':').at(-1) === 'br' ? '\n' : descendants(run, 't').map(xmlText).join('')).join('')).join('\n'); });
             return finish({ format: 'pptx', text: pages.join('\n\n'), pages: pages.length, warnings: ['Native slide/shape/table text; charts/notes/embedded media are not interpreted. Original retained.'] });
         }
         const shared = files.has('xl/sharedStrings.xml') ? descendants(xml('xl/sharedStrings.xml'), 'si').map(s => descendants(s, 't').map(xmlText).join('')) : [];

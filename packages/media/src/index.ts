@@ -2,6 +2,8 @@ import { validateDocument } from "@oeydesign/document";
 import type { DeckDocument, DeckNode, DeckPage, ImageAsset, ImageCrop, PMMarkJSON, PMNodeJSON } from "@oeydesign/document";
 import { imageBytes, imageDataUri } from "./assets.ts";
 import type { AssetResolver } from "./assets.ts";
+export { defaultDeliveryFormat, deliveryFormats, inspectDelivery, packageDelivery } from './delivery.ts';
+export type { DeliveryLocation, DeliveryFinding, DeliveryAsset, DeliveryReport, DeliveryManifest } from './delivery.ts';
 
 const xml = (value: unknown): string => String(value).replace(/[&<>"']/g, character => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&apos;" })[character]!);
 const number = (value: number): string => Number.isInteger(value) ? String(value) : String(Number(value.toFixed(4)));

@@ -8,7 +8,7 @@ import { ReplaceStep } from "prosemirror-transform";
 import { textFromString, textSchema } from "@oeydesign/document";
 import { exportDocumentArtifact, docPdfEngine, renderDeckSvg, renderDocHtml, renderWebHtml } from "@oeydesign/media";
 import type { ArtifactFormat } from "@oeydesign/media";
-import { ProjectAssets, ProjectRuntime } from "@oeydesign/runtime";
+import { ProjectAssets, ProjectRuntime, checkDelivery, createDeliveryBundle } from "@oeydesign/runtime";
 import { executeAgent } from './agent-cli.ts';
 
 type AnyRecord = Record<string, any>;
@@ -27,6 +27,8 @@ const HELP = {
       "apply <dir> <command.json>",
       "render <dir> <documentId> --output <file.svg|file.html> [--page <id>]",
       "export <dir> <documentId> --output <file.pptx|file.docx|file.pdf|file.png|file.html|file.zip|file.source.zip|file.build.zip> [--page <id>]",
+      "check <dir> <documentId> [--format <format>] [--revision <n>]",
+      "deliver <dir> <documentId> --revision <n> --output <file.delivery.zip> [--format <format>]",
       "import-source <dir> <file.source.zip> [--name <name>]",
       "import-structure <dir> <file.html|file.tsx|file.jsx>",
     ],
@@ -267,6 +269,23 @@ export async function execute(argv: string[]): Promise<unknown> {
       const content = document.kind === 'doc' ? await renderDocHtml(document, resolver) : document.kind === 'web' ? await renderWebHtml(document, page, resolver) : await renderDeckSvg(document, page, resolver);
       await writeFileAtomically(output, new TextEncoder().encode(content));
       return { documentId: document.documentId, revision: document.revision, format, output };
+    } finally { runtime.close(); }
+  }
+
+  if (area === 'document' && (action === 'check' || action === 'deliver')) {
+    const { values, positional } = parseFlags(rest, action === 'deliver' ? ['format', 'revision', 'output'] : ['format', 'revision']);
+    expectPositionals(positional, 2, `document ${action}`);
+    const expectedRevision = values.revision === undefined ? undefined : numberFlag(values, 'revision');
+    if (action === 'deliver' && expectedRevision === undefined) usage('document deliver requires --revision from the checked snapshot');
+    const output = action === 'deliver' ? resolve(requiredFlag(values, 'output')) : undefined;
+    if (output && !output.toLowerCase().endsWith('.delivery.zip')) usage('交付包输出文件须以 .delivery.zip 结尾');
+    const runtime = ProjectRuntime.open(positional[0]!);
+    try {
+      const options = { format: optionalFlag(values, 'format') as ArtifactFormat | undefined, expectedRevision };
+      if (action === 'check') return { report: await checkDelivery(runtime, positional[1]!, options) };
+      const result = await createDeliveryBundle(runtime, positional[1]!, { ...options, expectedRevision: expectedRevision! });
+      await writeFileAtomically(output!, result.bytes);
+      return { output, manifest: result.manifest, sizeBytes: result.bytes.length };
     } finally { runtime.close(); }
   }
 
