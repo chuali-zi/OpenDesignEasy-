@@ -2,6 +2,9 @@ import { createRoot } from 'react-dom/client';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { DeckEditor, DocEditor, WebEditor } from '@oeydesign/editor';
 import type { EditableDocument, DocumentOperation, EditPrecondition } from '@oeydesign/document';
+import type { EditorRevealRequest } from '@oeydesign/editor';
+import type { ArtifactFormat, DeliveryReport, DeliveryFinding } from '@oeydesign/media';
+import { resolveDeliveryLocation } from './delivery-location.ts';
 import type { DesignVersion } from '@oeydesign/runtime';
 import * as api from './api.ts';
 import './style.css';
@@ -33,6 +36,8 @@ function App() {
   const [chatOpen, setChatOpen] = useState(true);
   const [applicationPreview, setApplicationPreview] = useState(false);
   const [deliveryOpen, setDeliveryOpen] = useState(false);
+  const [revealRequest, setRevealRequest] = useState<EditorRevealRequest>();
+  const [deliveryResume,setDeliveryResume]=useState<{documentId:string;format:ArtifactFormat}>();
   const docxInput=useRef<HTMLInputElement>(null);
   const sourceInput = useRef<HTMLInputElement>(null);
   const structureInput = useRef<HTMLInputElement>(null);
@@ -49,6 +54,8 @@ function App() {
     if (previous?.documentId !== next.documentId) {
       setApplicationPreview(false);
       setDeliveryOpen(false);
+      setRevealRequest(undefined);
+      setDeliveryResume(undefined);
       setSelectedIds([]);
       setVersions(null);
     }
@@ -87,6 +94,17 @@ function App() {
     }).catch(error => setNotice(`无法打开项目：${error.message}`));
     return () => { active = false; stream?.close(); };
   }, [accept]);
+
+  const locateFinding = (report: DeliveryReport, finding: DeliveryFinding): boolean => {
+    const latest = current.current;
+    if (!latest || report.documentId !== latest.documentId || report.kind !== latest.kind || report.revision !== latest.revision) return false;
+    const target = resolveDeliveryLocation(latest, finding.location);
+    if (!target) return false;
+    setDeliveryResume({documentId:latest.documentId,format:report.format});
+    setRevealRequest({ requestId: crypto.randomUUID(), documentId: latest.documentId, revision: latest.revision, target });
+    setDeliveryOpen(false);
+    return true;
+  };
 
   const act = async (action: () => Promise<{ document: EditableDocument }>, documentTarget?: string) => {
     if (activeRequests.current) throw new Error('请等待当前修改保存');
@@ -203,14 +221,14 @@ function App() {
     </header>
     {notice && <div role="alert" className="notice">{notice}<button aria-label="关闭提示" onClick={() => setNotice('')}>×</button></div>}
     {applicationPreview && document?.kind === 'web' && <ApplicationPreview key={document.documentId} documentId={document.documentId} revision={document.revision} onClose={() => setApplicationPreview(false)} />}
-    {deliveryOpen && document && <DeliveryPanel key={document.documentId} document={document} onClose={() => setDeliveryOpen(false)} />}
+    {deliveryOpen && document && <DeliveryPanel key={document.documentId} document={document} initialFormat={deliveryResume?.documentId===document.documentId?deliveryResume.format:undefined} onLocate={locateFinding} onClose={() => {setDeliveryOpen(false);setDeliveryResume(undefined);}} />}
     {versions && document && <section className="version-panel" aria-label="文档版本"><div><strong>保存的版本</strong><button onClick={() => setVersions(null)}>关闭</button></div>
       <button onClick={() => { const name = window.prompt('版本名称', `版本 ${document.revision}`); if (name) void api.createVersion(document.documentId, name).then(() => loadVersions(document.documentId)).catch(error => setNotice(error.message)); }}>＋ 保存当前版本</button>
       {!versions.length && <p>将值得保留的设计存为一个版本。</p>}
       {versions.map(version => <button key={version.versionId} disabled={saving} onClick={() => { void act(() => api.restoreVersion(version.versionId, document.revision)).then(() => setVersions(null)).catch(() => {}); }}>{version.name}<small>修订 {version.revision} · 恢复</small></button>)}
     </section>}
     <div className="workspace-body">{chatOpen && <AgentPanel documentId={document?.documentId} selectedIds={selectedIds} />}
-    {document ? document.kind === 'deck' ? <DeckEditor key={document.documentId} document={document} onApply={apply} onUndo={() => history('undo')} onRedo={() => history('redo')} disabled={saving} onImportAsset={api.importAsset} assetUrl={api.assetUrl} onSelectionChange={setSelectedIds} /> : document.kind === 'doc' ? <DocEditor key={document.documentId} document={document} onApply={apply} onUndo={()=>history('undo')} onRedo={()=>history('redo')} disabled={saving} onImportAsset={api.importAsset} assetUrl={api.assetUrl} onSelectionChange={setSelectedIds} /> : <WebEditor key={document.documentId} document={document} onApply={apply} onUndo={() => history('undo')} onRedo={() => history('redo')} disabled={saving} onImportAsset={api.importAsset} onSelectionChange={setSelectedIds} /> : <div className="loading">{notice ? '项目暂不可用' : '正在打开设计工作台…'}</div>}</div>
+    {document ? document.kind === 'deck' ? <DeckEditor key={document.documentId} document={document} revealRequest={revealRequest} onApply={apply} onUndo={() => history('undo')} onRedo={() => history('redo')} disabled={saving} onImportAsset={api.importAsset} assetUrl={api.assetUrl} onSelectionChange={setSelectedIds} /> : document.kind === 'doc' ? <DocEditor key={document.documentId} document={document} revealRequest={revealRequest} onApply={apply} onUndo={()=>history('undo')} onRedo={()=>history('redo')} disabled={saving} onImportAsset={api.importAsset} assetUrl={api.assetUrl} onSelectionChange={setSelectedIds} /> : <WebEditor key={document.documentId} document={document} revealRequest={revealRequest} onApply={apply} onUndo={() => history('undo')} onRedo={() => history('redo')} disabled={saving} onImportAsset={api.importAsset} onSelectionChange={setSelectedIds} /> : <div className="loading">{notice ? '项目暂不可用' : '正在打开设计工作台…'}</div>}</div>
     <footer className="app-footer"><span>{document?.kind === 'doc' ? 'DOC WORKSPACE' : document?.kind === 'web' ? 'WEB WORKSPACE' : 'DECK WORKSPACE'} <span className="footer-dot">·</span> 人工与 Agent 共享作品历史</span><span>{document?.kind === 'web' ? `${document.pages.length} 页面 · ${Object.keys(document.nodes).length} 元素` : document?.kind === 'doc' ? `${document.sections.length} 章节` : `${document?.pages.length ?? 0} 页`} <span className="footer-dot">·</span> 修订 {document?.revision ?? 0}</span></footer>
   </div>;
 }

@@ -1,3 +1,5 @@
+import type { EditorRevealRequest } from './reveal.ts';
+export type { EditorRevealRequest, EditorRevealTarget } from './reveal.ts';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { ChangeEvent, CSSProperties, ReactNode } from 'react';
 import { Arc, Circle, Group, Image as KonvaImage, Layer, Line, Rect, Stage, Text, Transformer } from 'react-konva';
@@ -18,6 +20,7 @@ import { ChartProperties } from './ChartProperties.tsx';
 
 export type DeckEditorProps = {
   document: DeckDocument;
+  revealRequest?: EditorRevealRequest;
   onApply: (operations: DocumentOperation[], label: string, baseRevision: number) => Promise<void>;
   onUndo: () => void;
   onRedo: () => void;
@@ -190,7 +193,7 @@ function ColorProperty({
   </div>;
 }
 
-export function DeckEditor({ document, onApply, onUndo, onRedo, onSelectionChange, onImportAsset, assetUrl, disabled = false }: DeckEditorProps) {
+export function DeckEditor({ document, revealRequest, onApply, onUndo, onRedo, onSelectionChange, onImportAsset, assetUrl, disabled = false }: DeckEditorProps) {
   const initialPage = document.pages[0]?.id ?? '';
   const [activePageId, setActivePageId] = useState(initialPage);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -255,6 +258,20 @@ export function DeckEditor({ document, onApply, onUndo, onRedo, onSelectionChang
 
   const selectedNodes = selectedIds.map(id => document.nodes[id]).filter((node): node is DeckNode => Boolean(node));
   const page = document.pages.find(candidate => candidate.id === activePageId) ?? document.pages[0];
+  const consumedReveal = useRef('');
+  const [resolvedTextReveal,setResolvedTextReveal]=useState('');
+  useEffect(() => {
+    if (!revealRequest || consumedReveal.current === revealRequest.requestId || disabled || pending) return;
+    const target = revealRequest.target;
+    if (target.kind !== 'deck' || revealRequest.documentId !== document.documentId || revealRequest.revision !== document.revision || !document.pages.some(item => item.id === target.pageId)) return;
+    consumedReveal.current = revealRequest.requestId;
+    const node = target.nodeId ? document.nodes[target.nodeId] : undefined;
+    if (target.nodeId && !node) return;
+    setActivePageId(target.pageId);
+    setEditingGroupId(node && document.nodes[node.parentId]?.kind === 'group' ? node.parentId : '');
+    setSelection(node ? [node.id] : []);
+    resetView();
+  }, [revealRequest, document.revision, disabled, pending]);
   const imageAssetSignature = Object.values(document.nodes).filter(node => node.kind === 'image' && node.assetId).map(node => `${node.id}:${node.assetId}`).join('|');
   const pageLayers = useMemo(() => page ? flattenLayers(document, page.id) : [], [document, page]);
   const activePageChildren = page?.children ?? [];
@@ -1384,7 +1401,7 @@ export function DeckEditor({ document, onApply, onUndo, onRedo, onSelectionChang
         </div>}
         {singleNode?.kind === 'text' && singleNode.content && <div className="editor-inspector-block">
           <div className="editor-property-heading">文本</div>
-          <RichTextEditor key={singleNode.id} documentId={document.documentId} nodeId={singleNode.id} content={singleNode.content} revision={document.revision}
+          <RichTextEditor revealTarget={revealRequest&&resolvedTextReveal!==revealRequest.requestId&&revealRequest.target.kind==='deck'&&revealRequest.target.nodeId===singleNode?.id&&revealRequest.revision===document.revision?{requestId:revealRequest.requestId,revision:revealRequest.revision,onRevealed:()=>setResolvedTextReveal(revealRequest.requestId)}:undefined} key={singleNode.id} documentId={document.documentId} nodeId={singleNode.id} content={singleNode.content} revision={document.revision}
             disabled={busy} focused={focusTextId === singleNode.id}
             baseStyle={{ fontFamily: asString(singleNode.style.fontFamily, 'Segoe UI'), fontSize: asNumber(singleNode.style.fontSize, 24), color: asString(singleNode.style.fill, '#244b3a') }}
             onCommit={commitRichText} onConflict={() => setNotice('文字已在其他操作中更新，当前输入已重新载入。')} />

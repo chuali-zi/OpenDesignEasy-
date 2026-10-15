@@ -127,3 +127,5 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .delivery-checks dd { margin:0; }
 .delivery-panel footer { border-top:1px solid #dfe4df; margin-top:18px; padding-top:12px; }
 .delivery-panel footer p { color:#4b554b; font-size:13px; }
+
+.delivery-findings li>div{flex:1;min-width:0}.delivery-findings li>button{flex-shrink:0;align-self:center;white-space:nowrap}

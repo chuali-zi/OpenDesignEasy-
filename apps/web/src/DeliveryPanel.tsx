@@ -1,6 +1,7 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { EditableDocument } from '@oeydesign/document';
 import type { ArtifactFormat, DeliveryFinding, DeliveryReport } from '@oeydesign/media';
+import { resolveDeliveryLocation } from './delivery-location.ts';
 
 const formats: Record<EditableDocument['kind'], Array<[ArtifactFormat, string]>> = {
   doc: [['docx', 'Word 文档'], ['pdf', 'PDF'], ['html', 'HTML'], ['png', '首页 PNG']],
@@ -13,8 +14,8 @@ function locationName(document: EditableDocument, finding: DeliveryFinding) {
   return document.pages.find(page => page.id === pageId)?.name ?? '文档素材';
 }
 
-export function DeliveryPanel({ document, onClose }: { document: EditableDocument; onClose(): void }) {
-  const [format, setFormat] = useState<ArtifactFormat>(formats[document.kind][0]![0]);
+export function DeliveryPanel({ document, onClose, onLocate, initialFormat }: { document: EditableDocument; initialFormat?:ArtifactFormat; onClose(): void; onLocate(report: DeliveryReport, finding: DeliveryFinding): boolean }) {
+  const [format, setFormat] = useState<ArtifactFormat>(formats[document.kind].some(([value])=>value===initialFormat)?initialFormat!:formats[document.kind][0]![0]);
   const [report, setReport] = useState<DeliveryReport | null>(null);
   const [busy, setBusy] = useState<'check' | 'export' | null>(null);
   const [error, setError] = useState('');
@@ -22,7 +23,8 @@ export function DeliveryPanel({ document, onClose }: { document: EditableDocumen
   const controller = useRef<AbortController | null>(null);
   const current = useRef(document); current.current = document;
   const dialog = useRef<HTMLDialogElement>(null);
-  const stale = !!report && (report.revision !== document.revision || report.format !== format);
+  const stale = !!report && (report.documentId !== document.documentId || report.kind !== document.kind || report.revision !== document.revision || report.format !== format);
+  const findingTargets=useMemo(()=>report?.findings.map(finding=>resolveDeliveryLocation(document,finding.location))??[],[document,report]);
 
   async function check() {
     controller.current?.abort();
@@ -70,7 +72,7 @@ export function DeliveryPanel({ document, onClose }: { document: EditableDocumen
     {stale && <p className="delivery-error" role="alert">检查已过期：报告为修订 {report!.revision}，作品已更新。请重新检查。</p>}
     {report && <>
       <section className="delivery-summary"><strong>修订 {report.revision} · {report.summary.errors ? `${report.summary.errors} 项错误` : report.summary.warnings ? `${report.summary.warnings} 项提醒` : '未发现已知结构问题'}</strong><p>此检查帮助发现交付遗漏，视觉、事实和目标软件仍需审阅。</p></section>
-      {!!report.findings.length && <ul className="delivery-findings">{report.findings.map((finding, index) => <li key={index}><span className={finding.severity === 'error' ? 'delivery-error' : ''}>{finding.severity === 'error' ? '需修复' : '请确认'}</span><div>{finding.message}<small>{locationName(document, finding)}</small></div></li>)}</ul>}
+      {!!report.findings.length && <ul className="delivery-findings">{report.findings.map((finding, index) => <li key={index}><span className={finding.severity === 'error' ? 'delivery-error' : ''}>{finding.severity === 'error' ? '需修复' : '请确认'}</span><div>{finding.message}<small>{locationName(document, finding)}</small></div>{(finding.location.pageId || finding.location.sectionId || finding.location.nodeId) && <button title={stale?'报告已过期，请重新检查。':findingTargets[index]?'打开对应章节或对象':'未找到唯一的编辑位置，请手动检查。'} disabled={!!busy || stale || !findingTargets[index]} onClick={() => { if (!onLocate(report, finding)) setError('当前版本中无法定位此问题，请重新检查。'); }}>定位问题</button>}</li>)}</ul>}
       <dl className="delivery-checks">{report.checks.map(item => <div key={item.id}><dt>{item.status === 'checked' ? '已检查' : '待审阅'}</dt><dd>{item.detail}</dd></div>)}</dl>
       <footer><p>交付包包含所选产物、检查报告与文件摘要，不额外归档项目目录、独立资料库或聊天。{format === 'source.zip' && ' 源码格式包含网页源码。'}产物内容未脱敏。{report.summary.warnings > 0 && ' 提醒会随包保留，请确认后交付。'}</p><button className="export-button" disabled={!!busy || stale || report.summary.errors > 0} onClick={() => void deliver()}>下载交付包</button></footer>
       {downloaded && <p role="status">交付包已下载，版本与报告一同保留。</p>}

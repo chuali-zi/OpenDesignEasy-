@@ -1,4 +1,5 @@
 ﻿import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import type { EditorRevealRequest } from './reveal.ts';
 import type { CSSProperties } from 'react';
 import type { DocumentAsset, WebBreakpoint, WebDocument, WebLayout, WebNode, WebOperation, WebSourceModule, EditPrecondition } from '@oeydesign/document';
 import { escapeWebText, renderWebMarkup, renderWebStyles, webVoidTags } from '@oeydesign/media/web-markup';
@@ -15,6 +16,7 @@ import './web-editor.css';
 
 type Props = {
   document: WebDocument;
+  revealRequest?: EditorRevealRequest;
   onApply: (operations: WebOperation[], label: string, baseRevision: number, preconditions?: EditPrecondition[], documentTarget?: string) => Promise<void>;
   onUndo: () => void;
   onRedo: () => void;
@@ -40,7 +42,7 @@ function projection(node: WebNode, breakpoint?: string) {
   return { style: { ...node.style, ...override?.style }, layout: { ...node.layout, ...override?.layout } };
 }
 
-export function WebEditor({ document, onApply, onUndo, onRedo, onImportAsset, disabled = false, onSelectionChange }: Props) {
+export function WebEditor({ document, revealRequest, onApply, onUndo, onRedo, onImportAsset, disabled = false, onSelectionChange }: Props) {
   const [pageId, setPageId] = useState(document.pages[0]?.id ?? '');
   const [rawSelectedIds, setSelectedIds] = useState<string[]>([]);
   const selectedIds = useMemo(() => {
@@ -156,6 +158,22 @@ export function WebEditor({ document, onApply, onUndo, onRedo, onImportAsset, di
       return `<!doctype html><html><body><p role="alert">无法显示预览：${escapeWebText(error instanceof Error ? error.message : String(error))}</p></body></html>`;
     }
   }, [previewDocument, previewPage]);
+
+  const consumedReveal=useRef('');
+  useEffect(()=>{
+    if(!revealRequest||consumedReveal.current===revealRequest.requestId||blocked)return;
+    const target=revealRequest.target;
+    if(target.kind!=='web'||revealRequest.documentId!==document.documentId||revealRequest.revision!==document.revision||!document.pages.some(item=>item.id===target.pageId)||target.nodeId&&!document.nodes[target.nodeId])return;
+    setPageId(target.pageId);setSelectedIds(target.nodeId?[target.nodeId]:[]);
+    const frame=requestAnimationFrame(()=>{
+      const dom=iframe.current?.contentDocument;
+      if(!dom||dom.body.dataset.previewPage!==target.pageId||dom.body.dataset.previewRevision!==String(revealRequest.revision))return;
+      const element=target.nodeId?dom.querySelector<HTMLElement>(`[data-web-id="${CSS.escape(target.nodeId)}"]`):dom.body;
+      if(!element)return;consumedReveal.current=revealRequest.requestId;
+      element.scrollIntoView({block:'center',inline:'nearest'});iframe.current?.focus();
+    });
+    return()=>cancelAnimationFrame(frame);
+  },[revealRequest,page?.id,frameEpoch,blocked,document.revision]);
 
   function measurePositions(ids: string[], sharedCoordinate = true, allowOwnTransform = false): Record<string, WebBounds> {
     const dom = iframe.current?.contentDocument;

@@ -16,6 +16,8 @@
 
 > 2026-10-14：用户验收补充正常纸张/幻灯片/浏览器比例与无模板 Docs 黑色层级；针对性实现及同夹具验证见 [默认样式与比例](spec/document-proportions.md)，Word 与新审美仍待验。
 
+> 2026-10-15 云端接续：在 Windows 最新交付检查之上补齐 [问题定位与修复后重检](spec/delivery-location.md)，不重复开发旧 R5，也不作为真实模型创作或视觉验收。
+
 ## 阅读顺序与效力
 
 2026-10-15 Windows 接续：已从 `5dc969a` 在独立分支实现三媒介共享的[交付检查与版本绑定产物](spec/checked-delivery.md)，并开展真实 Word/PowerPoint 合成往返验收；[竞品研究](competitive-analysis/design-agents-2026-10-15.md)区分官方公告、源码和本机实测。固定夹具、离线 Pi faux 测试不代表真实 K2.8 产品创作效果，完整 R5/R6/R7 仍未完成。
@@ -40,6 +42,7 @@
 | [运行与恢复](spec/runtime-recovery.md) | SQLite、会话、输入、版本、重启、数据导入 |
 | [质量规范](spec/quality-governance-spec.md) | 编辑正确性、设计质量、实际导出与必要验证 |
 | [客户端规范](spec/clients-spec.md) | Web、CLI、TUI、Desktop、进程与分发 |
+| [交付问题定位](spec/delivery-location.md) | 从报告到章节/对象/路由、一次性视图请求、修复后版本与产物核对 |
 | [默认文档样式与媒介比例](spec/document-proportions.md) | A4/黑色标题正文、真实视口/缩放、同夹具导出及仍待人工审核的差异 |
 | [Doc 章节分节与验收门](spec/doc-section-rules.md) | 奇偶空白页/全书字段、四类原生往返、官方 Library 交付与明确停止门 |
 | [Doc 分页直接编辑](spec/doc-paged-editing.md) | 同一光标的跨页编辑、原生中文 IME、表格/图片/浮动、章节页码与明确范围 |

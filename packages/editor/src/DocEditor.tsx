@@ -1,3 +1,4 @@
+import type { EditorRevealRequest } from './reveal.ts';
 import {measureDocSections} from './doc-page-layout.ts';
 import { useMemo, useState, useRef, useEffect, useCallback } from 'react';
 import { Fragment, Slice } from 'prosemirror-model';
@@ -6,8 +7,8 @@ import { docBlockStyle, mapDocSectionPages, docSchema, textFromString, textToStr
 import type { DocDocument, DocumentOperation, EditPrecondition, DocumentAsset, ImageAsset, PMNodeJSON } from '@oeydesign/document';
 import { RichTextEditor } from './RichTextEditor.tsx';
 import { createDocEditorSchema } from './doc-editor-schema.ts';
-type Props={document:DocDocument;disabled:boolean;onApply:(ops:DocumentOperation[],label:string,base:number,preconditions?:EditPrecondition[],target?:string)=>Promise<void>;onUndo:()=>void;onRedo:()=>void;onImportAsset:(file:File)=>Promise<DocumentAsset>;assetUrl:(id:string)=>string;onSelectionChange?:(ids:string[])=>void};
-export function DocEditor({document,disabled,onApply,onUndo,onRedo,onImportAsset,assetUrl,onSelectionChange}:Props) {
+type Props={document:DocDocument;revealRequest?:EditorRevealRequest;disabled:boolean;onApply:(ops:DocumentOperation[],label:string,base:number,preconditions?:EditPrecondition[],target?:string)=>Promise<void>;onUndo:()=>void;onRedo:()=>void;onImportAsset:(file:File)=>Promise<DocumentAsset>;assetUrl:(id:string)=>string;onSelectionChange?:(ids:string[])=>void};
+export function DocEditor({document,revealRequest,disabled,onApply,onUndo,onRedo,onImportAsset,assetUrl,onSelectionChange}:Props) {
   const[paged,setPaged]=useState(true),[pageCounts,setPageCounts]=useState<Record<string,number>>({});
   const [preview,setPreview]=useState<{url:string;revision:number;engine:string}|null>(null),[previewBusy,setPreviewBusy]=useState(false);const previewRequest=useRef<AbortController|null>(null),previewUrl=useRef<string|null>(null);
   useEffect(()=>()=>{previewRequest.current?.abort();if(previewUrl.current)URL.revokeObjectURL(previewUrl.current);},[document.documentId]);
@@ -23,6 +24,13 @@ export function DocEditor({document,disabled,onApply,onUndo,onRedo,onImportAsset
   const commit=async(ops:DocumentOperation[],label:string,base=document.revision,target=document.documentId)=>{try{await onApply(ops,label,base,[],target);setNotice('');return true;}catch(error){setNotice(error instanceof Error?error.message:String(error));return false;}};
   const readDraft=()=>{try{const raw=localStorage.getItem(key);if(!raw)return null;const value:PMNodeJSON=JSON.parse(raw);validateTextContent(value,section.id,docSchema);if(JSON.stringify(schema.nodeFromJSON(value).toJSON())===JSON.stringify(schema.nodeFromJSON(content).toJSON())){localStorage.removeItem(key);return null;}return value;}catch{return null;}};
   const choose=(id:string,nextPart=part)=>{setSelected(id);setPart(nextPart);setRecovery(null);lastDraft.current=null;onSelectionChange?.([id]);};
+  const consumedReveal=useRef('');const[resolvedTextReveal,setResolvedTextReveal]=useState('');
+  useEffect(()=>{
+    if(!revealRequest||consumedReveal.current===revealRequest.requestId||disabled)return;
+    const target=revealRequest.target;
+    if(target.kind!=='doc'||revealRequest.documentId!==document.documentId||revealRequest.revision!==document.revision||!document.sections.some(item=>item.id===target.sectionId))return;
+    consumedReveal.current=revealRequest.requestId;choose(target.sectionId,target.part);
+  },[revealRequest,document.revision,disabled]);
   const currentKey=useRef(key);currentKey.current=key;
   const clear=()=>{try{localStorage.removeItem(key);}catch{}if(currentKey.current===key){setRecovery(null);lastDraft.current=null;}};
   const remember=(draft:PMNodeJSON)=>{if(currentKey.current===key)lastDraft.current=draft;try{localStorage.setItem(key,JSON.stringify(draft));}catch{setNotice('浏览器草稿存储不可用，请复制未保存正文。');}};
@@ -43,7 +51,7 @@ export function DocEditor({document,disabled,onApply,onUndo,onRedo,onImportAsset
       {notice&&<p role="alert">{notice}</p>}{draft&&<section role="status" className="doc-draft"><strong>有未保存正文草稿</strong><pre>{textToString(draft)}</pre><button disabled={disabled} onClick={()=>{const old=docSchema.nodeFromJSON(content);const next=docSchema.nodeFromJSON(draft);const step=new ReplaceStep(0,old.content.size,new Slice(Fragment.from(next.content),0,0));void commit([{type:'doc.text.apply',sectionId:section.id,part,steps:[step.toJSON()]}],'恢复正文草稿').then(ok=>{if(ok)clear();});}}>恢复正文草稿</button><button onClick={clear}>丢弃草稿</button></section>}
       {preview&&<section className="doc-pdf-preview" aria-label="Doc 分页预览"><div><strong>分页预览 · 修订 {preview.revision}</strong><span>{preview.engine==='libreoffice'?'LibreOffice 原生分页':'浏览器分页，页眉页脚与 Word 排版需复核'}{preview.revision!==document.revision?' · 正文已有新修改，请更新预览':''}</span><button onClick={()=>{if(previewUrl.current)URL.revokeObjectURL(previewUrl.current);previewUrl.current=null;setPreview(null);}}>关闭预览</button></div><iframe title="文档分页 PDF" src={preview.url}/></section>}
       <p className="doc-geometry" aria-label="文档页面尺寸">纸张 {mm(page.width)} × {mm(page.height)} mm · 正文 {mm(page.width-page.marginLeft-page.marginRight)} × {mm(page.height-page.marginTop-page.marginBottom)} mm · 显示 {zoom}%（缩放不改变纸张或排版）</p><div className="doc-scroll"><div className={`doc-paper ${pagingActive?'is-paged':''}`} style={pagingActive?{width:'100%'}:{width:page.width,minHeight:page.height,padding:`${page.marginTop}px ${page.marginRight}px ${page.marginBottom}px ${page.marginLeft}px`,zoom:zoom/100}}>
-        <RichTextEditor key={`${section.id}:${part}`} assetUrl={assetUrl} schema={schema} docPagination={pagingActive?{page,zoom,leadingBlank:pageMap.blankBefore[section.id]??0,partSchema,header:section.header,footer:section.footer,pageOffset,totalPages,onPages,onPart:next=>choose(section.id,next)}:undefined} documentId={document.documentId} nodeId={section.id} content={content} revision={document.revision} disabled={disabled||!!draft} baseStyle={{fontFamily:'Noto Sans CJK SC',fontSize:16,lineHeight:24,color:'#000000'}} resolveBlockStyle={node=>docBlockStyle(document.styles,node,defaultStyle)} onDraftChange={remember}
+        <RichTextEditor revealTarget={revealRequest&&resolvedTextReveal!==revealRequest.requestId&&revealRequest.target.kind==='doc'&&revealRequest.target.sectionId===section.id&&revealRequest.target.part===part&&revealRequest.revision===document.revision?{requestId:revealRequest.requestId,revision:revealRequest.revision,nodeId:revealRequest.target.nodeId,onRevealed:()=>setResolvedTextReveal(revealRequest.requestId)}:undefined} key={`${section.id}:${part}`} assetUrl={assetUrl} schema={schema} docPagination={pagingActive?{page,zoom,leadingBlank:pageMap.blankBefore[section.id]??0,partSchema,header:section.header,footer:section.footer,pageOffset,totalPages,onPages,onPart:next=>choose(section.id,next)}:undefined} documentId={document.documentId} nodeId={section.id} content={content} revision={document.revision} disabled={disabled||!!draft} baseStyle={{fontFamily:'Noto Sans CJK SC',fontSize:16,lineHeight:24,color:'#000000'}} resolveBlockStyle={node=>docBlockStyle(document.styles,node,defaultStyle)} onDraftChange={remember}
           onImportImage={async file=>{const asset=await onImportAsset(file);if(asset.kind!=='image')throw new Error('请选择图片');return asset;}}
           onCommit={async(id,sectionId,steps,label,base,assets)=>{const ops:DocumentOperation[]=(assets ?? []).map(asset=>({type:'asset.register',asset:asset as ImageAsset}));ops.push({type:'doc.text.apply',sectionId,part,steps});const ok=await commit(ops,label,base,id);if(ok)clear();return ok;}}
           onConflict={value=>{if(value)remember(value);if(currentKey.current===key)setRecovery(value ?? lastDraft.current);}} />

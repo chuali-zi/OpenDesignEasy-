@@ -7,11 +7,12 @@ import { wrapInList, splitListItem, liftListItem } from 'prosemirror-schema-list
 import type { Schema } from 'prosemirror-model';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { PMNodeJSON, ImageAsset } from '@oeydesign/document';
-import { EditorState, NodeSelection, Selection } from 'prosemirror-state';
+import { EditorState, NodeSelection, Selection, TextSelection } from 'prosemirror-state';
 import { EditorView } from 'prosemirror-view';
 import { editorTextSchema } from './editor-text-schema.ts';
 
 export type RichTextEditorProps = {
+  revealTarget?: {requestId:string;revision:number;nodeId?:string;onRevealed?:()=>void};
   schema?: Schema;
   docPagination?: DocPaginationOptions;
   assetUrl?: (id:string)=>string;
@@ -32,7 +33,7 @@ export type RichTextEditorProps = {
 const FONT_CHOICES = ['Noto Sans CJK SC', 'Segoe UI', 'Arial', 'Georgia', 'Aptos', 'Microsoft YaHei', 'Noto Sans'];
 type PendingFocusRestore = { view: EditorView; selection: Selection; moved: boolean; cleanup: () => void };
 
-export function RichTextEditor({ schema: requestedSchema = editorTextSchema, docPagination, assetUrl, onImportImage, documentId, nodeId, content, revision, disabled, focused = false, baseStyle, resolveBlockStyle, onCommit, onConflict, onDraftChange }: RichTextEditorProps) {
+export function RichTextEditor({ revealTarget, schema: requestedSchema = editorTextSchema, docPagination, assetUrl, onImportImage, documentId, nodeId, content, revision, disabled, focused = false, baseStyle, resolveBlockStyle, onCommit, onConflict, onDraftChange }: RichTextEditorProps) {
   const blockStyleRef=useRef(resolveBlockStyle);blockStyleRef.current=resolveBlockStyle;
   const [schema,setSchema]=useState(requestedSchema);
   const selectionSnapshot=useRef<{documentId:string;nodeId:string;json:unknown;expectedDoc:string;focused:boolean}|null>(null);
@@ -246,6 +247,19 @@ export function RichTextEditor({ schema: requestedSchema = editorTextSchema, doc
   }, [content, documentId, revision, schema]);
 
   useEffect(() => { if (focused) viewRef.current?.focus(); }, [focused]);
+  const consumedReveal=useRef('');
+  useEffect(()=>{
+    if(!revealTarget||consumedReveal.current===revealTarget.requestId||disabled||revealTarget.revision!==revision)return;
+    const frame=requestAnimationFrame(()=>{
+      const view=viewRef.current;if(!view||view.isDestroyed||view.composing||baseRevisionRef.current!==revealTarget.revision)return;
+      let selection=TextSelection.atStart(view.state.doc),found=!revealTarget.nodeId;
+      view.state.doc.descendants((node,pos)=>{if(found)return false;if(node.attrs.id!==revealTarget.nodeId)return;selection=node.isAtom&&NodeSelection.isSelectable(node)?NodeSelection.create(view.state.doc,pos):TextSelection.near(view.state.doc.resolve(Math.min(pos+1,view.state.doc.content.size)));found=true;return false;});
+      if(!found)return;consumedReveal.current=revealTarget.requestId;
+      view.dispatch(view.state.tr.setSelection(selection).scrollIntoView());view.focus();revealTarget.onRevealed?.();
+    });
+    return()=>cancelAnimationFrame(frame);
+  },[revealTarget?.requestId,revision,schema,disabled]);
+
 
   function syncToolbar(state: EditorState) {
     const selected=(state.selection as Selection & {node?: typeof state.doc}).node;setObjectAttrs(selected && ['inline_image','floating_image','floating_shape'].includes(selected.type.name)?{...selected.attrs,kind:selected.type.name}:null);
