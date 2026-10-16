@@ -126,6 +126,10 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .delivery-checks dt { font-weight:600; }
 .delivery-checks dd { margin:0; }
 .delivery-panel footer { border-top:1px solid #dfe4df; margin-top:18px; padding-top:12px; }
+.delivery-renderer,.delivery-fonts { border:1px solid #dfe4df; border-radius:8px; padding:14px; margin:16px 0; }
+.delivery-fonts table { width:100%; border-collapse:collapse; font-size:13px; table-layout:fixed; }
+.delivery-fonts th,.delivery-fonts td { padding:8px; border-bottom:1px solid #e6ebe6; text-align:left; vertical-align:top; overflow-wrap:anywhere; }
+.delivery-fonts small { display:block; color:#596259; margin-top:5px; }
 .delivery-panel footer p { color:#4b554b; font-size:13px; }
 
 .delivery-findings li>div{flex:1;min-width:0}.delivery-findings li>button{flex-shrink:0;align-self:center;white-space:nowrap}

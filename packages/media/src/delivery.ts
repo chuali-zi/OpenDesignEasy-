@@ -11,6 +11,31 @@ export interface DeliveryFinding {
   location: DeliveryLocation;
 }
 export interface DeliveryAsset { id: string; sha256: string; sizeBytes: number; mimeType: string }
+export interface DeliveryFontRun {
+  declared: string;
+  weight: string;
+  style: string;
+  sample: string;
+  location: DeliveryLocation;
+  availability: 'available' | 'missing' | 'generic' | 'unknown';
+  actual: Array<{ family: string; postScriptName: string; glyphs: number }>;
+  fallback: boolean;
+}
+export interface DeliveryFonts {
+  platform: string;
+  inventory: 'fontconfig' | 'unavailable';
+  probe: 'measured' | 'not-run';
+  browserVersion?: string;
+  complete: boolean;
+  detail: string;
+  runs: DeliveryFontRun[];
+}
+export interface DeliveryRenderer {
+  engine: string;
+  phase: 'planned' | 'generated';
+  platform: string;
+  detail: string;
+}
 export interface DeliveryReport {
   schemaVersion: 1;
   documentId: string;
@@ -23,6 +48,8 @@ export interface DeliveryReport {
   findings: DeliveryFinding[];
   summary: { errors: number; warnings: number };
   checks: Array<{ id: string; status: 'checked' | 'not-run'; detail: string }>;
+  fonts?: DeliveryFonts;
+  renderer?: DeliveryRenderer;
 }
 
 export const deliveryFormats: Record<EditableDocument['kind'], readonly ArtifactFormat[]> = {

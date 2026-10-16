@@ -22,8 +22,11 @@ test('delivery HTTP API rejects stale revisions, unsupported formats and unrelat
     assert.equal((await app.inject({ method: 'POST', url: `/api/documents/${id}/delivery.zip`, headers: { origin: 'https://unrelated.example' }, payload: { expectedRevision: 1 } })).statusCode, 403);
     const delivered = await app.inject({ method: 'POST', url: `/api/documents/${id}/delivery.zip`, payload: { expectedRevision: 1 } });
     assert.equal(delivered.statusCode, 200, delivered.body); assert.equal(delivered.headers['x-document-revision'], '1');
+    assert.equal(delivered.headers['x-delivery-renderer'], 'docx / OOXML');
     const zip = await JSZip.loadAsync(delivered.rawPayload); assert.ok(zip.file('doc-r1.docx'));
-    assert.equal(JSON.parse(await zip.file('delivery.json')!.async('string')).report.revision, 1);
+    const report = JSON.parse(await zip.file('delivery.json')!.async('string')).report;
+    assert.equal(report.revision, 1); assert.equal(report.renderer.phase, 'generated');
+    assert.equal(report.checks.find((item: { id: string }) => item.id === 'native-app').status, 'not-run');
     assert.equal(runtime.readDocument(id).revision, 1);
   } finally { await app.close(); runtime.close(); await rm(root, { recursive: true, force: true }); }
 });

@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto';
 import { imageSize } from 'image-size';
-import { defaultDeliveryFormat, deliveryFormats, inspectDelivery, packageDelivery, exportDocumentArtifact, docPdfEngine } from '@oeydesign/media';
+import { defaultDeliveryFormat, deliveryFormats, inspectDelivery, packageDelivery, exportDocumentArtifact, inspectDeliveryFonts, fontFindings, deliveryRenderer } from '@oeydesign/media';
 import type { ArtifactFormat, DeliveryManifest, DeliveryReport } from '@oeydesign/media';
 import type { EditableDocument, PMNodeJSON } from '@oeydesign/document';
 import { ProjectAssets } from './assets.ts';
@@ -29,7 +29,7 @@ async function prepare(runtime: ProjectRuntime, documentId: string, options: Del
   const report: DeliveryReport = {
     schemaVersion: 1, documentId, kind: document.kind, name: document.name, revision: document.revision, format,
     documentSha256: sha256(canonical(document)), assets: [], findings: inspectDelivery(document, format),
-    summary: { errors: 0, warnings: 0 },
+    summary: { errors: 0, warnings: 0 }, renderer: deliveryRenderer(document, format),
     checks: [
       { id: 'structure', status: 'checked', detail: '统一文档模型、待完成文案和有限静态几何/链接检查。' },
       { id: 'assets', status: 'checked', detail: '所注册图片及模板原件的实际字节、尺寸、类型和已有摘要。' },
@@ -80,6 +80,13 @@ async function prepare(runtime: ProjectRuntime, documentId: string, options: Del
       report.findings.push({ code: 'asset.unavailable', severity: 'error', message: `素材 ${id} 缺失或字节与登记信息不一致，请重新导入。`, location: {} });
     }
   }
+  report.fonts = await inspectDeliveryFonts(document, async id => {
+    const bytes = frozenAssets.get(id);
+    if (!bytes) throw new Error('Unchecked font-preview asset');
+    return bytes;
+  }, options.signal);
+  report.findings.push(...fontFindings(report.fonts));
+  report.checks.push({ id: 'fonts', status: report.fonts.probe === 'measured' && report.fonts.complete ? 'checked' : 'not-run', detail: report.fonts.detail });
   assertRevision(runtime, documentId, document.revision);
   report.summary = { errors: report.findings.filter(item => item.severity === 'error').length, warnings: report.findings.filter(item => item.severity === 'warning').length };
   return { document, report, frozenAssets };
@@ -105,7 +112,8 @@ export async function createDeliveryBundle(runtime: ProjectRuntime, documentId: 
   const artifact = await exportDocumentArtifact(document, resolve, report.format, { signal: options.signal });
   options.signal?.throwIfAborted();
   // The bundle records export engine truth without turning it into an Office approval.
-  report.checks.push({ id: 'export', status: 'checked', detail: `已生成 ${report.format}${document.kind === 'doc' && report.format === 'pdf' ? `（${docPdfEngine()}）` : ''}；文件摘要见 artifact。` });
+  report.renderer!.phase = 'generated';
+  report.checks.push({ id: 'export', status: 'checked', detail: `已由 ${report.renderer!.engine} 生成 ${report.format}；文件摘要见 artifact。${report.renderer!.detail}` });
   const manifest: DeliveryManifest = { schemaVersion: 1, report, artifact: {
     filename: `${document.kind}-r${document.revision}.${report.format}`, sha256: sha256(artifact), sizeBytes: artifact.length,
   } };

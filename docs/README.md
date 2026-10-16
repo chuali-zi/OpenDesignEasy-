@@ -1,5 +1,7 @@
 # OEYdesign 文档与实施状态
 
+> 2026-10-16 云端接续：[交付字体证据与渲染器](spec/delivery-fonts.md)区分宿主字体可用性、Chromium 实测字形与实际导出路径，复用问题定位及修复后重检；不推断 Windows 字体状态或 Office 验收。
+
 > 当前有效路线：**D / 全 TypeScript / Pi SDK / 直接编辑 / 多客户端**。用户于 2026-09-12 明确采用。
 > 状态截至 2026-09-20：R1 已完成 Windows 开发基线验证；R2 Deck 编辑与原生导出已完成本轮验收；R3 产品 Pi 会话已接入，现有兼容服务的共同创作、恢复与图片链路已实测通过，原生 K3 的文本、工具及截图识别也已实测通过。见[本轮验收](spec/r2-r3-validation.md)与[实施计划](spec/implementation-plan.md)。跨平台干净安装留在 R7。
 > 2026-09-26：R4 Web 文档、无头生产、DOM 编辑基础与受管源码构建已实现，阶段检查见 [R4 记录](spec/r4-web-validation.md)。R4 完整验收与 R5–R7 尚未完成。

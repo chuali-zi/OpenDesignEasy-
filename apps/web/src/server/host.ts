@@ -51,8 +51,13 @@ export async function createWebHost(runtime: ProjectRuntime, options: WebHostOpt
   });
   app.get('/api/assets', () => ({ assets: assets.list() }));
   app.get<{ Params: { id: string }; Querystring: { format?: ArtifactFormat; revision?: string } }>('/api/documents/:id/delivery-check', async (request, reply) => {
-    const report = await checkDelivery(runtime, request.params.id, { format: request.query.format, expectedRevision: request.query.revision === undefined ? undefined : Number(request.query.revision) });
-    return reply.header('Cache-Control', 'no-store').send({ report });
+    const controller = new AbortController();
+    const stop = () => { if (!reply.raw.writableEnded) controller.abort(); };
+    reply.raw.once('close', stop);
+    try {
+      const report = await checkDelivery(runtime, request.params.id, { format: request.query.format, expectedRevision: request.query.revision === undefined ? undefined : Number(request.query.revision), signal: controller.signal });
+      return reply.header('Cache-Control', 'no-store').send({ report });
+    } finally { reply.raw.removeListener('close', stop); }
   });
   app.post<{ Params: { id: string }; Body: { format?: ArtifactFormat; expectedRevision: number } }>('/api/documents/:id/delivery.zip', async (request, reply) => {
     const controller = new AbortController();
@@ -61,7 +66,8 @@ export async function createWebHost(runtime: ProjectRuntime, options: WebHostOpt
     try {
       const result = await createDeliveryBundle(runtime, request.params.id, { format: request.body?.format, expectedRevision: request.body?.expectedRevision, signal: controller.signal });
       return reply.type('application/zip').header('Content-Disposition', `attachment; filename="${result.manifest.report.kind}-r${result.manifest.report.revision}.delivery.zip"`)
-        .header('Cache-Control', 'no-store').header('X-Document-Revision', result.manifest.report.revision).send(Buffer.from(result.bytes));
+        .header('Cache-Control', 'no-store').header('X-Document-Revision', result.manifest.report.revision)
+        .header('X-Delivery-Renderer', result.manifest.report.renderer!.engine).send(Buffer.from(result.bytes));
     } finally { reply.raw.removeListener('close', stop); }
   });
   app.post<{ Body: { base64: string; name?: string } }>('/api/documents/import-source', { bodyLimit: 12 * 1024 * 1024 }, async request => {

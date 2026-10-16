@@ -1,5 +1,7 @@
 # 三媒介交付检查与版本绑定产物
 
+2026-10-16 接续：[字体证据与渲染器](delivery-fonts.md)增加当前检查宿主家族可用性、Chromium 实测字形与生成前/后的导出路径；不将浏览器声明或 Linux 结果当成 Windows Office 的实际用字。
+
 2026-10-15，接续 R5。此切片不表示 R6 TUI/Desktop 已实现，不把浏览器检查或合成夹具当真实模型创作验收。研究依据见 [竞品与取舍](../competitive-analysis/design-agents-2026-10-15.md)。
 
 ## 用户可感知的行为

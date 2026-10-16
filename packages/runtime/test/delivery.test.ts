@@ -36,13 +36,15 @@ for (const kind of ['doc', 'deck', 'web'] as const) test(`${kind}: bundle binds 
     runtime.submit(runtime.makeCommand(document.documentId, operations));
     const before = runtime.readDocument(document.documentId), events = runtime.events();
     const report = await checkDelivery(runtime, document.documentId, { expectedRevision: before.revision });
-    assert.equal(report.summary.errors, 0); assert.equal(report.summary.warnings, 1);
+    assert.equal(report.summary.errors, 0); assert.equal(report.findings.filter(item => item.code === 'content.placeholder').length, 1);
     assert.equal(report.findings[0]!.code, 'content.placeholder'); assert.equal(report.assets[0]!.sha256, hash(pixel));
     assert.deepEqual(report.checks.filter(check => check.status === 'not-run').map(check => check.id), ['visual', 'native-app', 'facts']);
     const bundle = await createDeliveryBundle(runtime, document.documentId, { expectedRevision: before.revision });
     const zip = await JSZip.loadAsync(bundle.bytes);
     const manifest = JSON.parse(await zip.file('delivery.json')!.async('string')) as DeliveryManifest;
     assert.equal(manifest.report.documentSha256, report.documentSha256);
+    assert.equal(report.renderer?.phase, 'planned'); assert.equal(manifest.report.renderer?.phase, 'generated');
+    assert.equal(report.fonts?.probe, 'measured'); assert.ok(report.fonts?.runs.length);
     const artifact = await zip.file(manifest.artifact.filename)!.async('uint8array');
     assert.equal(hash(artifact), manifest.artifact.sha256); assert.equal(artifact.length, manifest.artifact.sizeBytes);
     assert.deepEqual(Object.keys(zip.files).sort(), [manifest.artifact.filename, 'README.txt', 'delivery.json'].sort());
